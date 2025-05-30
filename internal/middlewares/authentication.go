@@ -10,6 +10,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+
 	l "github.com/faelmori/logz"
 
 	sau "github.com/rafa-mori/gobe/factory/security"
@@ -20,7 +22,8 @@ import (
 	gl "github.com/rafa-mori/gobe/logger"
 )
 
-type AuthentifcaftionMiddleware struct {
+type AuthenticationMiddleware struct {
+	contractapi.Contract
 	CertService  sci.ICertService
 	TokenService sci.TokenService
 }
@@ -51,24 +54,37 @@ func NewTokenService(config *srv.IDBConfig, logger l.Logger) (sci.TokenService, 
 	return tkService, crtService, nil
 }
 
-func NewAuthentifcaftionMiddleware(tokenService sci.TokenService, certService sci.ICertService, err error) gin.HandlerFunc {
+func NewAuthenticationMiddleware(tokenService sci.TokenService, certService sci.ICertService, err error) gin.HandlerFunc {
+	authMiddleware := &AuthenticationMiddleware{
+		CertService:  certService,
+		TokenService: tokenService,
+	}
+
+	if authMiddleware.CertService == nil || authMiddleware.TokenService == nil {
+		return func(c *gin.Context) {
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize authentication middleware"})
+				c.Abort()
+				return
+			} else {
+				gl.Log("error", "❌ Erro ao inicializar AuthenticationMiddleware: CertService or TokenService is nil")
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize authentication middleware"})
+				c.Next()
+			}
+		}
+	}
+
 	return func(c *gin.Context) {
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize authentication middleware"})
 			c.Abort()
-			return
+		} else {
+			c.Next()
 		}
-
-		authMiddleware := &AuthentifcaftionMiddleware{
-			CertService:  certService,
-			TokenService: tokenService,
-		}
-
-		authMiddleware.ValidateJWT(c.Handler())
 	}
 }
 
-func (a *AuthentifcaftionMiddleware) ValidateJWT(next gin.HandlerFunc) gin.HandlerFunc {
+func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -92,7 +108,7 @@ func (a *AuthentifcaftionMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handl
 	}
 }
 
-func (a *AuthentifcaftionMiddleware) validateToken(tokenString string) (*jwt.StandardClaims, error) {
+func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.StandardClaims, error) {
 	publicK, publicKErr := a.CertService.GetPublicKey()
 	if publicKErr != nil {
 		gl.Log("error", fmt.Sprintf("Error getting public key: %v", publicKErr))

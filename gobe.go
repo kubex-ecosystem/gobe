@@ -16,11 +16,11 @@ import (
 	crp "github.com/rafa-mori/gobe/factory/security"
 	cm "github.com/rafa-mori/gobe/internal/common"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	"github.com/rafa-mori/gobe/internal/routes"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	is "github.com/rafa-mori/gobe/internal/services"
 	t "github.com/rafa-mori/gobe/internal/types"
 
-	"github.com/rafa-mori/gobe/internal/routes"
 	gl "github.com/rafa-mori/gobe/logger"
 )
 

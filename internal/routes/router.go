@@ -23,15 +23,15 @@ import (
 
 // Router represents the main router structure for the application.
 type Router struct {
-	gin.IRouter
-	Logger l.Logger
+	*gin.Engine
 	*t.Mutexes
+	Logger          l.Logger
 	settings        map[string]string
 	databaseService gdbf.DBService
 	routes          map[string]map[string]ci.IRoute
 	properties      map[string]any
-	engine          *gin.Engine
 	middlewares     map[string]gin.HandlerFunc
+	engine          *gin.Engine
 	debug           bool
 }
 
@@ -40,6 +40,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
+
 	rtr := &Router{
 		Logger:          logger,
 		Mutexes:         t.NewMutexesType(),
@@ -49,7 +50,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		databaseService: databaseService,
 		properties:      make(map[string]any),
 		middlewares: map[string]gin.HandlerFunc{
-			"authentication":      mdw.NewAuthentifcaftionMiddleware(mdw.NewTokenService(databaseService.GetConfig(), logger)),
+			"authentication":      mdw.NewAuthenticationMiddleware(mdw.NewTokenService(databaseService.GetConfig(), logger)),
 			"validateAndSanitize": mdw.ValidateAndSanitize(),
 			"rateLimite":          mdw.RateLimiter(rate.Limit(serverConfig.RateLimitLimit), serverConfig.RateLimitBurst),
 			"logger":              mdw.Logger(logger),
