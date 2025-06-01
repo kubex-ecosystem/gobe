@@ -8,14 +8,13 @@ IFS=$'\n\t'
 
 get_release_url() {
     local os="${_PLATFORM%%-*}"
-    local arch="${_PLATFORM##*-}"
     local format
     if [[ "$os" == "windows" ]]; then
       format="zip"
     else
       format="tar.gz"
     fi
-    echo "https://github.com/${_OWNER}/${_PROJECT_NAME}/releases/download/${_VERSION}/${_PROJECT_NAME}_.${format}"
+    echo "'https://github.com/${_OWNER}/${_PROJECT_NAME}/releases/download/${_VERSION}/${_PROJECT_NAME}_.${format}'"
 }
 
 what_platform() {
@@ -111,5 +110,12 @@ _get_arch_from_args() {
       ;;
   esac
 }
+
+export -f _get_os_arr_from_args
+export -f _get_arch_arr_from_args
+export -f _get_os_from_args
+export -f _get_arch_from_args
+export -f get_release_url
+export -f what_platform
 
 what_platform "${@}"
