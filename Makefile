@@ -31,46 +31,44 @@ log_break = @printf "%b%s%b\n" "$(COLOR_BLUE)" "[INFO]" "$(COLOR_RESET)"
 log_error = @printf "%b%s%b %s\n" "$(COLOR_RED)" "[ERROR]" "$(COLOR_RESET)" "$(1)"
 
 ARGUMENTS := $(MAKECMDGOALS)
-# INSTALL_SCRIPT=$(ROOT_DIR)support/installer/main.sh
-INSTALL_SCRIPT=$(ROOT_DIR)support/scripts/main.sh
+INSTALL_SCRIPT=$(ROOT_DIR)support/install.sh
 CMD_STR := $(strip $(firstword $(ARGUMENTS)))
 ARGS := $(filter-out $(strip $(CMD_STR)), $(ARGUMENTS))
 
 # Build the binary using the install script.
 build:
-	$(call log_info, Running: $(INSTALL_SCRIPT))
 	$(call log_info, Building $(APP_NAME) binary)
 	$(call log_info, Args: $(ARGS))
-	@$(INSTALL_SCRIPT) build $(ARGS)
+	@bash $(INSTALL_SCRIPT) build $(ARGS)
 	$(shell exit 0)
 
 # Install the binary and configure the environment.
 install:
 	$(call log_info, Installing $(APP_NAME) binary)
 	$(call log_info, Args: $(ARGS))
-	@$(INSTALL_SCRIPT) install $(ARGS)
+	@bash $(INSTALL_SCRIPT) install $(ARGS)
 	$(shell exit 0)
 
 # Clean up build artifacts.
 clean:
 	$(call log_info, Cleaning up build artifacts)
 	$(call log_info, Args: $(ARGS))
-	@$(INSTALL_SCRIPT) clean $(ARGS)
+	@bash $(INSTALL_SCRIPT) clean $(ARGS)
 	$(shell exit 0)
 
 # Run tests.
 test:
 	$(call log_info, Running tests)
 	$(call log_info, Args: $(ARGS))
-	@$(INSTALL_SCRIPT) test $(ARGS)
+	@bash $(INSTALL_SCRIPT) test $(ARGS)
 	$(shell exit 0)
 
 ## Run dynamic commands with arguments calling the install script.
 %:
 	@:
 	$(call log_info, Running command: $(CMD_STR))
-	$(call log_info, Args %: $(ARGS))
-	@$(INSTALL_SCRIPT) $(CMD_STR) $(ARGS)
+	$(call log_info, Args: $(ARGS))
+	@bash $(INSTALL_SCRIPT) $(CMD_STR) $(ARGS)
 	$(shell exit 0)
 
 # Display help message.
