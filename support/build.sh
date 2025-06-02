@@ -7,14 +7,12 @@ set -o posix
 IFS=$'\n\t'
 
 build_binary() {
-  local _PLATFORM_ARG="${1:-${_PLATFORM}}"
-  local _ARCH_ARG="${2:-${_ARCH}}"
+  local _PLATFORM_ARG="${1:-${_PLATFORM:-}}"
+  local _ARCH_ARG="${2:-${_ARCH:-}}"
 
   # Obtém arrays de plataformas e arquiteturas
   local platforms=( "$(_get_os_arr_from_args "$_PLATFORM_ARG")" )
   local archs=( "$(_get_arch_arr_from_args "$_ARCH_ARG")" )
-  log info "Qtd de OS's: ${#platforms[@]}"
-  log info "Qtd de arquiteturas: ${#archs[@]}"
 
   for platform_pos in "${platforms[@]}"; do
     [[ -z "$platform_pos" ]] && continue
@@ -48,8 +46,7 @@ build_binary() {
       else
         if [[ "$platform_pos" != "windows" ]]; then
             install_upx || return 1
-            log info "Empacotando com UPX..."
-            # upx "$OUTPUT_NAME" --force-overwrite --lzma --no-progress --no-color -qqq || true
+            upx "$OUTPUT_NAME" --force-overwrite --lzma --no-progress --no-color -qqq || true
             log success "Binário empacotado: ${OUTPUT_NAME}"
         fi
         if [[ ! -f "$OUTPUT_NAME" ]]; then
@@ -66,8 +63,8 @@ build_binary() {
 }
 
 compress_binary() {
-  local platform_arg=$1
-  local arch_arg=$2
+  local platform_arg="${1:-${_PLATFORM:-}}"
+  local arch_arg="${2:-${_ARCH:-}}"
 
   # Obtém arrays de plataformas e arquiteturas
   local platforms=( "$(_get_os_arr_from_args "$platform_arg")" )
@@ -92,16 +89,19 @@ compress_binary() {
       local compress_cmd_exec=""
       if [[ "$platform_pos" != "windows" ]]; then
         OUTPUT_NAME="${OUTPUT_NAME}.tar.gz"
-        log info "Comprimindo para ${platform_pos} ${arch_pos} em ${OUTPUT_NAME}..."
-        if tar -czf "${OUTPUT_NAME}" "${BINARY_NAME}"; then
+        _CURR_PATH="$(pwd)"
+        _BINARY_PATH="$(dirname "${BINARY_NAME:-\.\/}")"
+        cd "${_BINARY_PATH}" || true # Just to avoid tar warning about relative paths
+        if tar -czf "./$(basename "${OUTPUT_NAME}")" "./$(basename "${BINARY_NAME}")"; then
           compress_cmd_exec="true"
         else
           compress_cmd_exec="false"
         fi
+        cd "${_CURR_PATH}" || true
       else
         OUTPUT_NAME="${OUTPUT_NAME}.zip"
-        log info "Comprimindo para ${platform_pos} ${arch_pos} em ${OUTPUT_NAME}..."
-        if zip -r -9 "${OUTPUT_NAME}" "${BINARY_NAME}"; then
+        # log info "Comprimindo para ${platform_pos} ${arch_pos} em ${OUTPUT_NAME}..."
+        if zip -r -9 "${OUTPUT_NAME}" "${BINARY_NAME}" >/dev/null; then
           compress_cmd_exec="true"
         else
           compress_cmd_exec="false"
@@ -115,10 +115,7 @@ compress_binary() {
       fi
     done
   done
-  log success "Todos os binários foram comprimidos com sucesso!"
 }
 
 export -f build_binary
 export -f compress_binary
-
-# build_binary "$@"

@@ -22,8 +22,8 @@ for file in "${FILES[@]}"; do
   FILE_PATH="$BASE_DIR/$file"
   if [[ ! -f "$FILE_PATH" ]]; then
     touch "$FILE_PATH"
-    echo "#!/bin/bash" > "$FILE_PATH"
-    echo "# $file - script placeholder" >> "$FILE_PATH"
+    printf '%s' "#!/bin/bash" | tee "$FILE_PATH" >/dev/null
+    printf '%s' "# $file - script placeholder" | tee -a "$FILE_PATH" >/dev/null
     chmod +x "$FILE_PATH"
     echo "Criado: $FILE_PATH"
   else

@@ -23,3 +23,6 @@ check_dependencies() {
         fi
     done
 }
+
+export -f validate_versions
+export -f check_dependencies

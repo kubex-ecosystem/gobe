@@ -40,6 +40,9 @@ main() {
 
   if [[ "${_DEBUG}" != true ]]; then
     show_headers
+    if [[ -z "${_HIDE_ABOUT}" ]]; then
+      show_about
+    fi
   else
     log info "Modo debug ativado; banner será ignorado..."
     if [[ -z "${_HIDE_ABOUT}" ]]; then
@@ -115,6 +118,7 @@ clean_artifacts() {
     log success "Artefatos de build removidos."
 }
 
-echo "MAKE ARGS: ${ARGS[*]:-}"
+# echo "MAKE ARGS: ${ARGS[*]:-}"
+log info "Starting installation script..."
 main "$@"
 

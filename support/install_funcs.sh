@@ -3,18 +3,40 @@
 
 install_upx() {
     if ! command -v upx &> /dev/null; then
-        log info "Instalando UPX..."
-        if [[ "$(uname)" == "Darwin" ]]; then
-            brew install upx
-        elif command -v apt-get &> /dev/null; then
-            sudo apt-get install -y upx
-        else
-            log error "Instale o UPX manualmente em 'https://upx.github.io/'"
-            exit 1
+        if ! sudo -v &> /dev/null; then
+            log error "Você não tem permissões de superusuário para instalar o empacotador de binários."
+            log warn "Se deseja o empacotamento de binários, instale o UPX manualmente."
+            log warn "Veja: https://upx.github.io/"
+            return 1
         fi
-    else
-        log success "UPX já está instalado."
+        if [[ "$(uname)" == "Darwin" ]]; then
+            brew install upx >/dev/null
+        elif command -v apt-get &> /dev/null; then
+            sudo apt-get install -y upx >/dev/null
+        elif command -v yum &> /dev/null; then
+            sudo yum install -y upx >/dev/null
+        elif command -v dnf &> /dev/null; then
+            sudo dnf install -y upx >/dev/null
+        elif command -v pacman &> /dev/null; then
+            sudo pacman -S --noconfirm upx >/dev/null
+        elif command -v zypper &> /dev/null; then
+            sudo zypper install -y upx >/dev/null
+        elif command -v apk &> /dev/null; then
+            sudo apk add upx >/dev/null
+        elif command -v port &> /dev/null; then
+            sudo port install upx >/dev/null
+        elif command -v snap &> /dev/null; then
+            sudo snap install upx >/dev/null
+        elif command -v flatpak &> /dev/null; then
+            sudo flatpak install flathub org.uptane.upx -y >/dev/null
+        else
+            log warn "Se deseja o empacotamento de binários, instale o UPX manualmente."
+            log warn "Veja: https://upx.github.io/"
+            return 1
+        fi
     fi
+
+    return 0
 }
 
 detect_shell_rc() {

@@ -55,16 +55,16 @@ get_current_shell() {
     ${shell_proc}*)
       local shebang
       shebang=$(head -1 "$0")
-      echo "${shebang##*/}"
+      printf '%s\n' "${shebang##*/}"
       ;;
     *)
-      echo "$shell_proc"
+      printf '%s\n' "$shell_proc"
       ;;
   esac
 }
 
 # Cria um diretório temporário para cache
-_TEMP_DIR="$(mktemp -d)"
+_TEMP_DIR="${_TEMP_DIR:-$(mktemp -d)}"
 if [[ -d "${_TEMP_DIR}" ]]; then
     log info "Diretório temporário criado: ${_TEMP_DIR}"
 else
@@ -89,7 +89,7 @@ clear_script_cache() {
 }
 
 set_trap() {
-  local current_shell
+  local current_shell=""
   current_shell=$(get_current_shell)
   case "${current_shell}" in
     *ksh|*zsh|*bash)
