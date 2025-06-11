@@ -50,5 +50,4 @@ tests/scripts/install.sh
 tests/scripts/Makefile
 tests/scripts/platform_detection.sh
 tests/scripts/utils.sh
-gobe_linux_amd64
-gobe_linux_amd64.tar.gz
+*_linux_amd64*
