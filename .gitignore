@@ -43,11 +43,5 @@ env
 *.log
 *.log.*
 gobe
-tests/scripts/binary_management.sh
-tests/scripts/configure.sh
-tests/scripts/dependency_management.sh
-tests/scripts/install.sh
-tests/scripts/Makefile
-tests/scripts/platform_detection.sh
-tests/scripts/utils.sh
+tests/**/*
 *_linux_amd64*
