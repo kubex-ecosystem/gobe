@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	m "github.com/rafa-mori/gdbase/factory/models"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
@@ -17,7 +17,7 @@ import (
 
 type idTokenCustomClaims struct {
 	User *m.UserModelType `json:"UserImpl"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 type TokenServiceImpl struct {
 	TokenRepository       sci.TokenRepo
@@ -153,7 +153,7 @@ type refreshTokenData struct {
 }
 type refreshTokenCustomClaims struct {
 	UID string `json:"uid"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func generateIDToken(u m.UserModel, key *rsa.PrivateKey, exp int64) (string, error) {
@@ -172,7 +172,7 @@ func generateIDToken(u m.UserModel, key *rsa.PrivateKey, exp int64) (string, err
 	tokenExp := unixTime + exp
 	claims := idTokenCustomClaims{
 		User: u.GetUserObj(),
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  unixTime,
 			ExpiresAt: tokenExp,
 		},
@@ -198,7 +198,7 @@ func generateRefreshToken(uid string, key string, exp int64) (*refreshTokenData,
 
 	claims := refreshTokenCustomClaims{
 		UID: uid,
-		StandardClaims: jwt.StandardClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  currentTime.Unix(),
 			ExpiresAt: tokenExp.Unix(),
 			Id:        tokenID.String(),

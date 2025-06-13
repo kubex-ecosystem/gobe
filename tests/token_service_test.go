@@ -6,7 +6,7 @@ package tests
 // 	"testing"
 // 	"time"
 
-// 	"github.com/dgrijalva/jwt-go"
+// 	"github.com/golang-jwt/jwt/v4"
 // 	"github.com/rafa-mori/gobe/internal/security/authentication"
 // 	"github.com/stretchr/testify/assert"
 // )
@@ -25,7 +25,7 @@ package tests
 // 			Username: "testuser",
 // 			Email:    "test@example.com",
 // 		},
-// 		StandardClaims: jwt.StandardClaims{
+// 		RegisteredClaims: jwt.RegisteredClaims{
 // 			ExpiresAt: expiresAt,
 // 			IssuedAt:  time.Now().Unix(),
 // 		},
@@ -49,7 +49,7 @@ package tests
 // 			Username: "testuser",
 // 			Email:    "test@example.com",
 // 		},
-// 		StandardClaims: jwt.StandardClaims{
+// 		RegisteredClaims: jwt.RegisteredClaims{
 // 			ExpiresAt: time.Now().Add(-time.Hour).Unix(),
 // 			IssuedAt:  time.Now().Add(-2 * time.Hour).Unix(),
 // 		},

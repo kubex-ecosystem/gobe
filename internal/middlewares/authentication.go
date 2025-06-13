@@ -7,7 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	//"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v4"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
@@ -108,14 +110,14 @@ func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handler
 	}
 }
 
-func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.StandardClaims, error) {
+func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.RegisteredClaims, error) {
 	publicK, publicKErr := a.CertService.GetPublicKey()
 	if publicKErr != nil {
 		gl.Log("error", fmt.Sprintf("Error getting public key: %v", publicKErr))
 		return nil, publicKErr
 	}
 
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return publicK, nil
 	})
 
@@ -123,7 +125,7 @@ func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.Stand
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
 		return claims, nil
 	}
 
