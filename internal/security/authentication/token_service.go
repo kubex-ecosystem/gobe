@@ -117,7 +117,7 @@ func (s *TokenServiceImpl) ValidateRefreshToken(tokenString string) (*sci.Refres
 	if claimsErr != nil {
 		return nil, fmt.Errorf("unable to validate or parse refresh token for token string %s: %v", tokenString, claimsErr)
 	}
-	tokenUUID, tokenUUIDErr := uuid.Parse(claims.Id)
+	tokenUUID, tokenUUIDErr := uuid.Parse(claims.ID)
 	if tokenUUIDErr != nil {
 		return nil, fmt.Errorf("claims ID could not be parsed as UUID: %s: %v", claims.UID, tokenUUIDErr)
 	}
@@ -136,14 +136,14 @@ func (s *TokenServiceImpl) RenewToken(ctx context.Context, refreshToken string) 
 	if err != nil {
 		return nil, fmt.Errorf("unable to validate or parse refresh token for token string %s: %v", refreshToken, err)
 	}
-	if err := s.TokenRepository.DeleteRefreshToken(ctx, claims.UID, claims.Id); err != nil {
+	if err := s.TokenRepository.DeleteRefreshToken(ctx, claims.UID, claims.ID); err != nil {
 		return nil, fmt.Errorf("error deleting refresh token: %v", err)
 	}
 	idCClaims, idCClaimsErr := validateIDToken(claims.UID, s.PubKey)
 	if idCClaimsErr != nil {
 		return nil, fmt.Errorf("error validating id token: %v", idCClaimsErr)
 	}
-	return s.NewPairFromUser(ctx, idCClaims.User, claims.Id)
+	return s.NewPairFromUser(ctx, idCClaims.User, claims.ID)
 }
 
 type refreshTokenData struct {
@@ -173,8 +173,8 @@ func generateIDToken(u m.UserModel, key *rsa.PrivateKey, exp int64) (string, err
 	claims := idTokenCustomClaims{
 		User: u.GetUserObj(),
 		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt:  unixTime,
-			ExpiresAt: tokenExp,
+			IssuedAt:  jwt.NewNumericDate(time.Unix(unixTime, 0)),
+			ExpiresAt: jwt.NewNumericDate(time.Unix(tokenExp, 0)),
 		},
 	}
 
@@ -199,9 +199,9 @@ func generateRefreshToken(uid string, key string, exp int64) (*refreshTokenData,
 	claims := refreshTokenCustomClaims{
 		UID: uid,
 		RegisteredClaims: jwt.RegisteredClaims{
-			IssuedAt:  currentTime.Unix(),
-			ExpiresAt: tokenExp.Unix(),
-			Id:        tokenID.String(),
+			IssuedAt:  jwt.NewNumericDate(currentTime),
+			ExpiresAt: jwt.NewNumericDate(tokenExp),
+			ID:        tokenID.String(),
 		},
 	}
 
@@ -290,13 +290,13 @@ func validateIDToken(tokenString string, key *rsa.PublicKey) (*idTokenCustomClai
 		gl.Log("error", "User username is empty")
 		return nil, fmt.Errorf("user username is empty")
 	}
-	if claims.ExpiresAt < time.Now().Unix() || claims.ExpiresAt <= 0 {
+	if claims.ExpiresAt.Time.Unix() < time.Now().Unix() || claims.ExpiresAt.Time.Unix() <= 0 {
 		return nil, fmt.Errorf("token has expired")
 	}
-	if claims.IssuedAt > claims.ExpiresAt {
+	if claims.IssuedAt.Time.Unix() > claims.ExpiresAt.Time.Unix() || claims.IssuedAt.Time.Unix() <= 0 {
 		return nil, fmt.Errorf("token issued at time is greater than expiration time")
 	}
-	if claims.IssuedAt <= 0 {
+	if claims.IssuedAt.Time.Unix() <= 0 {
 		return nil, fmt.Errorf("token issued at time is less than or equal to zero")
 	}
 
