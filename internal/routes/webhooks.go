@@ -5,11 +5,11 @@ import (
 
 	"github.com/streadway/amqp"
 
-	l "github.com/faelmori/logz"
-	whk "github.com/rafa-mori/gdbase/factory/models"
+	whk "github.corafa-moriori/gdbase/factory/models"
 	"github.com/rafa-mori/gobe/internal/controllers/webhooks"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 )
 
 // WebhookRoutes utiliza o padrão Route para registrar endpoints do Webhook Manager.

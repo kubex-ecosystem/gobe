@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"time"
 
-	l "github.com/faelmori/logz"
 	f "github.com/rafa-mori/gdbase/factory"
 	s "github.com/rafa-mori/gdbase/types"
 	sc "github.com/rafa-mori/gdbase/types"
@@ -16,6 +15,7 @@ import (
 	fcs "github.com/rafa-mori/gobe/internal/security/certificates"
 	t "github.com/rafa-mori/gobe/internal/types"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

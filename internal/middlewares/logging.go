@@ -1,8 +1,8 @@
 package middlewares
 
 import (
-	l "github.com/faelmori/logz"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 
 	"github.com/gin-gonic/gin"
 

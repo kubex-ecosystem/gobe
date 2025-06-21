@@ -3,11 +3,11 @@ package routes
 import (
 	"net/http"
 
-	l "github.com/faelmori/logz"
-	"github.com/gin-gonic/gin"
+	"github.com/girafa-morigin"
 	products_controller "github.com/rafa-mori/gobe/internal/controllers/products"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 )
 
 type ProductRoutes struct {

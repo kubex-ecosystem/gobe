@@ -1,9 +1,9 @@
 package cli
 
 import (
-	l "github.com/faelmori/logz"
 	gb "github.com/rafa-mori/gobe"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 	"github.com/spf13/cobra"
 )
 

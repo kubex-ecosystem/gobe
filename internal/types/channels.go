@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	l "github.com/faelmori/logz"
+	l "github.com/rafa-mori/logz"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	tu "github.com/rafa-mori/gobe/internal/utils"
 	gl "github.com/rafa-mori/gobe/logger"

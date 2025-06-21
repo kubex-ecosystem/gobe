@@ -6,9 +6,9 @@ import (
 	"os"
 	"reflect"
 
-	l "github.com/faelmori/logz"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 
 	"github.com/google/uuid"
 )
@@ -63,13 +63,14 @@ func (p *Property[T]) GetValue() T {
 }
 
 // SetValue sets the value of the property.
-func (p *Property[T]) SetValue(v *T) {
+func (p *Property[T]) SetValue(v *T) error {
 	p.prop.Set(v)
 	if p.cb != nil {
 		if _, err := p.cb(v); err != nil {
 			//p.metrics.Log("error", "Error in callback function: "+err.Error())
 		}
 	}
+	return nil
 }
 
 // GetReference returns the reference of the property.

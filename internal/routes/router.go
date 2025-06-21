@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	l "github.com/faelmori/logz"
 	gdbf "github.com/rafa-mori/gdbase/factory"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	mdw "github.com/rafa-mori/gobe/internal/middlewares"
 	t "github.com/rafa-mori/gobe/internal/types"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 	"golang.org/x/time/rate"
 
 	"net"

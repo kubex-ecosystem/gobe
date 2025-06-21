@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	l "github.com/faelmori/logz"
 	gdbf "github.com/rafa-mori/gdbase/factory"
+	l "github.com/rafa-mori/logz"
 )
 
 type ContactForm struct {

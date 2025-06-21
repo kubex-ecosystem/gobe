@@ -166,7 +166,7 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar
 ## **Contact**
 
 💌 **Developer**:  
-[Rafael Mori](mailto:faelmori@gmail.com)  
+[Rafael Mori](mailto:rafa-mori@gmail.com)  
 💼 [Follow me on GitHub](https://github.com/rafa-mori)  
 Estou aberto a colaborações e novas ideias. Se achou o projeto interessante, entre em contato!
 

@@ -3,9 +3,9 @@ package interfaces
 import (
 	"time"
 
-	l "github.com/faelmori/logz"
 	"github.com/gin-gonic/gin"
 	gdbf "github.com/rafa-mori/gdbase/factory"
+	l "github.com/rafa-mori/logz"
 )
 
 type IRouter interface {
