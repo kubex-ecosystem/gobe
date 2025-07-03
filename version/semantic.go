@@ -19,7 +19,7 @@ import (
 const moduleAlias = "GoBE"
 const moduleName = "gobe"
 const gitModelUrl = "https://github.com/rafa-mori/" + moduleName + ".git"
-const currentVersionFallback = "v1.0.1" // First version with the version file
+const currentVersionFallback = "v1.1.0" // First version with the version file
 
 type Service interface {
 	GetLatestVersion() (string, error)
