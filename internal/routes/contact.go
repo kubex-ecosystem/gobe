@@ -1,7 +1,7 @@
 package routes
 
 import (
-	contacts "githrafa-moriafa-mori/gobe/internal/controllers/contacts"
+	contacts "github.com/rafa-mori/gobe/internal/controllers/contacts"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	l "github.com/rafa-mori/logz"
 

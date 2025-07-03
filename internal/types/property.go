@@ -63,14 +63,13 @@ func (p *Property[T]) GetValue() T {
 }
 
 // SetValue sets the value of the property.
-func (p *Property[T]) SetValue(v *T) error {
+func (p *Property[T]) SetValue(v *T) {
 	p.prop.Set(v)
 	if p.cb != nil {
 		if _, err := p.cb(v); err != nil {
 			//p.metrics.Log("error", "Error in callback function: "+err.Error())
 		}
 	}
-	return nil
 }
 
 // GetReference returns the reference of the property.

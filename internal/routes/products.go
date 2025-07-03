@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	"github.com/girafa-morigin"
+	"github.com/gin-gonic/gin"
 	products_controller "github.com/rafa-mori/gobe/internal/controllers/products"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"

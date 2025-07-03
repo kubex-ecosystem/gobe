@@ -5,9 +5,10 @@ import (
 
 	"github.com/streadway/amqp"
 
-	whk "github.corafa-moriori/gdbase/factory/models"
 	"github.com/rafa-mori/gobe/internal/controllers/webhooks"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+
+	whk "github.com/rafa-mori/gdbase/factory/models"
 	gl "github.com/rafa-mori/gobe/logger"
 	l "github.com/rafa-mori/logz"
 )

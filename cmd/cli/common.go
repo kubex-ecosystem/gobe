@@ -6,7 +6,6 @@ import (
 	"strings"
 )
 
-
 var banners = []string{
 	`
   ______           _______  ________ 
@@ -17,7 +16,8 @@ var banners = []string{
 | ▓▓ \▓▓▓▓ ▓▓  | ▓▓ ▓▓▓▓▓▓▓\ ▓▓▓▓▓   
 | ▓▓__| ▓▓ ▓▓__/ ▓▓ ▓▓__/ ▓▓ ▓▓_____ 
  \▓▓    ▓▓\▓▓    ▓▓ ▓▓    ▓▓ ▓▓     \
-  \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓▓`
+  \▓▓▓▓▓▓  \▓▓▓▓▓▓ \▓▓▓▓▓▓▓ \▓▓▓▓▓▓▓▓
+`,
 }
 
 func GetDescriptions(descriptionArg []string, _ bool) map[string]string {
