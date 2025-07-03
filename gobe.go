@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"time"
 
-	l "github.com/faelmori/logz"
 	gdbf "github.com/rafa-mori/gdbase/factory"
 	ut "github.com/rafa-mori/gdbase/utils"
 	crp "github.com/rafa-mori/gobe/factory/security"
@@ -20,6 +19,7 @@ import (
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	is "github.com/rafa-mori/gobe/internal/services"
 	t "github.com/rafa-mori/gobe/internal/types"
+	l "github.com/rafa-mori/logz"
 
 	gl "github.com/rafa-mori/gobe/logger"
 )

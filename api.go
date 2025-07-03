@@ -4,9 +4,9 @@ import (
 	. "github.com/rafa-mori/gobe/internal/interfaces"
 	. "github.com/rafa-mori/gobe/internal/security/interfaces"
 
-	l "github.com/faelmori/logz"
 	isc "github.com/rafa-mori/gobe/internal/security/certificates"
 	t "github.com/rafa-mori/gobe/internal/types"
+	l "github.com/rafa-mori/logz"
 )
 
 //func StartGoBE(name string, port string, bind string, logFile string, configFile string, isConfidential bool, logger l.Logger, debug bool) {

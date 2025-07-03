@@ -3,10 +3,10 @@ package routes
 import (
 	"net/http"
 
-	l "github.com/faelmori/logz"
 	"github.com/gin-gonic/gin"
 	customers_controller "github.com/rafa-mori/gobe/internal/controllers/customers"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	l "github.com/rafa-mori/logz"
 )
 
 type CustomerRoutes struct {

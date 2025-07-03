@@ -6,7 +6,7 @@ package tests
 // 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 // 	at "github.com/rafa-mori/gobe/internal/types"
 // 	gl "github.com/rafa-mori/gobe/logger"
-// 	l "github.com/faelmori/logz"
+// 	l "github.com/rafa-mori/logz"
 // 	"path/filepath"
 // 	"strings"
 // 	"sync"

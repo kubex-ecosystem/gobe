@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	l "github.com/faelmori/logz"
+	l "github.com/rafa-mori/logz"
 )
 
 // JobWrapper decorates the given Job with some behavior.

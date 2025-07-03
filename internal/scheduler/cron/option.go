@@ -3,7 +3,7 @@ package cron
 import (
 	"time"
 
-	l "github.com/faelmori/logz"
+	l "github.com/rafa-mori/logz"
 )
 
 // Option represents a modification to the default behavior of a Cron.

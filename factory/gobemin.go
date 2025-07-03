@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	l "github.com/faelmori/logz"
+	l "github.com/rafa-mori/logz"
 	gb "github.com/rafa-mori/gobe"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	"github.com/streadway/amqp"

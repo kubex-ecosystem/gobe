@@ -45,3 +45,4 @@ env
 gobe
 tests/**/*
 *_linux_amd64*
+ORG_FILES.txt

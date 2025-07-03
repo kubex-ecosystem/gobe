@@ -14,7 +14,7 @@ import (
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 
-	l "github.com/faelmori/logz"
+	l "github.com/rafa-mori/logz"
 
 	sau "github.com/rafa-mori/gobe/factory/security"
 	cm "github.com/rafa-mori/gobe/internal/common"

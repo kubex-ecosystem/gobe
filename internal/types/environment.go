@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	l "github.com/faelmori/logz"
+	l "github.com/rafa-mori/logz"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	crp "github.com/rafa-mori/gobe/internal/security/crypto"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"

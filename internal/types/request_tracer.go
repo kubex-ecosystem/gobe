@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	l "github.com/faelmori/logz"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 )
 
 var (

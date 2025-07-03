@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	l "github.com/faelmori/logz"
+	l "github.com/rafa-mori/logz"
 )
 
 // Cron keeps track of any number of entries, invoking the associated func as

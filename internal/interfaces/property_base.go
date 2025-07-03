@@ -1,8 +1,8 @@
 package interfaces
 
 import (
-	l "github.com/faelmori/logz"
 	"github.com/google/uuid"
+	l "github.com/rafa-mori/logz"
 	"reflect"
 )
 
