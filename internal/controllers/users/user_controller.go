@@ -139,7 +139,7 @@ func (uc *UserController) AuthenticateUser(c *gin.Context) {
 			os.ExpandEnv(cm.DefaultGoBEKeyPath),
 			os.ExpandEnv(cm.DefaultGoBECertPath),
 		),
-		uc.userService.GetContextDbService(),
+		uc.userService.GetContextDBService(),
 	)
 
 	tokenService, idExpirationSecs, refreshExpirationSecs, err := tokenClient.LoadTokenCfg() // Ta vindo zerado aqui os tempos de expiração
@@ -241,7 +241,7 @@ func (uc *UserController) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	tokenClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDbService())
+	tokenClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDBService())
 	tokenService, idExpirationSecs, refreshExpirationSecs, err := tokenClient.LoadTokenCfg()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -310,7 +310,7 @@ func (uc *UserController) Logout(c *gin.Context) {
 		return
 	}
 
-	tkClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDbService())
+	tkClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDBService())
 	tokenService, _, _, err := tkClient.LoadTokenCfg()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
