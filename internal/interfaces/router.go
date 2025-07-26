@@ -36,21 +36,15 @@ type IRouter interface {
 }
 
 type IRoute interface {
-	// gin.IRoutes
-
 	Method() string
 	Path() string
 	ContentType() string
-
 	RateLimitLimit() int
 	RequestWindow() time.Duration
-
 	Secure() bool
 	ValidateAndSanitize() bool
 	SecureProperties() map[string]bool
-
 	Handler() gin.HandlerFunc
 	Middlewares() map[string]any
-
 	DBConfig() gdbf.DBConfig
 }
