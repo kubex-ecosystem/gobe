@@ -138,4 +138,4 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
-replace github.com/rafa-mori/gdbase => ../gdbase
+// replace github.com/rafa-mori/gdbase => ../gdbase
