@@ -1,3 +1,4 @@
+// Package version provides functionality to manage and check the version of the GoBE CLI tool.
 package version
 
 import (
@@ -16,10 +17,13 @@ import (
 	"time"
 )
 
+//go:embed CLI_VERSION
+var currentVersion string
+
 const moduleAlias = "GoBE"
 const moduleName = "gobe"
-const gitModelUrl = "https://github.com/rafa-mori/" + moduleName + ".git"
-const currentVersionFallback = "v1.1.0" // First version with the version file
+const gitModelURL = "https://github.com/rafa-mori/" + moduleName + ".git"
+const currentVersionFallback = "v1.1.1" // First version with the version file
 
 type Service interface {
 	GetLatestVersion() (string, error)
@@ -27,13 +31,40 @@ type Service interface {
 	IsLatestVersion() (bool, error)
 }
 type ServiceImpl struct {
-	gitModelUrl    string
+	gitModelURL    string
 	latestVersion  string
 	currentVersion string
 }
 type Tag struct {
 	Name string `json:"name"`
 }
+
+var (
+	versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Print the version number of " + moduleAlias,
+		Long:  "Print the version number of " + moduleAlias,
+		Run: func(cmd *cobra.Command, args []string) {
+			GetVersionInfo()
+		},
+	}
+	subLatestCmd = &cobra.Command{
+		Use:   "latest",
+		Short: "Print the latest version number of " + moduleAlias,
+		Long:  "Print the latest version number of " + moduleAlias,
+		Run: func(cmd *cobra.Command, args []string) {
+			GetLatestVersionInfo()
+		},
+	}
+	subCmdCheck = &cobra.Command{
+		Use:   "check",
+		Short: "Check if the current version is the latest version of " + moduleAlias,
+		Long:  "Check if the current version is the latest version of " + moduleAlias,
+		Run: func(cmd *cobra.Command, args []string) {
+			GetVersionInfoWithLatestAndCheck()
+		},
+	}
+)
 
 func init() {
 	l.GetLogger(moduleAlias)
@@ -66,7 +97,7 @@ func getLatestTag(repoURL string) (string, error) {
 }
 
 func (v *ServiceImpl) updateLatestVersion() error {
-	repoURL := strings.TrimSuffix(v.gitModelUrl, ".git")
+	repoURL := strings.TrimSuffix(v.gitModelURL, ".git")
 	tag, err := getLatestTag(repoURL)
 	if err != nil {
 		return err
@@ -145,41 +176,11 @@ func (v *ServiceImpl) GetCurrentVersion() string { return v.currentVersion }
 
 func NewVersionService() Service {
 	return &ServiceImpl{
-		gitModelUrl:    gitModelUrl,
+		gitModelURL:    gitModelURL,
 		currentVersion: currentVersion,
 		latestVersion:  "",
 	}
 }
-
-var (
-	versionCmd = &cobra.Command{
-		Use:   "version",
-		Short: "Print the version number of " + moduleAlias,
-		Long:  "Print the version number of " + moduleAlias,
-		Run: func(cmd *cobra.Command, args []string) {
-			GetVersionInfo()
-		},
-	}
-	subLatestCmd = &cobra.Command{
-		Use:   "latest",
-		Short: "Print the latest version number of " + moduleAlias,
-		Long:  "Print the latest version number of " + moduleAlias,
-		Run: func(cmd *cobra.Command, args []string) {
-			GetLatestVersionInfo()
-		},
-	}
-	subCmdCheck = &cobra.Command{
-		Use:   "check",
-		Short: "Check if the current version is the latest version of " + moduleAlias,
-		Long:  "Check if the current version is the latest version of " + moduleAlias,
-		Run: func(cmd *cobra.Command, args []string) {
-			GetVersionInfoWithLatestAndCheck()
-		},
-	}
-)
-
-//go:embed CLI_VERSION
-var currentVersion string
 
 func GetVersion() string {
 	if currentVersion == "" {
@@ -188,14 +189,14 @@ func GetVersion() string {
 	return currentVersion
 }
 
-func GetGitModelUrl() string {
-	return gitModelUrl
+func GetGitModelURL() string {
+	return gitModelURL
 }
 
 func GetVersionInfo() string {
 	gl.Log("info", "Version: "+GetVersion())
-	gl.Log("info", "Git repository: "+GetGitModelUrl())
-	return fmt.Sprintf("Version: %s\nGit repository: %s", GetVersion(), GetGitModelUrl())
+	gl.Log("info", "Git repository: "+GetGitModelURL())
+	return fmt.Sprintf("Version: %s\nGit repository: %s", GetVersion(), GetGitModelURL())
 }
 
 func GetLatestVersionFromGit() string {
@@ -203,18 +204,18 @@ func GetLatestVersionFromGit() string {
 		Timeout: time.Second * 10,
 	}
 
-	gitUrlWithoutGit := strings.TrimSuffix(gitModelUrl, ".git")
+	gitURLWithoutGit := strings.TrimSuffix(gitModelURL, ".git")
 
-	response, err := netClient.Get(gitUrlWithoutGit + "/releases/latest")
+	response, err := netClient.Get(gitURLWithoutGit + "/releases/latest")
 	if err != nil {
 		gl.Log("error", "ErrorCtx fetching latest version: "+err.Error())
-		gl.Log("error", gitUrlWithoutGit+"/releases/latest")
+		gl.Log("error", gitURLWithoutGit+"/releases/latest")
 		return err.Error()
 	}
 
 	if response.StatusCode != 200 {
 		gl.Log("error", "ErrorCtx fetching latest version: "+response.Status)
-		gl.Log("error", "Url: "+gitUrlWithoutGit+"/releases/latest")
+		gl.Log("error", "Url: "+gitURLWithoutGit+"/releases/latest")
 		body, _ := io.ReadAll(response.Body)
 		return fmt.Sprintf("ErrorCtx: %s\nResponse: %s", response.Status, string(body))
 	}

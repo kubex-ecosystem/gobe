@@ -1,3 +1,4 @@
+// Package routes provides the implementation of the IRoute interface for managing routes in a web application.
 package routes
 
 import (
@@ -9,6 +10,11 @@ import (
 	is "github.com/rafa-mori/gobe/internal/services"
 	t "github.com/rafa-mori/gobe/internal/types"
 )
+
+// DBConfig implements interfaces.IRoute.
+func (r *Route) DBConfig() gdbf.DBConfig {
+	panic("unimplemented")
+}
 
 type Route struct {
 	*t.Mutexes
@@ -29,11 +35,6 @@ type Route struct {
 	dbService   is.DBService
 	handler     gin.HandlerFunc
 	middlewares map[string]any
-}
-
-// DBConfig implements interfaces.IRoute.
-func (r *Route) DBConfig() gdbf.DBConfig {
-	panic("unimplemented")
 }
 
 func newRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]any, dbService gdbf.DBService) *Route {

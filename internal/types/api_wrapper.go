@@ -1,3 +1,4 @@
+// Package types contém definições de tipos e estruturas para o wrapper de API
 package types
 
 import (
@@ -36,14 +37,14 @@ func NewAPIRequest() *APIRequest {
 }
 
 // API Wrapper para gerenciar requisições e respostas de maneira padronizada
-type ApiWrapper[T any] struct{}
+type APIWrapper[T any] struct{}
 
-func NewApiWrapper[T any]() *ApiWrapper[T] {
-	return &ApiWrapper[T]{}
+func NewApiWrapper[T any]() *APIWrapper[T] {
+	return &APIWrapper[T]{}
 }
 
 // Gerencia requisições de forma genérica
-func (w *ApiWrapper[T]) HandleRequest(c *gin.Context, method string, endpoint string, payload interface{}) {
+func (w *APIWrapper[T]) HandleRequest(c *gin.Context, method string, endpoint string, payload interface{}) {
 	switch method {
 	case "GET":
 		c.JSON(http.StatusOK, gin.H{"message": "GET request handled", "endpoint": endpoint})
@@ -55,7 +56,7 @@ func (w *ApiWrapper[T]) HandleRequest(c *gin.Context, method string, endpoint st
 }
 
 // Middleware para interceptar e padronizar respostas
-func (w *ApiWrapper[T]) Middleware() gin.HandlerFunc {
+func (w *APIWrapper[T]) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 		if c.Writer.Status() >= 400 {
@@ -69,7 +70,7 @@ func (w *ApiWrapper[T]) Middleware() gin.HandlerFunc {
 }
 
 // Enviar resposta padronizada
-func (w *ApiWrapper[T]) JSONResponse(c *gin.Context, status string, msg, hash string, data interface{}, filter map[string]interface{}, httpStatus int) {
+func (w *APIWrapper[T]) JSONResponse(c *gin.Context, status string, msg, hash string, data interface{}, filter map[string]interface{}, httpStatus int) {
 	r := NewAPIResponse()
 	r.Status = status
 	r.Msg = msg
@@ -81,7 +82,7 @@ func (w *ApiWrapper[T]) JSONResponse(c *gin.Context, status string, msg, hash st
 }
 
 // JSONResponseWithError sends a JSON response to the client with an error message.
-func (w *ApiWrapper[T]) JSONResponseWithError(c *gin.Context, err error) {
+func (w *APIWrapper[T]) JSONResponseWithError(c *gin.Context, err error) {
 	r := NewAPIResponse()
 	r.Status = "error"
 	r.Msg = err.Error()
@@ -93,7 +94,7 @@ func (w *ApiWrapper[T]) JSONResponseWithError(c *gin.Context, err error) {
 }
 
 // JSONResponseWithSuccess sends a JSON response to the client with a success message.
-func (w *ApiWrapper[T]) JSONResponseWithSuccess(c *gin.Context, msgKey, hash string, data interface{}) {
+func (w *APIWrapper[T]) JSONResponseWithSuccess(c *gin.Context, msgKey, hash string, data interface{}) {
 	//msg := translateMessage(msgKey) // Função fictícia para traduzir mensagens
 	r := NewAPIResponse()
 	r.Status = "success"
@@ -105,7 +106,7 @@ func (w *ApiWrapper[T]) JSONResponseWithSuccess(c *gin.Context, msgKey, hash str
 	c.JSON(http.StatusOK, r)
 }
 
-func (w *ApiWrapper[T]) GetContext(c *gin.Context) (context.Context, error) {
+func (w *APIWrapper[T]) GetContext(c *gin.Context) (context.Context, error) {
 	userId := c.GetHeader("X-User-ID")
 	if userId == "" {
 		return nil, fmt.Errorf("user ID is required")
@@ -116,12 +117,12 @@ func (w *ApiWrapper[T]) GetContext(c *gin.Context) (context.Context, error) {
 	}
 	ctx := context.WithValue(c.Request.Context(), "userID", uuserID)
 
-	cronId := c.Param("id")
-	if cronId != "" {
-		if cronId == "" {
+	cronID := c.Param("id")
+	if cronID != "" {
+		if cronID == "" {
 			return nil, fmt.Errorf("cron job ID is required")
 		}
-		cronUUID, err := uuid.Parse(cronId)
+		cronUUID, err := uuid.Parse(cronID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid cron job ID: %s", err)
 		}

@@ -1,3 +1,4 @@
+// Package controllers provides the controller logic for handling webhooks.
 package controllers
 
 import (
@@ -13,28 +14,28 @@ import (
 type WebhookController struct {
 	Service      whk.WebhookService
 	RabbitMQConn *amqp.Connection
-	ApiWrapper   *types.ApiWrapper[any]
+	APIWrapper   *types.APIWrapper[any]
 }
 
 func NewWebhookController(service whk.WebhookService, rabbitMQConn *amqp.Connection) *WebhookController {
 	return &WebhookController{
 		Service:      service,
 		RabbitMQConn: rabbitMQConn,
-		ApiWrapper:   types.NewApiWrapper[any](),
+		APIWrapper:   types.NewApiWrapper[any](),
 	}
 }
 
 func (wc *WebhookController) RegisterWebhook(ctx *gin.Context) {
 	var request whk.RegisterWebhookRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		wc.ApiWrapper.JSONResponseWithError(ctx, fmt.Errorf("Invalid request: %v", err))
+		wc.APIWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request: %v", err))
 		return
 	}
 
 	// if _, err := wc.Service.RegisterWebhook(request); err != nil {
-	// 	wc.ApiWrapper.JSONResponseWithError(ctx, http.StatusInternalServerError, err)
+	// 	wc.APIWrapper.JSONResponseWithError(ctx, http.StatusInternalServerError, err)
 	// 	return
 	// }
 
-	wc.ApiWrapper.JSONResponseWithSuccess(ctx, "Webhook registered successfully", "", http.StatusCreated)
+	wc.APIWrapper.JSONResponseWithSuccess(ctx, "Webhook registered successfully", "", http.StatusCreated)
 }

@@ -1,3 +1,4 @@
+// Package users provides the UserController for managing user-related operations.
 package users
 
 import (
@@ -20,15 +21,15 @@ import (
 
 type UserController struct {
 	userService    user.UserService
-	ApiWrapper     *types.ApiWrapper[user.UserModel]
-	ApiAuthWrapper *types.ApiWrapper[user.AuthRequestDTO]
+	APIWrapper     *types.APIWrapper[user.UserModel]
+	APIAuthWrapper *types.APIWrapper[user.AuthRequestDTO]
 }
 
 func NewUserController(db *gorm.DB) *UserController {
 	return &UserController{
 		userService:    user.NewUserService(user.NewUserRepo(db)),
-		ApiWrapper:     types.NewApiWrapper[user.UserModel](),
-		ApiAuthWrapper: types.NewApiWrapper[user.AuthRequestDTO](),
+		APIWrapper:     types.NewApiWrapper[user.UserModel](),
+		APIAuthWrapper: types.NewApiWrapper[user.AuthRequestDTO](),
 	}
 }
 
@@ -94,7 +95,7 @@ func (uc *UserController) AuthenticateUser(c *gin.Context) {
 	type AuthRequestDTO struct {
 		User UserRequestDTO `json:"user"`
 	}
-	var authReqT *AuthRequestDTO = &AuthRequestDTO{}
+	var authReqT = &AuthRequestDTO{}
 	if err := c.ShouldBindJSON(&authReqT); err != nil && authReqT == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -139,7 +140,7 @@ func (uc *UserController) AuthenticateUser(c *gin.Context) {
 			os.ExpandEnv(cm.DefaultGoBEKeyPath),
 			os.ExpandEnv(cm.DefaultGoBECertPath),
 		),
-		uc.userService.GetContextDbService(),
+		uc.userService.GetContextDBService(),
 	)
 
 	tokenService, idExpirationSecs, refreshExpirationSecs, err := tokenClient.LoadTokenCfg() // Ta vindo zerado aqui os tempos de expiração
@@ -199,7 +200,7 @@ func (uc *UserController) AuthenticateUser(c *gin.Context) {
 	// Set the user role in the response header
 	c.Header("X-User-Role", user.GetRoleID())
 
-	uc.ApiAuthWrapper.JSONResponse(
+	uc.APIAuthWrapper.JSONResponse(
 		c,
 		"success",
 		"User authenticated successfully",
@@ -241,7 +242,7 @@ func (uc *UserController) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	tokenClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDbService())
+	tokenClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDBService())
 	tokenService, idExpirationSecs, refreshExpirationSecs, err := tokenClient.LoadTokenCfg()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -280,7 +281,7 @@ func (uc *UserController) RefreshToken(c *gin.Context) {
 	// Set the user role in the response header
 	c.Header("X-User-Role", user.GetRoleID())
 	// Set the user ID in the response body
-	uc.ApiAuthWrapper.JSONResponse(
+	uc.APIAuthWrapper.JSONResponse(
 		c,
 		"success",
 		"User authenticated successfully",
@@ -310,7 +311,7 @@ func (uc *UserController) Logout(c *gin.Context) {
 		return
 	}
 
-	tkClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDbService())
+	tkClient := sau.NewTokenClient(crt.NewCertService("", ""), uc.userService.GetContextDBService())
 	tokenService, _, _, err := tkClient.LoadTokenCfg()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

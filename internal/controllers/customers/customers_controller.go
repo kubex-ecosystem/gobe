@@ -1,3 +1,4 @@
+// Package customers provides the controller for managing customer-related operations.
 package customers
 
 import (
@@ -11,13 +12,13 @@ import (
 
 type CustomerController struct {
 	customerService fscm.ClientService
-	ApiWrapper      *t.ApiWrapper[fscm.ClientModel]
+	APIWrapper      *t.APIWrapper[fscm.ClientModel]
 }
 
 func NewCustomerController(db *gorm.DB) *CustomerController {
 	return &CustomerController{
 		customerService: fscm.NewClientService(fscm.NewClientRepo(db)),
-		ApiWrapper:      t.NewApiWrapper[fscm.ClientModel](),
+		APIWrapper:      t.NewApiWrapper[fscm.ClientModel](),
 	}
 }
 
