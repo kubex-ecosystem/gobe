@@ -1,3 +1,4 @@
+// Package certificates provides an interface for managing SSL/TLS certificates.
 package certificates
 
 type ICertManager interface {
