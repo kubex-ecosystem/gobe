@@ -1,3 +1,4 @@
+// Package services provides database services for the application.
 package services
 
 import (
