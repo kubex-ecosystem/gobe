@@ -16,13 +16,13 @@ import (
 
 type PreferencesController struct {
 	preferencesService svc.PreferencesService
-	ApiWrapper         *types.APIWrapper[svc.PreferencesModel]
+	APIWrapper         *types.APIWrapper[svc.PreferencesModel]
 }
 
 func NewPreferencesController(db *gorm.DB) *PreferencesController {
 	return &PreferencesController{
 		preferencesService: svc.NewPreferencesService(models.NewPreferencesRepo(db)),
-		ApiWrapper:         types.NewApiWrapper[svc.PreferencesModel](),
+		APIWrapper:         types.NewApiWrapper[svc.PreferencesModel](),
 	}
 }
 

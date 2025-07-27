@@ -15,13 +15,13 @@ import (
 
 type LLMController struct {
 	llmService svc.LLMService
-	ApiWrapper *types.APIWrapper[svc.LLMModel]
+	APIWrapper *types.APIWrapper[svc.LLMModel]
 }
 
 func NewLLMController(db *gorm.DB) *LLMController {
 	return &LLMController{
 		llmService: svc.NewLLMService(models.NewLLMRepo(db)),
-		ApiWrapper: types.NewApiWrapper[svc.LLMModel](),
+		APIWrapper: types.NewApiWrapper[svc.LLMModel](),
 	}
 }
 

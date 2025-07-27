@@ -8,7 +8,6 @@ import (
 	"time"
 
 	f "github.com/rafa-mori/gdbase/factory"
-	s "github.com/rafa-mori/gdbase/types"
 	sc "github.com/rafa-mori/gdbase/types"
 	ut "github.com/rafa-mori/gdbase/utils"
 	cm "github.com/rafa-mori/gobe/internal/common"
@@ -21,7 +20,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type DBService = s.IDBService
+type DBService = sc.IDBService
 
 func NewDBService(config *sc.DBConfig, logger l.Logger) (DBService, error) {
 	return f.NewDatabaseService(config, logger)
