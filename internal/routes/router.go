@@ -8,6 +8,7 @@ import (
 	"time"
 
 	gdbf "github.com/rafa-mori/gdbase/factory"
+	"github.com/rafa-mori/gdbase/types"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	mdw "github.com/rafa-mori/gobe/internal/middlewares"
 	t "github.com/rafa-mori/gobe/internal/types"
@@ -160,7 +161,9 @@ func (rtr *Router) HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes 
 
 // DBConfig is a placeholder function for database configuration.
 func (rtr *Router) DBConfig() gdbf.IDBConfig {
-	return rtr.DBConfig()
+	return *types.NewDBConfig(
+		nil,
+	)
 }
 
 // Start starts the server with the configured settings.
@@ -424,13 +427,13 @@ func (rtr *Router) MonitorServer() {
 // ValidateRouter validates the router's configuration and components.
 func (rtr *Router) ValidateRouter() error {
 	if rtr == nil {
-		return fmt.Errorf("Router is nil")
+		return fmt.Errorf("router is nil")
 	}
 	if rtr.engine == nil {
-		return fmt.Errorf("Engine is nil")
+		return fmt.Errorf("engine is nil")
 	}
 	if rtr.databaseService == nil {
-		return fmt.Errorf("Database service is nil")
+		return fmt.Errorf("database service is nil")
 	}
 	return nil
 }

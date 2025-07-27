@@ -1,3 +1,4 @@
+// Package webhooks provides the WebhookController for managing webhook-related operations.
 package webhooks
 
 import (
@@ -13,14 +14,14 @@ import (
 type WebhookController struct {
 	Service      whk.WebhookService
 	RabbitMQConn *amqp.Connection
-	ApiWrapper   *t.ApiWrapper[any]
+	APIWrapper   *t.APIWrapper[any]
 }
 
 func NewWebhookController(service whk.WebhookService, rabbitMQConn *amqp.Connection) *WebhookController {
 	return &WebhookController{
 		Service:      service,
 		RabbitMQConn: rabbitMQConn,
-		ApiWrapper:   t.NewApiWrapper[any](),
+		APIWrapper:   t.NewApiWrapper[any](),
 	}
 }
 

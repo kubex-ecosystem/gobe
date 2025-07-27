@@ -1,3 +1,4 @@
+// Package products provides the controller for managing products in the application.
 package products
 
 import (
@@ -11,13 +12,13 @@ import (
 
 type ProductController struct {
 	productService fscm.ProductService
-	ApiWrapper     *t.ApiWrapper[fscm.ProductModel]
+	APIWrapper     *t.APIWrapper[fscm.ProductModel]
 }
 
 func NewProductController(db *gorm.DB) *ProductController {
 	return &ProductController{
 		productService: fscm.NewProductService(fscm.NewProductRepo(db)),
-		ApiWrapper:     t.NewApiWrapper[fscm.ProductModel](),
+		APIWrapper:     t.NewApiWrapper[fscm.ProductModel](),
 	}
 }
 

@@ -1,3 +1,4 @@
+// Package contacts provides the ContactController for handling contact form submissions.
 package contacts
 
 import (
@@ -21,14 +22,14 @@ type SMTPConfig struct {
 type ContactController struct {
 	queue      chan ci.ContactForm
 	properties map[string]any
-	ApiWrapper *t.ApiWrapper[ci.ContactForm]
+	APIWrapper *t.APIWrapper[ci.ContactForm]
 }
 
 func NewContactController(properties map[string]any) *ContactController {
 	return &ContactController{
 		queue:      make(chan ci.ContactForm, 100),
 		properties: properties,
-		ApiWrapper: t.NewApiWrapper[ci.ContactForm](),
+		APIWrapper: t.NewApiWrapper[ci.ContactForm](),
 	}
 }
 
