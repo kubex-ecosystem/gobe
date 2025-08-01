@@ -1,0 +1,23 @@
+Estrutura de Diretórios do Fluxo de Distribuição:
+.
+├── bin
+│   └── ... # Agora fica aqui os binários compilados
+│
+│   # Daqui pra baixo estão os arquivos que compõem toda lógica de distribuição
+├── Makefile
+├── Makefile.swagger
+├── .github
+│   └── workflows
+│       └── devtops.yml
+├── info
+│   ├── application.go
+│   └── manifest.json
+├── logger
+│   └── logger.go
+├── support
+│   ├── docs
+│   ├── post.d
+│   ├── pre.d
+│   └── *.sh
+└── version
+    └── semantic.go

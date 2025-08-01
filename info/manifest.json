@@ -1,0 +1,18 @@
+{
+  "name": "Kubex GoBE",
+  "application": "gobe",
+  "version": "1.2.0",
+  "private": true,
+  "published": false,
+  "aliases": ["gobe", "kbx"],
+  "repository": "https://github.com/rafa-mori/gobe",
+  "homepage": "https://github.com/rafa-mori/gobe",
+  "description": "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and more for help you managing your technology stack.",
+  "main": "cmd/main.go",
+  "bin": "gobe",
+  "author": "Rafael Mori <faelmori@gmail.com>",
+  "organization": "rafa-mori",
+  "license": "MIT",
+  "keywords": ["gobe", "kubex", "control", "command-line", "tool", "management"],
+  "platforms": ["linux"]
+}

@@ -3,8 +3,10 @@ package services
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	f "github.com/rafa-mori/gdbase/factory"
@@ -97,10 +99,15 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 	}
 	var err error
 	if environment == nil {
-		environment, err = t.NewEnvironment(os.ExpandEnv(cm.DefaultGoBEConfigPath), false, logger)
-		if err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar o ambiente: %v", err))
-			return nil, fmt.Errorf("❌ Erro ao inicializar o ambiente: %v", err)
+		if runtime.GOOS == "windows" {
+			log.Println("Ambiente não pode ser nulo no Windows.")
+			return nil, fmt.Errorf("ambiente não pode ser nulo no Windows")
+		} else {
+			environment, err = t.NewEnvironment(os.ExpandEnv(cm.DefaultGoBEConfigPath), false, logger)
+			if err != nil {
+				gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar o ambiente: %v", err))
+				return nil, fmt.Errorf("❌ Erro ao inicializar o ambiente: %v", err)
+			}
 		}
 	}
 

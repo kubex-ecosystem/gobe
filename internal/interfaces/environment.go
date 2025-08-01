@@ -1,10 +1,11 @@
+// Package interfaces defines the IEnvironment interface for managing environment variables and system information.
 package interfaces
 
 import "context"
 
 type IEnvironment interface {
 	Mu() IMutexes
-	CpuCount() int
+	CPUCount() int
 	MemTotal() int
 	Hostname() string
 	Os() string
