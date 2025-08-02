@@ -13,10 +13,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"gorm.io/gorm"
+
 	"github.com/rafa-mori/gobe/internal/approval"
 	"github.com/rafa-mori/gobe/internal/config"
 	"github.com/rafa-mori/gobe/internal/events"
-	"gorm.io/gorm"
+
+	fscm "github.com/rafa-mori/gdbase/factory/models"
+	t "github.com/rafa-mori/gobe/internal/types"
 )
 
 type HubInterface interface {
@@ -26,17 +30,17 @@ type HubInterface interface {
 }
 
 type DiscordController struct {
-	// discordService fscm.DiscordService
-	// APIWrapper     *t.APIWrapper[fscm.DiscordModel]
-	config   *config.Config
-	hub      HubInterface
-	upgrader websocket.Upgrader
+	discordService fscm.DiscordService
+	APIWrapper     *t.APIWrapper[fscm.DiscordModel]
+	config         *config.Config
+	hub            HubInterface
+	upgrader       websocket.Upgrader
 }
 
 func NewDiscordController(db *gorm.DB) *DiscordController {
 	return &DiscordController{
-		// discordService: fscm.NewDiscordService(fscm.NewDiscordRepo(db)),
-		// APIWrapper:     t.NewApiWrapper[fscm.DiscordModel](),
+		discordService: fscm.NewDiscordService(fscm.NewDiscordRepo(db)),
+		APIWrapper:     t.NewApiWrapper[fscm.DiscordModel](),
 	}
 }
 
