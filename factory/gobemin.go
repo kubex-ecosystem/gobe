@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 
-	l "github.com/rafa-mori/logz"
 	gb "github.com/rafa-mori/gobe"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )
 
@@ -15,8 +15,12 @@ type GoBE interface {
 	ci.IGoBE
 }
 
-func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug bool) (ci.IGoBE, error) {
-	return gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, logger, debug)
+func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug, releaseMode bool) (ci.IGoBE, error) {
+	err := initRabbitMQ()
+	if err != nil {
+		return nil, err
+	}
+	return gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, logger, debug, releaseMode)
 }
 
 var rabbitMQConn *amqp.Connection

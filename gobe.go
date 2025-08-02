@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	gdbf "github.com/rafa-mori/gdbase/factory"
 	ut "github.com/rafa-mori/gdbase/utils"
 	crp "github.com/rafa-mori/gobe/factory/security"
@@ -55,12 +56,16 @@ type GoBE struct {
 	Middlewares map[string]any
 }
 
-func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug bool) (ci.IGoBE, error) {
+func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug, releaseMode bool) (ci.IGoBE, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
 	if debug {
 		gl.SetDebug(debug)
+	}
+	if releaseMode {
+		os.Setenv("GIN_MODE", "release")
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	chanCtl := make(chan string, 3)
@@ -193,7 +198,7 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		gbm.Properties["privKey"] = t.NewProperty("privKey", &keyEncodedBytes, true, nil)
 	} else {
 		certObj := &GoBECertData{}
-		mapper := t.NewMapper[*GoBECertData](&certObj, filepath.Join(gbm.configDir, "cert.json"))
+		mapper := t.NewMapper(&certObj, filepath.Join(gbm.configDir, "cert.json"))
 		if _, err := mapper.DeserializeFromFile("json"); err != nil {
 			gl.Log("error", fmt.Sprintf("Error reading certificate: %v", err))
 			return nil, err
@@ -216,9 +221,14 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 	go func(chan string, ci.ISignalManager[chan string], *GoBE) {
 		signamManager.ListenForSignals()
 		gl.Log("info", "Listening for signals...")
-		for {
-			select {
-			case <-chanCtl:
+		for msg := range chanCtl {
+			switch msg {
+			case "reload":
+				gl.Log("info", "Received reload signal, reloading server...")
+				gbm.StopGoBE()
+				gbm.StartGoBE()
+			default:
+				gl.Log("info", "Received stop signal, stopping server...")
 				gbm.StopGoBE()
 				gl.Log("info", "Server stopped gracefully")
 				return

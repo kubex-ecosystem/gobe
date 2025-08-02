@@ -21,7 +21,7 @@ type GLog[T any] interface {
 	SetLogLevel(string)
 	SetDebug(bool)
 	SetShowTrace(bool)
-	ObjLog(*T, string, ...string)
+	ObjLog(*T, string, ...any)
 	Log(string, ...any)
 }
 type gLog[T any] struct {
@@ -63,21 +63,21 @@ const (
 )
 
 const (
-	// LogLevelDebug is the log level for debug messages.
+	// LogLevelDebug 0
 	LogLevelDebug LogLevel = iota
-	// LogLevelNotice is the log level for notice messages.
+	// LogLevelNotice 1
 	LogLevelNotice
-	// LogLevelInfo is the log level for informational messages.
+	// LogLevelInfo 2
 	LogLevelInfo
-	// LogLevelSuccess is the log level for success messages.
+	// LogLevelSuccess 3
 	LogLevelSuccess
-	// LogLevelWarn is the log level for warning messages.
+	// LogLevelWarn 4
 	LogLevelWarn
-	// LogLevelError is the log level for error messages.
+	// LogLevelError 5
 	LogLevelError
-	// LogLevelFatal is the log level for fatal error messages.
+	// LogLevelFatal 6
 	LogLevelFatal
-	// LogLevelPanic is the log level for panic messages.
+	// LogLevelPanic 7
 	LogLevelPanic
 )
 
@@ -110,7 +110,8 @@ func init() {
 			logLevel = getEnvOrDefault("GOBE_LOG_LEVEL", "error")
 			debug = getEnvOrDefault("GOBE_DEBUG", false)
 			showTrace = getEnvOrDefault("GOBE_SHOW_TRACE", false)
-			g.gLogLevel = LogLevelError
+			//g.gLogLevel = LogLevelError
+			g.gLogLevel = LogLevelInfo
 			g.gShowTrace = showTrace
 			g.gDebug = debug
 		}
@@ -177,8 +178,10 @@ func setLogLevel(logLevel string) {
 		g.gLogLevel = LogLevelSuccess
 		g.SetLevel("success")
 	default:
-		logLevel = "error"
-		g.gLogLevel = LogLevelError
+		// logLevel = "error"
+		// g.gLogLevel = LogLevelError
+		logLevel = "info"
+		g.gLogLevel = LogLevelInfo
 		g.SetLevel(logLevel)
 	}
 }
@@ -200,11 +203,7 @@ func willPrintLog(logType string) bool {
 		lTypeInt := LogLevelError
 		switch strings.ToLower(logType) {
 		case "debug":
-			lTypeInt = 0
-		case "fatal":
-			lTypeInt = 0
-		case "panic":
-			lTypeInt = 0
+			lTypeInt = LogLevelDebug
 		case "info":
 			lTypeInt = LogLevelInfo
 		case "warn":
@@ -215,6 +214,10 @@ func willPrintLog(logType string) bool {
 			lTypeInt = LogLevelNotice
 		case "success":
 			lTypeInt = LogLevelSuccess
+		case "fatal":
+			lTypeInt = LogLevelFatal
+		case "panic":
+			lTypeInt = LogLevelPanic
 		default:
 			lTypeInt = LogLevelError
 		}
@@ -295,7 +298,44 @@ func getCtxMessageMap(logType, funcName, file string, line int) map[string]any {
 	}
 	return ctxMessageMap
 }
-func LogObjLogger[T any](obj *T, logType string, messages ...string) {
+func getFuncNameMessage(lgr l.Logger) (string, int, string) {
+	if lgr == nil {
+		return "", 0, ""
+	}
+	if getShowTrace() {
+		pc, file, line, ok := runtime.Caller(3)
+		if !ok {
+			lgr.ErrorCtx("Log: unable to get caller information", nil)
+			return "", 0, ""
+		}
+		funcName := runtime.FuncForPC(pc).Name()
+		if strings.Contains(funcName, "LogObjLogger") {
+			pc, file, line, ok = runtime.Caller(4)
+			if !ok {
+				lgr.ErrorCtx("Log: unable to get caller information", nil)
+				return "", 0, ""
+			}
+			funcName = runtime.FuncForPC(pc).Name()
+		}
+		return funcName, line, file
+	}
+	return "", 0, ""
+}
+func getFullMessage(messages ...any) string {
+	fullMessage := ""
+	for _, msg := range messages {
+		if msg != nil {
+			if str, ok := msg.(string); ok {
+				fullMessage += str + " "
+			} else {
+				fullMessage += fmt.Sprintf("%v ", msg)
+			}
+		}
+	}
+	return strings.TrimSpace(fullMessage)
+}
+
+func LogObjLogger[T any](obj *T, logType string, messages ...any) {
 	lgr := GetLogger(obj)
 	if lgr == nil {
 		g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
@@ -307,14 +347,10 @@ func LogObjLogger[T any](obj *T, logType string, messages ...string) {
 		})
 		return
 	}
-	pc, file, line, ok := runtime.Caller(1)
-	if !ok {
-		lgr.GetLogger().ErrorCtx("Log: unable to get caller information", nil)
-		return
-	}
-	funcName := runtime.FuncForPC(pc).Name()
-	fullMessage := strings.Join(messages, " ")
+
+	fullMessage := getFullMessage(messages...)
 	logType = strings.ToLower(logType)
+	funcName, line, file := getFuncNameMessage(lgr.GetLogger())
 
 	ctxMessageMap := getCtxMessageMap(logType, funcName, file, line)
 	if logType != "" {
@@ -329,16 +365,8 @@ func LogObjLogger[T any](obj *T, logType string, messages ...string) {
 	}
 }
 func Log(logType string, messages ...any) {
-	pc, file, line, ok := runtime.Caller(1)
-	if !ok {
-		g.ErrorCtx("Log: unable to get caller information", nil)
-		return
-	}
-	funcName := runtime.FuncForPC(pc).Name()
-	fullMessage := ""
-	if len(messages) > 0 {
-		fullMessage = fmt.Sprintf("%v", messages[0:])
-	}
+	funcName, line, file := getFuncNameMessage(g.Logger)
+	fullMessage := getFullMessage(messages...)
 	logType = strings.ToLower(logType)
 	ctxMessageMap := getCtxMessageMap(logType, funcName, file, line)
 	if logType != "" {
@@ -394,7 +422,7 @@ func (g *gLog[T]) SetLogLevel(logLevel string)         { setLogLevel(logLevel) }
 func (g *gLog[T]) SetShowTrace(showTrace bool)         { g.gShowTrace = showTrace }
 func (g *gLog[T]) SetDebug(d bool)                     { SetDebug(d); g.gDebug = d }
 func (g *gLog[T]) Log(logType string, messages ...any) { Log(logType, messages...) }
-func (g *gLog[T]) ObjLog(obj *T, logType string, messages ...string) {
+func (g *gLog[T]) ObjLog(obj *T, logType string, messages ...any) {
 	LogObjLogger(obj, logType, messages...)
 }
 

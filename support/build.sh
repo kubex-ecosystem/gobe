@@ -57,7 +57,7 @@ build_binary() {
       if [[ -f "$OUTPUT_NAME" ]]; then
         local REPLY="y"
         if [[ "${IS_INTERACTIVE:-}" != "true" || "${CI:-}" != "true" ]]; then
-          if [[ $FORCE =~ [yY] || "${NON_INTERACTIVE:-}" == "true" ]]; then
+          if [[ $FORCE =~ [yY] || $FORCE == "true" || "${NON_INTERACTIVE:-}" == "true" ]]; then
             REPLY="y"
           elif [[ -t 0 ]]; then
             # If the script is running interactively, prompt for confirmation

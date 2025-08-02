@@ -204,7 +204,6 @@ func (s *Server) handleCreateTask(ctx context.Context, params map[string]interfa
 	return mcp.NewToolResultText(string(result)), nil
 }
 
-// 🚀 AUTOMAÇÕES REAIS - System Info Handler
 func (s *Server) handleSystemInfo(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
 	infoType, _ := params["info_type"].(string)
 	userID, _ := params["user_id"].(string)
@@ -257,7 +256,6 @@ func (s *Server) handleSystemInfo(ctx context.Context, params map[string]interfa
 	return mcp.NewToolResultText(result), nil
 }
 
-// 💀 SHELL Command Handler - MUITO PODEROSO!
 func (s *Server) handleShellCommand(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
 	command, _ := params["command"].(string)
 	userID, _ := params["user_id"].(string)
@@ -305,7 +303,6 @@ func (s *Server) handleShellCommand(ctx context.Context, params map[string]inter
 	return mcp.NewToolResultText(fmt.Sprintf("✅ **Comando executado**\n```\n%s\n```\n\n📄 **Output:**\n```\n%s\n```", command, output)), nil
 }
 
-// 🖥️ System Info Methods - Automação Real!
 func (s *Server) getCPUInfo() (string, error) {
 	cmd := exec.Command("sh", "-c", "top -bn1 | grep 'Cpu(s)' || echo 'CPU: Informação não disponível'")
 	output, err := cmd.Output()
