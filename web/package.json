@@ -1,0 +1,59 @@
+{
+  "name": "krompt",
+  "version": "1.0.0",
+  "description": "Krompt: A React-based Prompt Engineering Tool for AI Models",
+  "private": true,
+  "homepage": "./",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "codemirror": "^6.0.2",
+    "i18next": "^25.3.1",
+    "i18next-browser-languagedetector": "^8.2.0",
+    "lucide-react": "^0.525.0",
+    "react": "^19.1.0",
+    "react-codemirror": "^1.0.0",
+    "react-dom": "^19.1.0",
+    "react-i18next": "^15.6.0",
+    "react-router-dom": "^7.6.3",
+    "react-scripts": "^5.0.1",
+    "react-toastify": "^11.0.5",
+    "react-tooltip": "^5.29.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^8.9.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.8.3",
+    "web-vitals": "^5.0.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "post-build": "bash ../support/pre.d/pre_build.sh",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "build:go": "npm run build && echo '📦 Optimized build created successfully!'"
+  },
+  "keywords": [
+    "prompt-engineering",
+    "ai",
+    "claude",
+    "react",
+    "golang",
+    "embedded"
+  ],
+  "author": "Rafael Mori",
+  "license": "MIT",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

@@ -92,6 +92,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		gl.Log("error", "Failed to initialize secure server: "+err.Error())
 		return nil, err
 	}
+	gl.Log("info", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
 
 	for groupName, routeGroup := range GetDefaultRouteMap(rtr) {
 		for routeName, route := range routeGroup {

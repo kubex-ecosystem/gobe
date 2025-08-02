@@ -25,20 +25,6 @@ func NewLLMController(db *gorm.DB) *LLMController {
 	}
 }
 
-func (lc *LLMController) RegisterRoutes(router *gin.Engine) {
-	api := router.Group("/mcp/llm")
-	{
-		api.GET("/", lc.GetAllLLMModels)
-		api.GET("/:id", lc.GetLLMModelByID)
-		api.POST("/", lc.CreateLLMModel)
-		api.PUT("/:id", lc.UpdateLLMModel)
-		api.DELETE("/:id", lc.DeleteLLMModel)
-		api.GET("/provider/:provider", lc.GetLLMModelsByProvider)
-		api.GET("/provider/:provider/model/:model", lc.GetLLMModelByProviderAndModel)
-		api.GET("/enabled", lc.GetEnabledLLMModels)
-	}
-}
-
 func (lc *LLMController) GetAllLLMModels(c *gin.Context) {
 	llmModels, err := lc.llmService.ListLLMModels()
 	if err != nil {

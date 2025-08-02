@@ -5,9 +5,11 @@ import (
 	"log"
 	"time"
 
-	l "github.com/rafa-mori/logz"
+	t "github.com/rafa-mori/gdbase/types"
 	gb "github.com/rafa-mori/gobe"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	s "github.com/rafa-mori/gobe/internal/services"
+	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )
 
@@ -15,25 +17,68 @@ type GoBE interface {
 	ci.IGoBE
 }
 
-func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug bool) (ci.IGoBE, error) {
-	return gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, logger, debug)
+type DBConfig = t.DBConfig
+
+var (
+	dbConfig *DBConfig
+)
+
+func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug, releaseMode bool) (ci.IGoBE, error) {
+	err := initRabbitMQ()
+	if err != nil {
+		return nil, err
+	}
+	goBe, err := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, logger, debug, releaseMode)
+	if err != nil {
+		return nil, err
+	}
+	dbService, err := GetDatabaseService(goBe)
+	if err != nil {
+		return nil, err
+	}
+	if dbService == nil {
+		return nil, fmt.Errorf("Database service is not initialized")
+	}
+	dbConfig = dbService.GetConfig()
+
+	return goBe, nil
 }
 
 var rabbitMQConn *amqp.Connection
 
 func initRabbitMQ() error {
+
 	var err error
-	rabbitMQConn, err = amqp.Dial(getRabbitMQURL())
+	url := getRabbitMQURL()
+	if url == "" {
+		return fmt.Errorf("RabbitMQ URL is not configured")
+	}
+	rabbitMQConn, err = amqp.Dial(url)
 	if err != nil {
 		log.Printf("Erro ao conectar ao RabbitMQ: %s", err)
 		return err
+	}
+	if rabbitMQConn == nil {
+		return fmt.Errorf("RabbitMQ connection is not initialized")
 	}
 	log.Println("Conexão com RabbitMQ estabelecida com sucesso.")
 	return nil
 }
 
 func getRabbitMQURL() string {
-	return "amqp://guest:guest@localhost:5672/"
+	if dbConfig != nil {
+		if dbConfig.Messagery != nil {
+			if dbConfig.Messagery.RabbitMQ != nil {
+				return fmt.Sprintf("amqp://%s:%s@%s:%d/",
+					dbConfig.Messagery.RabbitMQ.Username,
+					dbConfig.Messagery.RabbitMQ.Password,
+					dbConfig.Messagery.RabbitMQ.Host,
+					dbConfig.Messagery.RabbitMQ.Port,
+				)
+			}
+		}
+	}
+	return ""
 }
 
 func closeRabbitMQ() {
@@ -44,7 +89,12 @@ func closeRabbitMQ() {
 }
 
 func ConsumeMessages(queueName string) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	url := getRabbitMQURL()
+	if url == "" {
+		log.Printf("RabbitMQ URL is not configured")
+		return
+	}
+	conn, err := amqp.Dial(url)
 	if err != nil {
 		log.Printf("Erro ao conectar ao RabbitMQ: %s", err)
 		return
@@ -104,7 +154,12 @@ func PublishMessageWithRetry(queueName string, message string) error {
 }
 
 func PublishMessage(queueName, message string) error {
-	conn, err := amqp.Dial(getRabbitMQURL())
+	url := getRabbitMQURL()
+	if url == "" {
+		log.Printf("RabbitMQ URL is not configured")
+		return fmt.Errorf("RabbitMQ URL is not configured")
+	}
+	conn, err := amqp.Dial(url)
 	if err != nil {
 		log.Printf("Erro ao conectar ao RabbitMQ: %s", err)
 		return err
@@ -135,4 +190,15 @@ func PublishMessage(queueName, message string) error {
 
 	log.Printf("Mensagem publicada na fila %s: %s", queueName, message)
 	return nil
+}
+
+func GetDatabaseService(goBE ci.IGoBE) (s.DBService, error) {
+	if goBE == nil {
+		return nil, fmt.Errorf("GoBE instance is nil")
+	}
+	dbService := goBE.GetDatabaseService()
+	if dbService == nil {
+		return nil, fmt.Errorf("Database service is not initialized")
+	}
+	return dbService, nil
 }
