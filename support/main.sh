@@ -26,12 +26,20 @@ __secure_logic_sourced_name() {
   return 0
 }
 
+__get_output_tty() {
+  if [ -t 1 ]; then
+    echo '/dev/tty'
+  else
+    echo '&2'
+  fi
+}
+
 __first(){
   if [ "$EUID" -eq 0 ] || [ "$UID" -eq 0 ]; then
-    echo "Please do not run as root." 1>&2 > /dev/tty
+    echo "Please do not run as root." >__get_output_tty
     exit 1
   elif [ -n "${SUDO_USER:-}" ]; then
-    echo "Please do not run as root, but with sudo privileges." 1>&2 > /dev/tty
+    echo "Please do not run as root, but with sudo privileges." > __get_output_tty
     exit 1
   else
     # shellcheck disable=SC2155
@@ -39,8 +47,8 @@ __first(){
 
     if test "${BASH_SOURCE-}" != "${0}"; then
       if test $__secure_logic_use_type != "lib"; then
-        echo "This script is not intended to be sourced." 1>&2 > /dev/tty
-        echo "Please run it directly." 1>&2 > /dev/tty
+        echo "This script is not intended to be sourced." > __get_output_tty
+        echo "Please run it directly." > __get_output_tty
         exit 1
       fi
       # If the script is sourced, we set the variable to true
@@ -49,8 +57,8 @@ __first(){
       export "${_ws_name}"="true"
     else
       if test $__secure_logic_use_type != "exec"; then
-        echo "This script is not intended to be executed directly." 1>&2 > /dev/tty
-        echo "Please source it instead." 1>&2 > /dev/tty
+        echo "This script is not intended to be executed directly." > __get_output_tty
+        echo "Please source it instead." > __get_output_tty
         exit 1
       fi
       # If the script is executed directly, we set the variable to false
@@ -71,7 +79,10 @@ _DEBUG=${DEBUG:-false}
 _HIDE_ABOUT=${HIDE_ABOUT:-false}
 _SCRIPT_DIR="$(dirname "${0}")"
 
-__first "$@" >/dev/tty || exit 1
+__first "$@" >&2 || {
+  echo "Error: This script must be run directly, not sourced." >&2
+  exit 1
+}
 
 
 __source_script_if_needed() {

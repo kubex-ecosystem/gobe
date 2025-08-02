@@ -10,11 +10,31 @@ on:
         description: 'Tag name for manual release (e.g., v1.0.0)'
         required: false
         type: string
+      debug:
+        description: 'Enable debug mode'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: 'Enable dry run mode'
+        required: false
+        default: false
+        type: boolean
+      platforms:
+        description: 'Override platforms (comma-separated, e.g., linux/amd64,windows/amd64)'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: write
   packages: write
   id-token: write
+
+env:
+  NON_INTERACTIVE: true
+  FORCE: y
+  CI: true
 
 jobs:
   # ==========================================
@@ -151,7 +171,13 @@ jobs:
           PLATFORMS="${{ steps.manifest.outputs.platforms }}"
           
           echo "Building $MODULE_NAME for platforms: $PLATFORMS"
-          
+
+          if [[ -z ${{ env.platforms }} ]]; then
+            echo "No platforms specified, using default from manifest."
+          else
+            PLATFORMS="${{ env.platforms }}"
+          fi
+
           for platform in $PLATFORMS; do
             # Parse platform (format: os/arch or os-arch)
             if [[ "$platform" == *"/"* ]]; then
@@ -164,7 +190,14 @@ jobs:
               echo "❌ Invalid platform format: $platform (expected: os/arch or os-arch)"
               continue
             fi
-            
+
+            # Set environment variables
+            export NON_INTERACTIVE=${{ env.NON_INTERACTIVE }}
+            export FORCE=${{ env.FORCE }}
+            export CI=${{ env.CI }}
+            export DRY_RUN=${{ env.dry_run }}
+            export DEBUG=${{ env.debug }}
+
             echo "🔨 Building for $OS/$ARCH..."
             make build "$OS" "$ARCH"
           done
