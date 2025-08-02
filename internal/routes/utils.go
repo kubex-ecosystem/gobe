@@ -32,6 +32,12 @@ func SecureServerInit(r *gin.Engine, fullBindAddress string) error {
 				c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 				c.Header("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
+				// Handle OPTIONS preflight requests
+				if c.Request.Method == "OPTIONS" {
+					c.AbortWithStatus(http.StatusOK)
+					return
+				}
+
 				c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 				c.Header("Referrer-Policy", "strict-origin")
 				c.Header("Permissions-Policy", "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()")
@@ -41,6 +47,7 @@ func SecureServerInit(r *gin.Engine, fullBindAddress string) error {
 				c.Header("X-XSS-Protection", "1; mode=block")
 				c.Header("X-Content-Type-Options", "nosniff")
 
+				c.Next()
 			}
 		},
 	)
