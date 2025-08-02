@@ -115,7 +115,7 @@ func newRequestsTracer(ip, port, endpoint, method, userAgent, filePath string) *
 	RequestTracers[ip] = tracer
 	rTracer := ci.IRequestsTracer(tracer)
 
-	tracer.Mapper = NewMapperType[ci.IRequestsTracer](&rTracer, tracer.filePath)
+	tracer.Mapper = NewMapperType(&rTracer, tracer.filePath)
 
 	//tracer.Mutexes.MuAdd(1)
 	//go func(tracer *RequestsTracer) {
