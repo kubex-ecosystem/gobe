@@ -1,9 +1,9 @@
 {
   "name": "Kubex GoBE",
   "application": "gobe",
-  "version": "1.2.0",
-  "private": true,
-  "published": false,
+  "version": "1.2.1",
+  "private": false,
+  "published": true,
   "aliases": ["gobe", "kbx"],
   "repository": "https://github.com/rafa-mori/gobe",
   "homepage": "https://github.com/rafa-mori/gobe",
