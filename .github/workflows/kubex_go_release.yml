@@ -171,11 +171,12 @@ jobs:
           PLATFORMS="${{ steps.manifest.outputs.platforms }}"
           
           echo "Building $MODULE_NAME for platforms: $PLATFORMS"
+          ENV_PLATFORMS="${ENV_PLATFORMS:-${{ github.event.inputs.platforms }}}"
 
-          if [[ -z ${{ env.platforms }} ]]; then
+          if [[ -z $ENV_PLATFORMS ]]; then
             echo "No platforms specified, using default from manifest."
           else
-            PLATFORMS="${{ env.platforms }}"
+            PLATFORMS="$ENV_PLATFORMS"
           fi
 
           for platform in $PLATFORMS; do
@@ -192,11 +193,11 @@ jobs:
             fi
 
             # Set environment variables
-            export NON_INTERACTIVE=${{ env.NON_INTERACTIVE }}
-            export FORCE=${{ env.FORCE }}
-            export CI=${{ env.CI }}
-            export DRY_RUN=${{ env.dry_run }}
-            export DEBUG=${{ env.debug }}
+            export NON_INTERACTIVE=${NON_INTERACTIVE:-${{ github.event.env.NON_INTERACTIVE }}}
+            export FORCE=${FORCE:-${{ github.event.env.FORCE }}}
+            export CI=${CI:-${{ github.event.env.CI }}}
+            export DRY_RUN=${DRY_RUN:-${{ github.event.inputs.dry_run }}}
+            export DEBUG=${DEBUG:-${{ github.event.inputs.debug }}}
 
             echo "🔨 Building for $OS/$ARCH..."
             make build "$OS" "$ARCH"

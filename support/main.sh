@@ -27,7 +27,7 @@ __secure_logic_sourced_name() {
 }
 
 __get_output_tty() {
-  if [ -t 1 ]; then
+  if [[ -t 1 ]]; then
     echo '/dev/tty'
   else
     echo '&2'
