@@ -1,4 +1,8 @@
+// Package types provides types and methods for managing environment variables,
 package types
+
+//// go:build !windows
+//// +build !windows
 
 import (
 	"bytes"
@@ -15,11 +19,11 @@ import (
 	"syscall"
 	"time"
 
-	l "github.com/rafa-mori/logz"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	crp "github.com/rafa-mori/gobe/internal/security/crypto"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 )
 
 type EnvCache struct {
@@ -127,7 +131,7 @@ func newEnvironment(envFile string, isConfidential bool, logger l.Logger) (*Envi
 	env.EnvCache.m["ENV_HOSTNAME"] = env.Hostname()
 	env.EnvCache.m["ENV_OS"] = env.Os()
 	env.EnvCache.m["ENV_KERNEL"] = env.Kernel()
-	env.EnvCache.m["ENV_CPU_COUNT"] = fmt.Sprintf("%d", env.CpuCount())
+	env.EnvCache.m["ENV_CPU_COUNT"] = fmt.Sprintf("%d", env.CPUCount())
 	env.EnvCache.m["ENV_MEM_TOTAL"] = fmt.Sprintf("%d", env.MemTotal())
 	env.EnvCache.m["ENV_MEM_AVAILABLE"] = fmt.Sprintf("%d", env.MemAvailable())
 	env.EnvCache.m["ENV_MEM_USED"] = fmt.Sprintf("%d", env.MemTotal()-env.MemAvailable())
@@ -153,7 +157,7 @@ func (e *Environment) Mu() ci.IMutexes {
 	}
 	return e.Mutexes
 }
-func (e *Environment) CpuCount() int {
+func (e *Environment) CPUCount() int {
 	e.Mutexes.MuRLock()
 	defer e.Mutexes.MuRUnlock()
 

@@ -15,7 +15,7 @@ func ServiceCmdList() []*cobra.Command {
 
 func startCommand() *cobra.Command {
 	var name, port, bind, logFile, configFile string
-	var isConfidential, debug bool
+	var isConfidential, debug, releaseMode bool
 
 	var startCmd = &cobra.Command{
 		Use: "start",
@@ -24,7 +24,7 @@ func startCommand() *cobra.Command {
 			"Start a minimal backend service with GoBE",
 		}, false),
 		Run: func(cmd *cobra.Command, args []string) {
-			gbm, gbmErr := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, l.GetLogger("GoBE"), debug)
+			gbm, gbmErr := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, l.GetLogger("GoBE"), debug, releaseMode)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
@@ -45,6 +45,7 @@ func startCommand() *cobra.Command {
 	startCmd.Flags().StringVarP(&configFile, "config-file", "c", "", "Configuration file path")
 	startCmd.Flags().BoolVarP(&isConfidential, "confidential", "C", false, "Enable confidential mode")
 	startCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
+	startCmd.Flags().BoolVarP(&releaseMode, "release", "r", false, "Enable release mode")
 
 	return startCmd
 }

@@ -23,21 +23,6 @@ func NewProvidersController(db *gorm.DB) *ProvidersController {
 	}
 }
 
-func (pc *ProvidersController) RegisterRoutes(router *gin.Engine) {
-	api := router.Group("/mcp/providers")
-	{
-		api.GET("/", pc.GetAllProviders)
-		api.GET("/:id", pc.GetProviderByID)
-		api.POST("/", pc.CreateProvider)
-		api.PUT("/:id", pc.UpdateProvider)
-		api.DELETE("/:id", pc.DeleteProvider)
-		api.GET("/provider/:provider", pc.GetProvidersByProvider)
-		api.GET("/org/:org_or_group", pc.GetProvidersByOrgOrGroup)
-		api.GET("/active", pc.GetActiveProviders)
-		api.POST("/upsert", pc.UpsertProviderByNameAndOrg)
-	}
-}
-
 // GetAllProviders retrieves all providers
 func (pc *ProvidersController) GetAllProviders(c *gin.Context) {
 	providers, err := pc.providersService.ListProviders()

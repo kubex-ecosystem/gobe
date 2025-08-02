@@ -26,20 +26,6 @@ func NewPreferencesController(db *gorm.DB) *PreferencesController {
 	}
 }
 
-func (pc *PreferencesController) RegisterRoutes(router *gin.Engine) {
-	api := router.Group("/mcp/preferences")
-	{
-		api.GET("/", pc.GetAllPreferences)
-		api.GET("/:id", pc.GetPreferencesByID)
-		api.POST("/", pc.CreatePreferences)
-		api.PUT("/:id", pc.UpdatePreferences)
-		api.DELETE("/:id", pc.DeletePreferences)
-		api.GET("/scope/:scope", pc.GetPreferencesByScope)
-		api.GET("/user/:userID", pc.GetPreferencesByUserID)
-		api.POST("/upsert/:scope", pc.UpsertPreferencesByScope)
-	}
-}
-
 func (pc *PreferencesController) GetAllPreferences(c *gin.Context) {
 	preferences, err := pc.preferencesService.ListPreferences()
 	if err != nil {

@@ -27,13 +27,27 @@ func SecureServerInit(r *gin.Engine, fullBindAddress string) error {
 			if !validateExpectedHosts(fullBindAddress, c) {
 				c.Abort()
 			} else {
-				c.Header("X-Frame-Options", "DENY")
-				c.Header("Content-Security-Policy", "default-src 'self'; connect-src *; font-src *; script-src-elem * 'unsafe-inline'; img-src * data:; style-src * 'unsafe-inline';")
-				c.Header("X-XSS-Protection", "1; mode=block")
+				c.Header("Access-Control-Allow-Origin", "*")
+				c.Header("Access-Control-Allow-Credentials", "true")
+				c.Header("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+				c.Header("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+				// Handle OPTIONS preflight requests
+				if c.Request.Method == "OPTIONS" {
+					c.AbortWithStatus(http.StatusOK)
+					return
+				}
+
 				c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 				c.Header("Referrer-Policy", "strict-origin")
-				c.Header("X-Content-Type-Options", "nosniff")
 				c.Header("Permissions-Policy", "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()")
+				c.Header("Content-Security-Policy", "default-src 'self'; connect-src *; font-src *; script-src-elem * 'unsafe-inline'; img-src * data:; style-src * 'unsafe-inline';")
+
+				c.Header("X-Frame-Options", "DENY")
+				c.Header("X-XSS-Protection", "1; mode=block")
+				c.Header("X-Content-Type-Options", "nosniff")
+
+				c.Next()
 			}
 		},
 	)
@@ -93,14 +107,19 @@ func validateExpectedHosts(fullBindAddress string, c *gin.Context) bool {
 
 func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 	return map[string]map[string]ci.IRoute{
-		"cronRoutes":     NewCronRoutes(&rtr),
-		"webhookRoutes":  NewWebhookRoutes(&rtr),
-		"contactRoutes":  NewContactRoutes(&rtr),
-		"authRoutes":     NewAuthRoutes(&rtr),
-		"userRoutes":     NewUserRoutes(&rtr),
-		"productRoutes":  NewProductRoutes(&rtr),
-		"serverRoutes":   NewServerRoutes(&rtr),
-		"customerRoutes": NewCustomerRoutes(&rtr),
+		"cronRoutes":           NewCronRoutes(&rtr),
+		"webhookRoutes":        NewWebhookRoutes(&rtr),
+		"contactRoutes":        NewContactRoutes(&rtr),
+		"authRoutes":           NewAuthRoutes(&rtr),
+		"userRoutes":           NewUserRoutes(&rtr),
+		"productRoutes":        NewProductRoutes(&rtr),
+		"serverRoutes":         NewServerRoutes(&rtr),
+		"customerRoutes":       NewCustomerRoutes(&rtr),
+		"discordRoutes":        NewDiscordRoutes(&rtr),
+		"mcpTasksRoutes":       NewMCPTasksRoutes(&rtr),
+		"mcpProvidersRoutes":   NewMCPProvidersRoutes(&rtr),
+		"mcpLLMRoutes":         NewMCPLLMRoutes(&rtr),
+		"mcpPreferencesRoutes": NewMCPPreferencesRoutes(&rtr),
 	}
 }
 

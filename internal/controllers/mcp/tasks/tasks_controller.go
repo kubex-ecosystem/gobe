@@ -22,23 +22,6 @@ func NewTasksController(db *gorm.DB) *TasksController {
 	}
 }
 
-func (tc *TasksController) RegisterRoutes(router *gin.Engine) {
-	api := router.Group("/mcp/tasks")
-	{
-		api.GET("/", tc.GetAllTasks)
-		api.GET("/:id", tc.GetTaskByID)
-		api.DELETE("/:id", tc.DeleteTask)
-		api.GET("/provider/:provider", tc.GetTasksByProvider)
-		api.GET("/target/:target", tc.GetTasksByTarget)
-		api.GET("/active", tc.GetActiveTasks)
-		api.GET("/due", tc.GetTasksDueForExecution)
-		api.POST("/:id/running", tc.MarkTaskAsRunning)
-		api.POST("/:id/completed", tc.MarkTaskAsCompleted)
-		api.POST("/:id/failed", tc.MarkTaskAsFailed)
-		api.GET("/:id/cron", tc.GetTaskCronJob)
-	}
-}
-
 // GetAllTasks retrieves all tasks
 func (tc *TasksController) GetAllTasks(c *gin.Context) {
 	tasks, err := tc.tasksService.ListTasks()

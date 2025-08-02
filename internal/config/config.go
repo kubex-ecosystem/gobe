@@ -1,0 +1,220 @@
+// Package config provides functionality to load and manage the application configuration.
+package config
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
+)
+
+type Config struct {
+	Discord  DiscordConfig  `json:"discord"`
+	LLM      LLMConfig      `json:"llm"`
+	Approval ApprovalConfig `json:"approval"`
+	Server   ServerConfig   `json:"server"`
+	ZMQ      ZMQConfig      `json:"zmq"`
+	GoBE     GoBeConfig     `json:"gobe"`
+	Kbxctl   KbxctlConfig   `json:"kbxctl"`
+	DevMode  bool           `json:"dev_mode"`
+}
+
+type DiscordConfig struct {
+	Bot struct {
+		Token       string   `json:"token"`
+		Permissions []string `json:"permissions"`
+		Intents     []string `json:"intents"`
+		Channels    []string `json:"channels"`
+	} `json:"bot"`
+	OAuth2 struct {
+		ClientID     string   `json:"client_id"`
+		ClientSecret string   `json:"client_secret"`
+		RedirectURI  string   `json:"redirect_uri"`
+		Scopes       []string `json:"scopes"`
+	} `json:"oauth2"`
+	Webhook struct {
+		URL    string `json:"url"`
+		Secret string `json:"secret"`
+	} `json:"webhook"`
+	RateLimits struct {
+		RequestsPerMinute int `json:"requests_per_minute"`
+		BurstSize         int `json:"burst_size"`
+	} `json:"rate_limits"`
+	Features struct {
+		AutoResponse            bool `json:"auto_response"`
+		TaskCreation            bool `json:"task_creation"`
+		CrossPlatformForwarding bool `json:"cross_platform_forwarding"`
+	} `json:"features"`
+}
+
+type LLMConfig struct {
+	Provider    string  `json:"provider" mapstructure:"provider"`
+	Model       string  `json:"model" mapstructure:"model"`
+	MaxTokens   int     `json:"max_tokens" mapstructure:"max_tokens"`
+	Temperature float64 `json:"temperature" mapstructure:"temperature"`
+	APIKey      string  `json:"api_key" mapstructure:"api_key"`
+}
+
+type ApprovalConfig struct {
+	RequireApprovalForResponses bool `json:"require_approval_for_responses"`
+	ApprovalTimeoutMinutes      int  `json:"approval_timeout_minutes"`
+}
+
+type ServerConfig struct {
+	Port       int    `json:"port"`
+	Host       string `json:"host"`
+	EnableCORS bool   `json:"enable_cors"`
+}
+
+type ZMQConfig struct {
+	Address string `json:"address"`
+	Port    int    `json:"port"`
+}
+
+type GoBeConfig struct {
+	BaseURL string `json:"base_url" mapstructure:"base_url"`
+	APIKey  string `json:"api_key" mapstructure:"api_key"`
+	Timeout int    `json:"timeout" mapstructure:"timeout"`
+	Enabled bool   `json:"enabled" mapstructure:"enabled"`
+}
+
+type KbxctlConfig struct {
+	Path       string `json:"path" mapstructure:"path"`
+	Namespace  string `json:"namespace" mapstructure:"namespace"`
+	Kubeconfig string `json:"kubeconfig" mapstructure:"kubeconfig"`
+	Enabled    bool   `json:"enabled" mapstructure:"enabled"`
+}
+
+func Load(configPath string) (*Config, error) {
+	// Check if .env file exists and load it
+	if _, err := os.Stat("./.env"); os.IsNotExist(err) {
+		log.Println("No .env file found, skipping environment variable loading")
+	} else if os.IsPermission(err) {
+		return nil, fmt.Errorf("permission denied to read .env file: %w", err)
+	} else {
+		log.Println("Loading environment variables from .env file")
+		if err := godotenv.Load("./.env"); err != nil {
+			return nil, fmt.Errorf("error loading .env file: %w", err)
+		}
+	}
+
+	// Initialize viper
+	viper.SetConfigName("discord_config")
+	viper.SetConfigType("json")
+	viper.AddConfigPath(configPath)
+
+	// Set defaults
+	viper.SetDefault("server.port", 8080)
+	viper.SetDefault("server.host", "localhost")
+	viper.SetDefault("server.enable_cors", true)
+	viper.SetDefault("zmq.address", "tcp://127.0.0.1")
+	viper.SetDefault("zmq.port", 5555)
+
+	// GoBE defaults
+	viper.SetDefault("gobe.base_url", "http://localhost:8081")
+	viper.SetDefault("gobe.timeout", 30)
+	viper.SetDefault("gobe.enabled", false)
+
+	// kbxctl defaults
+	viper.SetDefault("kbxctl.path", "kbxctl")
+	viper.SetDefault("kbxctl.namespace", "default")
+	viper.SetDefault("kbxctl.enabled", false)
+
+	// Check for dev mode
+	devMode := os.Getenv("DEV_MODE") == "true"
+
+	// Read environment variables
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("error reading config file: %w", err)
+	}
+
+	// Set dev mode after reading config
+	viper.Set("dev_mode", devMode)
+
+	// Expand environment variables or set dev defaults
+	if token := os.Getenv("DISCORD_BOT_TOKEN"); token != "" {
+		viper.Set("discord.bot.token", token)
+	} else if devMode {
+		viper.Set("discord.bot.token", "dev_token")
+	}
+
+	// Discord OAuth2 configuration
+	if clientID := os.Getenv("DISCORD_CLIENT_ID"); clientID != "" {
+		viper.Set("discord.oauth2.client_id", clientID)
+	}
+	if clientSecret := os.Getenv("DISCORD_CLIENT_SECRET"); clientSecret != "" {
+		viper.Set("discord.oauth2.client_secret", clientSecret)
+	}
+	if ngrokURL := os.Getenv("NGROK_URL"); ngrokURL != "" {
+		viper.Set("discord.oauth2.redirect_uri", ngrokURL+"/api/v1/oauth2/authorize")
+	}
+
+	// Set default OAuth2 scopes
+	viper.SetDefault("discord.oauth2.scopes", []string{"bot", "applications.commands"})
+
+	// 🔗 GoBE Backend Integration
+	if gobeURL := os.Getenv("GOBE_BASE_URL"); gobeURL != "" {
+		viper.Set("gobe.base_url", gobeURL)
+		viper.Set("gobe.enabled", true)
+	}
+	if gobeKey := os.Getenv("GOBE_API_KEY"); gobeKey != "" {
+		viper.Set("gobe.api_key", gobeKey)
+	}
+
+	// ⚙️ kbxctl K8s Integration
+	if kbxctlPath := os.Getenv("KBXCTL_PATH"); kbxctlPath != "" {
+		viper.Set("kbxctl.path", kbxctlPath)
+		viper.Set("kbxctl.enabled", true)
+	}
+	if k8sNamespace := os.Getenv("K8S_NAMESPACE"); k8sNamespace != "" {
+		viper.Set("kbxctl.namespace", k8sNamespace)
+	}
+	if kubeconfig := os.Getenv("KUBECONFIG"); kubeconfig != "" {
+		viper.Set("kbxctl.kubeconfig", kubeconfig)
+	}
+
+	// For now, always use dev mode for LLM to focus on Discord testing
+	geminiKey := os.Getenv("GEMINI_API_KEY")
+	openaiKey := os.Getenv("OPENAI_API_KEY")
+
+	log.Printf("🔍 Config Debug - Environment Variables:")
+	log.Printf("   GEMINI_API_KEY: '%s' (len=%d)", geminiKey, len(geminiKey))
+	log.Printf("   OPENAI_API_KEY: '%s' (len=%d)", openaiKey, len(openaiKey))
+
+	if geminiKey != "" && geminiKey != "dev_api_key" {
+		viper.Set("llm.api_key", geminiKey)
+		viper.Set("llm.provider", "gemini")
+		log.Printf("   ✅ Using Gemini with key: %s...", geminiKey[:10])
+	} else if openaiKey != "" && openaiKey != "dev_api_key" {
+		viper.Set("llm.api_key", openaiKey)
+		viper.Set("llm.provider", "openai")
+		log.Printf("   ✅ Using OpenAI with key: %s...", openaiKey[:10])
+	} else {
+		viper.Set("llm.api_key", "dev_api_key")
+		viper.Set("llm.provider", "dev")
+		log.Printf("   ⚠️ Using DEV mode (no valid API keys found)")
+	}
+
+	var config Config
+	if err := viper.Unmarshal(&config); err != nil {
+		return nil, fmt.Errorf("error unmarshaling config: %w", err)
+	}
+
+	// Force dev mode values after unmarshal if in dev mode
+	if devMode {
+		config.DevMode = true
+		if config.Discord.Bot.Token == "" {
+			config.Discord.Bot.Token = "dev_token"
+		}
+		// Only override API key if it's actually empty
+		if config.LLM.APIKey == "" {
+			config.LLM.APIKey = "dev_api_key"
+		}
+	}
+
+	return &config, nil
+}
