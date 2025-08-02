@@ -155,16 +155,8 @@ func (vl *ValidationListener) GetHandlersByName(name string) []func(*ValidationR
 	defer vl.Mutexes.MuUnlock()
 
 	for _, handler := range vl.Handlers {
-		if handler == nil {
-			gl.Log("error", "RegisterListener: handler is nil")
-			continue
-		}
 		if name == "" {
 			gl.Log("error", "RegisterListener: name is empty")
-			continue
-		}
-		if handler == nil {
-			gl.Log("error", "RegisterListener: handler is nil")
 			continue
 		}
 		return []func(*ValidationResult){handler}

@@ -660,7 +660,6 @@ func readEnvFile(e *Environment, ctx context.Context, wg *sync.WaitGroup) {
 			if err := os.Remove(tmpFile.Name()); err != nil {
 				gl.Log("error", fmt.Sprintf("Error removing temp file: %v", err))
 			}
-			return
 		}(tmpFile)
 
 		if _, err := tmpFile.Write(fileData); err != nil {
@@ -731,7 +730,7 @@ func getKey(e *Environment) (sci.ICryptoService, []byte, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to generate key: %v", err)
 		}
-		e.properties["key"] = NewProperty[[]byte]("key", &key, false, nil)
+		e.properties["key"] = NewProperty("key", &key, false, nil)
 		if e.properties["key"] == nil {
 			return nil, nil, fmt.Errorf("failed to get key")
 		}

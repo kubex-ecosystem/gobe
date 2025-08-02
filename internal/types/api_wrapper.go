@@ -64,7 +64,7 @@ func (w *APIWrapper[T]) Middleware() gin.HandlerFunc {
 			if errMsg == "" {
 				errMsg = "Erro desconhecido"
 			}
-			w.JSONResponseWithError(c, fmt.Errorf(errMsg))
+			w.JSONResponseWithError(c, fmt.Errorf("%s", errMsg))
 		}
 	}
 }

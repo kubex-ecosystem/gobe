@@ -175,7 +175,6 @@ func (m *Mapper[T]) DeserializeFromFile(format string) (*T, error) {
 			gl.Log("error", fmt.Sprintf("Error closing file: %v", closeErr.Error()))
 			return
 		}
-		return
 	}(inputFile)
 
 	reader := bufio.NewReader(inputFile)
@@ -219,7 +218,6 @@ func (m *Mapper[T]) DeserializeFromFile(format string) (*T, error) {
 			m.object = reflect.ValueOf(objSlice).Interface().(T)
 			return &m.object, nil
 		}
-		break
 	case reflect.Map:
 		if value.Len() == 0 {
 			// If the map is empty, assign the deserialized object to the map
@@ -227,7 +225,6 @@ func (m *Mapper[T]) DeserializeFromFile(format string) (*T, error) {
 			return &m.object, nil
 		}
 		isSliceOrMap = 1
-		break
 	default:
 		// If the type is neither a slice nor a map, assign the first object to m.object
 		if len(objSlice) == 0 {
@@ -239,7 +236,6 @@ func (m *Mapper[T]) DeserializeFromFile(format string) (*T, error) {
 			return nil, fmt.Errorf("múltiplos objetos encontrados no arquivo")
 		}
 		m.object = objSlice[0]
-		break
 	}
 
 	for _, obj := range objSlice {
