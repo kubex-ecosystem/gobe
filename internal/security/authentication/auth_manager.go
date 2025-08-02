@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	//"github.com/golang-jwt/jwt/v4"
 	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/google/uuid"
@@ -47,8 +46,8 @@ func (am *AuthManager) GenerateIDToken(userID string) (string, error) {
 
 	claims := jwt.RegisteredClaims{
 		Subject:   userID,
-		ExpiresAt: &jwt.NumericDate{time.Now().Add(time.Duration(am.idExpirationSecs) * time.Second)},
-		IssuedAt:  &jwt.NumericDate{time.Now()},
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Duration(am.idExpirationSecs) * time.Second)},
+		IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		ID:        uuid.New().String(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -58,8 +57,8 @@ func (am *AuthManager) GenerateIDToken(userID string) (string, error) {
 func (am *AuthManager) GenerateRefreshToken(userID string) (string, error) {
 	claims := jwt.RegisteredClaims{
 		Subject:   userID,
-		ExpiresAt: &jwt.NumericDate{time.Now().Add(time.Duration(am.refreshExpirationSecs) * time.Second)},
-		IssuedAt:  &jwt.NumericDate{time.Now()},
+		ExpiresAt: &jwt.NumericDate{Time: time.Now().Add(time.Duration(am.refreshExpirationSecs) * time.Second)},
+		IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 		ID:        uuid.New().String(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

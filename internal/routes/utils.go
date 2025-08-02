@@ -107,16 +107,19 @@ func validateExpectedHosts(fullBindAddress string, c *gin.Context) bool {
 
 func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 	return map[string]map[string]ci.IRoute{
-		"cronRoutes":     NewCronRoutes(&rtr),
-		"webhookRoutes":  NewWebhookRoutes(&rtr),
-		"contactRoutes":  NewContactRoutes(&rtr),
-		"authRoutes":     NewAuthRoutes(&rtr),
-		"userRoutes":     NewUserRoutes(&rtr),
-		"productRoutes":  NewProductRoutes(&rtr),
-		"serverRoutes":   NewServerRoutes(&rtr),
-		"customerRoutes": NewCustomerRoutes(&rtr),
-		"discordRoutes":  NewDiscordRoutes(&rtr),
-		"mcpTasksRoutes": NewMCPTasksRoutes(&rtr),
+		"cronRoutes":           NewCronRoutes(&rtr),
+		"webhookRoutes":        NewWebhookRoutes(&rtr),
+		"contactRoutes":        NewContactRoutes(&rtr),
+		"authRoutes":           NewAuthRoutes(&rtr),
+		"userRoutes":           NewUserRoutes(&rtr),
+		"productRoutes":        NewProductRoutes(&rtr),
+		"serverRoutes":         NewServerRoutes(&rtr),
+		"customerRoutes":       NewCustomerRoutes(&rtr),
+		"discordRoutes":        NewDiscordRoutes(&rtr),
+		"mcpTasksRoutes":       NewMCPTasksRoutes(&rtr),
+		"mcpProvidersRoutes":   NewMCPProvidersRoutes(&rtr),
+		"mcpLLMRoutes":         NewMCPLLMRoutes(&rtr),
+		"mcpPreferencesRoutes": NewMCPPreferencesRoutes(&rtr),
 	}
 }
 

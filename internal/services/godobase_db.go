@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"time"
 
@@ -30,11 +31,21 @@ func NewDBService(config *sc.DBConfig, logger l.Logger) (DBService, error) {
 
 type IDBConfig = sc.DBConfig
 
-func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger l.Logger, debug bool) (*sc.DBConfig, error) {
-	dbName := environment.Getenv("DB_NAME")
-	if dbName == "" {
-		dbName = "GoBE-DB"
+func getEnvOrDefault[T string | int | bool](environment ci.IEnvironment, key string, defaultValue T) T {
+	value := environment.Getenv(key)
+	if value == "" {
+		return defaultValue
+	} else {
+		valInterface := reflect.ValueOf(value)
+		if valInterface.Type().ConvertibleTo(reflect.TypeFor[T]()) {
+			return valInterface.Convert(reflect.TypeFor[T]()).Interface().(T)
+		}
 	}
+	return defaultValue
+}
+
+func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger l.Logger, debug bool) (*sc.DBConfig, error) {
+	dbName := getEnvOrDefault(environment, "DB_NAME", "kubex_db")
 	if _, err := os.Stat(dbConfigFilePath); err != nil && os.IsNotExist(err) {
 		if err := ut.EnsureDir(filepath.Dir(dbConfigFilePath), 0644, []string{}); err != nil {
 			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err))
@@ -112,24 +123,16 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 	}
 
 	// 1. Inicializar Certificados
-	keyPath := environment.Getenv("GOBE_KEY_PATH")
-	certPath := environment.Getenv("GOBE_CERT_PATH")
-	if keyPath == "" {
-		keyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
-	}
-	if certPath == "" {
-		certPath = os.ExpandEnv(cm.DefaultGoBECertPath)
-	}
+	keyPath := getEnvOrDefault(environment, "GOBE_KEY_PATH", os.ExpandEnv(cm.DefaultGoBEKeyPath))
+	certPath := getEnvOrDefault(environment, "GOBE_CERT_PATH", os.ExpandEnv(cm.DefaultGoBECertPath))
 	certService := fcs.NewCertService(keyPath, certPath)
 	if certService == nil {
 		gl.Log("error", "❌ Erro ao inicializar CertService")
 		return nil, fmt.Errorf("❌ Erro ao inicializar CertService")
 	}
 
-	dbConfigFile := environment.Getenv("DB_CONFIG_FILE")
-	if dbConfigFile == "" {
-		dbConfigFile = os.ExpandEnv(cm.DefaultGodoBaseConfigPath)
-	}
+	dbConfigFile := getEnvOrDefault(environment, "DB_CONFIG_FILE", os.ExpandEnv(cm.DefaultGodoBaseConfigPath))
+
 	dbConfig, dbConfigErr := SetupDatabase(environment, dbConfigFile, logger, debug)
 	if dbConfigErr != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBConfig: %v", dbConfigErr))
