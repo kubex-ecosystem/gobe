@@ -2,7 +2,7 @@
 
 ![GoBE Banner](docs/assets/top_banner_lg_b.png)
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/rafa-mori/gobe/release.yml?branch=main)](https://github.com/rafa-mori/gobe/actions)
+[![Build Status](https://github.com/rafa-mori/gobe/actions/workflows/release.yml/badge.svg)](https://github.com/rafa-mori/gobe/actions/workflows/release.yml)
 [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/rafa-mori/gobe/blob/main/LICENSE)
 [![Automation](https://img.shields.io/badge/automation-zero%20config-blue)](#features)
