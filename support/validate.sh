@@ -2,7 +2,7 @@
 # lib/validate.sh – Validação da versão do Go e dependências
 
 validate_versions() {
-    local _GO_SETUP='https://raw.githubusercontent.com/rafa-mori/gosetup/refs/heads/main/go.sh'
+    local _GO_SETUP='https://raw.githubusercontent.com/rafa-mori/gosetup/main/go.sh'
     local go_version
     go_version=$(go version | awk '{print $3}' | tr -d 'go' || echo "")
     if [[ -z "$go_version" ]]; then
@@ -27,16 +27,42 @@ validate_versions() {
           return 1
       fi
     fi
-    # Check for required dependencies
-    check_dependencies "git" "curl" "jq" "upx" "go" || return 1
+    local _DEPENDENCIES=( $(cat "${_ROOT_DIR:-$(git rev-parse --show-toplevel)}/info/manifest.json" | jq -r '.dependencies[]?') )
+    check_dependencies "${_DEPENDENCIES[@]}" || return 1
     return 0
 }
 
 check_dependencies() {
   for dep in "$@"; do
     if ! command -v "$dep" > /dev/null; then
-      log error "$dep is not installed." true
-      return 1
+      if ! dpkg -l | grep -o "$dep" -q; then
+        log error "$dep is not installed." true
+        if [[ -z "$NON_INTERACTIVE" ]]; then
+          log warn "$dep is required for this script to run." true
+          log question "Would you like to install it now? (y/n)" true
+          read -r -n 1 -t 10 answer || answer="n"
+          if [[ $answer =~ ^[Yy]$ ]]; then
+            sudo apt-get install -y "$dep" || {
+              log error "Failed to install $dep. Please install it manually."
+              return 1
+            }
+            log info "$dep has been installed successfully."
+          fi
+        else
+          log warn "$dep is required for this script to run. Installing..." true
+          if [[ $FORCE =~ ^[Yy]$ ]]; then
+            log warn "Force mode is enabled. Installing $dep without confirmation."
+            sudo apt-get install -y "$dep" || {
+            log error "Failed to install $dep. Please install it manually."
+              return 1
+            }
+            log info "$dep has been installed successfully."
+          else
+            log error "Failed to install $dep. Please install it manually before running this script."
+            return 1
+          fi
+        fi
+      fi
     fi
   done
 }
