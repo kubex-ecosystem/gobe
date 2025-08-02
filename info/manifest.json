@@ -14,5 +14,5 @@
   "organization": "rafa-mori",
   "license": "MIT",
   "keywords": ["gobe", "kubex", "control", "command-line", "tool", "management"],
-  "platforms": ["linux"]
+  "platforms": ["linux/amd64"]
 }
