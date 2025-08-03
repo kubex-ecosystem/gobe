@@ -1,4 +1,4 @@
-name: Kubex_Go_Distribution_Workflow
+name: Kubex Go Dist CI
 
 on:
   push:
