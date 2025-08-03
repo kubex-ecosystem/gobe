@@ -363,12 +363,12 @@ jobs:
 
             # Add platform-specific information
             case "$platform" in
-              "linux/amd64"|"linux-amd64") PLATFORM_LIST="$PLATFORM_LIST\n          - 🐧 **Linux (AMD64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
-              "windows/amd64"|"windows-amd64") PLATFORM_LIST="$PLATFORM_LIST\n          - 🪟 **Windows (AMD64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.zip\`" ;;
-              "windows/i386"|"windows-i386") PLATFORM_LIST="$PLATFORM_LIST\n          - 🪟 **Windows (i386)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.zip\`" ;;
-              "darwin/amd64"|"darwin-amd64") PLATFORM_LIST="$PLATFORM_LIST\n          - 🍎 **macOS (AMD64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
-              "darwin/arm64"|"darwin-arm64") PLATFORM_LIST="$PLATFORM_LIST\n          - 🍎 **macOS (ARM64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
-              *) PLATFORM_LIST="$PLATFORM_LIST\n          - 📦 **${platform:-}**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
+              "linux/amd64"|"linux-amd64") PLATFORM_LIST="$PLATFORM_LIST          - 🐧 **Linux (AMD64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
+              "windows/amd64"|"windows-amd64") PLATFORM_LIST="$PLATFORM_LIST          - 🪟 **Windows (AMD64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.zip\`" ;;
+              "windows/i386"|"windows-i386") PLATFORM_LIST="$PLATFORM_LIST          - 🪟 **Windows (i386)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.zip\`" ;;
+              "darwin/amd64"|"darwin-amd64") PLATFORM_LIST="$PLATFORM_LIST          - 🍎 **macOS (AMD64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
+              "darwin/arm64"|"darwin-arm64") PLATFORM_LIST="$PLATFORM_LIST          - 🍎 **macOS (ARM64)**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
+              *) PLATFORM_LIST="$PLATFORM_LIST          - 📦 **${platform:-}**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
             esac
           done
           
