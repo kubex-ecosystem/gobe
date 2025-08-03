@@ -95,19 +95,19 @@ type GobeCtlConfig struct {
 
 func Load(configPath string) (*Config, error) {
 	// Check if .env file exists and load it
-	if _, err := os.Stat(".env"); os.IsNotExist(err) {
+	if _, err := os.Stat("config/.env"); os.IsNotExist(err) {
 		log.Println("No .env file found, skipping environment variable loading")
 	} else if os.IsPermission(err) {
 		return nil, fmt.Errorf("permission denied to read .env file: %w", err)
 	} else {
 		log.Println("Loading environment variables from .env file")
-		if err := godotenv.Load(".env"); err != nil {
+		if err := godotenv.Load("config/.env"); err != nil {
 			return nil, fmt.Errorf("error loading .env file: %w", err)
 		}
 	}
 
 	// Initialize viper
-	viper.SetConfigName("discord_config.json")
+	viper.SetConfigName("config/discord_config.json")
 	viper.SetConfigType("json")
 	viper.AddConfigPath(configPath)
 

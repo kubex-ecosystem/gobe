@@ -12,6 +12,7 @@
 *BAK
 *BAK*
 /bin/
+*/log/
 
 # Test binary, built with `go test -c`
 *.test
