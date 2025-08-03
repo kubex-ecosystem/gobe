@@ -214,6 +214,33 @@ func (e *Environment) Kernel() string {
 	}
 	return e.kernel
 }
+func (e *Environment) GetenvOrDefault(key string, defaultValue any) (ci.IPropertyValBase[any], reflect.Kind) {
+	e.Mutexes.MuRLock()
+	defer e.Mutexes.MuRUnlock()
+
+	if val, exists := e.EnvCache.m[key]; exists {
+		if val == "" {
+			gl.Log("info", fmt.Sprintf("'%s' found in cache, but value is empty", key))
+			return NewVal[any](key, &defaultValue), reflect.TypeOf(defaultValue).Kind()
+		}
+		isEncryptedValue := e.IsEncryptedValue(val)
+		if isEncryptedValue {
+			gl.Log("debug", fmt.Sprintf("'%s' found in cache, value is encrypted", key))
+			decryptedVal, err := e.DecryptEnv(val)
+			if err != nil {
+				gl.Log("error", fmt.Sprintf("Error decrypting value for key '%s': %v", key, err))
+				return NewVal[any](key, &defaultValue), reflect.TypeOf(defaultValue).Kind()
+			}
+			gl.Log("debug", fmt.Sprintf("Decrypted value for key '%s': %s", key, decryptedVal))
+			value := any(decryptedVal)
+			return NewVal[any](key, &value), reflect.TypeOf(decryptedVal).Kind()
+		}
+		value := any(val)
+		return NewVal[any](key, &value), reflect.TypeOf(val).Kind()
+	}
+	gl.Log("debug", fmt.Sprintf("'%s' not found in cache, checking system env...", key))
+	return NewVal[any](key, &defaultValue), reflect.TypeOf(defaultValue).Kind()
+}
 func (e *Environment) Getenv(key string) string {
 	if val, exists := e.EnvCache.m[key]; exists {
 		if val == "" {

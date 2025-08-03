@@ -26,6 +26,7 @@ type IRouter interface {
 	GetProperties() map[string]any
 	SetProperties(properties map[string]any)
 	GetRoutes() map[string]map[string]IRoute
+	GetMiddlewares() map[string]gin.HandlerFunc
 	RegisterMiddleware(name string, middleware gin.HandlerFunc, global bool)
 	RegisterRoute(groupName, routeName string, route IRoute, middlewares []string)
 	StartServer()
@@ -45,6 +46,6 @@ type IRoute interface {
 	ValidateAndSanitize() bool
 	SecureProperties() map[string]bool
 	Handler() gin.HandlerFunc
-	Middlewares() map[string]any
+	Middlewares() map[string]gin.HandlerFunc
 	DBConfig() gdbf.DBConfig
 }

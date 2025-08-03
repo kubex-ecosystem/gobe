@@ -1,7 +1,10 @@
 // Package interfaces defines the IEnvironment interface for managing environment variables and system information.
 package interfaces
 
-import "context"
+import (
+	"context"
+	"reflect"
+)
 
 type IEnvironment interface {
 	Mu() IMutexes
@@ -13,6 +16,7 @@ type IEnvironment interface {
 	LoadEnvFile(watchFunc func(ctx context.Context, chanCbArg chan any) <-chan any) error
 	GetEnvFilePath() string
 	Getenv(key string) string
+	GetenvOrDefault(key string, defaultValue any) (IPropertyValBase[any], reflect.Kind)
 	Setenv(key, value string) error
 	GetEnvCache() map[string]string
 	ParseEnvVar(s string) (string, string)

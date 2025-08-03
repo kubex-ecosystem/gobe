@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	whk "github.com/rafa-mori/gdbase/factory/models"
 	t "github.com/rafa-mori/gdbase/types"
 	"github.com/rafa-mori/gobe/internal/controllers/webhooks"
@@ -29,6 +30,10 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 
 	// Obtenha o dbService já configurado no router
 	dbService := rtl.GetDatabaseService()
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for WebhookRoutes")
+		return nil
+	}
 
 	db, err := dbService.GetDB()
 	if err != nil {
@@ -63,11 +68,18 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 
 	webhookController := webhooks.NewWebhookController(webhookService, rabbitMQConn)
 
+	middlewaresMap := make(map[string]gin.HandlerFunc)
+
+	secureProperties := make(map[string]bool)
+	secureProperties["secure"] = true
+	secureProperties["validateAndSanitize"] = false
+	secureProperties["validateAndSanitizeBody"] = false
+
 	// Mapear as rotas utilizando o WebhookController.
 	routesMap := make(map[string]ci.IRoute)
-	routesMap["RegisterWebhookRoute"] = NewRoute(http.MethodPost, "/webhooks", "application/json", webhookController.RegisterWebhook, nil, dbService)
-	routesMap["ListWebhooksRoute"] = NewRoute(http.MethodGet, "/webhooks", "application/json", webhookController.ListWebhooks, nil, dbService)
-	routesMap["DeleteWebhookRoute"] = NewRoute(http.MethodDelete, "/webhooks/:id", "application/json", webhookController.DeleteWebhook, nil, dbService)
+	routesMap["RegisterWebhookRoute"] = NewRoute(http.MethodPost, "/webhooks", "application/json", webhookController.RegisterWebhook, middlewaresMap, dbService, secureProperties)
+	routesMap["ListWebhooksRoute"] = NewRoute(http.MethodGet, "/webhooks", "application/json", webhookController.ListWebhooks, middlewaresMap, dbService, secureProperties)
+	routesMap["DeleteWebhookRoute"] = NewRoute(http.MethodDelete, "/webhooks/:id", "application/json", webhookController.DeleteWebhook, middlewaresMap, dbService, secureProperties)
 
 	return routesMap
 }

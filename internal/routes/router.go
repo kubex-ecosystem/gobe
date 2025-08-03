@@ -16,6 +16,8 @@ import (
 	l "github.com/rafa-mori/logz"
 	"golang.org/x/time/rate"
 
+	_ "github.com/rafa-mori/gobe/docs"
+
 	"net"
 	"net/http"
 
@@ -50,12 +52,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		debug:           debug,
 		databaseService: databaseService,
 		properties:      make(map[string]any),
-		middlewares: map[string]gin.HandlerFunc{
-			"authentication":      mdw.NewAuthenticationMiddleware(mdw.NewTokenService(databaseService.GetConfig(), logger)),
-			"validateAndSanitize": mdw.ValidateAndSanitize(),
-			"rateLimite":          mdw.RateLimiter(rate.Limit(serverConfig.RateLimitLimit), serverConfig.RateLimitBurst),
-			"logger":              mdw.Logger(logger),
-		},
+		middlewares:     make(map[string]gin.HandlerFunc),
 		settings: map[string]string{
 			"configPath":     serverConfig.FilePath,
 			"bindingAddress": serverConfig.BindAddress,
@@ -64,10 +61,24 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		},
 	}
 
-	if debug {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
+	var autenticationMiddleware *mdw.AuthenticationMiddleware
+	if databaseService != nil {
+		tokenService, certService, err := mdw.NewTokenService(databaseService.GetConfig(), logger)
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
+			return nil, err
+		}
+		autenticationMiddleware = &mdw.AuthenticationMiddleware{
+			CertService:  certService,
+			TokenService: tokenService,
+		}
+	}
+
+	defaultMiddlewares := map[string]gin.HandlerFunc{
+		"authentication":      autenticationMiddleware.ValidateJWT(mdw.NewAuthenticationMiddleware(autenticationMiddleware.TokenService, autenticationMiddleware.CertService, nil)),
+		"validateAndSanitize": mdw.ValidateAndSanitize(),
+		"rateLimite":          mdw.RateLimiter(rate.Limit(serverConfig.RateLimitLimit), serverConfig.RateLimitBurst),
+		"logger":              mdw.Logger(logger),
 	}
 
 	// Set up the globals for gin (middlewares, logger, etc.)
@@ -76,15 +87,22 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 	rtr.engine.Use(gin.Recovery())
 	rtr.engine.Use(gin.Logger())
 
+	strMiddlewares := make([]string, 0)
 	rtr.engine.Use(func(middlewares map[string]gin.HandlerFunc) []gin.HandlerFunc {
 		middlewaresList := make([]gin.HandlerFunc, 0)
 		for middlewareName, middleware := range middlewares {
 			if middlewareName != "authentication" {
+				rtr.RegisterMiddleware(middlewareName, middleware, true)
 				middlewaresList = append(middlewaresList, middleware)
+			} else {
+				rtr.RegisterMiddleware(middlewareName, middleware, false)
 			}
+			strMiddlewares = append(strMiddlewares, middlewareName)
 		}
 		return middlewaresList
-	}(rtr.middlewares)...)
+	}(defaultMiddlewares)...)
+
+	rtr.middlewares = defaultMiddlewares
 
 	fullBindAddress := net.JoinHostPort(rtr.settings["bindingAddress"], rtr.settings["port"])
 
@@ -97,9 +115,29 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 	for groupName, routeGroup := range GetDefaultRouteMap(rtr) {
 		for routeName, route := range routeGroup {
 			if route != nil {
-				rtr.RegisterRoute(groupName, routeName, route, []string{})
+				rtr.RegisterRoute(groupName, routeName, route, strMiddlewares)
 			}
 		}
+	}
+
+	// rtr.RegisterRoute(
+	// 	"swagger",
+	// 	"Swagger",
+	// 	NewRoute(
+	// 		http.MethodGet,
+	// 		"/swagger/*any",
+	// 		"Application/html",
+	// 		ginSwagger.WrapHandler(swaggerfiles.Handler),
+	// 		nil,
+	// 		nil,
+	// 	),
+	// 	[]string{},
+	// )
+
+	if debug {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	return rtr, nil
@@ -272,6 +310,18 @@ func (rtr *Router) GetRoutes() map[string]map[string]ci.IRoute {
 	return rtr.routes
 }
 
+// GetMiddlewares returns all registered middlewares in the router.
+func (rtr *Router) GetMiddlewares() map[string]gin.HandlerFunc {
+	if err := rtr.ValidateRouter(); err != nil {
+		gl.Log("error", err.Error())
+		return nil
+	}
+	if rtr.middlewares == nil {
+		rtr.middlewares = make(map[string]gin.HandlerFunc)
+	}
+	return rtr.middlewares
+}
+
 // RegisterMiddleware registers a middleware with the router.
 func (rtr *Router) RegisterMiddleware(name string, middleware gin.HandlerFunc, global bool) {
 	if err := rtr.ValidateRouter(); err != nil {
@@ -319,7 +369,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 	}
 
 	var middlewaresStack []gin.HandlerFunc
-	if route.Middlewares() != nil {
+	if len(route.Middlewares()) != 0 {
 		for _, middlewareName := range middlewares {
 			// If the middleware registered in the route is not in the list of middlewares
 			// registered in the router, do not add the middleware

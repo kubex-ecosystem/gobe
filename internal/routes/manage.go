@@ -22,18 +22,27 @@ func NewServerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	ra := ServerRoutes{IRouter: rtl}
 	dbService := rtl.GetDatabaseService()
+	// if dbService == nil {
+	// 	fmt.Println("Database service is nil for ServerRoute")
+	// 	return nil
+	// }
 
 	routesMap := make(map[string]ar.IRoute)
-	middlewaresMap := make(map[string]any)
+	middlewaresMap := make(map[string]gin.HandlerFunc)
 
-	routesMap["HealthRoute"] = NewRoute(http.MethodPost, "/health", "application/json", ra.PingRouteHandler(nil), middlewaresMap, dbService)
-	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/ping", "application/json", ra.PingRouteHandler(nil), middlewaresMap, dbService)
+	secureProperties := make(map[string]bool)
+	secureProperties["secure"] = true
+	secureProperties["validateAndSanitize"] = false
+	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["PingPostRoute"] = NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), middlewaresMap, dbService)
-	routesMap["PingPostRoute"] = NewRoute(http.MethodGet, "/config", "application/json", ra.ConfigRouteHandler(nil), middlewaresMap, dbService)
+	routesMap["HealthRoute"] = NewRoute(http.MethodPost, "/health", "application/json", ra.PingRouteHandler(nil), middlewaresMap, dbService, nil)
+	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/ping", "application/json", ra.PingRouteHandler(nil), middlewaresMap, dbService, nil)
 
-	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/start", "application/json", ra.StartRouteHandler(nil), middlewaresMap, dbService)
-	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/stop", "application/json", ra.StopRouteHandler(nil), middlewaresMap, dbService)
+	routesMap["PingPostRoute"] = NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), middlewaresMap, dbService, nil)
+	routesMap["PingPostRoute"] = NewRoute(http.MethodGet, "/config", "application/json", ra.ConfigRouteHandler(nil), middlewaresMap, dbService, secureProperties)
+
+	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/start", "application/json", ra.StartRouteHandler(nil), middlewaresMap, dbService, secureProperties)
+	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/stop", "application/json", ra.StopRouteHandler(nil), middlewaresMap, dbService, secureProperties)
 
 	return routesMap
 }

@@ -22,7 +22,19 @@ func NewTasksController(db *gorm.DB) *TasksController {
 	}
 }
 
-// GetAllTasks retrieves all tasks
+// @Summary MCP Tasks Controller
+// @Description Controller for managing tasks in the MCP
+// @Schemes http https
+// @Tags tasks
+// @Summary Get All Tasks
+// @Description Retrieves a list of all tasks.
+// @Accept json
+// @Produce json
+// @Success 200 {object} []models.TasksModel
+// @Failure 500 {string} Failed to get tasks
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Tasks not found
+// @Router /mcp/tasks [get]
 func (tc *TasksController) GetAllTasks(c *gin.Context) {
 	tasks, err := tc.tasksService.ListTasks()
 	if err != nil {
@@ -33,7 +45,15 @@ func (tc *TasksController) GetAllTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
-// GetTaskByID retrieves a task by ID
+// @Summary Get Task by ID
+// @Description Retrieves a task by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.TasksModel
+// @Failure 404 {string} Task not found
+// @Failure 500 {string} Failed to get task
+// @Failure 400 {string} Invalid request
+// @Router /mcp/tasks/{id} [get]
 func (tc *TasksController) GetTaskByID(c *gin.Context) {
 	id := c.Param("id")
 	task, err := tc.tasksService.GetTaskByID(id)
@@ -45,7 +65,15 @@ func (tc *TasksController) GetTaskByID(c *gin.Context) {
 	c.JSON(http.StatusOK, task)
 }
 
-// DeleteTask deletes a task by ID
+// @Summary Delete Task
+// @Description Deletes a task by its ID.
+// @Accept json
+// @Produce json
+// @Success 204 {string} Task deleted successfully
+// @Failure 404 {string} Task not found
+// @Failure 500 {string} Failed to delete task
+// @Failure 400 {string} Invalid request
+// @Router /mcp/tasks/{id} [delete]
 func (tc *TasksController) DeleteTask(c *gin.Context) {
 	id := c.Param("id")
 
@@ -57,7 +85,15 @@ func (tc *TasksController) DeleteTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task deleted successfully"})
 }
 
-// GetTasksByProvider retrieves tasks by provider
+// @Summary Get Tasks by Provider
+// @Description Retrieves tasks by provider.
+// @Accept json
+// @Produce json
+// @Success 200 {object} []models.TasksModel
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Tasks not found
+// @Failure 500 {string} Failed to get tasks
+// @Router /mcp/tasks/provider/{provider} [get]
 func (tc *TasksController) GetTasksByProvider(c *gin.Context) {
 	provider := c.Param("provider")
 	tasks, err := tc.tasksService.GetTasksByProvider(provider)
@@ -69,7 +105,15 @@ func (tc *TasksController) GetTasksByProvider(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
-// GetTasksByTarget retrieves tasks by target
+// @Summary Get Tasks by Target
+// @Description Retrieves tasks by target.
+// @Accept json
+// @Produce json
+// @Success 200 {object} []models.TasksModel
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Tasks not found
+// @Failure 500 {string} Failed to get tasks
+// @Router /mcp/tasks/target/{target} [get]
 func (tc *TasksController) GetTasksByTarget(c *gin.Context) {
 	target := c.Param("target")
 	tasks, err := tc.tasksService.GetTasksByTarget(target)
@@ -81,7 +125,15 @@ func (tc *TasksController) GetTasksByTarget(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
-// GetActiveTasks retrieves all active tasks
+// @Summary Get Active Tasks
+// @Description Retrieves all active tasks.
+// @Accept json
+// @Produce json
+// @Success 200 {object} []models.TasksModel
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Tasks not found
+// @Failure 500 {string} Failed to get tasks
+// @Router /mcp/tasks/active [get]
 func (tc *TasksController) GetActiveTasks(c *gin.Context) {
 	tasks, err := tc.tasksService.GetActiveTasks()
 	if err != nil {
@@ -92,7 +144,15 @@ func (tc *TasksController) GetActiveTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
-// GetTasksDueForExecution retrieves tasks due for execution
+// @Summary Get Tasks Due for Execution
+// @Description Retrieves tasks due for execution.
+// @Accept json
+// @Produce json
+// @Success 200 {object} []models.TasksModel
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Tasks not found
+// @Failure 500 {string} Failed to get tasks
+// @Router /mcp/tasks/due [get]
 func (tc *TasksController) GetTasksDueForExecution(c *gin.Context) {
 	tasks, err := tc.tasksService.GetTasksDueForExecution()
 	if err != nil {
@@ -103,7 +163,15 @@ func (tc *TasksController) GetTasksDueForExecution(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
-// MarkTaskAsRunning marks a task as running
+// @Summary Mark Task as Running
+// @Description Marks a task as running.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Task marked as running
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Task not found
+// @Failure 500 {string} Failed to mark task as running
+// @Router /mcp/tasks/{id}/running [post]
 func (tc *TasksController) MarkTaskAsRunning(c *gin.Context) {
 	id := c.Param("id")
 
@@ -115,7 +183,15 @@ func (tc *TasksController) MarkTaskAsRunning(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task marked as running"})
 }
 
-// MarkTaskAsCompleted marks a task as completed
+// @Summary Mark Task as Completed
+// @Description Marks a task as completed.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Task marked as completed
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Task not found
+// @Failure 500 {string} Failed to mark task as completed
+// @Router /mcp/tasks/{id}/completed [post]
 func (tc *TasksController) MarkTaskAsCompleted(c *gin.Context) {
 	id := c.Param("id")
 
@@ -132,7 +208,15 @@ func (tc *TasksController) MarkTaskAsCompleted(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task marked as completed"})
 }
 
-// MarkTaskAsFailed marks a task as failed
+// @Summary Mark Task as Failed
+// @Description Marks a task as failed.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Task marked as failed
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Task not found
+// @Failure 500 {string} Failed to mark task as failed
+// @Router /mcp/tasks/{id}/failed [post]
 func (tc *TasksController) MarkTaskAsFailed(c *gin.Context) {
 	id := c.Param("id")
 
@@ -149,7 +233,15 @@ func (tc *TasksController) MarkTaskAsFailed(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task marked as failed"})
 }
 
-// GetTaskCronJob retrieves the CronJob representation of a task
+// @Summary Get Task CronJob
+// @Description Retrieves the CronJob representation of a task.
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.CronJobIntegration
+// @Failure 400 {string} Invalid request
+// @Failure 404 {string} Task not found
+// @Failure 500 {string} Failed to get task CronJob
+// @Router /mcp/tasks/{id}/cronjob [get]
 func (tc *TasksController) GetTaskCronJob(c *gin.Context) {
 	id := c.Param("id")
 

@@ -261,19 +261,38 @@ __main() {
       log success "All tests passed successfully."
       ;;
     build-docs|BUILD-DOCS|-bdc|-BDC)
-      log info "Running build-docs command..."
-      if ! go build -o "${_ROOT_DIR}/bin/kbxctl-docs" "${_ROOT_DIR}/cmd/docs/main.go"; then
+      log info "Generating API documentation..."
+
+      if ! go install github.com/swaggo/swag/cmd/swag@latest; then
+        log error "Failed to install swaggo/swag." true
+        return 1
+      fi
+
+      if ! swag init -g cmd/swagger/main.go -o docs/ --parseDependency --parseInternal; then
+        log error "Failed to initialize swag." true
+        return 1
+      fi
+
+      if ! go build -o "${_ROOT_DIR}/bin/${_APP_NAME}-docs" "${_ROOT_DIR}/cmd/swagger/main.go"; then
         log error "Failed to build documentation binary." true
         return 1
       fi
-      log success "Documentation binary built successfully."
+      chmod +x "${_ROOT_DIR}/bin/${_APP_NAME}-docs" || {
+        log error "Failed to make documentation binary executable." true
+        return 1
+      }
+      log success "Documentation binary built successfully at ${_ROOT_DIR}/bin/${_APP_NAME}-docs" true
       ;;
     serve-docs|SERVE-DOCS|-sdc|-SDC)
-      if [[ -f "${_ROOT_DIR}/bin/kbxctl-docs" ]]; then
+      if [[ -f "${_ROOT_DIR}/bin/${_APP_NAME}-docs" ]]; then
         log info "Starting documentation server..."
-        "${_ROOT_DIR}/bin/kbxctl-docs" serve
+        "${_ROOT_DIR}/bin/${_APP_NAME}-docs" || {
+          log error "Failed to start documentation server." true
+          return 1
+        }
+        log success "Documentation server successfully ran at http://localhost:8080/swagger/index.html" true
       else
-        log error "Documentation binary not found: ${_ROOT_DIR}/bin/kbxctl-docs" true
+        log error "Documentation binary not found: ${_ROOT_DIR}/bin/${_APP_NAME}-docs" true
         return 1
       fi
       ;;

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	customers_controller "github.com/rafa-mori/gobe/internal/controllers/customers"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
-	l "github.com/rafa-mori/logz"
+	gl "github.com/rafa-mori/gobe/logger"
 )
 
 type CustomerRoutes struct {
@@ -27,24 +27,33 @@ type CustomerRoutes struct {
 
 func NewCustomerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		l.ErrorCtx("Router is nil", nil)
+		gl.Log("error", "Router is nil for CustomerRoute")
 		return nil
 	}
 	rtl := *rtr
 	dbService := rtl.GetDatabaseService()
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for CustomerRoute")
+		return nil
+	}
 	dbGorm, err := dbService.GetDB()
 	if err != nil {
-		l.ErrorCtx("Failed to get DB from service", map[string]interface{}{"error": err.Error()})
+		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
 	customerController := customers_controller.NewCustomerController(dbGorm)
 
+	secureProperties := make(map[string]bool)
+	secureProperties["secure"] = true
+	secureProperties["validateAndSanitize"] = false
+	secureProperties["validateAndSanitizeBody"] = false
+
 	routes := map[string]ar.IRoute{
-		"GetAllCustomers": NewRoute(http.MethodGet, "/customers", "application/json", gin.WrapF(customerController.GetAllCustomers), nil, dbService),
-		"GetCustomerByID": NewRoute(http.MethodGet, "/customers/:id", "application/json", gin.WrapF(customerController.GetCustomerByID), nil, dbService),
-		"CreateCustomer":  NewRoute(http.MethodPost, "/customers", "application/json", gin.WrapF(customerController.CreateCustomer), nil, dbService),
-		"UpdateCustomer":  NewRoute(http.MethodPut, "/customers/:id", "application/json", gin.WrapF(customerController.UpdateCustomer), nil, dbService),
-		"DeleteCustomer":  NewRoute(http.MethodDelete, "/customers/:id", "application/json", gin.WrapF(customerController.DeleteCustomer), nil, dbService),
+		"GetAllCustomers": NewRoute(http.MethodGet, "/customers", "application/json", gin.WrapF(customerController.GetAllCustomers), nil, dbService, secureProperties),
+		"GetCustomerByID": NewRoute(http.MethodGet, "/customers/:id", "application/json", gin.WrapF(customerController.GetCustomerByID), nil, dbService, secureProperties),
+		"CreateCustomer":  NewRoute(http.MethodPost, "/customers", "application/json", gin.WrapF(customerController.CreateCustomer), nil, dbService, secureProperties),
+		"UpdateCustomer":  NewRoute(http.MethodPut, "/customers/:id", "application/json", gin.WrapF(customerController.UpdateCustomer), nil, dbService, secureProperties),
+		"DeleteCustomer":  NewRoute(http.MethodDelete, "/customers/:id", "application/json", gin.WrapF(customerController.DeleteCustomer), nil, dbService, secureProperties),
 	}
 	return routes
 }
@@ -54,7 +63,7 @@ func (a *CustomerRoutes) DummyPlaceHolder(_ chan interface{}) gin.HandlerFunc {
 		return nil
 	}
 	return func(c *gin.Context) {
-		l.NoticeCtx("Sending Dummy PlaceHolder context to data Channel", nil)
+		gl.Log("info", "Sending Dummy PlaceHolder context to data Channel")
 		c.JSON(http.StatusOK, gin.H{"message": "Dummy PlaceHolder"})
 	}
 }

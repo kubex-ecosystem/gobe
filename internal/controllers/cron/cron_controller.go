@@ -45,6 +45,17 @@ func (cc *CronController) RegisterRoutes(router *gin.Engine) {
 	}
 }
 
+// @Summary Cron Job Management
+// @Description This controller manages cron jobs, allowing users to create, update, delete, and execute cron jobs.
+// @Tags cron
+// @Schemes http https
+// @Summary Get All Cron Jobs
+// @Description Retrieves all cron jobs in the system.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[[]cron.CronJobModel]
+// @Failure 500 {string} Failed to fetch cron jobs
+// @Router /cronjobs [get]
 func (cc *CronController) GetAllCronJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -59,6 +70,13 @@ func (cc *CronController) GetAllCronJobs(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron jobs fetched successfully", "", jobs, nil, http.StatusOK)
 }
 
+// @Summary Get Cron Job by ID
+// @Description Retrieves a specific cron job by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[cron.CronJobModel]
+// @Failure 404 {string} Cron job not found
+// @Router /cronjobs/{id} [get]
 func (cc *CronController) GetCronJobByID(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -78,6 +96,13 @@ func (cc *CronController) GetCronJobByID(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job fetched successfully", "", job, nil, http.StatusOK)
 }
 
+// @Summary Create Cron Job
+// @Description Creates a new cron job.
+// @Accept json
+// @Produce json
+// @Success 201 {object} types.APIResponse[cron.CronJobModel]
+// @Failure 400 {string} Failed to create cron job
+// @Router /cronjobs [post]
 func (cc *CronController) CreateCronJob(c *gin.Context) {
 	var job *cron.CronJobModel
 	if err := c.ShouldBindJSON(&job); err != nil {
@@ -111,6 +136,15 @@ func (cc *CronController) CreateCronJob(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job created successfully", "", createdJob, nil, http.StatusCreated)
 }
 
+// @Summary Update Cron Job
+// @Description Updates an existing cron job.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[cron.CronJobModel]
+// @Failure 400 {string} Failed to update cron job
+// @Failure 404 {string} Cron job not found
+// @Failure 500 {string} Failed to update cron job
+// @Router /cronjobs/{id} [put]
 func (cc *CronController) UpdateCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -140,6 +174,15 @@ func (cc *CronController) UpdateCronJob(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job updated successfully", "", updatedJob, nil, http.StatusOK)
 }
 
+// @Summary Delete Cron Job
+// @Description Deletes a specific cron job by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron job deleted successfully
+// @Failure 404 {string} Cron job not found
+// @Failure 400 {string} Invalid cron job ID
+// @Failure 500 {string} Failed to delete cron job
+// @Router /cronjobs/{id} [delete]
 func (cc *CronController) DeleteCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -178,6 +221,13 @@ func (cc *CronController) DeleteCronJob(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job deleted successfully", "", nil, nil, http.StatusOK)
 }
 
+// @Summary Enable Cron Job
+// @Description Enables a specific cron job by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron job enabled successfully
+// @Failure 404 {string} Cron job not found
+// @Router /cronjobs/{id}/enable [post]
 func (cc *CronController) EnableCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -197,6 +247,13 @@ func (cc *CronController) EnableCronJob(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job enabled successfully", "", nil, nil, http.StatusOK)
 }
 
+// @Summary Disable Cron Job
+// @Description Disables a specific cron job by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron job disabled successfully
+// @Failure 404 {string} Cron job not found
+// @Router /cronjobs/{id}/disable [post]
 func (cc *CronController) DisableCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -215,6 +272,13 @@ func (cc *CronController) DisableCronJob(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job disabled successfully", "", nil, nil, http.StatusOK)
 }
 
+// @Summary Execute Cron Job Manually
+// @Description Executes a specific cron job manually by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron job executed successfully
+// @Failure 404 {string} Cron job not found
+// @Router /cronjobs/{id}/execute [post]
 func (cc *CronController) ExecuteCronJobManually(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -233,6 +297,13 @@ func (cc *CronController) ExecuteCronJobManually(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job executed successfully", "", nil, nil, http.StatusOK)
 }
 
+// @Summary Execute Cron Job Manually by ID
+// @Description Executes a specific cron job manually by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron job executed successfully
+// @Failure 404 {string} Cron job not found
+// @Router /cronjobs/{id}/execute/{job_id} [post]
 func (cc *CronController) ExecuteCronJobManuallyByID(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -261,6 +332,15 @@ func (cc *CronController) ExecuteCronJobManuallyByID(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job executed successfully", "", nil, nil, http.StatusOK)
 }
 
+// @Summary Reschedule Cron Job
+// @Description Reschedules a specific cron job by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron job rescheduled successfully
+// @Failure 400 {string} Invalid cron job ID
+// @Failure 404 {string} Cron job not found
+// @Failure 500 {string} Failed to reschedule cron job
+// @Router /cronjobs/{id}/reschedule [post]
 func (cc *CronController) RescheduleCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -299,6 +379,13 @@ func (cc *CronController) RescheduleCronJob(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron job rescheduled successfully", "", nil, nil, http.StatusOK)
 }
 
+// @Summary List Cron Jobs
+// @Description Lists all cron jobs.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron jobs listed successfully
+// @Failure 404 {string} Cron jobs not found
+// @Router /cronjobs/list [get]
 func (cc *CronController) ListCronJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -313,6 +400,13 @@ func (cc *CronController) ListCronJobs(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron jobs listed successfully", "", jobs, nil, http.StatusOK)
 }
 
+// @Summary List Active Cron Jobs
+// @Description Lists all active cron jobs.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Active cron jobs listed successfully
+// @Failure 404 {string} Cron jobs not found
+// @Router /cronjobs/active [get]
 func (cc *CronController) ListActiveCronJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -327,6 +421,13 @@ func (cc *CronController) ListActiveCronJobs(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Active cron jobs listed successfully", "", jobs, nil, http.StatusOK)
 }
 
+// @Summary Validate Cron Expression
+// @Description Validates a cron expression.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Cron expression is valid
+// @Failure 404 {string} Invalid cron expression
+// @Router /cronjobs/validate [post]
 func (cc *CronController) ValidateCronExpression(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -347,7 +448,13 @@ func (cc *CronController) ValidateCronExpression(c *gin.Context) {
 	cc.APIWrapper.JSONResponse(c, "success", "Cron expression is valid", "", nil, nil, http.StatusOK)
 }
 
-// GetJobQueue retrieves the current state of the job queue.
+// @Summary Get Job Queue
+// @Description Retrieves the current state of the job queue.
+// @Accept json
+// @Produce json
+// @Success 200 {object} []jobqueue.JobQueue
+// @Failure 404 {string} Job queue not found
+// @Router /cronjobs/queue [get]
 func (cc *CronController) GetJobQueue(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -362,7 +469,13 @@ func (cc *CronController) GetJobQueue(c *gin.Context) {
 	c.JSON(http.StatusOK, queue)
 }
 
-// ReprocessFailedJobs reprocesses all failed jobs in the queue.
+// @Summary Reprocess Failed Jobs
+// @Description Reprocesses all failed jobs in the queue.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Failed jobs reprocessed successfully
+// @Failure 404 {string} Failed jobs not found
+// @Router /cronjobs/reprocess [post]
 func (cc *CronController) ReprocessFailedJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
@@ -377,7 +490,13 @@ func (cc *CronController) ReprocessFailedJobs(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Failed jobs reprocessed successfully"})
 }
 
-// GetExecutionLogs retrieves execution logs for a specific cron job.
+// @Summary Get Execution Logs
+// @Description Retrieves the execution logs for a specific cron job by its ID.
+// @Accept json
+// @Produce json
+// @Success 200 {string} Execution logs retrieved successfully
+// @Failure 404 {string} Cron job not found
+// @Router /cronjobs/logs [get]
 func (cc *CronController) GetExecutionLogs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {

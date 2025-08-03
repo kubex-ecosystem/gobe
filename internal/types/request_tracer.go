@@ -4,22 +4,28 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	"github.com/rafa-mori/gobe/logger"
 	gl "github.com/rafa-mori/gobe/logger"
 	l "github.com/rafa-mori/logz"
 )
 
-var (
-	RequestTracers = make(map[string]ci.IRequestsTracer)
-)
-
 const RequestLimit = 5
 const RequestWindow = 60 * time.Second
+
+var requestTracers *RequestTracers
+
+type RequestTracers struct {
+	gobe    ci.IGoBE
+	tracers map[string]ci.IRequestsTracer
+}
 
 type RequestsTracer struct {
 	Mutexes       ci.IMutexes `json:"-" yaml:"-" xml:"-" toml:"-" gorm:"-"`
@@ -40,16 +46,16 @@ type RequestsTracer struct {
 	Mapper        ci.IMapper[ci.IRequestsTracer] `json:"-" yaml:"-" xml:"-" toml:"-" gorm:"-"`
 }
 
-func newRequestsTracer(ip, port, endpoint, method, userAgent, filePath string) *RequestsTracer {
+func newRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePath string) *RequestsTracer {
 	var tracer *RequestsTracer
 	var exists bool
 
-	if RequestTracers == nil {
-		RequestTracers = make(map[string]ci.IRequestsTracer)
+	if requestTracers == nil {
+		requestTracers = NewRequestTracers(g)
 	}
 	var tracerT ci.IRequestsTracer
 	var ok bool
-	if tracerT, exists = RequestTracers[ip]; exists {
+	if tracerT, exists = requestTracers.tracers[ip]; exists {
 		tracer, ok = tracerT.(*RequestsTracer)
 		if !ok {
 			gl.Log("error", fmt.Sprintf("Error casting tracer to RequestsTracer for IP: %s", ip))
@@ -112,7 +118,7 @@ func newRequestsTracer(ip, port, endpoint, method, userAgent, filePath string) *
 		}
 	}
 
-	RequestTracers[ip] = tracer
+	requestTracers.tracers[ip] = tracer
 	rTracer := ci.IRequestsTracer(tracer)
 
 	tracer.Mapper = NewMapperType(&rTracer, tracer.filePath)
@@ -126,11 +132,11 @@ func newRequestsTracer(ip, port, endpoint, method, userAgent, filePath string) *
 
 	return tracer
 }
-func NewRequestsTracerType(ip, port, endpoint, method, userAgent, filePath string) ci.IRequestsTracer {
-	return newRequestsTracer(ip, port, endpoint, method, userAgent, filePath)
+func NewRequestsTracerType(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePath string) ci.IRequestsTracer {
+	return newRequestsTracer(g, ip, port, endpoint, method, userAgent, filePath)
 }
-func NewRequestsTracer(ip, port, endpoint, method, userAgent, filePath string) ci.IRequestsTracer {
-	return newRequestsTracer(ip, port, endpoint, method, userAgent, filePath)
+func NewRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePath string) ci.IRequestsTracer {
+	return newRequestsTracer(g, ip, port, endpoint, method, userAgent, filePath)
 }
 
 func (r *RequestsTracer) Mu() ci.IMutexes          { return r.Mutexes }
@@ -196,8 +202,11 @@ func (r *RequestsTracer) SetRequestLimit(limit int) {
 }
 
 func LoadRequestsTracerFromFile(g ci.IGoBE) (map[string]ci.IRequestsTracer, error) {
-	if RequestTracers == nil {
-		RequestTracers = make(map[string]ci.IRequestsTracer)
+	if requestTracers == nil {
+		requestTracers = NewRequestTracers(g)
+	}
+	if len(requestTracers.tracers) == 0 {
+		requestTracers.tracers = make(map[string]ci.IRequestsTracer)
 	}
 
 	gl.Log("info", "Loading request tracers from file")
@@ -244,20 +253,20 @@ func LoadRequestsTracerFromFile(g ci.IGoBE) (map[string]ci.IRequestsTracer, erro
 				continue
 			}
 			gl.Log("info", fmt.Sprintf("Decoded request tracer: %s", existing.IP))
-			RequestTracers[existing.IP] = existing
+			requestTracers.tracers[existing.IP] = existing
 		}
 	}(g)
 
 	gl.Log("info", "Waiting for decoding to finish")
 	//g.Mu().MuWait()
 
-	if len(RequestTracers) > 0 {
-		gl.Log("info", fmt.Sprintf("Loaded %d request tracers", len(RequestTracers)))
+	if len(requestTracers.tracers) > 0 {
+		gl.Log("info", fmt.Sprintf("Loaded %d request tracers", len(requestTracers.tracers)))
 	} else {
 		gl.Log("warn", "No request tracers loaded from file")
 	}
 
-	return RequestTracers, nil
+	return requestTracers.tracers, nil
 }
 func updateRequestTracer(g ci.IGoBE, updatedTracer ci.IRequestsTracer) error {
 	var decoder *json.Decoder
@@ -394,4 +403,70 @@ func updateRequestTracerInMemory(updatedTracer ci.IRequestsTracer) error {
 		}
 		return os.WriteFile(updatedTracer.GetFilePath(), []byte(strings.Join(lines, "\n")), 0644)
 	}
+}
+
+func NewRequestTracers(g ci.IGoBE) *RequestTracers {
+	return &RequestTracers{
+		gobe:    g,
+		tracers: make(map[string]ci.IRequestsTracer),
+	}
+}
+
+func (r RequestTracers) RequestsTracerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := c.ClientIP()
+		port := c.Request.URL.Port()
+		endpoint := c.Request.URL.Path
+		method := c.Request.Method
+		userAgent := c.Request.UserAgent()
+
+		if ip == "" || port == "" || endpoint == "" || method == "" || userAgent == "" {
+			gl.Log("error", "Invalid request data for RequestTracerMiddleware")
+			c.Next()
+			return
+		}
+
+		filePath := r.gobe.GetLogFilePath()
+		tracer := NewRequestsTracerType(r.gobe, ip, port, endpoint, method, userAgent, filePath)
+
+		if isDuplicateRequest(r.gobe, tracer, logger.GetLogger[*RequestsTracer](nil).GetLogger()) {
+			gl.Log("info", fmt.Sprintf("Duplicate request detected for IP: %s, Port: %s", ip, port))
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
+			return
+		}
+
+		c.Set("requestTracer", tracer)
+		c.Next()
+
+		if err := updateRequestTracer(r.gobe, tracer); err != nil {
+			gl.Log("error", fmt.Sprintf("Error updating request tracer: %v", err))
+		}
+	}
+}
+
+func (r *RequestTracers) GetRequestTracers() map[string]ci.IRequestsTracer {
+	//r.Mutexes.MuRLock()
+	//defer r.Mutexes.MuRUnlock()
+	return r.tracers
+}
+func (r *RequestTracers) SetRequestTracers(tracers map[string]ci.IRequestsTracer) {
+	/*r.Mutexes.MuAdd(1)
+	defer r.Mutexes.MuDone()*/
+	r.tracers = tracers
+}
+func (r *RequestTracers) AddRequestTracer(name string, tracer ci.IRequestsTracer) {
+	//r.Mutexes.MuAdd(1)
+	//defer r.Mutexes.MuDone()
+	r.tracers[name] = tracer
+}
+func (r *RequestTracers) GetRequestTracer(name string) (ci.IRequestsTracer, bool) {
+	//r.Mutexes.MuRLock()
+	//defer r.Mutexes.MuRUnlock()
+	tracer, ok := r.tracers[name]
+	return tracer, ok
+}
+func (r *RequestTracers) RemoveRequestTracer(name string) {
+	//r.Mutexes.MuAdd(1)
+	//defer r.Mutexes.MuDone()
+	delete(r.tracers, name)
 }

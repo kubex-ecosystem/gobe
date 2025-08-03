@@ -49,6 +49,17 @@ func (uc *UserController) RegisterRoutes(router *gin.Engine) {
 	}
 }
 
+// @Summary User Management
+// @Description UserController provides endpoints for user management.
+// @Schemes http https
+// @Tags users
+// @Summary Get All Users
+// @Description Retrieves a list of all users.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[[]user.UserModel]
+// @Failure 500 {object} types.APIResponse[string]
+// @Router /users [get]
 func (uc *UserController) GetAllUsers(c *gin.Context) {
 	users, err := uc.userService.ListUsers()
 	if err != nil {
@@ -58,6 +69,13 @@ func (uc *UserController) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// @Summary Get User by ID
+// @Description Retrieves a specific user by their ID.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[user.UserModel]
+// @Failure 404 {object} types.APIResponse[string]
+// @Router /users/{id} [get]
 func (uc *UserController) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	user, err := uc.userService.GetUserByID(id)
@@ -68,6 +86,13 @@ func (uc *UserController) GetUserByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// @Summary Create User
+// @Description Creates a new user.
+// @Accept json
+// @Produce json
+// @Success 201 {object} types.APIResponse[user.UserModel]
+// @Failure 400 {object} types.APIResponse[string]
+// @Router /users [post]
 func (uc *UserController) CreateUser(c *gin.Context) {
 	var userRequest user.UserModel
 	if err := c.ShouldBindJSON(&userRequest); err != nil {
@@ -82,6 +107,14 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 	c.JSON(http.StatusCreated, createdUser)
 }
 
+// @Summary Authenticate User
+// @Description Authenticates a user and returns a token.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[string]
+// @Failure 400 {object} types.APIResponse[string]
+// @Failure 401 {object} types.APIResponse[string]
+// @Router /users/sign-in [post]
 func (uc *UserController) AuthenticateUser(c *gin.Context) {
 	// Define a DTO for authentication requests
 	type UserRequestDTO struct {
@@ -225,6 +258,15 @@ func (uc *UserController) AuthenticateUser(c *gin.Context) {
 	//c.JSON(http.StatusOK, gin.H{"token": token.IDToken, "refresh_token": token.RefreshToken})
 }
 
+// @Summary Refresh Token
+// @Description Refreshes the user's authentication token.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[string]
+// @Failure 400 {object} types.APIResponse[string]
+// @Failure 401 {object} types.APIResponse[string]
+// @Failure 500 {object} types.APIResponse[string]
+// @Router /users/refresh-token [post]
 func (uc *UserController) RefreshToken(c *gin.Context) {
 	prevTokenID := strings.ReplaceAll(c.GetHeader("Authorization"), "Bearer ", "")
 	if prevTokenID == "" {
@@ -304,6 +346,15 @@ func (uc *UserController) RefreshToken(c *gin.Context) {
 	//c.JSON(http.StatusOK, gin.H{"token": token.IDToken, "refresh_token": token.RefreshToken})
 }
 
+// @Summary Logout
+// @Description Logs out the user by invalidating the refresh token.
+// @Accept json
+// @Produce json
+// @Success 204 {object} types.APIResponse[string]
+// @Failure 400 {object} types.APIResponse[string]
+// @Failure 401 {object} types.APIResponse[string]
+// @Failure 500 {object} types.APIResponse[string]
+// @Router /users/logout [post]
 func (uc *UserController) Logout(c *gin.Context) {
 	refreshTk := strings.ReplaceAll(c.GetHeader("Authorization"), "Bearer ", "")
 	if refreshTk == "" {
@@ -326,6 +377,14 @@ func (uc *UserController) Logout(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// @Summary Get User By Email
+// @Description Retrieves a user by their email address.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[string]
+// @Failure 400 {object} types.APIResponse[string]
+// @Failure 404 {object} types.APIResponse[string]
+// @Router /users/email/{email} [get]
 func (uc *UserController) GetUserByEmail(c *gin.Context) {
 	email := c.Param("email")
 	user, err := uc.userService.GetUserByEmail(email)
@@ -336,6 +395,14 @@ func (uc *UserController) GetUserByEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// @Summary Get User By Username
+// @Description Retrieves a user by their username.
+// @Accept json
+// @Produce json
+// @Success 200 {object} types.APIResponse[string]
+// @Failure 400 {object} types.APIResponse[string]
+// @Failure 404 {object} types.APIResponse[string]
+// @Router /users/username/{username} [get]
 func (uc *UserController) GetUserByUsername(c *gin.Context) {
 	username := c.Param("username")
 	user, err := uc.userService.GetUserByUsername(username)
@@ -346,6 +413,17 @@ func (uc *UserController) GetUserByUsername(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// @Summary Update User
+// @Description Updates a user's information.
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Param user body user.UserModel true "User information"
+// @Success 200 {object} types.APIResponse[string]
+// @Failure 400 {object} types.APIResponse[string]
+// @Failure 404 {object} types.APIResponse[string]
+// @Failure 500 {object} types.APIResponse[string]
+// @Router /users/{id} [put]
 func (uc *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 	var userRequest user.UserModel
@@ -362,6 +440,15 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, updatedUser)
 }
 
+// @Summary Delete User
+// @Description Deletes a user by their ID.
+// @Accept json
+// @Produce json
+// @Success 204 {object} types.APIResponse[string]
+// @Failure 400 {object} types.APIResponse[string]
+// @Failure 404 {object} types.APIResponse[string]
+// @Failure 500 {object} types.APIResponse[string]
+// @Router /users/{id} [delete]
 func (uc *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 	err := uc.userService.DeleteUser(id)

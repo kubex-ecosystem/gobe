@@ -44,6 +44,14 @@ func NewDiscordController(db *gorm.DB) *DiscordController {
 	}
 }
 
+// @Summary Discord OAuth2 Authorization
+// @Schemes http https
+// @Description Initiates the OAuth2 authorization flow for Discord
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 200 {string} Authorization URL
+// @Router /discord/authorize [get]
 func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	log.Printf("🔐 Discord OAuth2 authorize request received")
 
@@ -142,6 +150,13 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	})
 }
 
+// @Summary WebSocket connection
+// @Description Upgrades the HTTP connection to a WebSocket connection
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 101 {string} WebSocket connection established
+// @Router /discord/socket [get]
 func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 	conn, err := dc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -161,6 +176,13 @@ func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 	log.Printf("WebSocket client connected: %s", client.ID)
 }
 
+// @Summary Get pending approvals
+// @Description Retrieves a list of pending approval requests
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 200 {array} string "Pending approvals"
+// @Router /discord/approvals [get]
 func (dc *DiscordController) GetPendingApprovals(c *gin.Context) {
 	// This would need to be implemented based on your approval manager interface
 	c.JSON(http.StatusOK, gin.H{
@@ -168,6 +190,14 @@ func (dc *DiscordController) GetPendingApprovals(c *gin.Context) {
 	})
 }
 
+// @Summary Approve request
+// @Description Approves a pending approval request
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Param id path string true "Request ID"
+// @Success 200 {string} Request approved
+// @Router /discord/approvals/{id}/approve [post]
 func (dc *DiscordController) ApproveRequest(c *gin.Context) {
 	requestID := c.Param("id")
 
@@ -180,6 +210,14 @@ func (dc *DiscordController) ApproveRequest(c *gin.Context) {
 	})
 }
 
+// @Summary Reject request
+// @Description Rejects a pending approval request
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Param id path string true "Request ID"
+// @Success 200 {string} Request rejected
+// @Router /discord/approvals/{id}/reject [post]
 func (dc *DiscordController) RejectRequest(c *gin.Context) {
 	requestID := c.Param("id")
 
@@ -192,6 +230,13 @@ func (dc *DiscordController) RejectRequest(c *gin.Context) {
 	})
 }
 
+// @Summary Handle test message
+// @Description Handles a test message from the user
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 200 {string} Test message processed successfully
+// @Router /discord/test [post]
 func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 	var testMsg struct {
 		Content  string `json:"content"`
@@ -241,6 +286,13 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 	})
 }
 
+// @Summary Handle Discord OAuth2 token
+// @Description Handles the OAuth2 token exchange for Discord
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 200 {string} Token exchanged successfully
+// @Router /discord/oauth2/token [post]
 func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
 	log.Printf("🎫 Discord OAuth2 token request received")
 
@@ -275,6 +327,13 @@ func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
 	})
 }
 
+// @Summary Handle Discord webhook
+// @Description Handles incoming webhook events from Discord
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 200 {string} Webhook processed successfully
+// @Router /discord/webhook/{webhookId}/{webhookToken} [post]
 func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	webhookID := c.Param("webhookId")
 	webhookToken := c.Param("webhookToken")
@@ -307,6 +366,13 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "webhook received"})
 }
 
+// @Summary Handle Discord interactions
+// @Description Handles interactions from Discord
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 200 {string} Interaction processed successfully
+// @Router /discord/interactions [post]
 func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	log.Printf("⚡ Discord interaction received")
 

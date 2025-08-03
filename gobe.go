@@ -12,6 +12,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	gdbf "github.com/rafa-mori/gdbase/factory"
+	"github.com/rafa-mori/gdbase/services"
+	"github.com/rafa-mori/gdbase/types"
 	ut "github.com/rafa-mori/gdbase/utils"
 	crp "github.com/rafa-mori/gobe/factory/security"
 	cm "github.com/rafa-mori/gobe/internal/common"
@@ -450,11 +452,19 @@ func (g *GoBE) GetConfigFilePath() string {
 func (g *GoBE) SetDatabaseService(dbService gdbf.DBService) {
 	//g.Mutexes.MuAdd(1)
 	//defer g.Mutexes.MuDone()
-	g.Properties["dbService"] = t.NewProperty[gdbf.DBService]("dbService", &dbService, true, nil)
+	g.Properties["dbService"] = t.NewProperty("dbService", &dbService, true, nil)
 }
 func (g *GoBE) GetDatabaseService() gdbf.DBService {
 	//g.Mutexes.MuRLock()
 	//defer g.Mutexes.MuRUnlock()
-	dbT := g.Properties["db"].(*t.Property[gdbf.DBService])
-	return dbT.GetValue()
+	if dbT, ok := g.Properties["dbService"].(*t.Property[gdbf.DBService]); ok {
+		return dbT.GetValue()
+	} else if dbT, ok := g.Properties["dbService"].(*t.Property[services.IDBService]); ok {
+		return dbT.GetValue()
+	} else if dbT, ok := g.Properties["dbService"].(*t.Property[types.DBService]); ok {
+		return dbT.GetValue()
+	} else {
+		gl.Log("error", "Database service is nil")
+		return nil
+	}
 }

@@ -61,6 +61,14 @@ func (c *ContactController) HandleContact(ctx *gin.Context) {
 	gl.Log("success", "Message sent successfully!")
 }
 
+// @Summary Contact flow for messaging through Email or other channels
+// @Description This endpoint handles the contact form submissions and sends messages through the appropriate channels.
+// @Schemes http https
+// @Tags contact
+// @Accept json
+// @Produce json
+// @Success 200 {string} Message sent successfully
+// @Router /contact [get]
 func (c *ContactController) GetContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
@@ -89,6 +97,14 @@ func (c *ContactController) GetContact(ctx *gin.Context) {
 	gl.Log("success", "Message sent successfully!")
 }
 
+// @Summary Contact flow for messaging through Email or other channels
+// @Description This endpoint handles the contact form submissions and sends messages through the appropriate channels.
+// @Schemes http https
+// @Tags contact
+// @Accept json
+// @Produce json
+// @Success 200 {string} Message sent successfully
+// @Router /contact [post]
 func (c *ContactController) PostContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
@@ -117,6 +133,14 @@ func (c *ContactController) PostContact(ctx *gin.Context) {
 	gl.Log("success", "Message sent successfully!")
 }
 
+// @Summary Contact flow for messaging through Email or other channels
+// @Description This endpoint handles the contact form submissions and sends messages through the appropriate channels.
+// @Schemes http https
+// @Tags contact
+// @Accept json
+// @Produce json
+// @Success 200 {object} t.ContactForm
+// @Router /contact/form [get]
 func (c *ContactController) GetContactForm(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
@@ -145,6 +169,14 @@ func (c *ContactController) GetContactForm(ctx *gin.Context) {
 	gl.Log("success", "Message sent successfully!")
 }
 
+// @Summary Get contact form by ID
+// @Description This endpoint retrieves a specific contact form submission by its ID.
+// @Schemes http https
+// @Tags contact
+// @Accept json
+// @Produce json
+// @Success 200 {object} t.ContactForm
+// @Router /contact/form/:id [get]
 func (c *ContactController) GetContactFormByID(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {

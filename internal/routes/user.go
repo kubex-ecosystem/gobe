@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/controllers/users"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"
@@ -20,6 +21,10 @@ func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for AuthRoute")
+		return nil
+	}
 	dbGorm, err := dbService.GetDB()
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
@@ -28,12 +33,17 @@ func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	userController := users.NewUserController(dbGorm)
 
 	routesMap := make(map[string]ar.IRoute)
-	middlewaresMap := make(map[string]any)
+	middlewaresMap := rtl.GetMiddlewares()
 
-	routesMap["LoginRoute"] = NewRoute(http.MethodPost, "/sign-in", "application/json", userController.AuthenticateUser, middlewaresMap, dbService)
-	routesMap["LogoutRoute"] = NewRoute(http.MethodPost, "/sign-out", "application/json", userController.Logout, middlewaresMap, dbService)
-	routesMap["RefreshRoute"] = NewRoute(http.MethodPost, "check", "application/json", userController.RefreshToken, middlewaresMap, dbService)
-	routesMap["RegisterRoute"] = NewRoute(http.MethodPost, "/sign-up", "application/json", userController.CreateUser, middlewaresMap, dbService)
+	secureProperties := make(map[string]bool)
+	secureProperties["secure"] = true
+	secureProperties["validateAndSanitize"] = false
+	secureProperties["validateAndSanitizeBody"] = false
+
+	routesMap["LoginRoute"] = NewRoute(http.MethodPost, "/sign-in", "application/json", userController.AuthenticateUser, nil, dbService, nil)
+	routesMap["LogoutRoute"] = NewRoute(http.MethodPost, "/sign-out", "application/json", userController.Logout, middlewaresMap, dbService, secureProperties)
+	routesMap["RefreshRoute"] = NewRoute(http.MethodPost, "check", "application/json", userController.RefreshToken, middlewaresMap, dbService, secureProperties)
+	routesMap["RegisterRoute"] = NewRoute(http.MethodPost, "/sign-up", "application/json", userController.CreateUser, nil, dbService, nil)
 
 	return routesMap
 }
@@ -46,6 +56,10 @@ func NewUserRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for UserRoute")
+		return nil
+	}
 	dbGorm, err := dbService.GetDB()
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
@@ -55,10 +69,17 @@ func NewUserRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	routesMap := make(map[string]ar.IRoute)
 
-	routesMap["GetAllUsers"] = NewRoute(http.MethodGet, "/users", "application/json", userController.GetAllUsers, nil, nil)
-	routesMap["GetUserByID"] = NewRoute(http.MethodGet, "/users/:id", "application/json", userController.GetUserByID, nil, nil)
-	routesMap["UpdateUser"] = NewRoute(http.MethodPut, "/users/:id", "application/json", userController.UpdateUser, nil, nil)
-	routesMap["DeleteUser"] = NewRoute(http.MethodDelete, "/users/:id", "application/json", userController.DeleteUser, nil, nil)
+	middlewaresMap := make(map[string]gin.HandlerFunc)
+
+	secureProperties := make(map[string]bool)
+	secureProperties["secure"] = true
+	secureProperties["validateAndSanitize"] = false
+	secureProperties["validateAndSanitizeBody"] = false
+
+	routesMap["GetAllUsers"] = NewRoute(http.MethodGet, "/users", "application/json", userController.GetAllUsers, middlewaresMap, dbService, secureProperties)
+	routesMap["GetUserByID"] = NewRoute(http.MethodGet, "/users/:id", "application/json", userController.GetUserByID, middlewaresMap, dbService, secureProperties)
+	routesMap["UpdateUser"] = NewRoute(http.MethodPut, "/users/:id", "application/json", userController.UpdateUser, middlewaresMap, dbService, secureProperties)
+	routesMap["DeleteUser"] = NewRoute(http.MethodDelete, "/users/:id", "application/json", userController.DeleteUser, middlewaresMap, dbService, secureProperties)
 
 	return routesMap
 }

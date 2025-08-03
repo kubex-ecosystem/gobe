@@ -34,12 +34,13 @@ func NewTokenService(config *srv.IDBConfig, logger l.Logger) (sci.TokenService, 
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
+	var err error
 	crtService := crt.NewCertService(os.ExpandEnv(cm.DefaultGoBEKeyPath), os.ExpandEnv(cm.DefaultGoBECertPath))
 
-	dbService, dbServiceErr := srv.NewDBService(config, logger)
-	if dbServiceErr != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBService: %v", dbServiceErr))
-		return nil, nil, fmt.Errorf("❌ Erro ao inicializar DBService: %v", dbServiceErr)
+	dbService, err := srv.NewDBService(config, logger)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBService: %v", err))
+		return nil, nil, fmt.Errorf("❌ Erro ao inicializar DBService: %v", err)
 	}
 
 	tkClient := sau.NewTokenClient(crtService, dbService)
@@ -47,13 +48,13 @@ func NewTokenService(config *srv.IDBConfig, logger l.Logger) (sci.TokenService, 
 		gl.Log("error", "❌ Erro ao inicializar TokenClient")
 		return nil, nil, fmt.Errorf("❌ Erro ao inicializar TokenClient")
 	}
-	tkService, _, _, tkServiceErr := tkClient.LoadTokenCfg()
-	if tkServiceErr != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar TokenService: %v", tkServiceErr))
-		return nil, nil, fmt.Errorf("❌ Erro ao inicializar TokenService: %v", tkServiceErr)
+	tkService, _, _, err := tkClient.LoadTokenCfg()
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar TokenService: %v", err))
+		return nil, nil, fmt.Errorf("❌ Erro ao inicializar TokenService: %v", err)
 	}
 
-	return tkService, crtService, nil
+	return tkService, crtService, err
 }
 
 func NewAuthenticationMiddleware(tokenService sci.TokenService, certService sci.ICertService, err error) gin.HandlerFunc {
@@ -62,15 +63,15 @@ func NewAuthenticationMiddleware(tokenService sci.TokenService, certService sci.
 		TokenService: tokenService,
 	}
 
-	if authMiddleware.CertService == nil || authMiddleware.TokenService == nil {
+	if authMiddleware.CertService == nil || authMiddleware.TokenService == nil || err != nil {
 		return func(c *gin.Context) {
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize authentication middleware"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to authenticate. Please try again later."})
 				c.Abort()
 				return
 			} else {
 				gl.Log("error", "❌ Erro ao inicializar AuthenticationMiddleware: CertService or TokenService is nil")
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize authentication middleware"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to authenticate. Please try again later."})
 				c.Next()
 			}
 		}
@@ -78,7 +79,7 @@ func NewAuthenticationMiddleware(tokenService sci.TokenService, certService sci.
 
 	return func(c *gin.Context) {
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to initialize authentication middleware"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to authenticate. Please try again later."})
 			c.Abort()
 		} else {
 			c.Next()
@@ -90,7 +91,7 @@ func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handler
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is missing"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Access Denied"})
 			c.Abort()
 			return
 		}
@@ -98,7 +99,13 @@ func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handler
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := a.validateToken(tokenString)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Access Denied"})
+			c.Abort()
+			return
+		}
+
+		if claims == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Access Denied"})
 			c.Abort()
 			return
 		}
@@ -106,18 +113,23 @@ func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handler
 		// Criando um contexto com o usuário autenticado
 		ctx := context.WithValue(c.Request.Context(), "user", claims)
 		c.Request = c.Request.WithContext(ctx)
+
 		c.Next()
 	}
 }
 
 func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.RegisteredClaims, error) {
-	publicK, publicKErr := a.CertService.GetPublicKey()
-	if publicKErr != nil {
-		gl.Log("error", fmt.Sprintf("Error getting public key: %v", publicKErr))
-		return nil, publicKErr
+	publicK, err := a.CertService.GetPublicKey()
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("Error getting public key: %v", err))
+		return nil, err
 	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			gl.Log("error", fmt.Sprintf("Unexpected signing method: %v", token.Header["alg"]))
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return publicK, nil
 	})
 
@@ -125,9 +137,13 @@ func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.Regis
 		return nil, err
 	}
 
+	if token == nil {
+		return nil, fmt.Errorf("Access Denied")
+	}
+
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
 		return claims, nil
 	}
 
-	return nil, fmt.Errorf("invalid token")
+	return nil, fmt.Errorf("Access Denied")
 }

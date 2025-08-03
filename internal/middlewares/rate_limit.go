@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	srv "github.com/rafa-mori/gobe/internal/services"
 	t "github.com/rafa-mori/gobe/internal/types"
 	gl "github.com/rafa-mori/gobe/logger"
@@ -16,14 +17,16 @@ type RateLimitMiddleware struct {
 	LogFile       string
 	requestLimit  int
 	requestWindow time.Duration
+	g             ci.IGoBE
 }
 
-func NewRateLimitMiddleware(dbConfig srv.IDBConfig, logDir string, limit int, window time.Duration) (*RateLimitMiddleware, error) {
+func NewRateLimitMiddleware(g ci.IGoBE, dbConfig srv.IDBConfig, logDir string, limit int, window time.Duration) (*RateLimitMiddleware, error) {
 	return &RateLimitMiddleware{
 		dbConfig:      &dbConfig,
 		LogFile:       logDir,
 		requestLimit:  limit,
 		requestWindow: window,
+		g:             g,
 	}, nil
 }
 
@@ -35,7 +38,7 @@ func (rl *RateLimitMiddleware) RateLimit(w http.ResponseWriter, r *http.Request)
 		return false
 	}
 
-	requestTracer := t.NewRequestsTracer(ip, port, r.URL.Path, r.Method, r.UserAgent(), rl.LogFile)
+	requestTracer := t.NewRequestsTracer(rl.g, ip, port, r.URL.Path, r.Method, r.UserAgent(), rl.LogFile)
 	requestTracer.GetMutexes().MuRLock()
 	defer requestTracer.GetMutexes().MuRUnlock()
 

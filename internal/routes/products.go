@@ -22,6 +22,10 @@ func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for ProductRoute")
+		return nil
+	}
 	dbGorm, err := dbService.GetDB()
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
@@ -30,13 +34,18 @@ func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	productController := products_controller.NewProductController(dbGorm)
 
 	routesMap := make(map[string]ar.IRoute)
-	middlewaresMap := make(map[string]any)
+	middlewaresMap := make(map[string]gin.HandlerFunc)
 
-	routesMap["GetProductsRoute"] = NewRoute(http.MethodGet, "/products", "application/json", gin.WrapF(productController.GetAllProducts), middlewaresMap, dbService)
-	routesMap["GetProductRoute"] = NewRoute(http.MethodGet, "/products/:id", "application/json", gin.WrapF(productController.GetProductByID), middlewaresMap, dbService)
-	routesMap["CreateProductRoute"] = NewRoute(http.MethodPost, "/products", "application/json", gin.WrapF(productController.CreateProduct), middlewaresMap, dbService)
-	routesMap["UpdateProductRoute"] = NewRoute(http.MethodPut, "/products/:id", "application/json", gin.WrapF(productController.UpdateProduct), middlewaresMap, dbService)
-	routesMap["DeleteProductRoute"] = NewRoute(http.MethodDelete, "/products/:id", "application/json", gin.WrapF(productController.DeleteProduct), middlewaresMap, dbService)
+	secureProperties := make(map[string]bool)
+	secureProperties["secure"] = true
+	secureProperties["validateAndSanitize"] = false
+	secureProperties["validateAndSanitizeBody"] = false
+
+	routesMap["GetProductsRoute"] = NewRoute(http.MethodGet, "/products", "application/json", gin.WrapF(productController.GetAllProducts), middlewaresMap, dbService, secureProperties)
+	routesMap["GetProductRoute"] = NewRoute(http.MethodGet, "/products/:id", "application/json", gin.WrapF(productController.GetProductByID), middlewaresMap, dbService, secureProperties)
+	routesMap["CreateProductRoute"] = NewRoute(http.MethodPost, "/products", "application/json", gin.WrapF(productController.CreateProduct), middlewaresMap, dbService, secureProperties)
+	routesMap["UpdateProductRoute"] = NewRoute(http.MethodPut, "/products/:id", "application/json", gin.WrapF(productController.UpdateProduct), middlewaresMap, dbService, secureProperties)
+	routesMap["DeleteProductRoute"] = NewRoute(http.MethodDelete, "/products/:id", "application/json", gin.WrapF(productController.DeleteProduct), middlewaresMap, dbService, secureProperties)
 
 	return routesMap
 }
