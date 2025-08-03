@@ -35,12 +35,18 @@ validate_versions() {
 check_dependencies() {
   for dep in "$@"; do
     if ! command -v "$dep" > /dev/null; then
-      if ! dpkg -l | grep -o "$dep" -q; then
+      if [[ ! $(dpkg -l --selected-only "$dep" | grep "$dep" -q >/dev/null) ]]; then
         log error "$dep is not installed." true
-        if [[ -z "$NON_INTERACTIVE" ]]; then
+        if [[ -z "${_NON_INTERACTIVE:-}" ]]; then
           log warn "$dep is required for this script to run." true
-          log question "Would you like to install it now? (y/n)" true
-          read -r -n 1 -t 10 answer || answer="n"
+          local answer=""
+          if [[ -z "${_FORCE:-}" ]]; then  
+            log question "Would you like to install it now? (y/n)" true
+            read -r -n 1 -t 10 answer || answer="n"
+          elif [[ "${_FORCE:-n}" == [Yy] ]]; then
+            log warn "Force mode is enabled. Installing $dep without confirmation."
+            answer="y"
+          fi
           if [[ $answer =~ ^[Yy]$ ]]; then
             sudo apt-get install -y "$dep" || {
               log error "Failed to install $dep. Please install it manually."
@@ -50,7 +56,7 @@ check_dependencies() {
           fi
         else
           log warn "$dep is required for this script to run. Installing..." true
-          if [[ $FORCE =~ ^[Yy]$ ]]; then
+          if [[ $_FORCE =~ ^[Yy]$ ]]; then
             log warn "Force mode is enabled. Installing $dep without confirmation."
             sudo apt-get install -y "$dep" || {
             log error "Failed to install $dep. Please install it manually."

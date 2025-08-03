@@ -11,6 +11,7 @@
 *.env
 *BAK
 *BAK*
+/bin/
 
 # Test binary, built with `go test -c`
 *.test
@@ -19,7 +20,10 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
+*/vendor/
+*/node_modules/
+*/bin/
 
 # Go workspace file
 go.work
@@ -36,14 +40,13 @@ env
 /tests/log/
 /tests/cert/
 /.vscode
-/gobemin_*
-/gobe^[a-zA-Z0-9]
+/*_linux_*
+/*_windows_*
+/*_darwin_*
 *.*.sql
 *_debug_*
 *.log
 *.log.*
-gobe
 tests/**/*
 *_linux_amd64*
-ORG_FILES.txt
-gobe/docs/mcp_implementation
+*/docs/mcp_implementation
