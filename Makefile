@@ -98,7 +98,6 @@ uninstall:
 # Clean up build artifacts.
 clean:
 	@bash $(INSTALL_SCRIPT) clean $(ARGS)
-	@rm -f kbxctl-docs
 	$(shell exit 0)
 
 # Run tests.

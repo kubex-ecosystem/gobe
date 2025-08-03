@@ -140,6 +140,8 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	rtr.GetEngine().StaticFile("/terms-of-service", "./docs/terms-service_temp.pdf")
+
 	return rtr, nil
 }
 

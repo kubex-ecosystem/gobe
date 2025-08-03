@@ -6,7 +6,7 @@ import (
 
 func ValidateAndSanitize() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var input map[string]interface{}
+		// var input map[string]interface{}
 		// if err := c.ShouldBindJSON(&input); err != nil {
 		// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		// 	c.Abort()
@@ -25,14 +25,14 @@ func ValidateAndSanitize() gin.HandlerFunc {
 		// 	return
 		// }
 
-		c.Set("sanitizedInput", input)
+		// c.Set("sanitizedInput", input)
 		c.Next()
 	}
 }
 
 func ValidateAndSanitizeBody() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var input map[string]interface{}
+		// var input map[string]interface{}
 		// if err := c.ShouldBindJSON(&input); err != nil {
 		// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		// 	c.Abort()
@@ -51,7 +51,7 @@ func ValidateAndSanitizeBody() gin.HandlerFunc {
 		// 	return
 		// }
 
-		c.Set("sanitizedBody", input)
+		// c.Set("sanitizedBody", input)
 		c.Next()
 	}
 }

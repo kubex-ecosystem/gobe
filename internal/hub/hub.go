@@ -13,7 +13,8 @@ import (
 	"github.com/rafa-mori/gobe/internal/config"
 	"github.com/rafa-mori/gobe/internal/discord"
 	"github.com/rafa-mori/gobe/internal/events"
-	"github.com/rafa-mori/gobe/internal/kbxctl"
+	"github.com/rafa-mori/gobe/internal/gobe"
+	"github.com/rafa-mori/gobe/internal/gobe_ctl"
 	"github.com/rafa-mori/gobe/internal/llm"
 	"github.com/rafa-mori/gobe/internal/mcp"
 	"github.com/rafa-mori/gobe/internal/zmq"
@@ -27,7 +28,8 @@ type DiscordMCPHub struct {
 	eventStream     *events.Stream
 	mcpServer       *mcp.Server
 	zmqPublisher    *zmq.Publisher
-	kbxctlClient    *kbxctl.Client // ⚙️ K8s Integration
+	gobeCtlClient   *gobe_ctl.Client // ⚙️ K8s Integration
+	gobeClient      *gobe.Client     // 🔗 GoBE Integration
 	mu              sync.RWMutex
 	running         bool
 }
@@ -55,25 +57,25 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 	zmqPublisher := zmq.NewPublisher(cfg.ZMQ)
 
 	// 🔗 GoBE Integration
-	// var gobeClient *gobe.Client
-	// if cfg.GoBE.Enabled {
-	// 	gobeConfig := gobe.Config{
-	// 		BaseURL: cfg.GoBE.BaseURL,
-	// 		APIKey:  cfg.GoBE.APIKey,
-	// 	}
-	// 	gobeClient = gobe.NewClient(gobeConfig)
-	// 	log.Printf("🔗 GoBE client initialized - Base URL: %s", cfg.GoBE.BaseURL)
-	// }
-
-	// ⚙️ kbxctl Integration
-	var kbxctlClient *kbxctl.Client
-	if cfg.Kbxctl.Enabled {
-		kbxctlConfig := kbxctl.Config{
-			Kubeconfig: cfg.Kbxctl.Kubeconfig,
-			Namespace:  cfg.Kbxctl.Namespace,
+	var gobeClient *gobe.Client
+	if cfg.GoBE.Enabled {
+		gobeConfig := gobe.Config{
+			BaseURL: cfg.GoBE.BaseURL,
+			APIKey:  cfg.GoBE.APIKey,
 		}
-		kbxctlClient = kbxctl.NewClient(kbxctlConfig)
-		log.Printf("⚙️ kbxctl client initialized - Namespace: %s", cfg.Kbxctl.Namespace)
+		gobeClient = gobe.NewClient(gobeConfig)
+		log.Printf("🔗 GoBE client initialized - Base URL: %s", cfg.GoBE.BaseURL)
+	}
+
+	// ⚙️ gobe Integration
+	var gobeCtlClient *gobe_ctl.Client
+	if cfg.GobeCtl.Enabled {
+		gobeConfig := gobe_ctl.Config{
+			Kubeconfig: cfg.GobeCtl.Kubeconfig,
+			Namespace:  cfg.GobeCtl.Namespace,
+		}
+		gobeCtlClient = gobe_ctl.NewClient(gobeConfig)
+		log.Printf("⚙️ gobe client initialized - Namespace: %s", cfg.GobeCtl.Namespace)
 	}
 
 	// 🏗️ Create Hub Instance First
@@ -84,8 +86,8 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 		approvalManager: approvalManager,
 		eventStream:     eventStream,
 		zmqPublisher:    zmqPublisher,
-		// gobeClient:      gobeClient,
-		kbxctlClient: kbxctlClient,
+		gobeCtlClient:   gobeCtlClient,
+		gobeClient:      gobeClient,
 	}
 
 	// 🔌 MCP Server (needs hub as handler)
@@ -245,19 +247,6 @@ func (h *DiscordMCPHub) intelligentTriage(msg discord.Message) (shouldProcess bo
 		return true, "command"
 	}
 
-	// 🚀 NOVA FEATURE: Detectar comandos de sistema/automação
-	systemCommands := []string{
-		"status do sistema", "info do sistema", "system info", "cpu", "memória", "memory", "disco", "disk",
-		"executar", "execute", "rodar", "run", "comando", "command", "shell",
-		"backup", "backup do banco", "restart", "reiniciar", "parar", "stop",
-		"deploy", "build", "compilar", "atualizar", "update",
-	}
-	for _, cmd := range systemCommands {
-		if strings.Contains(content, cmd) {
-			return true, "system_command"
-		}
-	}
-
 	// Detectar perguntas
 	questionWords := []string{"como", "quando", "onde", "por que", "porque", "quem", "qual", "quanto", "que", "?"}
 	for _, word := range questionWords {
@@ -303,6 +292,19 @@ func (h *DiscordMCPHub) intelligentTriage(msg discord.Message) (shouldProcess bo
 		// Se não é casual mas é uma mensagem substancial, pode ser uma pergunta implícita
 		if len(content) > 50 {
 			return true, "question"
+		}
+	}
+
+	// Detectar comandos de sistema/automação
+	systemCommands := []string{
+		"status do sistema", "info do sistema", "system info", "cpu", "memória", "memory", "disco", "disk",
+		"executar", "execute", "rodar", "run", "comando", "command", "shell",
+		"backup", "backup do banco", "restart", "reiniciar", "parar", "stop",
+		"deploy", "build", "compilar", "atualizar", "update",
+	}
+	for _, cmd := range systemCommands {
+		if strings.Contains(content, cmd) {
+			return true, "system_command"
 		}
 	}
 
@@ -483,15 +485,15 @@ func (h *DiscordMCPHub) processSystemCommandMessage(ctx context.Context, msg dis
 	// 	}
 	// }
 
-	// ⚙️ kbxctl Commands
-	if h.kbxctlClient != nil {
+	// ⚙️ gobe Commands
+	if h.gobeClient != nil {
 		switch {
 		case strings.Contains(content, "deploy") && strings.Contains(content, "app"):
 			return h.handleDeployCommand(ctx, msg)
 		case strings.Contains(content, "scale") && (strings.Contains(content, "deployment") || strings.Contains(content, "pod")):
 			return h.handleScaleCommand(ctx, msg)
 		case strings.Contains(content, "cluster info") || strings.Contains(content, "info do cluster"):
-			return h.processKbxctlCommand(ctx, "cluster_info", "{}")
+			return h.processGobeCommand(ctx, "cluster_info", "{}")
 		}
 	}
 
@@ -790,15 +792,15 @@ func (h *DiscordMCPHub) Shutdown(ctx context.Context) error {
 } */
 
 // ============================================================================
-// kbxctl Integration Methods
+// gobe Integration Methods
 // ============================================================================
 
-func (h *DiscordMCPHub) processKbxctlCommand(ctx context.Context, command, params string) error {
-	if h.kbxctlClient == nil {
-		return fmt.Errorf("kbxctl client not enabled")
+func (h *DiscordMCPHub) processGobeCommand(ctx context.Context, command, params string) error {
+	if h.gobeClient == nil {
+		return fmt.Errorf("gobe client not enabled")
 	}
 
-	log.Printf("⚙️ Processing kbxctl command: %s with params: %s", command, params)
+	log.Printf("⚙️ Processing gobe command: %s with params: %s", command, params)
 
 	switch command {
 	case "deploy_app":
@@ -817,7 +819,7 @@ func (h *DiscordMCPHub) processKbxctlCommand(ctx context.Context, command, param
 			deployParams.Values = make(map[string]string)
 		}
 
-		result, err := h.kbxctlClient.DeployApp(ctx, deployParams.AppName, deployParams.Version, deployParams.Image, deployParams.Values)
+		result, err := h.gobeCtlClient.DeployApp(ctx, deployParams.AppName, deployParams.Version, deployParams.Image, deployParams.Values)
 		if err != nil {
 			return fmt.Errorf("failed to deploy app: %w", err)
 		}
@@ -839,7 +841,7 @@ func (h *DiscordMCPHub) processKbxctlCommand(ctx context.Context, command, param
 			return fmt.Errorf("failed to parse scale params: %w", err)
 		}
 
-		err := h.kbxctlClient.ScaleDeployment(ctx, scaleParams.AppName, scaleParams.Replicas)
+		err := h.gobeCtlClient.ScaleDeployment(ctx, scaleParams.AppName, scaleParams.Replicas)
 		if err != nil {
 			return fmt.Errorf("failed to scale deployment: %w", err)
 		}
@@ -852,7 +854,7 @@ func (h *DiscordMCPHub) processKbxctlCommand(ctx context.Context, command, param
 		return h.SendDiscordMessage("", response)
 
 	case "cluster_info":
-		info, err := h.kbxctlClient.GetClusterInfo(ctx)
+		info, err := h.gobeCtlClient.GetClusterInfo(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to get cluster info: %w", err)
 		}
@@ -871,7 +873,7 @@ func (h *DiscordMCPHub) processKbxctlCommand(ctx context.Context, command, param
 		return h.SendDiscordMessage("", response)
 
 	default:
-		return fmt.Errorf("comando kbxctl desconhecido: %s", command)
+		return fmt.Errorf("comando gobe desconhecido: %s", command)
 	}
 }
 
@@ -956,11 +958,11 @@ func (h *DiscordMCPHub) handleDeployCommand(ctx context.Context, msg discord.Mes
 		image = fmt.Sprintf("%s:%s", appName, version)
 	}
 
-	// Create JSON params for kbxctl
+	// Create JSON params for gobe
 	params := fmt.Sprintf(`{"app_name": "%s", "version": "%s", "image": "%s", "values": {}}`,
 		appName, version, image)
 
-	return h.processKbxctlCommand(ctx, "deploy_app", params)
+	return h.processGobeCommand(ctx, "deploy_app", params)
 }
 
 func (h *DiscordMCPHub) handleScaleCommand(ctx context.Context, msg discord.Message) error {
@@ -991,8 +993,8 @@ func (h *DiscordMCPHub) handleScaleCommand(ctx context.Context, msg discord.Mess
 			"❌ Nome da app não encontrado. Use: 'scale [app] [replicas]'")
 	}
 
-	// Create JSON params for kbxctl
+	// Create JSON params for gobe
 	params := fmt.Sprintf(`{"app_name": "%s", "replicas": %d}`, appName, replicas)
 
-	return h.processKbxctlCommand(ctx, "scale_deployment", params)
+	return h.processGobeCommand(ctx, "scale_deployment", params)
 }

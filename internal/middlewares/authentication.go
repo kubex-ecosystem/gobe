@@ -21,8 +21,10 @@ import (
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
 	srv "github.com/rafa-mori/gobe/internal/services"
-	gl "github.com/rafa-mori/gobe/logger"
+	"github.com/rafa-mori/gobe/logger"
 )
+
+var gl = logger.GetLogger[l.Logger](nil)
 
 type AuthenticationMiddleware struct {
 	contractapi.Contract

@@ -53,50 +53,6 @@ func NewAdapter(config config.DiscordConfig) (*Adapter, error) {
 		discordgo.IntentsDirectMessages |
 		discordgo.IntentsMessageContent
 
-	// var invite *discordgo.Invite
-	// var chInvs []*discordgo.Invite
-
-	// if len(config.Bot.Channels) > 0 {
-	// 	chInvs, err = session.ChannelInvites(
-	// 		config.Bot.Channels[0],
-	// 	)
-	// } else {
-	// 	chInvs, err = session.GuildInvites(
-	// 		session.State.Application.GuildID,
-	// 	)
-	// }
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get channel invites: %w", err)
-	// }
-
-	// Create an invite for the bot to join servers
-	// if len(config.Bot.Channels) > 0 {
-	// 	stChs, stChsErr := session.GuildChannels(session.State.Application.GuildID)
-	// 	if stChsErr != nil {
-	// 		return nil, fmt.Errorf("failed to get guild channels: %w", stChsErr)
-	// 	}
-	// 	for _, channel := range stChs {
-	// 		if channel.Name == config.Bot.Channels[0] {
-	// 			invite, err = session.ChannelInviteCreate(
-	// 				channel.ID,
-	// 				*chInvs[0],
-	// 			)
-	// 			if err != nil {
-	// 				return nil, fmt.Errorf("failed to create Discord invite: %w", err)
-	// 			}
-	// 			break
-	// 		}
-	// 	}
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to create Discord invite: %w", err)
-	// 	}
-	// } else {
-	// 	log.Println("No invite channel specified, using default invite creation")
-	// }
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to create Discord invite: %w", err)
-	// }
-
 	adapter := &Adapter{
 		api:         &session.Identify,
 		invite:      nil, // invite,

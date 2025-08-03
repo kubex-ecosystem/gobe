@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	"github.com/rafa-mori/gobe/logger"
 	gl "github.com/rafa-mori/gobe/logger"
 	l "github.com/rafa-mori/logz"
 )
@@ -414,33 +412,34 @@ func NewRequestTracers(g ci.IGoBE) *RequestTracers {
 
 func (r RequestTracers) RequestsTracerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
-		port := c.Request.URL.Port()
-		endpoint := c.Request.URL.Path
-		method := c.Request.Method
-		userAgent := c.Request.UserAgent()
+		// ip := c.ClientIP()
+		// port := c.Request.URL.Port()
+		// endpoint := c.Request.URL.Path
+		// method := c.Request.Method
+		// userAgent := c.Request.UserAgent()
 
-		if ip == "" || port == "" || endpoint == "" || method == "" || userAgent == "" {
-			gl.Log("error", "Invalid request data for RequestTracerMiddleware")
-			c.Next()
-			return
-		}
+		// if ip == "" || port == "" || endpoint == "" || method == "" || userAgent == "" {
+		// 	gl.Log("error", "Invalid request data for RequestTracerMiddleware")
+		// 	c.Next()
+		// 	return
+		// }
 
-		filePath := r.gobe.GetLogFilePath()
-		tracer := NewRequestsTracerType(r.gobe, ip, port, endpoint, method, userAgent, filePath)
+		// filePath := r.gobe.GetLogFilePath()
+		// tracer := NewRequestsTracerType(r.gobe, ip, port, endpoint, method, userAgent, filePath)
 
-		if isDuplicateRequest(r.gobe, tracer, logger.GetLogger[*RequestsTracer](nil).GetLogger()) {
-			gl.Log("info", fmt.Sprintf("Duplicate request detected for IP: %s, Port: %s", ip, port))
-			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
-			return
-		}
+		// if isDuplicateRequest(r.gobe, tracer, logger.GetLogger[*RequestsTracer](nil).GetLogger()) {
+		// 	gl.Log("info", fmt.Sprintf("Duplicate request detected for IP: %s, Port: %s", ip, port))
+		// 	c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
+		// 	return
+		// }
 
-		c.Set("requestTracer", tracer)
+		// c.Set("requestTracer", tracer)
+		// c.Next()
+
+		// if err := updateRequestTracer(r.gobe, tracer); err != nil {
+		// 	gl.Log("error", fmt.Sprintf("Error updating request tracer: %v", err))
+		// }
 		c.Next()
-
-		if err := updateRequestTracer(r.gobe, tracer); err != nil {
-			gl.Log("error", fmt.Sprintf("Error updating request tracer: %v", err))
-		}
 	}
 }
 

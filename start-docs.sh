@@ -23,7 +23,7 @@ cd "$(dirname "$0")/../.." || exit 1
 
 # Build and run the documentation server
 echo "🔨 Building documentation server..."
-if go build -o kbxctl-docs cmd/api-docs/main.go; then
+if go build -o gobe-docs cmd/api-docs/main.go; then
     echo "✅ Build successful!"
     echo ""
     echo "🌟 Starting documentation server..."
@@ -36,7 +36,7 @@ if go build -o kbxctl-docs cmd/api-docs/main.go; then
     echo "Press Ctrl+C to stop the server"
     echo ""
     
-    ./kbxctl-docs
+    ./gobe-docs
 else
     echo "❌ Build failed. Please check for errors."
     exit 1

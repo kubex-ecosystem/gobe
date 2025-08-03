@@ -8,7 +8,13 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
+
+	"github.com/rafa-mori/gobe/logger"
+
+	l "github.com/rafa-mori/logz"
 )
+
+var gl = logger.GetLogger[l.Logger](nil)
 
 type Config struct {
 	Discord  DiscordConfig  `json:"discord"`
@@ -17,7 +23,7 @@ type Config struct {
 	Server   ServerConfig   `json:"server"`
 	ZMQ      ZMQConfig      `json:"zmq"`
 	GoBE     GoBeConfig     `json:"gobe"`
-	Kbxctl   KbxctlConfig   `json:"kbxctl"`
+	GobeCtl  GobeCtlConfig  `json:"gobeCtl"`
 	DevMode  bool           `json:"dev_mode"`
 }
 
@@ -80,7 +86,7 @@ type GoBeConfig struct {
 	Enabled bool   `json:"enabled" mapstructure:"enabled"`
 }
 
-type KbxctlConfig struct {
+type GobeCtlConfig struct {
 	Path       string `json:"path" mapstructure:"path"`
 	Namespace  string `json:"namespace" mapstructure:"namespace"`
 	Kubeconfig string `json:"kubeconfig" mapstructure:"kubeconfig"`
@@ -89,19 +95,19 @@ type KbxctlConfig struct {
 
 func Load(configPath string) (*Config, error) {
 	// Check if .env file exists and load it
-	if _, err := os.Stat("./.env"); os.IsNotExist(err) {
+	if _, err := os.Stat(".env"); os.IsNotExist(err) {
 		log.Println("No .env file found, skipping environment variable loading")
 	} else if os.IsPermission(err) {
 		return nil, fmt.Errorf("permission denied to read .env file: %w", err)
 	} else {
 		log.Println("Loading environment variables from .env file")
-		if err := godotenv.Load("./.env"); err != nil {
+		if err := godotenv.Load(".env"); err != nil {
 			return nil, fmt.Errorf("error loading .env file: %w", err)
 		}
 	}
 
 	// Initialize viper
-	viper.SetConfigName("discord_config")
+	viper.SetConfigName("discord_config.json")
 	viper.SetConfigType("json")
 	viper.AddConfigPath(configPath)
 
@@ -113,17 +119,17 @@ func Load(configPath string) (*Config, error) {
 	viper.SetDefault("zmq.port", 5555)
 
 	// GoBE defaults
-	viper.SetDefault("gobe.base_url", "http://localhost:8081")
+	viper.SetDefault("gobe.base_url", "http://localhost:8080")
 	viper.SetDefault("gobe.timeout", 30)
-	viper.SetDefault("gobe.enabled", false)
+	viper.SetDefault("gobe.enabled", true)
 
-	// kbxctl defaults
-	viper.SetDefault("kbxctl.path", "kbxctl")
-	viper.SetDefault("kbxctl.namespace", "default")
-	viper.SetDefault("kbxctl.enabled", false)
+	// gobe defaults
+	viper.SetDefault("gobe.path", "gobeCtl")
+	viper.SetDefault("gobe.namespace", "default")
+	viper.SetDefault("gobe.enabled", true)
 
 	// Check for dev mode
-	devMode := os.Getenv("DEV_MODE") == "true"
+	devMode := false //os.Getenv("DEV_MODE") == "true"
 
 	// Read environment variables
 	viper.AutomaticEnv()
@@ -150,7 +156,8 @@ func Load(configPath string) (*Config, error) {
 		viper.Set("discord.oauth2.client_secret", clientSecret)
 	}
 	if ngrokURL := os.Getenv("NGROK_URL"); ngrokURL != "" {
-		viper.Set("discord.oauth2.redirect_uri", ngrokURL+"/api/v1/oauth2/authorize")
+		viper.Set("discord.oauth2.redirect_uri", ngrokURL+"/discord/oauth2/authorize")
+		gl.Log("info", "Using ngrok URL for Discord OAuth2 redirect:", ngrokURL)
 	}
 
 	// Set default OAuth2 scopes
@@ -165,16 +172,16 @@ func Load(configPath string) (*Config, error) {
 		viper.Set("gobe.api_key", gobeKey)
 	}
 
-	// ⚙️ kbxctl K8s Integration
-	if kbxctlPath := os.Getenv("KBXCTL_PATH"); kbxctlPath != "" {
-		viper.Set("kbxctl.path", kbxctlPath)
-		viper.Set("kbxctl.enabled", true)
+	// ⚙️ gobe K8s Integration
+	if gobePath := os.Getenv("KBXCTL_PATH"); gobePath != "" {
+		viper.Set("gobe.path", gobePath)
+		viper.Set("gobe.enabled", true)
 	}
 	if k8sNamespace := os.Getenv("K8S_NAMESPACE"); k8sNamespace != "" {
-		viper.Set("kbxctl.namespace", k8sNamespace)
+		viper.Set("gobe.namespace", k8sNamespace)
 	}
 	if kubeconfig := os.Getenv("KUBECONFIG"); kubeconfig != "" {
-		viper.Set("kbxctl.kubeconfig", kubeconfig)
+		viper.Set("gobe.kubeconfig", kubeconfig)
 	}
 
 	// For now, always use dev mode for LLM to focus on Discord testing

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
@@ -43,7 +42,7 @@ func SecureServerInit(r *gin.Engine, fullBindAddress string) error {
 				c.Header("Permissions-Policy", "geolocation=(),midi=(),sync-xhr=(),microphone=(),camera=(),magnetometer=(),gyroscope=(),fullscreen=(self),payment=()")
 				c.Header("Content-Security-Policy", "default-src 'self'; connect-src *; font-src *; script-src-elem * 'unsafe-inline'; img-src * data:; style-src * 'unsafe-inline';")
 
-				c.Header("X-Frame-Options", "DENY")
+				// c.Header("X-Frame-Options", "DENY")
 				c.Header("X-XSS-Protection", "1; mode=block")
 				c.Header("X-Content-Type-Options", "nosniff")
 
@@ -87,22 +86,24 @@ func getTrustedProxies() ([]string, error) {
 }
 
 func validateExpectedHosts(fullBindAddress string, c *gin.Context) bool {
-	if c.Request.Host == fullBindAddress ||
-		c.Request.URL.Host == fullBindAddress {
-		return true
-	}
+	// if c.Request.Host == fullBindAddress ||
+	// 	c.Request.URL.Host == fullBindAddress {
+	// 	return true
+	// }
 
-	bindPort := strings.Split(fullBindAddress, ":")[1]
-	trustedLocalList := []string{"localhost", "127.0.0.1", "localhost:" + bindPort, "127.0.0.1:" + bindPort}
-	for _, trustedLocal := range trustedLocalList {
-		if c.Request.Host == trustedLocal ||
-			c.Request.URL.Host == trustedLocal {
-			return true
-		}
-	}
+	// bindPort := strings.Split(fullBindAddress, ":")[1]
+	// trustedLocalList := []string{"localhost", "127.0.0.1", "localhost:" + bindPort, "127.0.0.1:" + bindPort}
+	// for _, trustedLocal := range trustedLocalList {
+	// 	if c.Request.Host == trustedLocal ||
+	// 		c.Request.URL.Host == trustedLocal {
+	// 		return true
+	// 	}
+	// }
 
-	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unauthorized host: " + c.Request.Host})
-	return false
+	//c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Unauthorized host: " + c.Request.Host})
+	// return false
+
+	return true
 }
 
 func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {

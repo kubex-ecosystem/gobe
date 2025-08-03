@@ -3,13 +3,16 @@ package routes
 import (
 	"net/http"
 
+	"github.com/rafa-mori/gobe/internal/config"
 	discord_controller "github.com/rafa-mori/gobe/internal/controllers/discord"
+	"github.com/rafa-mori/gobe/internal/hub"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/logger"
 )
 
 type DiscordRoutes struct {
 	ar.IRouter
+	h *hub.DiscordMCPHub
 }
 
 func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
@@ -29,7 +32,6 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
-	discordController := discord_controller.NewDiscordController(dbGorm)
 
 	routesMap := make(map[string]ar.IRoute)
 
@@ -40,21 +42,43 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 
 	secureProperties := make(map[string]bool)
-	secureProperties["secure"] = true
+	secureProperties["secure"] = false
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["OAuth2AuthorizeDiscord"] = NewRoute(http.MethodGet, "/discord/oauth2/authorize", "application/json", discordController.HandleDiscordOAuth2Authorize, middlewaresMap, dbService, secureProperties)
-	routesMap["OAuth2TokenDiscord"] = NewRoute(http.MethodGet, "/discord/oauth2/token", "application/json", discordController.HandleDiscordOAuth2Token, middlewaresMap, dbService, secureProperties)
-	routesMap["WebhookDiscord"] = NewRoute(http.MethodPost, "/discord/webhook/:webhookId/:webhookToken", "application/json", discordController.HandleDiscordWebhook, middlewaresMap, dbService, secureProperties)
-	routesMap["InteractionsDiscord"] = NewRoute(http.MethodPut, "/discord/interactions", "application/json", discordController.HandleDiscordInteractions, middlewaresMap, dbService, secureProperties)
-	routesMap["GetPendingApprovals"] = NewRoute(http.MethodGet, "/discord/interactions/pending", "application/json", discordController.GetPendingApprovals, middlewaresMap, dbService, secureProperties)
-	routesMap["GetApprovals"] = NewRoute(http.MethodGet, "/discord/approvals", "application/json", discordController.GetPendingApprovals, middlewaresMap, dbService, secureProperties)
-	routesMap["ApproveRequest"] = NewRoute(http.MethodGet, "/discord/approve", "application/json", discordController.ApproveRequest, middlewaresMap, dbService, secureProperties)
-	routesMap["RejectRequest"] = NewRoute(http.MethodGet, "/discord/reject", "application/json", discordController.RejectRequest, middlewaresMap, dbService, secureProperties)
-	routesMap["HandleTestMessage"] = NewRoute(http.MethodGet, "/discord/test", "application/json", discordController.HandleTestMessage, middlewaresMap, dbService, secureProperties)
+	config, configErr := config.Load(
+		"./",
+	)
+	if configErr != nil {
+		gl.Log("error", "Failed to load config for DiscordRoute", configErr)
+		return nil
+	}
 
-	// HandleWebSocket
+	h, err := hub.NewDiscordMCPHub(config)
+	if err != nil {
+		gl.Log("error", "Failed to create Discord hub", err)
+		return nil
+	}
+
+	discordController := discord_controller.NewDiscordController(dbGorm, h)
+
+	routesMap["DiscordWebSocket"] = NewRoute(http.MethodGet, "/discord/websocket", "application/json", discordController.HandleWebSocket, middlewaresMap, dbService, secureProperties)
+	routesMap["DiscordOAuth2Authorize"] = NewRoute(http.MethodGet, "/discord/oauth2/authorize", "application/json", discordController.HandleDiscordOAuth2Authorize, middlewaresMap, dbService, secureProperties)
+	routesMap["DiscordOAuth2Token"] = NewRoute(http.MethodGet, "/discord/oauth2/token", "application/json", discordController.HandleDiscordOAuth2Token, middlewaresMap, dbService, secureProperties)
+
+	// Rota principal para aplicações Discord (Activities) - SEM middlewares de segurança para desenvolvimento
+	routesMap["DiscordApp"] = NewRoute(http.MethodGet, "/discord", "text/html", discordController.HandleDiscordApp, nil, dbService, nil)
+	routesMap["OAuth2AuthorizeDiscord"] = NewRoute(http.MethodPost, "/discord/oauth2/authorize", "application/json", discordController.HandleDiscordOAuth2Authorize, nil, dbService, nil)
+	routesMap["OAuth2TokenDiscord"] = NewRoute(http.MethodPost, "/discord/oauth2/token", "application/json", discordController.HandleDiscordOAuth2Token, nil, dbService, nil)
+	routesMap["WebhookDiscord"] = NewRoute(http.MethodPost, "/discord/webhook/:webhookId/:webhookToken", "application/json", discordController.HandleDiscordWebhook, nil, dbService, nil)
+	routesMap["InteractionsDiscord"] = NewRoute(http.MethodPost, "/discord/interactions", "application/json", discordController.HandleDiscordInteractions, nil, dbService, nil)
+	routesMap["GetPendingApprovals"] = NewRoute(http.MethodPost, "/discord/interactions/pending", "application/json", discordController.GetPendingApprovals, nil, dbService, nil)
+	routesMap["GetApprovals"] = NewRoute(http.MethodPost, "/discord/approvals", "application/json", discordController.GetPendingApprovals, nil, dbService, nil)
+	routesMap["ApproveRequest"] = NewRoute(http.MethodPost, "/discord/approve", "application/json", discordController.ApproveRequest, nil, dbService, nil)
+	routesMap["RejectRequest"] = NewRoute(http.MethodPost, "/discord/reject", "application/json", discordController.RejectRequest, nil, dbService, nil)
+	routesMap["HandleTestMessage"] = NewRoute(http.MethodPost, "/discord/test", "application/json", discordController.HandleTestMessage, nil, dbService, nil)
+
+	defer discordController.InitiateBotMCP()
 
 	return routesMap
 }

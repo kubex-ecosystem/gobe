@@ -1,5 +1,5 @@
-// Package kbxctl provides integration with kbxctl for K8s and Helm operations
-package kbxctl
+// Package gobe provides integration with gobe for K8s and Helm operations
+package gobe_ctl
 
 import (
 	"context"
@@ -10,16 +10,16 @@ import (
 	"time"
 )
 
-// Client represents a kbxctl client
+// Client represents a gobe client
 type Client struct {
-	kbxctlPath string
+	gobePath   string
 	namespace  string
 	kubeconfig string
 }
 
-// Config holds kbxctl client configuration
+// Config holds gobe client configuration
 type Config struct {
-	KbxctlPath string `json:"kbxctl_path"`
+	GobePath   string `json:"gobe_path"`
 	Namespace  string `json:"namespace"`
 	Kubeconfig string `json:"kubeconfig"`
 }
@@ -76,17 +76,17 @@ type HelmRelease struct {
 	AppVersion string    `json:"app_version"`
 }
 
-// NewClient creates a new kbxctl client
+// NewClient creates a new gobe client
 func NewClient(config Config) *Client {
-	if config.KbxctlPath == "" {
-		config.KbxctlPath = "kbxctl" // Assume it's in PATH
+	if config.GobePath == "" {
+		config.GobePath = "gobe" // Assume it's in PATH
 	}
 	if config.Namespace == "" {
 		config.Namespace = "default"
 	}
 
 	return &Client{
-		kbxctlPath: config.KbxctlPath,
+		gobePath:   config.GobePath,
 		namespace:  config.Namespace,
 		kubeconfig: config.Kubeconfig,
 	}
@@ -301,14 +301,14 @@ func (c *Client) GetClusterInfo(ctx context.Context) (map[string]interface{}, er
 func (c *Client) executeCommand(ctx context.Context, args ...string) (string, error) {
 	var cmd *exec.Cmd
 
-	// Determine if we're using kbxctl as a wrapper or direct kubectl/helm
+	// Determine if we're using gobe as a wrapper or direct kubectl/helm
 	if strings.HasPrefix(args[0], "kubectl") || strings.HasPrefix(args[0], "helm") {
 		// Direct command
 		cmd = exec.CommandContext(ctx, args[0], args[1:]...)
 	} else {
-		// Use kbxctl as wrapper
+		// Use gobe as wrapper
 		kbxArgs := append([]string{}, args...)
-		cmd = exec.CommandContext(ctx, c.kbxctlPath, kbxArgs...)
+		cmd = exec.CommandContext(ctx, c.gobePath, kbxArgs...)
 	}
 
 	// Set kubeconfig if specified

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strings"
 
@@ -18,9 +17,18 @@ import (
 	"github.com/rafa-mori/gobe/internal/approval"
 	"github.com/rafa-mori/gobe/internal/config"
 	"github.com/rafa-mori/gobe/internal/events"
+	"github.com/rafa-mori/gobe/internal/hub"
 
 	fscm "github.com/rafa-mori/gdbase/factory/models"
 	t "github.com/rafa-mori/gobe/internal/types"
+
+	l "github.com/rafa-mori/logz"
+
+	"github.com/rafa-mori/gobe/logger"
+)
+
+var (
+	gl = logger.GetLogger[l.Logger](nil)
 )
 
 type HubInterface interface {
@@ -37,11 +45,241 @@ type DiscordController struct {
 	upgrader       websocket.Upgrader
 }
 
-func NewDiscordController(db *gorm.DB) *DiscordController {
+func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub) *DiscordController {
 	return &DiscordController{
 		discordService: fscm.NewDiscordService(fscm.NewDiscordRepo(db)),
 		APIWrapper:     t.NewApiWrapper[fscm.DiscordModel](),
+		hub:            hub,
 	}
+}
+
+// @Summary Discord App Handler
+// @Description Handles Discord Application/Activity requests
+// @Tags discord
+// @Accept html
+// @Produce html
+// @Success 200 {string} HTML page for Discord Application
+// @Router /discord [get]
+func (dc *DiscordController) HandleDiscordApp(c *gin.Context) {
+	gl.Log("info", "🎮 Discord App request received")
+
+	// Log all query parameters
+	for key, values := range c.Request.URL.Query() {
+		for _, value := range values {
+			gl.Log("info", fmt.Sprintf("  %s: %s", key, value))
+		}
+	}
+
+	// Extract Discord Activity parameters
+	instanceID := c.Query("instance_id")
+	locationID := c.Query("location_id")
+	launchID := c.Query("launch_id")
+	channelID := c.Query("channel_id")
+	frameID := c.Query("frame_id")
+	platform := c.Query("platform")
+
+	gl.Log("info", "📋 Discord Activity parameters:")
+	gl.Log("info", fmt.Sprintf("  instance_id: %s", instanceID))
+	gl.Log("info", fmt.Sprintf("  location_id: %s", locationID))
+	gl.Log("info", fmt.Sprintf("  launch_id: %s", launchID))
+	gl.Log("info", fmt.Sprintf("  channel_id: %s", channelID))
+	gl.Log("info", fmt.Sprintf("  frame_id: %s", frameID))
+	gl.Log("info", fmt.Sprintf("  platform: %s", platform))
+
+	// Create HTML response for Discord Application
+	html := fmt.Sprintf(`
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoBE Discord Bot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
+            color: white;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #00ff00;
+            border-radius: 50%%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%% { opacity: 1; }
+            50%% { opacity: 0.5; }
+            100%% { opacity: 1; }
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .info-card h3 {
+            margin: 0 0 10px 0;
+            color: #FFD700;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-card p {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+        }
+        .actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            margin: 5px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(31, 38, 135, 0.6);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 GoBE Discord Bot</h1>
+            <p>Aplicação Discord integrada com sucesso!</p>
+        </div>
+        
+        <div class="status">
+            <div class="status-indicator"></div>
+            <span>Conectado e funcionando</span>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>📍 Channel ID</h3>
+                <p>%s</p>
+            </div>
+            <div class="info-card">
+                <h3>🆔 Instance ID</h3>
+                <p>%s</p>
+            </div>
+            <div class="info-card">
+                <h3>🚀 Launch ID</h3>
+                <p>%s</p>
+            </div>
+            <div class="info-card">
+                <h3>📱 Platform</h3>
+                <p>%s</p>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn" onclick="testBot()">🧪 Testar Bot</button>
+            <button class="btn" onclick="openWebSocket()">🔗 WebSocket</button>
+        </div>
+        
+        <div class="footer">
+            <p>GoBE Discord Integration • Instance: %s</p>
+        </div>
+    </div>
+
+    <script>
+        function testBot() {
+            fetch('/discord/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: 'Teste do Discord App!',
+                    user_id: 'discord_app_user',
+                    username: 'Discord App'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('✅ Bot testado com sucesso: ' + data.message);
+            })
+            .catch(error => {
+                alert('❌ Erro ao testar bot: ' + error);
+            });
+        }
+
+        function openWebSocket() {
+            // Redirect to WebSocket test page or open connection
+            alert('🔗 WebSocket connection would be opened here');
+        }
+
+        // Initialize Discord SDK if available
+        if (typeof DiscordSDK !== 'undefined') {
+            console.log('🎮 Discord SDK detected');
+        }
+    </script>
+</body>
+</html>
+    `, channelID, instanceID, launchID, platform, frameID)
+
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	c.String(http.StatusOK, html)
 }
 
 // @Summary Discord OAuth2 Authorization
@@ -53,19 +291,19 @@ func NewDiscordController(db *gorm.DB) *DiscordController {
 // @Success 200 {string} Authorization URL
 // @Router /discord/authorize [get]
 func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
-	log.Printf("🔐 Discord OAuth2 authorize request received")
+	gl.Log("info", "🔐 Discord OAuth2 authorize request received")
 
 	// Log all query parameters
 	for key, values := range c.Request.URL.Query() {
 		for _, value := range values {
-			log.Printf("  %s: %s", key, value)
+			gl.Log("info", fmt.Sprintf("  %s: %s", key, value))
 		}
 	}
 
 	// Check for error in query params (Discord sends errors here)
 	if errorType := c.Query("error"); errorType != "" {
 		errorDesc := c.Query("error_description")
-		log.Printf("❌ Discord OAuth2 error: %s - %s", errorType, errorDesc)
+		gl.Log("error", fmt.Sprintf("❌ Discord OAuth2 error: %s - %s", errorType, errorDesc))
 
 		// Return a proper HTML page instead of JSON for browser display
 		html := fmt.Sprintf(`
@@ -116,8 +354,8 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	state := c.Query("state")
 
 	if code != "" {
-		log.Printf("✅ Authorization code received: %s", code)
-		log.Printf("📦 State: %s", state)
+		gl.Log("info", fmt.Sprintf("✅ Authorization code received: %s", code))
+		gl.Log("info", fmt.Sprintf("📦 State: %s", state))
 
 		// In a real app, you'd exchange this code for a token
 		// For now, we'll just return success
@@ -135,11 +373,11 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	responseType := c.Query("response_type")
 	scope := c.Query("scope")
 
-	log.Printf("📋 OAuth2 parameters:")
-	log.Printf("  client_id: %s", clientID)
-	log.Printf("  redirect_uri: %s", redirectURI)
-	log.Printf("  response_type: %s", responseType)
-	log.Printf("  scope: %s", scope)
+	gl.Log("info", "📋 OAuth2 parameters:")
+	gl.Log("info", fmt.Sprintf("  client_id: %s", clientID))
+	gl.Log("info", fmt.Sprintf("  redirect_uri: %s", redirectURI))
+	gl.Log("info", fmt.Sprintf("  response_type: %s", responseType))
+	gl.Log("info", fmt.Sprintf("  scope: %s", scope))
 
 	// Return authorization page or redirect to Discord
 	c.JSON(http.StatusOK, gin.H{
@@ -160,7 +398,7 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 	conn, err := dc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade error: %v", err)
+		gl.Log("error", fmt.Sprintf("WebSocket upgrade error: %v", err))
 		return
 	}
 
@@ -173,7 +411,7 @@ func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 	eventStream := dc.hub.GetEventStream()
 	eventStream.RegisterClient(client)
 
-	log.Printf("WebSocket client connected: %s", client.ID)
+	gl.Log("info", fmt.Sprintf("WebSocket client connected: %s", client.ID))
 }
 
 // @Summary Get pending approvals
@@ -202,7 +440,7 @@ func (dc *DiscordController) ApproveRequest(c *gin.Context) {
 	requestID := c.Param("id")
 
 	// Mock approval - implement with your approval manager
-	log.Printf("Approving request: %s", requestID)
+	gl.Log("info", fmt.Sprintf("Approving request: %s", requestID))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Request approved",
@@ -222,7 +460,7 @@ func (dc *DiscordController) RejectRequest(c *gin.Context) {
 	requestID := c.Param("id")
 
 	// Mock rejection - implement with your approval manager
-	log.Printf("Rejecting request: %s", requestID)
+	gl.Log("info", fmt.Sprintf("Rejecting request: %s", requestID))
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":    "Request rejected",
@@ -257,7 +495,7 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 		testMsg.Username = "TestUser"
 	}
 
-	log.Printf("🧪 Test message received: %s from %s", testMsg.Content, testMsg.Username)
+	gl.Log("info", fmt.Sprintf("🧪 Test message received: %s from %s", testMsg.Content, testMsg.Username))
 
 	// Create a mock message object
 	mockMessage := map[string]interface{}{
@@ -271,7 +509,7 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 	ctx := context.Background()
 	err := dc.hub.ProcessMessageWithLLM(ctx, mockMessage)
 	if err != nil {
-		log.Printf("❌ Error processing test message: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Error processing test message: %v", err))
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "processing failed",
 			"details": err.Error(),
@@ -294,11 +532,11 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 // @Success 200 {string} Token exchanged successfully
 // @Router /discord/oauth2/token [post]
 func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
-	log.Printf("🎫 Discord OAuth2 token request received")
+	gl.Log("info", "🎫 Discord OAuth2 token request received")
 
 	// Parse form data
 	if err := c.Request.ParseForm(); err != nil {
-		log.Printf("❌ Error parsing form: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Error parsing form: %v", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
 		return
 	}
@@ -309,12 +547,12 @@ func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
 	clientID := c.PostForm("client_id")
 	clientSecret := c.PostForm("client_secret")
 
-	log.Printf("📋 Token request parameters:")
-	log.Printf("  grant_type: %s", grantType)
-	log.Printf("  code: %s", code)
-	log.Printf("  redirect_uri: %s", redirectURI)
-	log.Printf("  client_id: %s", clientID)
-	log.Printf("  client_secret: %s", strings.Repeat("*", len(clientSecret)))
+	gl.Log("info", "📋 Token request parameters:")
+	gl.Log("info", fmt.Sprintf("  grant_type: %s", grantType))
+	gl.Log("info", fmt.Sprintf("  code: %s", code))
+	gl.Log("info", fmt.Sprintf("  redirect_uri: %s", redirectURI))
+	gl.Log("info", fmt.Sprintf("  client_id: %s", clientID))
+	gl.Log("info", fmt.Sprintf("  client_secret: %s", strings.Repeat("*", len(clientSecret))))
 
 	// In a real app, you'd validate these and return a real token
 	// For now, return a mock token response
@@ -338,14 +576,14 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	webhookID := c.Param("webhookId")
 	webhookToken := c.Param("webhookToken")
 
-	log.Printf("🪝 Discord webhook received:")
-	log.Printf("  Webhook ID: %s", webhookID)
-	log.Printf("  Webhook Token: %s", webhookToken[:10]+"...")
+	gl.Log("info", "🪝 Discord webhook received:")
+	gl.Log("info", fmt.Sprintf("  Webhook ID: %s", webhookID))
+	gl.Log("info", fmt.Sprintf("  Webhook Token: %s", webhookToken[:10]+"..."))
 
 	// Read the body
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Printf("❌ Error reading webhook body: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Error reading webhook body: %v", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_body"})
 		return
 	}
@@ -353,12 +591,12 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	// Parse JSON
 	var webhookData map[string]interface{}
 	if err := json.Unmarshal(body, &webhookData); err != nil {
-		log.Printf("❌ Error parsing webhook JSON: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Error parsing webhook JSON: %v", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_json"})
 		return
 	}
 
-	log.Printf("📦 Webhook data: %+v", webhookData)
+	gl.Log("info", fmt.Sprintf("📦 Webhook data: %+v", webhookData))
 
 	// Process webhook (you can integrate this with your hub)
 	// dc.hub.ProcessWebhook(webhookData)
@@ -374,20 +612,20 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 // @Success 200 {string} Interaction processed successfully
 // @Router /discord/interactions [post]
 func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
-	log.Printf("⚡ Discord interaction received")
+	gl.Log("info", "⚡ Discord interaction received")
 
 	// Verify Discord signature (important for security)
 	signature := c.GetHeader("X-Signature-Ed25519")
 	timestamp := c.GetHeader("X-Signature-Timestamp")
 
-	log.Printf("📋 Headers:")
-	log.Printf("  X-Signature-Ed25519: %s", signature)
-	log.Printf("  X-Signature-Timestamp: %s", timestamp)
+	gl.Log("info", "📋 Headers:")
+	gl.Log("info", fmt.Sprintf("  X-Signature-Ed25519: %s", signature))
+	gl.Log("info", fmt.Sprintf("  X-Signature-Timestamp: %s", timestamp))
 
 	// Read body
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Printf("❌ Error reading interaction body: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Error reading interaction body: %v", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_body"})
 		return
 	}
@@ -395,16 +633,16 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	// Parse interaction
 	var interaction map[string]interface{}
 	if err := json.Unmarshal(body, &interaction); err != nil {
-		log.Printf("❌ Error parsing interaction JSON: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Error parsing interaction JSON: %v", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_json"})
 		return
 	}
 
-	log.Printf("📦 Interaction data: %+v", interaction)
+	gl.Log("info", fmt.Sprintf("📦 Interaction data: %+v", interaction))
 
 	// Handle ping interactions (Discord requires this)
 	if interactionType, ok := interaction["type"].(float64); ok && interactionType == 1 {
-		log.Printf("🏓 Ping interaction - responding with pong")
+		gl.Log("info", "🏓 Ping interaction - responding with pong")
 		c.JSON(http.StatusOK, gin.H{"type": 1})
 		return
 	}
@@ -416,4 +654,48 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 			"content": "Hello from Discord MCP Hub! 🤖",
 		},
 	})
+}
+
+func (dc *DiscordController) InitiateBotMCP() {
+	var err error
+	var h *hub.DiscordMCPHub
+	if dc.hub == nil {
+		h, err = hub.NewDiscordMCPHub(dc.config)
+		if err != nil {
+			gl.Log("error", "Failed to create Discord hub", err)
+			return
+		}
+		dc.hub = h
+		gl.Log("info", "Discord MCP Hub created successfully")
+	} else {
+		var ok bool
+		if h, ok = dc.hub.(*hub.DiscordMCPHub); ok {
+			gl.Log("info", "Discord MCP Hub started successfully")
+		} else {
+			gl.Log("error", "Discord hub is not of type DiscordMCPHub")
+			return
+		}
+	}
+
+	go func() {
+		defer func() {
+			if recErr := recover(); recErr != nil {
+				gl.Log("error", "Recovered from panic in Discord hub", recErr)
+				events := dc.hub.GetEventStream()
+				if events != nil {
+					events.Close()
+					gl.Log("info", "Discord hub stopped gracefully")
+				}
+				gl.Log("info", "Restarting Discord hub...")
+				dc.InitiateBotMCP()
+			}
+		}()
+		if err := h.StartDiscordBot(); err != nil {
+			gl.Log("error", "Failed to start Discord hub", err)
+			return
+		}
+		h.StartMCPServer()
+
+		h.GetEventStream().Run()
+	}()
 }

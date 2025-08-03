@@ -295,8 +295,8 @@ func (c *Client) analyzeWithGemini(ctx context.Context, req AnalysisRequest) (*A
 
 	result, err := client.Models.GenerateContent(
 		ctx,
-		//"gemini-2.5-flash",
-		"gemini-1.5-flash",
+		"gemini-2.5-flash",
+		//"gemini-1.5-flash",
 		genai.Text(fullPrompt),
 		nil,
 	)
@@ -353,20 +353,29 @@ Responda apenas com JSON válido.
 `, req.Platform, req.UserID, req.Content, req.Context)
 }
 
+type Pagination struct {
+	PageToken   string `json:"page_token" gorm:"column:page_token" binding:"required"`
+	PageSize    uint64 `json:"page_size" gorm:"column:page_size" binding:"required"`
+	PageCount   int    `json:"page_count" gorm:"column:page_count" binding:"required"`
+	CurrentPage int    `json:"current_page" gorm:"column:current_page" binding:"required"`
+	TotalSize   uint64 `json:"total_size" gorm:"column:total_size" binding:"required"`
+}
+
 func (c *Client) parseAnalysisResponse(content string) *AnalysisResponse {
 	// Try to parse as JSON first
 	var jsonResp struct {
-		ShouldRespond     bool     `json:"should_respond"`
-		SuggestedResponse string   `json:"suggested_response"`
-		Confidence        float64  `json:"confidence"`
-		ShouldCreateTask  bool     `json:"should_create_task"`
-		TaskTitle         string   `json:"task_title"`
-		TaskDescription   string   `json:"task_description"`
-		TaskPriority      string   `json:"task_priority"`
-		TaskTags          []string `json:"task_tags"`
-		RequiresApproval  bool     `json:"requires_approval"`
-		Sentiment         string   `json:"sentiment"`
-		Category          string   `json:"category"`
+		ShouldRespond     bool        `json:"should_respond" binding:"required"`
+		SuggestedResponse string      `json:"suggested_response" binding:"required"`
+		Confidence        float64     `json:"confidence" binding:"required"`
+		ShouldCreateTask  bool        `json:"should_create_task" binding:"required"`
+		TaskTitle         string      `json:"task_title,omitempty" binding:"required"`
+		TaskDescription   string      `json:"task_description,omitempty" binding:"required"`
+		TaskPriority      string      `json:"task_priority,omitempty" binding:"required"`
+		TaskTags          []string    `json:"task_tags,omitempty" binding:"required"`
+		RequiresApproval  bool        `json:"requires_approval" binding:"required"`
+		Sentiment         string      `json:"sentiment,omitempty" binding:"required"`
+		Category          string      `json:"category" binding:"required"`
+		Pagination        *Pagination `json:"pagination,omitempty" binding:"omitempty"`
 	}
 
 	// Extract JSON from markdown code blocks if present
