@@ -60,7 +60,7 @@ func SwaggerMain() {
 		gl.Log("fatal", "❌ Failed to create environment:", err)
 		return
 	}
-	dbConfigPathProp, _ := environment.GetenvOrDefault("DB_CONFIG_PATH", os.ExpandEnv("~/.kubex/gdbase/config/db_config.json"))
+	dbConfigPathProp, _ := environment.GetenvOrDefault("DB_CONFIG_PATH", os.ExpandEnv("$HOME/.kubex/gdbase/config/db_config.json"))
 	dbConfigPath := *dbConfigPathProp.Value()
 	if _, ok := dbConfigPath.(string); !ok {
 		gl.Log("fatal", "❌ Failed to get DB_CONFIG_PATH:", err)
