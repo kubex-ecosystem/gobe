@@ -189,12 +189,21 @@ __main() {
       exit 0
       ;;
     build-dev|BUILD-DEV|-bd|-BD)
-      # validate_versions
+      log info "Preparing to build the binary..."
+      if ! validate_versions; then
+        log error "Required dependencies are missing. Please install them and try again." true
+        return 1
+      fi
       log info "Running build command in development mode..."
       build_binary "${PLATFORM_ARG}" "${ARCH_ARG}" false || return 1
       ;;
     build|BUILD|-b|-B)
       # validate_versions
+      log info "Preparing to build the binary..."
+      if ! validate_versions; then
+        log error "Required dependencies are missing. Please install them and try again." true
+        return 1
+      fi
       log info "Running build command..."
       build_binary "${PLATFORM_ARG}" "${ARCH_ARG}" || return 1
       ;;
@@ -214,7 +223,11 @@ __main() {
           }
       elif [[ $choice =~ [bB] ]]; then
           log info "Building locally..."
-          validate_versions || return 1
+          log info "Preparing to build the binary..."
+          if ! validate_versions; then
+            log error "Required dependencies are missing. Please install them and try again." true
+            return 1
+          fi
           build_binary "${PLATFORM_ARG}" "${ARCH_ARG}" || return 1
           install_binary || {
             log error "Failed to install the binary." true

@@ -15,15 +15,5 @@
   "license": "MIT",
   "keywords": ["gobe", "kubex", "control", "command-line", "tool", "management"],
   "platforms": ["linux/amd64"],
-  "dependencies": [
-    "pkg-config",
-    "tar",
-    "gzip",
-    "curl",
-    "git",
-    "zip",
-    "unzip",
-    "jq",
-    "libzmq3-dev"
-  ]
+  "dependencies": ["pkg-config", "tar", "gzip", "curl", "git", "zip", "unzip", "jq", "libzmq3-dev"]
 }

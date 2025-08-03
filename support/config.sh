@@ -29,6 +29,9 @@ _PRIVATE_REPOSITORY="$(jq -r '.private' "$_ROOT_DIR/info/manifest.json" 2>/dev/n
 _VERSION_GO=$(grep '^go ' "$_ROOT_DIR/go.mod" | awk '{print $2}')
 _PLATFORMS_SUPPORTED="$(jq -r '.platforms[]' "$_ROOT_DIR/info/manifest.json" 2>/dev/null || echo "Linux, MacOS, Windows")"
 _FORCE="${FORCE:-${_FORCE:-n}}"
+_DEBUG="${DEBUG:-${_DEBUG:-n}}"
+_DRY_RUN="${DRY_RUN:-${_DRY_RUN:-n}}"
+_NON_INTERACTIVE="${NON_INTERACTIVE:-${_NON_INTERACTIVE:-n}}"
 
 _ABOUT="  Name: ${_PROJECT_NAME} (${_APP_NAME})
   Version: ${_VERSION}
