@@ -33,10 +33,11 @@ func NewMCPTasksRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	mcpTasksController := mcp_tasks_controller.NewTasksController(dbGorm)
 
 	routesMap := make(map[string]ar.IRoute)
+	// middlewaresMap := rtl.GetMiddlewares()
 	middlewaresMap := make(map[string]gin.HandlerFunc)
 
 	secureProperties := make(map[string]bool)
-	secureProperties["secure"] = true
+	secureProperties["secure"] = false // This need to be changed to true for production
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
