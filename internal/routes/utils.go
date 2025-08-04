@@ -122,6 +122,7 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"mcpLLMRoutes":           NewMCPLLMRoutes(&rtr),
 		"mcpPreferencesRoutes":   NewMCPPreferencesRoutes(&rtr),
 		"mcpSystemRoutes":        NewMCPSystemRoutes(&rtr),
+		"swaggerRoutes":          NewSwaggerRoutes(&rtr),
 	}
 }
 

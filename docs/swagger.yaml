@@ -1,4 +1,4 @@
-basePath: /
+basePath: /swagger
 definitions:
   github_com_rafa-mori_gdbase_types.JsonB:
     additionalProperties: {}
@@ -512,6 +512,21 @@ paths:
           schema:
             type: string
       summary: Validate Cron Expression
+  /discord:
+    get:
+      consumes:
+      - text/html
+      description: Handles Discord Application/Activity requests
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Discord App Handler
+      tags:
+      - discord
   /discord/approvals:
     get:
       consumes:

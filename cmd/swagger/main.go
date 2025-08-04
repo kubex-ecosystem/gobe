@@ -12,7 +12,7 @@
 // @license.url   https://opensource.org/licenses/MIT
 
 // @host      localhost:8080
-// @BasePath  /
+// @BasePath  /swagger
 
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
@@ -20,7 +20,7 @@
 // @description Type "Bearer" followed by a space and JWT token.
 
 // @securityDefinitions.oauth2 OAuth2
-// @tokenUrl https://localhost:8080/sign-in
+// @tokenUrl https://localhost:8080/api/v1/sign-in
 // @security OAuth2
 
 // @externalDocs.description  OpenAPI
@@ -72,6 +72,10 @@ func SwaggerMain() {
 		l.GetLogger("GoBE Swagger"),
 		false,
 	)
+	if err != nil {
+		gl.Log("fatal", "❌ Failed to set up database:", err)
+		return
+	}
 	dbService, err := services.NewDBService(dbConfig, l.GetLogger("GoBE Swagger"))
 	if err != nil {
 		gl.Log("fatal", "❌ Failed to create database service:", err)
@@ -108,7 +112,7 @@ func SwaggerMain() {
 	//router.GetEngine().GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 
 	secureProperties := make(map[string]bool)
-	secureProperties["secure"] = true
+	secureProperties["secure"] = false
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
@@ -141,7 +145,7 @@ func SwaggerMain() {
 	// Start server
 	gl.Log("info", "🚀 GoBE API Server starting...")
 	gl.Log("info", "📚 Swagger docs available at: http://localhost:8080/swagger/index.html")
-	gl.Log("info", "🔍 API endpoints at: http://localhost:8080/")
+	gl.Log("info", "🔍 API endpoints at: http://localhost:8080/api/v1")
 
 	docs.SwaggerInfo.Host = "localhost:8080"
 	docs.SwaggerInfo.Title = "GoBE API"

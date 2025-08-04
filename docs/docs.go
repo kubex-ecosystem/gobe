@@ -566,6 +566,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/discord": {
+            "get": {
+                "description": "Handles Discord Application/Activity requests",
+                "consumes": [
+                    "text/html"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "discord"
+                ],
+                "summary": "Discord App Handler",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/discord/approvals": {
             "get": {
                 "description": "Retrieves a list of pending approval requests",
@@ -1782,7 +1805,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/",
+	BasePath:         "/swagger",
 	Schemes:          []string{},
 	Title:            "GoBE API",
 	Description:      "GoBE is a powerful backend, MCP, and API server with a comprehensive route system following GoBE patterns.",
