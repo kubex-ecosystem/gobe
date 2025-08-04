@@ -77,9 +77,9 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 
 	// Mapear as rotas utilizando o WebhookController.
 	routesMap := make(map[string]ci.IRoute)
-	routesMap["RegisterWebhookRoute"] = NewRoute(http.MethodPost, "/webhooks", "application/json", webhookController.RegisterWebhook, middlewaresMap, dbService, secureProperties)
-	routesMap["ListWebhooksRoute"] = NewRoute(http.MethodGet, "/webhooks", "application/json", webhookController.ListWebhooks, middlewaresMap, dbService, secureProperties)
-	routesMap["DeleteWebhookRoute"] = NewRoute(http.MethodDelete, "/webhooks/:id", "application/json", webhookController.DeleteWebhook, middlewaresMap, dbService, secureProperties)
+	routesMap["RegisterWebhookRoute"] = NewRoute(http.MethodPost, "/api/v1/webhooks", "application/json", webhookController.RegisterWebhook, middlewaresMap, dbService, secureProperties)
+	routesMap["ListWebhooksRoute"] = NewRoute(http.MethodGet, "/api/v1/webhooks", "application/json", webhookController.ListWebhooks, middlewaresMap, dbService, secureProperties)
+	routesMap["DeleteWebhookRoute"] = NewRoute(http.MethodDelete, "/api/v1/webhooks/:id", "application/json", webhookController.DeleteWebhook, middlewaresMap, dbService, secureProperties)
 
 	return routesMap
 }

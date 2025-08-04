@@ -40,10 +40,10 @@ func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["LoginRoute"] = NewRoute(http.MethodPost, "/sign-in", "application/json", userController.AuthenticateUser, nil, dbService, nil)
-	routesMap["LogoutRoute"] = NewRoute(http.MethodPost, "/sign-out", "application/json", userController.Logout, middlewaresMap, dbService, secureProperties)
-	routesMap["RefreshRoute"] = NewRoute(http.MethodPost, "check", "application/json", userController.RefreshToken, middlewaresMap, dbService, secureProperties)
-	routesMap["RegisterRoute"] = NewRoute(http.MethodPost, "/sign-up", "application/json", userController.CreateUser, nil, dbService, nil)
+	routesMap["LoginRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-in", "application/json", userController.AuthenticateUser, nil, dbService, nil)
+	routesMap["LogoutRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-out", "application/json", userController.Logout, middlewaresMap, dbService, secureProperties)
+	routesMap["RefreshRoute"] = NewRoute(http.MethodPost, "/api/v1/check", "application/json", userController.RefreshToken, middlewaresMap, dbService, secureProperties)
+	routesMap["RegisterRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-up", "application/json", userController.CreateUser, nil, dbService, nil)
 
 	return routesMap
 }
