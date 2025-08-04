@@ -36,7 +36,9 @@ func NewTasksController(db *gorm.DB) *TasksController {
 // @Failure 404 {string} Tasks not found
 // @Router /mcp/tasks [get]
 func (tc *TasksController) GetAllTasks(c *gin.Context) {
-	tasks, err := tc.tasksService.ListTasks()
+	// ListTasks(active, outOfDate, running bool) ([]ITasksModel, error)
+	gl.Log("info", "Fetching all tasks")
+	tasks, err := tc.tasksService.ListTasks(nil)
 	if err != nil {
 		gl.Log("error", "Failed to get tasks", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get tasks"})

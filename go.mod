@@ -3,7 +3,6 @@ module github.com/rafa-mori/gobe
 go 1.24.5
 
 require (
-	github.com/VirusTotal/vt-go v1.0.1
 	github.com/fatih/color v1.18.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.27.0
@@ -13,11 +12,13 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/rafa-mori/gdbase v1.2.1
 	github.com/rafa-mori/logz v1.3.0
+	github.com/shirou/gopsutil/v4 v4.25.7
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/streadway/amqp v1.1.0
-	github.com/stretchr/testify v1.10.0
 	github.com/subosito/gotenv v1.6.0
+	github.com/swaggo/files v1.0.1
+	github.com/swaggo/gin-swagger v1.6.0
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/crypto v0.40.0
 	golang.org/x/time v0.12.0
@@ -42,9 +43,6 @@ require (
 	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/shirou/gopsutil/v4 v4.25.7 // indirect
-	github.com/swaggo/files v1.0.1 // indirect
-	github.com/swaggo/gin-swagger v1.6.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
@@ -72,7 +70,6 @@ require (
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
 	github.com/docker/docker v28.3.3+incompatible // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
@@ -130,7 +127,6 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pebbe/zmq4 v1.4.0
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rafa-mori/xtui v1.3.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
@@ -140,9 +136,7 @@ require (
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cast v1.9.2 // indirect
 	github.com/spf13/pflag v1.0.7 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/swaggo/swag v1.16.6
-	github.com/thedevsaddam/gojsonq/v2 v2.5.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.3.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
@@ -171,4 +165,4 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
-// replace github.com/rafa-mori/gdbase => ../gdbase
+replace github.com/rafa-mori/gdbase => ../../gdbase
