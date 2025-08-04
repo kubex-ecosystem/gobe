@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	"github.com/rafa-mori/gobe/internal/middlewares"
+	l "github.com/rafa-mori/logz"
 )
 
 type ServerRoutes struct {
@@ -29,20 +31,30 @@ func NewServerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)
+	middlewaresMap["logging"] = middlewares.Logger(l.GetLogger("GoBE-ServerRoutes"))
+	middlewaresMap["rateLimit"] = middlewares.RateLimiter(5, 10) // 5 requests per 10 seconds
+	middlewaresMap["sanitize"] = middlewares.ValidateAndSanitize()
 
 	secureProperties := make(map[string]bool)
 	secureProperties["secure"] = true
-	secureProperties["validateAndSanitize"] = false
-	secureProperties["validateAndSanitizeBody"] = false
+	secureProperties["validateAndSanitize"] = true
+	secureProperties["validateAndSanitizeBody"] = true
 
-	routesMap["HealthRoute"] = NewRoute(http.MethodPost, "/health", "application/json", ra.PingRouteHandler(nil), middlewaresMap, dbService, nil)
-	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/ping", "application/json", ra.PingRouteHandler(nil), middlewaresMap, dbService, nil)
+	openedProperties := make(map[string]bool)
+	openedProperties["secure"] = false
+	openedProperties["validateAndSanitize"] = false
+	openedProperties["validateAndSanitizeBody"] = false
 
-	routesMap["PingPostRoute"] = NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), middlewaresMap, dbService, nil)
-	routesMap["PingPostRoute"] = NewRoute(http.MethodGet, "/config", "application/json", ra.ConfigRouteHandler(nil), middlewaresMap, dbService, secureProperties)
+	routesMap["HealthPostRoute"] = NewRoute(http.MethodPost, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties)
+	routesMap["HealthGetRoute"] = NewRoute(http.MethodGet, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties)
+	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties)
+	routesMap["PingGetRoute"] = NewRoute(http.MethodGet, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties)
 
-	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/start", "application/json", ra.StartRouteHandler(nil), middlewaresMap, dbService, secureProperties)
-	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/stop", "application/json", ra.StopRouteHandler(nil), middlewaresMap, dbService, secureProperties)
+	routesMap["VersionGetRoute"] = NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
+	routesMap["ConfigGetRoute"] = NewRoute(http.MethodGet, "/config", "application/json", ra.ConfigRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
+
+	routesMap["StartPostRoute"] = NewRoute(http.MethodPost, "/start", "application/json", ra.StartRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
+	routesMap["StopPostRoute"] = NewRoute(http.MethodPost, "/stop", "application/json", ra.StopRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
 
 	return routesMap
 }
