@@ -32,9 +32,9 @@ func NewContactRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["PostContactRoute"] = NewRoute(http.MethodPost, "/contact", "application/json", handler.PostContact, middlewaresMap, dbService, secureProperties)
-	routesMap["GetContactRoute"] = NewRoute(http.MethodGet, "/contact", "application/json", handler.GetContact, middlewaresMap, dbService, secureProperties)
-	routesMap["HandleContactRoute"] = NewRoute(http.MethodPost, "/contact/handle", "application/json", handler.HandleContact, middlewaresMap, dbService, secureProperties)
+	routesMap["PostContactRoute"] = NewRoute(http.MethodPost, "/api/v1/contact", "application/json", handler.PostContact, middlewaresMap, dbService, secureProperties)
+	routesMap["GetContactRoute"] = NewRoute(http.MethodGet, "/api/v1/contact", "application/json", handler.GetContact, middlewaresMap, dbService, secureProperties)
+	routesMap["HandleContactRoute"] = NewRoute(http.MethodPost, "/api/v1/contact/handle", "application/json", handler.HandleContact, middlewaresMap, dbService, secureProperties)
 
 	return routesMap
 }

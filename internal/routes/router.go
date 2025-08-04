@@ -140,9 +140,9 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	rtr.GetEngine().StaticFile("/terms-of-service", "./docs/terms-service_temp.pdf")
+	rtr.GetEngine().StaticFile("/api/v1/terms-of-service", "./docs/terms-service_temp.pdf")
 
-	rtr.GetEngine().StaticFS("/discord/web", http.Dir("./web"))
+	rtr.GetEngine().StaticFS("/api/v1/discord/web", http.Dir("./web"))
 
 	return rtr, nil
 }

@@ -51,10 +51,10 @@ func NewServerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	routesMap["PingGetRoute"] = NewRoute(http.MethodGet, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties)
 
 	routesMap["VersionGetRoute"] = NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
-	routesMap["ConfigGetRoute"] = NewRoute(http.MethodGet, "/config", "application/json", ra.ConfigRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
+	routesMap["ConfigGetRoute"] = NewRoute(http.MethodGet, "/api/v1/config", "application/json", ra.ConfigRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
 
-	routesMap["StartPostRoute"] = NewRoute(http.MethodPost, "/start", "application/json", ra.StartRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
-	routesMap["StopPostRoute"] = NewRoute(http.MethodPost, "/stop", "application/json", ra.StopRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
+	routesMap["StartPostRoute"] = NewRoute(http.MethodPost, "/api/v1/start", "application/json", ra.StartRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
+	routesMap["StopPostRoute"] = NewRoute(http.MethodPost, "/api/v1/stop", "application/json", ra.StopRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties)
 
 	return routesMap
 }

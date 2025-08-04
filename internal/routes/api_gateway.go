@@ -27,11 +27,11 @@ func NewAPIGateway(authManager *apia.AuthManager) *APIGateway {
 func (gateway *APIGateway) RegisterRoutes(router *gin.Engine) {
 	api := router.Group("/api")
 
-	api.POST("/smart-plane/register", gateway.HandleRegisterDocument)
-	api.POST("/smart-plane/approve", gateway.HandleApproveDocument)
-	api.POST("/smart-plane/sign", gateway.HandleSignDocument)
-	api.GET("/smart-plane/history", gateway.HandleGetDocumentHistory)
-	api.DELETE("/smart-plane/delete", gateway.HandleDeleteDocumentState)
+	api.POST("/api/v1/smart-plane/register", gateway.HandleRegisterDocument)
+	api.POST("/api/v1/smart-plane/approve", gateway.HandleApproveDocument)
+	api.POST("/api/v1/smart-plane/sign", gateway.HandleSignDocument)
+	api.GET("/api/v1/smart-plane/history", gateway.HandleGetDocumentHistory)
+	api.DELETE("/api/v1/smart-plane/delete", gateway.HandleDeleteDocumentState)
 }
 
 type WebhookManager struct {

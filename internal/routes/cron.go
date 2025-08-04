@@ -40,17 +40,17 @@ func NewCronRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["CreateCronJobRoute"] = NewRoute("POST", "/cronjobs", "application/json", cronJobController.CreateCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["GetCronJobRoute"] = NewRoute("GET", "/cronjobs/:id", "application/json", cronJobController.GetCronJobByID, middlewaresMap, dbService, secureProperties)
-	routesMap["ListCronJobsRoute"] = NewRoute("GET", "/cronjobs", "application/json", cronJobController.ListCronJobs, middlewaresMap, dbService, secureProperties)
-	routesMap["UpdateCronJobRoute"] = NewRoute("PUT", "/cronjobs/:id", "application/json", cronJobController.UpdateCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["DeleteCronJobRoute"] = NewRoute("DELETE", "/cronjobs/:id", "application/json", cronJobController.DeleteCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["EnableCronJobRoute"] = NewRoute("POST", "/cronjobs/:id/enable", "application/json", cronJobController.EnableCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["DisableCronJobRoute"] = NewRoute("POST", "/cronjobs/:id/disable", "application/json", cronJobController.DisableCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["ExecuteCronJobManuallyRoute"] = NewRoute("POST", "/cronjobs/:id/execute", "application/json", cronJobController.ExecuteCronJobManually, middlewaresMap, dbService, secureProperties)
-	routesMap["ListActiveCronJobsRoute"] = NewRoute("GET", "/cronjobs/active", "application/json", cronJobController.ListActiveCronJobs, middlewaresMap, dbService, secureProperties)
-	routesMap["RescheduleCronJobRoute"] = NewRoute("PUT", "/cronjobs/:id/reschedule", "application/json", cronJobController.RescheduleCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["ValidateCronExpressionRoute"] = NewRoute("POST", "/cronjobs/validate", "application/json", cronJobController.ValidateCronExpression, middlewaresMap, dbService, secureProperties)
+	routesMap["CreateCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs", "application/json", cronJobController.CreateCronJob, middlewaresMap, dbService, secureProperties)
+	routesMap["GetCronJobRoute"] = NewRoute("GET", "/api/v1/cronjobs/:id", "application/json", cronJobController.GetCronJobByID, middlewaresMap, dbService, secureProperties)
+	routesMap["ListCronJobsRoute"] = NewRoute("GET", "/api/v1/cronjobs", "application/json", cronJobController.ListCronJobs, middlewaresMap, dbService, secureProperties)
+	routesMap["UpdateCronJobRoute"] = NewRoute("PUT", "/api/v1/cronjobs/:id", "application/json", cronJobController.UpdateCronJob, middlewaresMap, dbService, secureProperties)
+	routesMap["DeleteCronJobRoute"] = NewRoute("DELETE", "/api/v1/cronjobs/:id", "application/json", cronJobController.DeleteCronJob, middlewaresMap, dbService, secureProperties)
+	routesMap["EnableCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/enable", "application/json", cronJobController.EnableCronJob, middlewaresMap, dbService, secureProperties)
+	routesMap["DisableCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/disable", "application/json", cronJobController.DisableCronJob, middlewaresMap, dbService, secureProperties)
+	routesMap["ExecuteCronJobManuallyRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/execute", "application/json", cronJobController.ExecuteCronJobManually, middlewaresMap, dbService, secureProperties)
+	routesMap["ListActiveCronJobsRoute"] = NewRoute("GET", "/api/v1/cronjobs/active", "application/json", cronJobController.ListActiveCronJobs, middlewaresMap, dbService, secureProperties)
+	routesMap["RescheduleCronJobRoute"] = NewRoute("PUT", "/api/v1/cronjobs/:id/reschedule", "application/json", cronJobController.RescheduleCronJob, middlewaresMap, dbService, secureProperties)
+	routesMap["ValidateCronExpressionRoute"] = NewRoute("POST", "/api/v1/cronjobs/validate", "application/json", cronJobController.ValidateCronExpression, middlewaresMap, dbService, secureProperties)
 
 	return routesMap
 }
