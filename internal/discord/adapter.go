@@ -154,3 +154,19 @@ func (a *Adapter) messageCreateHandler(s *discordgo.Session, m *discordgo.Messag
 		a.messageHandler(message)
 	}
 }
+
+func (a *Adapter) PingDiscord(msg string) error {
+	if a.session == nil {
+		log.Println("Discord adapter in dev mode - not pinging Discord")
+		return nil
+	}
+	if a.session.State.User == nil {
+		_, err := a.session.ChannelMessageSend("ping", msg)
+		if err != nil {
+			log.Printf("❌ Erro ao enviar mensagem: %v", err)
+			return err
+		}
+		log.Printf("✅ Mensagem de ping enviada com sucesso!")
+	}
+	return nil
+}

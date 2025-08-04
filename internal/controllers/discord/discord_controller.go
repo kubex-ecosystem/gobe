@@ -16,6 +16,7 @@ import (
 
 	"github.com/rafa-mori/gobe/internal/approval"
 	"github.com/rafa-mori/gobe/internal/config"
+	"github.com/rafa-mori/gobe/internal/discord"
 	"github.com/rafa-mori/gobe/internal/events"
 	"github.com/rafa-mori/gobe/internal/hub"
 
@@ -519,4 +520,52 @@ func (dc *DiscordController) InitiateBotMCP() {
 
 		h.GetEventStream().Run()
 	}()
+}
+
+// @Summary Ping Discord adapter
+// @Description Pings the Discord adapter to check its status
+// @Tags discord
+// @Accept json
+// @Produce json
+// @Success 200 {string} Discord adapter pinged successfully
+// @Router /discord/ping [get]
+func (dc *DiscordController) PingDiscord(c *gin.Context) {
+	hd := dc.hub
+	if hd == nil {
+		gl.Log("error", "Failed to ping Discord adapter")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to ping Discord adapter"})
+		return
+	}
+	gl.Log("info", "Discord adapter pinged successfully")
+	c.JSON(http.StatusOK, gin.H{"message": "Discord adapter pinged successfully"})
+}
+
+func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
+	config, err := config.Load("./")
+	if err != nil {
+		gl.Log("error", "Failed to load config for Discord adapter", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load config"})
+		return
+	}
+
+	adapter, adapterErr := discord.NewAdapter(config.Discord)
+	if adapterErr != nil {
+		gl.Log("error", "Failed to create Discord adapter", adapterErr)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Discord adapter"})
+		return
+	}
+
+	msg := c.GetString("msg")
+	if msg == "" {
+		msg = "Hello from Discord MCP Hub!"
+	}
+
+	err = adapter.PingDiscord(msg)
+	if err != nil {
+		gl.Log("error", "Failed to ping Discord", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to ping Discord"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Discord is reachable"})
+
 }

@@ -53,7 +53,6 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to load config for DiscordRoute", configErr)
 		return nil
 	}
-
 	h, err := hub.NewDiscordMCPHub(config)
 	if err != nil {
 		gl.Log("error", "Failed to create Discord hub", err)
@@ -77,6 +76,8 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	routesMap["ApproveRequest"] = NewRoute(http.MethodPost, "/api/v1/discord/approve", "application/json", discordController.ApproveRequest, nil, dbService, nil)
 	routesMap["RejectRequest"] = NewRoute(http.MethodPost, "/api/v1/discord/reject", "application/json", discordController.RejectRequest, nil, dbService, nil)
 	routesMap["HandleTestMessage"] = NewRoute(http.MethodPost, "/api/v1/discord/test", "application/json", discordController.HandleTestMessage, nil, dbService, nil)
+	routesMap["PingDiscord"] = NewRoute(http.MethodGet, "/api/v1/discord/ping", "application/json", discordController.PingDiscord, nil, dbService, nil)
+	routesMap["PingDiscord"] = NewRoute(http.MethodPost, "/api/v1/discord/ping", "application/json", discordController.PingDiscordAdapter, nil, dbService, nil)
 
 	defer discordController.InitiateBotMCP()
 
