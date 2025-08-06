@@ -117,6 +117,8 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"productRoutes":          NewProductRoutes(&rtr),
 		"customerRoutes":         NewCustomerRoutes(&rtr),
 		"discordRoutes":          NewDiscordRoutes(&rtr),
+		"whatsappRoutes":         NewWhatsAppRoutes(&rtr),
+		"telegramRoutes":         NewTelegramRoutes(&rtr),
 		"mcpTasksRoutes":         NewMCPTasksRoutes(&rtr),
 		"mcpProvidersRoutes":     NewMCPProvidersRoutes(&rtr),
 		"mcpLLMRoutes":           NewMCPLLMRoutes(&rtr),

@@ -17,14 +17,15 @@ import (
 var gl = logger.GetLogger[l.Logger](nil)
 
 type Config struct {
-	Discord  DiscordConfig  `json:"discord"`
-	LLM      LLMConfig      `json:"llm"`
-	Approval ApprovalConfig `json:"approval"`
-	Server   ServerConfig   `json:"server"`
-	ZMQ      ZMQConfig      `json:"zmq"`
-	GoBE     GoBeConfig     `json:"gobe"`
-	GobeCtl  GobeCtlConfig  `json:"gobeCtl"`
-	DevMode  bool           `json:"dev_mode"`
+	Discord      DiscordConfig     `json:"discord"`
+	LLM          LLMConfig         `json:"llm"`
+	Approval     ApprovalConfig    `json:"approval"`
+	Server       ServerConfig      `json:"server"`
+	ZMQ          ZMQConfig         `json:"zmq"`
+	GoBE         GoBeConfig        `json:"gobe"`
+	GobeCtl      GobeCtlConfig     `json:"gobeCtl"`
+	Integrations IntegrationConfig `json:"integrations"`
+	DevMode      bool              `json:"dev_mode"`
 }
 
 type DiscordConfig struct {
@@ -93,6 +94,26 @@ type GobeCtlConfig struct {
 	Enabled    bool   `json:"enabled" mapstructure:"enabled"`
 }
 
+type IntegrationConfig struct {
+	WhatsApp WhatsAppConfig `json:"whatsapp"`
+	Telegram TelegramConfig `json:"telegram"`
+}
+
+type WhatsAppConfig struct {
+	Enabled       bool   `json:"enabled" mapstructure:"enabled"`
+	AccessToken   string `json:"access_token" mapstructure:"access_token"`
+	VerifyToken   string `json:"verify_token" mapstructure:"verify_token"`
+	PhoneNumberID string `json:"phone_number_id" mapstructure:"phone_number_id"`
+	WebhookURL    string `json:"webhook_url" mapstructure:"webhook_url"`
+}
+
+type TelegramConfig struct {
+	Enabled        bool     `json:"enabled" mapstructure:"enabled"`
+	BotToken       string   `json:"bot_token" mapstructure:"bot_token"`
+	WebhookURL     string   `json:"webhook_url" mapstructure:"webhook_url"`
+	AllowedUpdates []string `json:"allowed_updates" mapstructure:"allowed_updates"`
+}
+
 func Load(configPath string) (*Config, error) {
 	// Check if .env file exists and load it
 	if _, err := os.Stat("config/.env"); os.IsNotExist(err) {
@@ -117,6 +138,10 @@ func Load(configPath string) (*Config, error) {
 	viper.SetDefault("server.enable_cors", true)
 	viper.SetDefault("zmq.address", "tcp://127.0.0.1")
 	viper.SetDefault("zmq.port", 5555)
+
+	// Integrations defaults
+	viper.SetDefault("integrations.whatsapp.enabled", false)
+	viper.SetDefault("integrations.telegram.enabled", false)
 
 	// GoBE defaults
 	viper.SetDefault("gobe.base_url", "http://localhost:8080")
@@ -162,6 +187,28 @@ func Load(configPath string) (*Config, error) {
 
 	// Set default OAuth2 scopes
 	viper.SetDefault("discord.oauth2.scopes", []string{"bot", "applications.commands"})
+
+	// WhatsApp configuration
+	if waToken := os.Getenv("WHATSAPP_ACCESS_TOKEN"); waToken != "" {
+		viper.Set("integrations.whatsapp.access_token", waToken)
+	}
+	if waVerify := os.Getenv("WHATSAPP_VERIFY_TOKEN"); waVerify != "" {
+		viper.Set("integrations.whatsapp.verify_token", waVerify)
+	}
+	if waPhone := os.Getenv("WHATSAPP_PHONE_NUMBER_ID"); waPhone != "" {
+		viper.Set("integrations.whatsapp.phone_number_id", waPhone)
+	}
+	if waWebhook := os.Getenv("WHATSAPP_WEBHOOK_URL"); waWebhook != "" {
+		viper.Set("integrations.whatsapp.webhook_url", waWebhook)
+	}
+
+	// Telegram configuration
+	if tgToken := os.Getenv("TELEGRAM_BOT_TOKEN"); tgToken != "" {
+		viper.Set("integrations.telegram.bot_token", tgToken)
+	}
+	if tgWebhook := os.Getenv("TELEGRAM_WEBHOOK_URL"); tgWebhook != "" {
+		viper.Set("integrations.telegram.webhook_url", tgWebhook)
+	}
 
 	// 🔗 GoBE Backend Integration
 	if gobeURL := os.Getenv("GOBE_BASE_URL"); gobeURL != "" {

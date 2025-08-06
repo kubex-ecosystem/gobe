@@ -164,6 +164,37 @@ database:
   password: secure
 ```
 
+#### Messaging Integrations
+
+WhatsApp and Telegram bots can be configured via the `config/discord_config.json` file under the `integrations` section:
+
+```json
+{
+  "integrations": {
+    "whatsapp": {
+      "enabled": true,
+      "access_token": "<token>",
+      "verify_token": "<verify>",
+      "phone_number_id": "<number>",
+      "webhook_url": "https://your.server/whatsapp/webhook"
+    },
+    "telegram": {
+      "enabled": true,
+      "bot_token": "<bot token>",
+      "webhook_url": "https://your.server/telegram/webhook",
+      "allowed_updates": ["message", "callback_query"]
+    }
+  }
+}
+```
+
+After setting up the file or environment variables, the server will expose the following endpoints:
+
+- `POST /api/v1/whatsapp/send` and `/api/v1/whatsapp/webhook`
+- `POST /api/v1/telegram/send` and `/api/v1/telegram/webhook`
+
+Each route also provides a `/ping` endpoint for health checks.
+
 ---
 
 ## **Roadmap**
