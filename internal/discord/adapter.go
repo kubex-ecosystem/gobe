@@ -64,6 +64,10 @@ func NewAdapter(config config.DiscordConfig) (*Adapter, error) {
 	// Register event handlers
 	session.AddHandler(adapter.messageCreateHandler)
 	session.AddHandler(adapter.readyHandler)
+	session.Identify.Intents |= discordgo.IntentsGuilds
+	session.Identify.Intents |= discordgo.IntentsGuildMembers
+	session.Identify.Intents |= discordgo.IntentsGuildPresences
+	session.Identify.Intents |= discordgo.IntentsGuildVoiceStates
 
 	return adapter, nil
 }
@@ -161,7 +165,7 @@ func (a *Adapter) PingDiscord(msg string) error {
 		return nil
 	}
 	if a.session.State.User == nil {
-		_, err := a.session.ChannelMessageSend("ping", msg)
+		_, err := a.session.ChannelMessageSend(a.invite.Channel.ID, msg)
 		if err != nil {
 			log.Printf("❌ Erro ao enviar mensagem: %v", err)
 			return err
