@@ -3,10 +3,10 @@ package types
 import (
 	"fmt"
 
-	l "github.com/rafa-mori/logz"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	tu "github.com/rafa-mori/gobe/internal/utils"
 	gl "github.com/rafa-mori/gobe/logger"
+	l "github.com/rafa-mori/logz"
 
 	"reflect"
 
@@ -17,92 +17,7 @@ var (
 	smBuf, mdBuf, lgBuf = tu.GetDefaultBufferSizes()
 )
 
-type ChannelBase[T any] struct {
-	*Mutexes              // Mutexes for this Channel instance
-	Name     string       // The name of the channel.
-	Channel  any          // The channel for the value. Main channel for this struct.
-	Type     reflect.Type // The type of the channel.
-	Buffers  int          // The number of buffers for the channel.
-	Shared   interface{}  // Shared data for many purposes
-}
-
-// NewChannelBase creates a new ChannelBase instance with the provided name and type.
-func NewChannelBase[T any](name string, buffers int, logger l.Logger) ci.IChannelBase[any] {
-	if logger == nil {
-		logger = l.GetLogger("GoLife")
-	}
-	mu := NewMutexesType()
-	if buffers <= 0 {
-		buffers = lgBuf
-	}
-	return &ChannelBase[any]{
-		Mutexes: mu,
-		Name:    name,
-		Channel: make(chan T, buffers),
-		Type:    reflect.TypeFor[T](),
-		Buffers: buffers,
-	}
-}
-
-func (cb *ChannelBase[T]) GetName() string {
-	cb.MuRLock()
-	defer cb.MuRUnlock()
-	return cb.Name
-}
-func (cb *ChannelBase[T]) GetChannel() (any, reflect.Type) {
-	cb.MuRLock()
-	defer cb.MuRUnlock()
-	return cb.Channel, reflect.TypeOf(cb.Channel)
-}
-func (cb *ChannelBase[T]) GetType() reflect.Type {
-	cb.MuRLock()
-	defer cb.MuRUnlock()
-	return cb.Type
-}
-func (cb *ChannelBase[T]) GetBuffers() int {
-	cb.MuRLock()
-	defer cb.MuRUnlock()
-	return cb.Buffers
-}
-func (cb *ChannelBase[T]) SetName(name string) string {
-	cb.MuLock()
-	defer cb.MuUnlock()
-	cb.Name = name
-	return cb.Name
-}
-func (cb *ChannelBase[T]) SetChannel(typE reflect.Type, bufferSize int) any {
-	cb.MuLock()
-	defer cb.MuUnlock()
-	cb.Channel = reflect.MakeChan(typE, bufferSize)
-	return cb.Channel
-}
-func (cb *ChannelBase[T]) SetBuffers(buffers int) int {
-	cb.MuLock()
-	defer cb.MuUnlock()
-	cb.Buffers = buffers
-	cb.Channel = make(chan T, buffers)
-	return cb.Buffers
-}
-func (cb *ChannelBase[T]) Close() error {
-	cb.MuLock()
-	defer cb.MuUnlock()
-	if cb.Channel != nil {
-		gl.LogObjLogger(cb, "info", "Closing channel for:", cb.Name)
-		close(cb.Channel.(chan T))
-	}
-	return nil
-}
-func (cb *ChannelBase[T]) Clear() error {
-	cb.MuLock()
-	defer cb.MuUnlock()
-	if cb.Channel != nil {
-		gl.LogObjLogger(cb, "info", "Clearing channel for:", cb.Name)
-		close(cb.Channel.(chan T))
-		cb.Channel = make(chan T, cb.Buffers)
-	}
-	return nil
-}
-
+// ChannelCtl is a struct that holds the properties for a channel control.
 type ChannelCtl[T any] struct {
 	// IChannelCtl is the interface for this Channel instance.
 	//ci.IChannelCtl[T] // Channel interface for this Channel instance
@@ -177,22 +92,29 @@ func NewChannelCtlWithProperty[T any, P ci.IProperty[T]](name string, buffers *i
 	return channelCtl
 }
 
+// GetID returns the ID of the channel control.
 func (cCtl *ChannelCtl[T]) GetID() uuid.UUID {
 	cCtl.MuRLock()
 	defer cCtl.MuRUnlock()
 	return cCtl.ID
 }
+
+// GetName returns the name of the channel control.
 func (cCtl *ChannelCtl[T]) GetName() string {
 	cCtl.MuRLock()
 	defer cCtl.MuRUnlock()
 	return cCtl.Name
 }
+
+// SetName sets the name of the channel control and returns it.
 func (cCtl *ChannelCtl[T]) SetName(name string) string {
 	cCtl.MuLock()
 	defer cCtl.MuUnlock()
 	cCtl.Name = name
 	return cCtl.Name
 }
+
+// GetProperty returns the property of the channel control.
 func (cCtl *ChannelCtl[T]) GetProperty() ci.IProperty[T] {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -201,6 +123,8 @@ func (cCtl *ChannelCtl[T]) GetProperty() ci.IProperty[T] {
 	defer cCtl.MuRUnlock()
 	return cCtl.property
 }
+
+// GetSubChannels returns the sub-channels of the channel control.
 func (cCtl *ChannelCtl[T]) GetSubChannels() map[string]interface{} {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -209,6 +133,8 @@ func (cCtl *ChannelCtl[T]) GetSubChannels() map[string]interface{} {
 	defer cCtl.MuRUnlock()
 	return cCtl.Channels
 }
+
+// SetSubChannels sets the sub-channels of the channel control and returns the updated map.
 func (cCtl *ChannelCtl[T]) SetSubChannels(channels map[string]interface{}) map[string]interface{} {
 	cCtl.MuLock()
 	defer cCtl.MuUnlock()
@@ -224,6 +150,8 @@ func (cCtl *ChannelCtl[T]) SetSubChannels(channels map[string]interface{}) map[s
 	}
 	return cCtl.Channels
 }
+
+// GetSubChannelByName returns the sub-channel by name and its type.
 func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, bool) {
 	if cCtl.Channels == nil {
 		gl.LogObjLogger(cCtl, "info", "Creating channels map for:", cCtl.Name, "ID:", cCtl.ID.String())
@@ -242,6 +170,8 @@ func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, 
 	gl.LogObjLogger(cCtl, "error", "Channel not found:", name, "ID:", cCtl.ID.String())
 	return nil, nil, false
 }
+
+// SetSubChannelByName sets the sub-channel by name and returns the channel.
 func (cCtl *ChannelCtl[T]) SetSubChannelByName(name string, channel any) (any, error) {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -255,6 +185,8 @@ func (cCtl *ChannelCtl[T]) SetSubChannelByName(name string, channel any) (any, e
 	}
 	return channel, nil
 }
+
+// GetSubChannelTypeByName returns the type of the sub-channel by name.
 func (cCtl *ChannelCtl[T]) GetSubChannelTypeByName(name string) (reflect.Type, bool) {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -266,6 +198,8 @@ func (cCtl *ChannelCtl[T]) GetSubChannelTypeByName(name string) (reflect.Type, b
 	}
 	return nil, false
 }
+
+// SetSubChannelTypeByName sets the type of the sub-channel by name and returns the type.
 func (cCtl *ChannelCtl[T]) GetSubChannelBuffersByName(name string) (int, bool) {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -277,6 +211,8 @@ func (cCtl *ChannelCtl[T]) GetSubChannelBuffersByName(name string) (int, bool) {
 	}
 	return 0, false
 }
+
+// SetSubChannelBuffersByName sets the number of buffers for the sub-channel by name and returns the number of buffers.
 func (cCtl *ChannelCtl[T]) SetSubChannelBuffersByName(name string, buffers int) (int, error) {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -289,6 +225,8 @@ func (cCtl *ChannelCtl[T]) SetSubChannelBuffersByName(name string, buffers int) 
 	}
 	return 0, nil
 }
+
+// GetMainChannel returns the main channel and its type.
 func (cCtl *ChannelCtl[T]) GetMainChannel() any {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -297,6 +235,8 @@ func (cCtl *ChannelCtl[T]) GetMainChannel() any {
 	defer cCtl.MuRUnlock()
 	return cCtl.ch
 }
+
+// SetMainChannel sets the main channel and returns it.
 func (cCtl *ChannelCtl[T]) SetMainChannel(channel chan T) chan T {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -306,6 +246,8 @@ func (cCtl *ChannelCtl[T]) SetMainChannel(channel chan T) chan T {
 	cCtl.ch = channel
 	return cCtl.ch
 }
+
+// GetMainChannelType returns the type of the main channel.
 func (cCtl *ChannelCtl[T]) GetMainChannelType() reflect.Type {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -314,6 +256,8 @@ func (cCtl *ChannelCtl[T]) GetMainChannelType() reflect.Type {
 	defer cCtl.MuRUnlock()
 	return reflect.TypeOf(cCtl.ch)
 }
+
+// GetHasMetrics returns true if the channel control has metrics enabled.
 func (cCtl *ChannelCtl[T]) GetHasMetrics() bool {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -322,6 +266,8 @@ func (cCtl *ChannelCtl[T]) GetHasMetrics() bool {
 	defer cCtl.MuRUnlock()
 	return cCtl.withMetrics
 }
+
+// SetHasMetrics sets the hasMetrics flag and returns it.
 func (cCtl *ChannelCtl[T]) SetHasMetrics(hasMetrics bool) bool {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -331,6 +277,8 @@ func (cCtl *ChannelCtl[T]) SetHasMetrics(hasMetrics bool) bool {
 	cCtl.withMetrics = hasMetrics
 	return cCtl.withMetrics
 }
+
+// GetBufferSize returns the buffer size of the channel control.
 func (cCtl *ChannelCtl[T]) GetBufferSize() int {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -339,6 +287,8 @@ func (cCtl *ChannelCtl[T]) GetBufferSize() int {
 	defer cCtl.MuRUnlock()
 	return cCtl.Buffers
 }
+
+// SetBufferSize sets the buffer size of the channel control and returns it.
 func (cCtl *ChannelCtl[T]) SetBufferSize(size int) int {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -348,6 +298,8 @@ func (cCtl *ChannelCtl[T]) SetBufferSize(size int) int {
 	cCtl.Buffers = size
 	return cCtl.Buffers
 }
+
+// Close closes the channel control and returns an error if any.
 func (cCtl *ChannelCtl[T]) Close() error {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -363,6 +315,8 @@ func (cCtl *ChannelCtl[T]) Close() error {
 	}
 	return nil
 }
+
+// WithProperty sets the property for the channel control and returns it.
 func (cCtl *ChannelCtl[T]) WithProperty(property ci.IProperty[T]) ci.IChannelCtl[T] {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -372,6 +326,8 @@ func (cCtl *ChannelCtl[T]) WithProperty(property ci.IProperty[T]) ci.IChannelCtl
 	cCtl.property = property
 	return cCtl
 }
+
+// WithChannel sets the channel for the channel control and returns it.
 func (cCtl *ChannelCtl[T]) WithChannel(channel chan T) ci.IChannelCtl[T] {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -381,6 +337,8 @@ func (cCtl *ChannelCtl[T]) WithChannel(channel chan T) ci.IChannelCtl[T] {
 	cCtl.ch = channel
 	return cCtl
 }
+
+// WithBufferSize sets the buffer size for the channel control and returns it.
 func (cCtl *ChannelCtl[T]) WithBufferSize(size int) ci.IChannelCtl[T] {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -390,6 +348,8 @@ func (cCtl *ChannelCtl[T]) WithBufferSize(size int) ci.IChannelCtl[T] {
 	cCtl.Buffers = size
 	return cCtl
 }
+
+// WithMetrics sets the metrics flag for the channel control and returns it.
 func (cCtl *ChannelCtl[T]) WithMetrics(metrics bool) ci.IChannelCtl[T] {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
@@ -400,6 +360,7 @@ func (cCtl *ChannelCtl[T]) WithMetrics(metrics bool) ci.IChannelCtl[T] {
 	return cCtl
 }
 
+// initChannelsMap initializes the channels map for the ChannelCtl instance.
 func initChannelsMap[T any](v *ChannelCtl[T]) map[string]interface{} {
 	if v.Channels == nil {
 		v.MuLock()
@@ -420,6 +381,8 @@ func initChannelsMap[T any](v *ChannelCtl[T]) map[string]interface{} {
 	}
 	return v.Channels
 }
+
+// getDefaultChannelsMap returns a map with default channels for the ChannelCtl instance.
 func getDefaultChannelsMap(withMetrics bool, logger l.Logger) map[string]any {
 	mp := map[string]any{
 		// done is a channel for the done signal.

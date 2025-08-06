@@ -15,7 +15,7 @@ import (
 
 type JsonB map[string]interface{}
 
-// Serializer manual para o GORM
+// Value manual para o GORM
 func (m JsonB) Value() (driver.Value, error) { return json.Marshal(m) }
 
 func (m *JsonB) Scan(vl any) error {
@@ -116,6 +116,7 @@ func (p *Property[T]) Deserialize(data []byte, format, filePath string) error {
 	return nil
 }
 
+// SaveToFile saves the property to a file in the specified format.
 func (p *Property[T]) SaveToFile(filePath string, format string) error {
 	if data, err := p.Serialize(format, filePath); err != nil {
 		gl.Log("error", "Failed to serialize data:", err.Error())
@@ -129,6 +130,7 @@ func (p *Property[T]) SaveToFile(filePath string, format string) error {
 	return nil
 }
 
+// LoadFromFile loads the property from a file in the specified format.
 func (p *Property[T]) LoadFromFile(filename, format string) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {

@@ -1,4 +1,4 @@
-package mcp
+package hooks
 
 func NewConfigBitstate[T uint64, S any]() *Bitstate[uint64, S] {
 	return NewBitstate[uint64, S](nil)

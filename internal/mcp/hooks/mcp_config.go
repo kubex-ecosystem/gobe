@@ -1,4 +1,4 @@
-package mcp
+package hooks
 
 type SystemDomain struct{}
 type SystemFlag uint64

@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// IMutexes is an interface that defines the methods for a mutex context map.
 type IMutexes interface {
 	MuLock()
 	MuUnlock()
@@ -192,13 +193,12 @@ func (m *Mutexes) MuDone() { m.MuCtxWg.Done() }
 // MuWait waits for the wait group counter to reach zero
 func (m *Mutexes) MuWait() { m.MuCtxWg.Wait() }
 
+// MuTryLock tries to lock the mutex without blocking
 func (m *Mutexes) MuTryLock() bool {
-	if m.MuCtxM.TryLock() {
-		return true
-	}
-	return false
+	return m.MuCtxM.TryLock()
 }
 
+// MuTryRLock tries to lock the mutex for reading without blocking
 func (m *Mutexes) MuTryRLock() bool {
 	if m.MuCtxL.TryRLock() {
 		return true
