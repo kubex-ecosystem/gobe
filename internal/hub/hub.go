@@ -4,6 +4,7 @@ package hub
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -237,7 +238,7 @@ func (h *DiscordMCPHub) intelligentTriage(msg discord.Message) (shouldProcess bo
 	// Filtrar mensagens que são apenas emojis ou caracteres especiais
 	if strings.Trim(
 		content,
-		"😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚☺️🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫🥱😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵🥴🤮🤢🤧😷🤒🤕🤬😡😠🤯😤👿💀☠️💩🤡👹👺👻👽👾🤖😺😸😹😻😼😽🙀😿😾",
+		strings.Join([]string{`😀😁😂🤣😃😄😅😆😉😊😋😎😍😘🥰😗😙😚☺️🙂🤗🤩🤔🤨😐😑😶🙄😏😣😥😮🤐😯😪😫🥱😴😌😛😜😝🤤😒😓😔😕🙃🤑😲☹️🙁😖😞😟😤😢😭😦😧😨😩🤯😬😰😱🥵🥶😳🤪😵🥴🤮🤢🤧😷🤒🤕🤬😡😠🤯😤👿💀☠️💩🤡👹👺👻👽👾🤖😺😸😹😻😼😽🙀😿😾`}, ""),
 	) == "" {
 		return false, ""
 	}
@@ -313,6 +314,9 @@ func (h *DiscordMCPHub) intelligentTriage(msg discord.Message) (shouldProcess bo
 }
 
 func (h *DiscordMCPHub) processCommandMessage(ctx context.Context, msg discord.Message) error {
+	if ctx == nil {
+		return errors.New("context is nil")
+	}
 	log.Printf("⚡ Processando comando: %s", msg.Content)
 	// Comandos já são tratados antes do processamento LLM
 	return nil
@@ -713,85 +717,6 @@ func (h *DiscordMCPHub) Shutdown(ctx context.Context) error {
 }
 
 // ============================================================================
-// GoBE Integration Methods
-// ============================================================================
-
-/* func (h *DiscordMCPHub) processGoBeCommand(ctx context.Context, command, params string) error {
-	// if h.gobeClient == nil {
-	// 	return fmt.Errorf("GoBE client not enabled")
-	// }
-
-	log.Printf("🔗 Processing GoBE command: %s with params: %s", command, params)
-
-	switch command {
-	case "create_user":
-		// Parse user data from params
-		var userData struct {
-			Name  string `json:"name"`
-			Email string `json:"email"`
-			Role  string `json:"role"`
-		}
-		if err := json.Unmarshal([]byte(params), &userData); err != nil {
-			return fmt.Errorf("failed to parse user data: %w", err)
-		}
-
-		userRequest := gobe.UserRequest{
-			Name:  userData.Name,
-			Email: userData.Email,
-			Role:  userData.Role,
-		}
-
-		user, err := h.gobeClient.CreateUser(ctx, userRequest)
-		if err != nil {
-			return fmt.Errorf("failed to create user: %w", err)
-		}
-
-		response := fmt.Sprintf("✅ Usuário criado com sucesso!\n"+
-			"ID: %s\n"+
-			"Nome: %s\n"+
-			"Email: %s\n"+
-			"Role: %s", user.ID, user.Name, user.Email, user.Role)
-
-		return h.SendDiscordMessage("", response)
-
-	case "system_status":
-		status, err := h.gobeClient.GetSystemStatus(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to get system status: %w", err)
-		}
-
-		response := fmt.Sprintf("📊 Status do Sistema:\n"+
-			"Status: %s\n"+
-			"Versão: %s\n"+
-			"Uptime: %s\n"+
-			"Database: %v\n"+
-			"Sessões ativas: %d",
-			status.Status, status.Version, status.Uptime,
-			status.Database.Connected, status.Metrics.ActiveSessions)
-
-		return h.SendDiscordMessage("", response)
-
-	case "backup_database":
-		result, err := h.gobeClient.BackupDatabase(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to backup database: %w", err)
-		}
-
-		filename, _ := result["filename"].(string)
-		size, _ := result["size"].(string)
-
-		response := fmt.Sprintf("💾 Backup do banco realizado!\n"+
-			"Arquivo: %s\n"+
-			"Tamanho: %s", filename, size)
-
-		return h.SendDiscordMessage("", response)
-
-	default:
-		return fmt.Errorf("comando GoBE desconhecido: %s", command)
-	}
-} */
-
-// ============================================================================
 // gobe Integration Methods
 // ============================================================================
 
@@ -888,7 +813,7 @@ func (h *DiscordMCPHub) handleCreateUserCommand(ctx context.Context, msg discord
 	content := strings.ToLower(msg.Content)
 
 	// Simple parsing - in a real implementation, you might want more sophisticated parsing
-	var name, email, role string
+	var name, _, role string
 
 	// Look for patterns like "criar usuário João email@test.com admin"
 	parts := strings.Fields(msg.Content)
@@ -897,7 +822,7 @@ func (h *DiscordMCPHub) handleCreateUserCommand(ctx context.Context, msg discord
 			name = parts[i+1]
 		}
 		if strings.Contains(part, "@") {
-			email = part
+			_ = part
 		}
 		if strings.Contains(content, "admin") {
 			role = "admin"
@@ -911,9 +836,9 @@ func (h *DiscordMCPHub) handleCreateUserCommand(ctx context.Context, msg discord
 			"❌ Nome não encontrado. Use: 'criar usuário [nome] [email] [role]'")
 	}
 
-	if email == "" {
-		email = fmt.Sprintf("%s@discord.local", strings.ToLower(name))
-	}
+	// if email == "" {
+	// 	email = fmt.Sprintf("%s@discord.local", strings.ToLower(name))
+	// }
 
 	if role == "" {
 		role = "user"
@@ -972,7 +897,7 @@ func (h *DiscordMCPHub) handleScaleCommand(ctx context.Context, msg discord.Mess
 	parts := strings.Fields(msg.Content)
 
 	var appName string
-	var replicas int = 1
+	var replicas = 1
 
 	for i, part := range parts {
 		if strings.Contains(part, "scale") && i+1 < len(parts) {

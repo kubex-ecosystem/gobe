@@ -42,16 +42,6 @@ type muCtx struct {
 	MuCtxWg *sync.WaitGroup
 }
 
-// newMuCtx creates a new mutex context map
-func newMuCtx(mSharedCtxM *sync.RWMutex) *muCtx {
-	mu := &muCtx{
-		MuCtxM:    &sync.RWMutex{},
-		MuCtxCond: sync.NewCond(mSharedCtxM),
-		MuCtxWg:   &sync.WaitGroup{},
-	}
-	return mu
-}
-
 // Mutexes is a struct that holds the mutex context map
 type Mutexes struct {
 	// muCtx is the mutex context map
@@ -72,6 +62,16 @@ type Mutexes struct {
 	muSharedCtx any
 	// muSharedCtxValidate is the shared context validation function. This is used to validate the shared context defining if it needs to wait or not.
 	muSharedCtxValidate func(any) (bool, error)
+}
+
+// newMuCtx creates a new mutex context map
+func newMuCtx(mSharedCtxM *sync.RWMutex) *muCtx {
+	mu := &muCtx{
+		MuCtxM:    &sync.RWMutex{},
+		MuCtxCond: sync.NewCond(mSharedCtxM),
+		MuCtxWg:   &sync.WaitGroup{},
+	}
+	return mu
 }
 
 // NewMutexesType creates a new mutex context map struct pointer.
