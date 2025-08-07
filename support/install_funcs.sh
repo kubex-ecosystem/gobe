@@ -76,7 +76,7 @@ add_to_path() {
 
     shell_rc_file="$(detect_shell_rc)"
 
-    if [ -z "$shell_rc_file" ]; then
+    if [[ -z "$shell_rc_file" ]]; then
         log error "Could not identify the shell configuration file."
         return 1
     fi

@@ -35,7 +35,7 @@ validate_versions() {
 check_dependencies() {
   for dep in "$@"; do
     if ! command -v "$dep" > /dev/null; then
-      if [[ ! $(dpkg -l --selected-only "$dep" | grep "$dep" -q >/dev/null) ]]; then
+      if ! dpkg -l --selected-only "$dep" | grep "$dep" -q >/dev/null; then
         log error "$dep is not installed." true
         if [[ -z "${_NON_INTERACTIVE:-}" ]]; then
           log warn "$dep is required for this script to run." true

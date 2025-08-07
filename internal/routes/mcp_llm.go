@@ -33,8 +33,8 @@ func NewMCPLLMRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	mcpLLMController := mcp_llm_controller.NewLLMController(dbGorm)
 
 	routesMap := make(map[string]ar.IRoute)
-	middlewaresMap := make(map[string]gin.HandlerFunc)
 
+	middlewaresMap := make(map[string]gin.HandlerFunc)
 	secureProperties := make(map[string]bool)
 	secureProperties["secure"] = true
 	secureProperties["validateAndSanitize"] = false
