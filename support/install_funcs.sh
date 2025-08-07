@@ -119,7 +119,7 @@ install_binary() {
     local BINARY_TO_INSTALL="${_BINARY/\/${_APP_NAME}/\/${_APP_NAME}\/bin}${SUFFIX:+_${SUFFIX}}"
     log info "Installing binary: '${BINARY_TO_INSTALL}' as '$_APP_NAME'"
 
-    if [ "$(id -u)" -ne 0 ]; then
+    if [[ "$(id -u)" -ne 0 ]]; then
         log info "Non-root user detected. Installing to ${_LOCAL_BIN}..."
         mkdir -p "$_LOCAL_BIN"
         cp "$BINARY_TO_INSTALL" "$_LOCAL_BIN/$_APP_NAME" || exit 1

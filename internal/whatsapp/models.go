@@ -1,3 +1,4 @@
+// Package whatsapp provides models for WhatsApp messages.
 package whatsapp
 
 import "time"
