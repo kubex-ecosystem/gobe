@@ -7,6 +7,7 @@ require (
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/google/go-github/v61 v61.0.0
 	github.com/google/uuid v1.6.0
 	github.com/hyperledger/fabric-contract-api-go v1.2.2
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -37,7 +38,6 @@ require (
 	github.com/ebitengine/purego v0.8.4 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/go-github/v61 v61.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
@@ -170,4 +170,7 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
-replace github.com/rafa-mori/ghbex => ../ghbex
+replace (
+	github.com/rafa-mori/ghbex => ../ghbex
+	github.com/rafa-mori/grompt => ../grompt
+)

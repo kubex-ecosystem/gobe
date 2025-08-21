@@ -406,9 +406,118 @@ func (c *GHbexController) Analytics(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, insights)
 }
-func (c *GHbexController) Productivity(ctx *gin.Context) {}
-func (c *GHbexController) Intelligence(ctx *gin.Context) {}
-func (c *GHbexController) Automation(ctx *gin.Context)   {}
+func (c *GHbexController) Productivity(ctx *gin.Context) {
+	// Extract owner and repo from URL path: /productivity/{owner}/{repo}
+	owner := ctx.Param("owner")
+	repo := ctx.Param("repo")
+
+	if owner == "" || repo == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
+		return
+	}
+
+	if c.ghc == nil {
+		gl.Log("warn", "GitHub client is nil")
+		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+	}
+
+	gl.Log("info", fmt.Sprintf("📊 PRODUCTIVITY REQUEST - %s/%s", owner, repo))
+	startTime := time.Now()
+
+	// Perform productivity analysis
+	report, err := services.AnalyzeProductivity(ctx, c.ghc, owner, repo)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("Productivity analysis error for %s/%s: %v", owner, repo, err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Productivity analysis failed: %v", err)})
+		return
+	}
+
+	duration := time.Since(startTime)
+	gl.Log("info", fmt.Sprintf("✅ PRODUCTIVITY ANALYSIS COMPLETED - %s/%s - Duration: %v, Actions: %d",
+		owner, repo, duration, len(report.Actions)))
+
+	ctx.JSON(http.StatusOK, report)
+}
+func (c *GHbexController) Intelligence(ctx *gin.Context) {
+	// Extract owner and repo from URL path: /intelligence/{owner}/{repo}
+	owner := ctx.Param("owner")
+	repo := ctx.Param("repo")
+
+	if owner == "" || repo == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
+		return
+	}
+
+	if c.ghc == nil {
+		gl.Log("warn", "GitHub client is nil")
+		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+	}
+
+	// Get analysis period from query param (default 60 days)
+	analysisDays := 60
+	if days := ctx.Query("days"); days != "" {
+		if parsed, err := time.ParseDuration(days + "h"); err == nil {
+			analysisDays = int(parsed.Hours() / 24)
+		}
+	}
+
+	gl.Log("info", fmt.Sprintf("🧠 INTELLIGENCE REQUEST - %s/%s - Analysis Days: %d", owner, repo, analysisDays))
+	startTime := time.Now()
+
+	// Perform intelligence analysis
+	insights, err := services.AnalyzeRepository(ctx, c.ghc, owner, repo, analysisDays)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("Intelligence analysis error for %s/%s: %v", owner, repo, err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Intelligence analysis failed: %v", err)})
+		return
+	}
+
+	duration := time.Since(startTime)
+	gl.Log("info", fmt.Sprintf("✅ INTELLIGENCE ANALYSIS COMPLETED - %s/%s - Duration: %v, Health Score: %.1f (%s)",
+		owner, repo, duration, insights.HealthScore.Overall, insights.HealthScore.Grade))
+
+	ctx.JSON(http.StatusOK, insights)
+}
+func (c *GHbexController) Automation(ctx *gin.Context) {
+	// Extract owner and repo from URL path: /automation/{owner}/{repo}
+	owner := ctx.Param("owner")
+	repo := ctx.Param("repo")
+
+	if owner == "" || repo == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
+		return
+	}
+
+	if c.ghc == nil {
+		gl.Log("warn", "GitHub client is nil")
+		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+	}
+
+	// Get analysis period from query param (default 30 days)
+	analysisDays := 30
+	if days := ctx.Query("days"); days != "" {
+		if parsed, err := time.ParseDuration(days + "h"); err == nil {
+			analysisDays = int(parsed.Hours() / 24)
+		}
+	}
+
+	gl.Log("info", fmt.Sprintf("🤖 AUTOMATION REQUEST - %s/%s - Analysis Days: %d", owner, repo, analysisDays))
+	startTime := time.Now()
+
+	// Perform automation analysis
+	report, err := services.AnalyzeAutomation(ctx, c.ghc, owner, repo, analysisDays)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("Automation analysis error for %s/%s: %v", owner, repo, err))
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Automation analysis failed: %v", err)})
+		return
+	}
+
+	duration := time.Since(startTime)
+	gl.Log("info", fmt.Sprintf("✅ AUTOMATION ANALYSIS COMPLETED - %s/%s - Duration: %v, Score: %.1f (%s)",
+		owner, repo, duration, report.AutomationScore, report.Grade))
+
+	ctx.JSON(http.StatusOK, report)
+}
 
 // calculateFallbackRepoScore generates realistic score based on repo name characteristics
 func calculateFallbackRepoScore(repoName string) float64 {
