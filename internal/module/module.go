@@ -1,9 +1,10 @@
-package main
+// Package module provides internal types and functions for the GoBE application.
+package module
 
 import (
 	cc "github.com/rafa-mori/gobe/cmd/cli"
-	gl "github.com/rafa-mori/gobe/logger"
-	vs "github.com/rafa-mori/gobe/version"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	vs "github.com/rafa-mori/gobe/internal/module/version"
 	"github.com/spf13/cobra"
 
 	"os"
@@ -15,18 +16,25 @@ type GoBE struct {
 	printBanner   bool
 }
 
-func (m *GoBE) Alias() string { return "" }
+func (m *GoBE) Alias() string {
+	return ""
+}
 func (m *GoBE) ShortDescription() string {
-	return "GoBE is a minimalistic backend service with Go."
+	return "GHbex is a command-line tool for managing GitHub repositories and file markers."
 }
 func (m *GoBE) LongDescription() string {
-	return `GoBE: A minimalistic backend service with Go.`
+	return `GHbex is a command-line tool for managing GitHub repositories and file markers.
+`
 }
 func (m *GoBE) Usage() string {
 	return "gobe [command] [args]"
 }
 func (m *GoBE) Examples() []string {
-	return []string{"gobe start -p ':8080' -b '0.0.0.0' -n 'MyService' -d"}
+	return []string{
+		"gobe start",
+		"gobe stop",
+		"gobe status",
+	}
 }
 func (m *GoBE) Active() bool {
 	return true
@@ -34,7 +42,9 @@ func (m *GoBE) Active() bool {
 func (m *GoBE) Module() string {
 	return "gobe"
 }
-func (m *GoBE) Execute() error { return m.Command().Execute() }
+func (m *GoBE) Execute() error {
+	return m.Command().Execute()
+}
 func (m *GoBE) Command() *cobra.Command {
 	gl.Log("debug", "Starting GoBE CLI...")
 
@@ -79,15 +89,4 @@ func (m *GoBE) concatenateExamples() string {
 		examples += rtCmd + example + "\n  "
 	}
 	return examples
-}
-
-func RegX() *GoBE {
-	var printBannerV = os.Getenv("GOBEMIN_PRINT_BANNER")
-	if printBannerV == "" {
-		printBannerV = "true"
-	}
-
-	return &GoBE{
-		printBanner: strings.ToLower(printBannerV) == "true",
-	}
 }

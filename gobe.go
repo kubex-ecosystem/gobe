@@ -24,7 +24,7 @@ import (
 	t "github.com/rafa-mori/gobe/internal/types"
 	l "github.com/rafa-mori/logz"
 
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type GoBECertData struct {

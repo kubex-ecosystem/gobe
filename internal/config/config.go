@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
-	"github.com/rafa-mori/gobe/logger"
+	"github.com/rafa-mori/gobe/internal/module/logger"
 
 	l "github.com/rafa-mori/logz"
 )

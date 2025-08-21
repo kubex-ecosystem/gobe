@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 // ValidateWorkerLimit valida o limite de workers

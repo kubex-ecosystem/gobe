@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	mcp_tasks_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/tasks"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type MCPTasksRoutes struct {

@@ -1,7 +1,7 @@
 package types
 
 import (
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 
 	"sync"
 	"time"

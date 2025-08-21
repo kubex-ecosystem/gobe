@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	cron "github.com/rafa-mori/gdbase/factory/models"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	"github.com/rafa-mori/gobe/internal/types"
-	gl "github.com/rafa-mori/gobe/logger"
 	"gorm.io/gorm"
 )
 

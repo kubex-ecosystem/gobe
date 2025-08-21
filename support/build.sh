@@ -11,7 +11,7 @@ get_output_name() {
   local platform_pos="${1:-${_PLATFORM:-}}"
   local arch_pos="${2:-${_ARCH:-}}"
 
-  local BINARY_DIR="${_ROOT_DIR}/bin"
+  local BINARY_DIR="${_ROOT_DIR}/dist"
   if [[ ! -d "$BINARY_DIR" ]]; then
     mkdir -p "$BINARY_DIR" || true
   fi
@@ -51,7 +51,7 @@ build_binary() {
       if [[ "$platform_pos" != "windows" && "$arch_pos" == "386" ]]; then
         continue
       fi
-      
+
       local OUTPUT_NAME
       OUTPUT_NAME=$(get_output_name "$platform_pos" "$arch_pos")
       if [[ -f "$OUTPUT_NAME" ]]; then
@@ -151,7 +151,7 @@ compress_binary() {
       if [[ "$platform_pos" != "windows" ]]; then
         OUTPUT_NAME="${OUTPUT_NAME}.tar.gz"
         _CURR_PATH="$(pwd)"
-        _BINARY_PATH="${_ROOT_DIR}/bin"
+        _BINARY_PATH="${_ROOT_DIR}/dist"
 
         cd "${_BINARY_PATH}" || true # Just to avoid tar warning about relative paths
         if tar -czf "./$(basename "${OUTPUT_NAME}")" "./$(basename "${BINARY_NAME}")"; then

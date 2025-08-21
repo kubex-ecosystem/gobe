@@ -6,8 +6,8 @@ import (
 
 	models "github.com/rafa-mori/gdbase/factory/models/mcp"
 	t "github.com/rafa-mori/gdbase/types"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	svc "github.com/rafa-mori/gobe/internal/services"
-	gl "github.com/rafa-mori/gobe/logger"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

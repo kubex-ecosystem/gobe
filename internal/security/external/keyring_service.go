@@ -6,9 +6,9 @@ import (
 	"os"
 
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
 	t "github.com/rafa-mori/gobe/internal/types"
-	gl "github.com/rafa-mori/gobe/logger"
 	"github.com/zalando/go-keyring"
 )
 

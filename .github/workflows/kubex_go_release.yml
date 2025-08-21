@@ -3,9 +3,14 @@ name: Kubex Go Dist CI
 on:
   push:
     tags:
-      - "v*.*.*" 
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
+      target_manifest:
+        description: 'Path to the module manifest (e.g., internal/module/info/manifest.json)'
+        required: false
+        default: 'internal/module/info/manifest.json'
+        type: string
       tag_name:
         description: 'Tag name for manual release (e.g., v1.0.0)'
         required: false
@@ -32,13 +37,17 @@ permissions:
   id-token: write
 
 env:
+  _TARGET_MANIFEST: ${{ github.event.inputs.target_manifest }}
+  _DEBUG: ${{ github.event.inputs.debug }}
+  _DRY_RUN: ${{ github.event.inputs.dry_run }}
+  _PLATFORMS: ${{ github.event.inputs.platforms }}
   NON_INTERACTIVE: true
   FORCE: y
   CI: true
 
 jobs:
   # ==========================================
-  # JOB 1: Build All Platforms  
+  # JOB 1: Build All Platforms
   # ==========================================
   build:
     name: Cross-Platform Build
@@ -50,7 +59,7 @@ jobs:
       platforms: ${{ steps.manifest.outputs.platforms }}
       version-mismatch: ${{ steps.version-check.outputs.version-mismatch }}
       continue: ${{ steps.version-check.outputs.continue }}
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -60,31 +69,31 @@ jobs:
       - name: Load Module Manifest
         id: manifest
         run: |
-          if [[ ! -f "$(git rev-parse --show-toplevel)/info/manifest.json" ]]; then
-            echo "❌ info/manifest.json not found"
+          if [[ ! -f "$(git rev-parse --show-toplevel)${{ github.env._TARGET_MANIFEST }}" ]]; then
+            echo "❌ ${{ github.env._TARGET_MANIFEST }} not found"
             exit 1
           fi
-          
+
           # Extract module information
-          MODULE_NAME=$(cat $(git rev-parse --show-toplevel)/info/manifest.json | jq -r '.bin // .name // "unknown"')
-          MODULE_VERSION=$(cat $(git rev-parse --show-toplevel)/info/manifest.json | jq -r '.version // "0.0.0"')
-          PLATFORMS=$(cat $(git rev-parse --show-toplevel)/info/manifest.json | jq -r '.platforms[]?' | tr '\n' ' ' | sed 's/ $//')
+          MODULE_NAME=$(cat $(git rev-parse --show-toplevel)${{ github.env._TARGET_MANIFEST }} | jq -r '.bin // .name // "unknown"')
+          MODULE_VERSION=$(cat $(git rev-parse --show-toplevel)${{ github.env._TARGET_MANIFEST }} | jq -r '.version // "0.0.0"')
+          PLATFORMS=$(cat $(git rev-parse --show-toplevel)${{ github.env._TARGET_MANIFEST }} | jq -r '.platforms[]?' | tr '\n' ' ' | sed 's/ $//')
 
           # Validate required fields
           if [[ "$MODULE_NAME" == "unknown" || "$MODULE_NAME" == "null" ]]; then
             echo "❌ Module name not found in manifest (bin or name field required)"
             exit 1
           fi
-          
+
           if [[ -z "$PLATFORMS" ]]; then
             echo "❌ No platforms specified in manifest"
             exit 1
           fi
-          
+
           echo "module-name=$MODULE_NAME" >> $GITHUB_OUTPUT
           echo "manifest-version=$MODULE_VERSION" >> $GITHUB_OUTPUT
           echo "platforms=$PLATFORMS" >> $GITHUB_OUTPUT
-          
+
           echo "✅ Module: $MODULE_NAME"
           echo "✅ Manifest Version: $MODULE_VERSION"
           echo "✅ Platforms: $PLATFORMS"
@@ -113,21 +122,21 @@ jobs:
         run: |
           TAG_VERSION="${{ steps.version.outputs.version }}"
           MANIFEST_VERSION="v${{ steps.manifest.outputs.manifest-version }}"
-          
+
           # Remove 'v' prefix for comparison
           TAG_CLEAN="${TAG_VERSION#v}"
           MANIFEST_CLEAN="${MANIFEST_VERSION#v}"
-          
+
           echo "🏷️  Tag Version: $TAG_VERSION ($TAG_CLEAN)"
           echo "📋 Manifest Version: $MANIFEST_VERSION ($MANIFEST_CLEAN)"
-          
+
           if [[ "$TAG_CLEAN" != "$MANIFEST_CLEAN" ]]; then
             echo ""
             echo "❌ Version Mismatch!"
             echo "   Git Tag: $TAG_VERSION"
             echo "   Manifest: $MANIFEST_VERSION"
             echo ""
-            echo "Please update info/manifest.json version to match the git tag."
+            echo "Please update ${{ github.env._TARGET_MANIFEST }} version to match the git tag."
             echo "Expected: \"version\": \"$TAG_CLEAN\""
             echo ""
             echo "🛑 Workflow will skip remaining steps for safety."
@@ -144,12 +153,12 @@ jobs:
         if: steps.version-check.outputs.continue == 'true'
         run: |
           GO_VERSION=$(grep '^go ' $(git rev-parse --show-toplevel)/go.mod | awk '{print $2}')
-          
+
           bash -c "$(curl -sSfL 'https://raw.githubusercontent.com/rafa-mori/gosetup/main/go.sh')" -s --version "$GO_VERSION"
-          
+
           # Verify installation
           go version
-          
+
           # Output for other jobs
           echo "go-version=$GO_VERSION" >> $GITHUB_OUTPUT
 
@@ -169,7 +178,7 @@ jobs:
         run: |
           MODULE_NAME="${{ steps.manifest.outputs.module-name }}"
           PLATFORMS="${{ steps.manifest.outputs.platforms }}"
-          
+
           echo "Building $MODULE_NAME for platforms: $PLATFORMS"
           ENV_PLATFORMS="${ENV_PLATFORMS:-${{ github.event.inputs.platforms }}}"
 
@@ -193,9 +202,9 @@ jobs:
             fi
 
             # Set environment variables
-            export NON_INTERACTIVE=${NON_INTERACTIVE:-${{ github.event.env.NON_INTERACTIVE }}}
-            export FORCE=${FORCE:-${{ github.event.env.FORCE }}}
-            export CI=${CI:-${{ github.event.env.CI }}}
+            export NON_INTERACTIVE=${NON_INTERACTIVE:-${{ github.env.NON_INTERACTIVE }}}
+            export FORCE=${FORCE:-${{ github.env.FORCE }}}
+            export CI=${CI:-${{ github.env.CI }}}
             export DRY_RUN=${DRY_RUN:-${{ github.event.inputs.dry_run }}}
             export DEBUG=${DEBUG:-${{ github.event.inputs.debug }}}
 
@@ -225,7 +234,7 @@ jobs:
 
             echo "os=${OS:-}" >> $GITHUB_OUTPUT
             echo "arch=${ARCH:-}" >> $GITHUB_OUTPUT
-            
+
             if [[ ! $(basename pwd) != "bin" ]]; then
               ls -la $(git rev-parse --show-toplevel)/bin/
               cd $(git rev-parse --show-toplevel)/bin || exit 1
@@ -287,7 +296,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   needs: build
   #   if: github.event_name != 'workflow_dispatch' && needs.build.outputs.continue == 'true'
-    
+
   #   steps:
   #     - name: Checkout Repository
   #       uses: actions/checkout@v4
@@ -295,9 +304,9 @@ jobs:
   #     - name: Smart Go Setup
   #       run: |
   #         GO_VERSION=$(grep '^go ' $(git rev-parse --show-toplevel)/go.mod | awk '{print $2}')
-          
+
   #         bash -c "$(curl -sSfL 'https://raw.githubusercontent.com/rafa-mori/gosetup/main/go.sh')" -s --version "${GO_VERSION:-1.24.5}"
-          
+
   #         # Verify installation
   #         go version
 
@@ -328,7 +337,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: always() && needs.build.result == 'success' && needs.build.outputs.continue == 'true'
-    
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -371,17 +380,17 @@ jobs:
               *) PLATFORM_LIST="$PLATFORM_LIST          - 📦 **${platform:-}**: \`${MODULE_NAME:-}_${OS:-}_${ARCH:-}.tar.gz\`" ;;
             esac
           done
-          
+
           cat > RELEASE_NOTES.md << EOF
           ## ${MODULE_NAME:-} Release ${VERSION:-}
-          
+
           ### What's Included
-          
+
           This release contains cross-platform binaries for:
           ${PLATFORM_LIST:-}
-          
+
           ### Installation
-          
+
           #### Linux/macOS
           \`\`\`bash
           # Download and extract
@@ -390,31 +399,31 @@ jobs:
           chmod +x ${MODULE_NAME:-}_linux_amd64
           sudo mv ${MODULE_NAME:-}_linux_amd64 /usr/local/bin/${MODULE_NAME:-}
           \`\`\`
-          
+
           #### Windows
           \`\`\`powershell
           # Download and extract the ZIP file
           # Add the executable to your PATH
           \`\`\`
-          
+
           ### Verification
-          
+
           All binaries are compressed and checksums are provided in \`SHA256SUMS\`.
-          
+
           \`\`\`bash
           # Verify checksum
           sha256sum -c SHA256SUMS
           \`\`\`
-          
+
           ### Build Information
-          
+
           - **Go Version**: ${{ needs.build.outputs.go-version }}
           - **Built on**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
           - **Commit**: ${{ github.sha }}
           - **Workflow**: ${{ github.run_id }}
-          
+
           ---
-          
+
           **Full Changelog**: [${{ github.repository }}/compare/...](https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }})
           EOF
 
@@ -422,13 +431,13 @@ jobs:
         run: |
           MODULE_NAME="${{ needs.build.outputs.module-name }}"
           VERSION="${{ needs.build.outputs.version }}"
-          
+
           gh release create "${VERSION:-}" \
             ./release-assets/* \
             --title "${MODULE_NAME:-} ${VERSION:-}" \
             --notes-file RELEASE_NOTES.md \
             ${{ contains(needs.build.outputs.version, '-') && '--prerelease' || '' }}
-          
+
           echo "✅ Release created successfully!"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -437,7 +446,7 @@ jobs:
         run: |
           MODULE_NAME="${{ needs.build.outputs.module-name }}"
           PLATFORMS="${{ needs.build.outputs.platforms }}"
-          
+
           echo "## Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Module**: ${MODULE_NAME:-}" >> $GITHUB_STEP_SUMMARY
@@ -445,7 +454,7 @@ jobs:
           echo "**Go Version**: ${{ needs.build.outputs.go-version }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Assets Released:" >> $GITHUB_STEP_SUMMARY
-          
+
           for platform in $PLATFORMS; do
             case "$platform" in
               "linux/amd64"|"linux-amd64") echo "- 🐧 Linux AMD64" >> $GITHUB_STEP_SUMMARY ;;

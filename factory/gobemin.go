@@ -8,8 +8,8 @@ import (
 	t "github.com/rafa-mori/gdbase/types"
 	gb "github.com/rafa-mori/gobe"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	s "github.com/rafa-mori/gobe/internal/services"
-	gl "github.com/rafa-mori/gobe/logger"
 	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )

@@ -10,7 +10,7 @@ import (
 
 	cm "github.com/rafa-mori/gobe/internal/common"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 // TLSConfig is a struct that holds the TLS configuration for the GoBE instance.

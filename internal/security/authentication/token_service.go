@@ -10,9 +10,9 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	m "github.com/rafa-mori/gdbase/factory/models"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
 )
 
 type idTokenCustomClaims struct {

@@ -18,10 +18,10 @@ import (
 
 	sau "github.com/rafa-mori/gobe/factory/security"
 	cm "github.com/rafa-mori/gobe/internal/common"
+	"github.com/rafa-mori/gobe/internal/module/logger"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
 	srv "github.com/rafa-mori/gobe/internal/services"
-	"github.com/rafa-mori/gobe/logger"
 )
 
 var gl = logger.GetLogger[l.Logger](nil)

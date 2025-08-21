@@ -1,10 +1,13 @@
 {
   "name": "Kubex GoBE",
   "application": "gobe",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": false,
   "published": true,
-  "aliases": ["gobe", "kbx"],
+  "aliases": [
+    "gobe",
+    "kbx"
+  ],
   "repository": "https://github.com/rafa-mori/gobe",
   "homepage": "https://github.com/rafa-mori/gobe",
   "description": "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and more for help you managing your technology stack.",
@@ -13,7 +16,26 @@
   "author": "Rafael Mori <faelmori@gmail.com>",
   "organization": "rafa-mori",
   "license": "MIT",
-  "keywords": ["gobe", "kubex", "control", "command-line", "tool", "management"],
-  "platforms": ["linux/amd64"],
-  "dependencies": ["pkg-config", "tar", "gzip", "curl", "git", "zip", "unzip", "jq", "libzmq3-dev"]
+  "keywords": [
+    "gobe",
+    "kubex",
+    "control",
+    "command-line",
+    "tool",
+    "management"
+  ],
+  "platforms": [
+    "linux/amd64"
+  ],
+  "dependencies": [
+    "pkg-config",
+    "tar",
+    "gzip",
+    "curl",
+    "git",
+    "zip",
+    "unzip",
+    "jq",
+    "libzmq3-dev"
+  ]
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	mcp_llm_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/llm"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type MCPLLMRoutes struct {

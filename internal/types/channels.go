@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	tu "github.com/rafa-mori/gobe/internal/utils"
-	gl "github.com/rafa-mori/gobe/logger"
 	l "github.com/rafa-mori/logz"
 
 	"reflect"

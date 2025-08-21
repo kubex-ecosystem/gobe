@@ -6,8 +6,8 @@ import (
 	"github.com/rafa-mori/gobe/internal/config"
 	telegram_controller "github.com/rafa-mori/gobe/internal/controllers/telegram"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	"github.com/rafa-mori/gobe/internal/telegram"
-	gl "github.com/rafa-mori/gobe/logger"
 )
 
 // NewTelegramRoutes registers Telegram related endpoints.

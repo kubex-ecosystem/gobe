@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	models "github.com/rafa-mori/gdbase/factory/models/mcp"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	svc "github.com/rafa-mori/gobe/internal/services"
-	gl "github.com/rafa-mori/gobe/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/types"

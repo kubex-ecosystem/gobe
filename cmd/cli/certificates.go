@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	crp "github.com/rafa-mori/gobe/internal/security/crypto"
-	gl "github.com/rafa-mori/gobe/logger"
 	"github.com/spf13/cobra"
 )
 

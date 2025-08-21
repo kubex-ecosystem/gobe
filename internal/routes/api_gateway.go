@@ -8,8 +8,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rafa-mori/gobe/internal/module/logger"
 	apia "github.com/rafa-mori/gobe/internal/security/authentication"
-	"github.com/rafa-mori/gobe/logger"
 )
 
 type APIGateway struct {

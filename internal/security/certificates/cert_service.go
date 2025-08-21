@@ -14,10 +14,10 @@ import (
 	"time"
 
 	cm "github.com/rafa-mori/gobe/internal/common"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	crp "github.com/rafa-mori/gobe/internal/security/crypto"
 	krs "github.com/rafa-mori/gobe/internal/security/external"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
