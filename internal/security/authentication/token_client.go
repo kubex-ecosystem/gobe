@@ -7,10 +7,10 @@ import (
 	s "github.com/rafa-mori/gdbase/factory"
 	"github.com/rafa-mori/gobe/internal/common"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	kri "github.com/rafa-mori/gobe/internal/security/external"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
 )
 
 type TokenClientImpl struct {

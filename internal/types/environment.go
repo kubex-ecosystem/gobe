@@ -20,9 +20,9 @@ import (
 	"time"
 
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	crp "github.com/rafa-mori/gobe/internal/security/crypto"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
 	l "github.com/rafa-mori/logz"
 )
 

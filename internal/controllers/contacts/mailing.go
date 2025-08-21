@@ -10,8 +10,8 @@ import (
 	"time"
 
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	t "github.com/rafa-mori/gobe/internal/types"
-	gl "github.com/rafa-mori/gobe/logger"
 )
 
 func enqueueEmail(cc *ContactController, emailQueue chan t.ContactForm) {

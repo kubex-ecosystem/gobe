@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/google/uuid"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type IReference interface {

@@ -1,4 +1,4 @@
-// Package gobe provides integration with gobe for K8s and Helm operations
+// Package gobe_ctl provides a client for managing GoBE backend systems
 package gobe_ctl
 
 import (

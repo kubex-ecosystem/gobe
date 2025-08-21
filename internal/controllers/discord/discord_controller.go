@@ -25,7 +25,7 @@ import (
 
 	l "github.com/rafa-mori/logz"
 
-	"github.com/rafa-mori/gobe/logger"
+	"github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 var (
@@ -145,15 +145,15 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 				<h1>🚨 Discord OAuth2 Error</h1>
 				<p class="error"><strong>Error:</strong> %s</p>
 				<p class="error"><strong>Description:</strong> %s</p>
-				
+
 				<div class="suggestion">
 					<h3>💡 Para Bots Discord:</h3>
 					<p>Se você está tentando adicionar um bot Discord, use esta URL direta:</p>
-					<a href="https://discord.com/api/oauth2/authorize?client_id=1344830702780420157&scope=bot&permissions=274877908992" 
+					<a href="https://discord.com/api/oauth2/authorize?client_id=1344830702780420157&scope=bot&permissions=274877908992"
 					   target="_blank" style="color: #1976d2; text-decoration: none; font-weight: bold;">
 						🤖 Clique aqui para convidar o bot
 					</a>
-					
+
 					<h4>🔧 Ou remova a Redirect URI:</h4>
 					<ol>
 						<li>Vá para <a href="https://discord.com/developers/applications/1344830702780420157/oauth2/general" target="_blank">Discord Developer Portal</a></li>

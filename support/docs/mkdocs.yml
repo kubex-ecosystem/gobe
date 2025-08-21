@@ -1,16 +1,16 @@
-site_name: TimeCraft AI
-site_url: https://rafa-mori.github.io/timecraft/
-site_description: 'Advanced time series analysis, database integration, and task automation with dynamic notifications and powerful CLI'
-site_author: 'Rafael Mori'
+site_name: Kubex GoBE
+site_url: https://gobe.rafa-mori.dev/
+site_description: "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and more for help you managing your technology stack."
+site_author: "Rafael Mori"
 
-repo_name: 'rafa-mori/timecraft'
-repo_url: https://github.com/rafa-mori/timecraft
+repo_name: "rafa-mori/gobe"
+repo_url: https://github.com/rafa-mori/gobe
 
 theme:
   name: material
   palette:
-    primary: 'indigo'
-    accent: 'indigo'
+    primary: "indigo"
+    accent: "indigo"
   features:
     - navigation.tabs
     - navigation.top
@@ -59,7 +59,7 @@ markdown_extensions:
   - pymdownx.magiclink:
       repo_url_shorthand: true
       user: rafa-mori
-      repo: timecraft
+      repo: gobe
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -76,28 +76,27 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Documentation:
-    - Getting Started:
-      - README: README.en.md
-      - Installation: INSTALL.md
-      - AI Integration: INSTALL_AI.md
-    - User Guide:
-      - README (Portuguese): README.pt-BR.md
+      - Getting Started:
+          - README: README.en.md
+          - Installation: INSTALL.md
+      - User Guide:
+          - README (Portuguese): README.pt-BR.md
   - Community:
-    - Contributing: CONTRIBUTING.md
-    - Code of Conduct: CODE_OF_CONDUCT.md
-    - Support: SUPPORT.md
-    - Authors: AUTHORS.md
+      - Contributing: CONTRIBUTING.md
+      - Code of Conduct: CODE_OF_CONDUCT.md
+      - Support: SUPPORT.md
+      - Authors: AUTHORS.md
   - Project Info:
-    - License: LICENSE
-    - Notice: NOTICE.md
-    - Security Policy: SECURITY.md
-    - Changelog: CHANGELOG.md
+      - License: LICENSE
+      - Notice: NOTICE.md
+      - Security Policy: SECURITY.md
+      - Changelog: CHANGELOG.md
 
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/rafa-mori/timecraft
-      name: TimeCraft AI on GitHub
+      link: https://github.com/rafa-mori/gobe
+      name: GoBE on GitHub
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/rafa-mori/
       name: Rafael Mori on LinkedIn
@@ -109,7 +108,6 @@ extra:
   analytics:
     provider: google
     property: ${G-7HLY17F3DK}
-
 # plugins:
 #   - search:
 #       lang: en

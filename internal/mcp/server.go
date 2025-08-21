@@ -20,10 +20,34 @@ type Server struct {
 	hub       MCPHandler
 }
 
+type IMCPServer interface {
+	RegisterTools()
+	RegisterResources()
+	HandleAnalyzeMessage(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error)
+	HandleSendMessage(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error)
+	HandleCreateTask(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error)
+	HandleSystemInfo(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error)
+	HandleShellCommand(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error)
+	GetCPUInfo() (string, error)
+	GetMemoryInfo() (string, error)
+	GetDiskInfo() (string, error)
+}
+
 type MCPHandler interface {
 	ProcessMessageWithLLM(ctx context.Context, msg interface{}) error
 	SendDiscordMessage(channelID, content string) error
 	GetEventStream() *events.Stream
+}
+
+func NewMCPServer(hub MCPHandler) (IMCPServer, error) {
+	if hub == nil {
+		return nil, fmt.Errorf("MCPHandler cannot be nil")
+	}
+	server, err := NewServer(hub)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create MCP server: %w", err)
+	}
+	return server, nil
 }
 
 func NewServer(hub MCPHandler) (*Server, error) {
@@ -38,13 +62,13 @@ func NewServer(hub MCPHandler) (*Server, error) {
 		hub:       hub,
 	}
 
-	srv.registerTools()
-	srv.registerResources()
+	srv.RegisterTools()
+	srv.RegisterResources()
 
 	return srv, nil
 }
 
-func (s *Server) registerTools() {
+func (s *Server) RegisterTools() {
 	// Analyze Discord Message Tool
 	analyzeTool := mcp.NewTool("analyze_discord_message",
 		mcp.WithDescription("Analyze a Discord message and suggest actions"),
@@ -59,7 +83,7 @@ func (s *Server) registerTools() {
 		if !ok {
 			return mcp.NewToolResultError("Invalid arguments"), nil
 		}
-		return s.handleAnalyzeMessage(ctx, params)
+		return s.HandleAnalyzeMessage(ctx, params)
 	}
 	s.mcpServer.AddTool(analyzeTool, analyzeHandler)
 
@@ -76,7 +100,7 @@ func (s *Server) registerTools() {
 		if !ok {
 			return mcp.NewToolResultError("Invalid arguments"), nil
 		}
-		return s.handleSendMessage(ctx, params)
+		return s.HandleSendMessage(ctx, params)
 	}
 	s.mcpServer.AddTool(sendTool, sendHandler)
 
@@ -92,7 +116,7 @@ func (s *Server) registerTools() {
 		if !ok {
 			return mcp.NewToolResultError("Invalid arguments"), nil
 		}
-		return s.handleSystemInfo(ctx, params)
+		return s.HandleSystemInfo(ctx, params)
 	}
 	s.mcpServer.AddTool(systemInfoTool, systemInfoHandler)
 
@@ -109,7 +133,7 @@ func (s *Server) registerTools() {
 		if !ok {
 			return mcp.NewToolResultError("Invalid arguments"), nil
 		}
-		return s.handleShellCommand(ctx, params)
+		return s.HandleShellCommand(ctx, params)
 	}
 	s.mcpServer.AddTool(shellTool, shellHandler)
 
@@ -127,12 +151,12 @@ func (s *Server) registerTools() {
 		if !ok {
 			return mcp.NewToolResultError("Invalid arguments"), nil
 		}
-		return s.handleCreateTask(ctx, params)
+		return s.HandleCreateTask(ctx, params)
 	}
 	s.mcpServer.AddTool(taskTool, taskHandler)
 }
 
-func (s *Server) registerResources() {
+func (s *Server) RegisterResources() {
 	// TODO: Fix resource handlers for new mcp-go version
 	// Discord Events Resource
 	eventsResource := mcp.NewResource(
@@ -152,7 +176,7 @@ func (s *Server) registerResources() {
 	_ = channelTemplate // Temporary to avoid unused variable error
 }
 
-func (s *Server) handleAnalyzeMessage(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
+func (s *Server) HandleAnalyzeMessage(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
 	content, _ := params["message_content"].(string)
 	channelID, _ := params["channel_id"].(string)
 	userID, _ := params["user_id"].(string)
@@ -174,7 +198,7 @@ func (s *Server) handleAnalyzeMessage(ctx context.Context, params map[string]int
 	return mcp.NewToolResultText("Message analyzed successfully"), nil
 }
 
-func (s *Server) handleSendMessage(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
+func (s *Server) HandleSendMessage(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
 	channelID, _ := params["channel_id"].(string)
 	content, _ := params["content"].(string)
 
@@ -186,7 +210,7 @@ func (s *Server) handleSendMessage(ctx context.Context, params map[string]interf
 	return mcp.NewToolResultText("Message sent successfully"), nil
 }
 
-func (s *Server) handleCreateTask(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
+func (s *Server) HandleCreateTask(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
 	messageID, _ := params["message_id"].(string)
 	title, _ := params["task_title"].(string)
 	description, _ := params["task_description"].(string)
@@ -204,7 +228,7 @@ func (s *Server) handleCreateTask(ctx context.Context, params map[string]interfa
 	return mcp.NewToolResultText(string(result)), nil
 }
 
-func (s *Server) handleSystemInfo(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
+func (s *Server) HandleSystemInfo(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
 	infoType, _ := params["info_type"].(string)
 	userID, _ := params["user_id"].(string)
 
@@ -235,15 +259,15 @@ func (s *Server) handleSystemInfo(ctx context.Context, params map[string]interfa
 
 	switch infoType {
 	case "cpu":
-		result, err = s.getCPUInfo()
+		result, err = s.GetCPUInfo()
 	case "memory":
-		result, err = s.getMemoryInfo()
+		result, err = s.GetMemoryInfo()
 	case "disk":
-		result, err = s.getDiskInfo()
+		result, err = s.GetDiskInfo()
 	case "all":
-		cpu, _ := s.getCPUInfo()
-		memory, _ := s.getMemoryInfo()
-		disk, _ := s.getDiskInfo()
+		cpu, _ := s.GetCPUInfo()
+		memory, _ := s.GetMemoryInfo()
+		disk, _ := s.GetDiskInfo()
 		result = fmt.Sprintf("🖥️ **System Info Complete**\n\n%s\n\n%s\n\n%s", cpu, memory, disk)
 	default:
 		return mcp.NewToolResultError("Tipo inválido. Use: cpu, memory, disk, all"), nil
@@ -256,7 +280,7 @@ func (s *Server) handleSystemInfo(ctx context.Context, params map[string]interfa
 	return mcp.NewToolResultText(result), nil
 }
 
-func (s *Server) handleShellCommand(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
+func (s *Server) HandleShellCommand(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
 	command, _ := params["command"].(string)
 	userID, _ := params["user_id"].(string)
 	requireConfirmation, _ := params["require_confirmation"].(bool)
@@ -303,7 +327,7 @@ func (s *Server) handleShellCommand(ctx context.Context, params map[string]inter
 	return mcp.NewToolResultText(fmt.Sprintf("✅ **Comando executado**\n```\n%s\n```\n\n📄 **Output:**\n```\n%s\n```", command, output)), nil
 }
 
-func (s *Server) getCPUInfo() (string, error) {
+func (s *Server) GetCPUInfo() (string, error) {
 	cmd := exec.Command("sh", "-c", "top -bn1 | grep 'Cpu(s)' || echo 'CPU: Informação não disponível'")
 	output, err := cmd.Output()
 	if err != nil {
@@ -312,7 +336,7 @@ func (s *Server) getCPUInfo() (string, error) {
 	return fmt.Sprintf("🔥 **CPU Usage**\nArquitetura: %s\nCores: %d\n%s", runtime.GOARCH, runtime.NumCPU(), string(output)), nil
 }
 
-func (s *Server) getMemoryInfo() (string, error) {
+func (s *Server) GetMemoryInfo() (string, error) {
 	cmd := exec.Command("sh", "-c", "free -h 2>/dev/null || echo 'Memória: Sistema Linux'")
 	output, err := cmd.Output()
 	if err != nil {
@@ -321,7 +345,7 @@ func (s *Server) getMemoryInfo() (string, error) {
 	return fmt.Sprintf("💾 **Memory Info**\n%s", string(output)), nil
 }
 
-func (s *Server) getDiskInfo() (string, error) {
+func (s *Server) GetDiskInfo() (string, error) {
 	cmd := exec.Command("sh", "-c", "df -h / 2>/dev/null || echo 'Disco: Sistema ativo'")
 	output, err := cmd.Output()
 	if err != nil {

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	"github.com/spf13/viper"
 )
 
@@ -86,6 +86,8 @@ func getTrustedProxies() ([]string, error) {
 }
 
 func validateExpectedHosts(fullBindAddress string, c *gin.Context) bool {
+	// TODO: ENABLE THIS WHEN RUNNING WITH ANY PUBLISHED ADDRESS/PORT
+
 	// if c.Request.Host == fullBindAddress ||
 	// 	c.Request.URL.Host == fullBindAddress {
 	// 	return true
@@ -117,11 +119,14 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"productRoutes":          NewProductRoutes(&rtr),
 		"customerRoutes":         NewCustomerRoutes(&rtr),
 		"discordRoutes":          NewDiscordRoutes(&rtr),
+		"whatsappRoutes":         NewWhatsAppRoutes(&rtr),
+		"telegramRoutes":         NewTelegramRoutes(&rtr),
 		"mcpTasksRoutes":         NewMCPTasksRoutes(&rtr),
 		"mcpProvidersRoutes":     NewMCPProvidersRoutes(&rtr),
 		"mcpLLMRoutes":           NewMCPLLMRoutes(&rtr),
 		"mcpPreferencesRoutes":   NewMCPPreferencesRoutes(&rtr),
 		"mcpSystemRoutes":        NewMCPSystemRoutes(&rtr),
+		"mcpGHbexRoutes":         NewMCPGHbexRoutes(&rtr),
 		"swaggerRoutes":          NewSwaggerRoutes(&rtr),
 	}
 }

@@ -25,21 +25,6 @@ type Config struct {
 	Timeout int    `json:"timeout"`
 }
 
-// NewClient creates a new GoBE client
-func NewClient(config Config) *Client {
-	if config.Timeout == 0 {
-		config.Timeout = 30
-	}
-
-	return &Client{
-		baseURL: config.BaseURL,
-		apiKey:  config.APIKey,
-		httpClient: &http.Client{
-			Timeout: time.Duration(config.Timeout) * time.Second,
-		},
-	}
-}
-
 // UserRequest represents a user creation request
 type UserRequest struct {
 	Name     string                 `json:"name"`
@@ -80,6 +65,21 @@ type SystemMetrics struct {
 	ErrorRate      float64 `json:"error_rate"`
 	ResponseTime   string  `json:"response_time"`
 	ActiveSessions int     `json:"active_sessions"`
+}
+
+// NewClient creates a new GoBE client
+func NewClient(config Config) *Client {
+	if config.Timeout == 0 {
+		config.Timeout = 30
+	}
+
+	return &Client{
+		baseURL: config.BaseURL,
+		apiKey:  config.APIKey,
+		httpClient: &http.Client{
+			Timeout: time.Duration(config.Timeout) * time.Second,
+		},
+	}
 }
 
 // CreateUser creates a new user in GoBE

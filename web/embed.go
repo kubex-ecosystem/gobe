@@ -1,23 +1,34 @@
-package utils
+// Package web provides utilities for handling web-related tasks.
+package web
 
 import (
 	"embed"
 	"html/template"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 //go:embed views/error/*
 var ErrorTemplates embed.FS
 
-func pageNotFound(rw http.ResponseWriter, r *http.Request) {
+//go:embed dashboard.html
+var DashboardHTML []byte
 
-	rw.WriteHeader(http.StatusNotFound)
+func PageNotFound(ctx *gin.Context) {
+	ctx.Status(http.StatusNotFound)
 	tmpl, _ := template.ParseFS(ErrorTemplates, "../views/error/404.html")
-	tmpl.Execute(rw, nil)
+	tmpl.Execute(ctx.Writer, nil)
 }
 
-func internalServerError(rw http.ResponseWriter, r *http.Request) {
-	rw.WriteHeader(http.StatusInternalServerError)
+func InternalServerError(ctx *gin.Context) {
+	ctx.Status(http.StatusInternalServerError)
 	tmpl, _ := template.ParseFS(ErrorTemplates, "views/error/500.html")
-	tmpl.Execute(rw, nil)
+	tmpl.Execute(ctx.Writer, nil)
+}
+
+func GHbexDashboard(ctx *gin.Context) {
+	ctx.Header("Content-Type", "text/html; charset=utf-8")
+	tmpl, _ := template.New("dashboard").Parse(string(DashboardHTML))
+	tmpl.Execute(ctx.Writer, nil)
 }

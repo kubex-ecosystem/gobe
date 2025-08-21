@@ -12,7 +12,7 @@ import (
 
 	"github.com/pelletier/go-toml/v2"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	"github.com/subosito/gotenv"
 	"gopkg.in/yaml.v3"
 )

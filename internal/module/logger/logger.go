@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	manifest "github.com/rafa-mori/gobe/info"
+	manifest "github.com/rafa-mori/gobe/internal/module/info"
 	l "github.com/rafa-mori/logz"
 )
 
@@ -24,12 +24,14 @@ type GLog[T any] interface {
 	ObjLog(*T, string, ...any)
 	Log(string, ...any)
 }
+
 type gLog[T any] struct {
 	l.Logger
 	gLogLevel  LogLevel // Global log level
 	gShowTrace bool     // Flag to show trace in logs
 	gDebug     bool     // Flag to show debug messages
 }
+
 type LogType string
 type LogLevel int
 
@@ -60,6 +62,10 @@ const (
 	LogTypePanic LogType = "panic"
 	// LogTypeSuccess is the log type for success messages.
 	LogTypeSuccess LogType = "success"
+	// LogTypeAnswer is the log type for answer messages.
+	LogTypeAnswer LogType = "answer"
+	// LogTypeSilent is the log type for silent messages.
+	LogTypeSilent LogType = "silent"
 )
 
 const (
@@ -79,6 +85,10 @@ const (
 	LogLevelFatal
 	// LogLevelPanic 7
 	LogLevelPanic
+	// LogLevelAnswer 8
+	LogLevelAnswer
+	// LogLevelSilent 9
+	LogLevelSilent
 )
 
 func getEnvOrDefault[T string | int | bool](key string, defaultValue T) T {
@@ -118,36 +128,6 @@ func init() {
 	}
 }
 
-func SetDebug(d bool) {
-	if g == nil || Logger == nil {
-		_ = GetLogger[l.Logger](nil)
-	}
-	g.gDebug = d
-	if d {
-		g.SetLevel("debug")
-	} else {
-		switch g.gLogLevel {
-		case LogLevelDebug:
-			g.SetLevel("debug")
-		case LogLevelInfo:
-			g.SetLevel("info")
-		case LogLevelWarn:
-			g.SetLevel("warn")
-		case LogLevelError:
-			g.SetLevel("error")
-		case LogLevelFatal:
-			g.SetLevel("fatal")
-		case LogLevelPanic:
-			g.SetLevel("panic")
-		case LogLevelNotice:
-			g.SetLevel("notice")
-		case LogLevelSuccess:
-			g.SetLevel("success")
-		default:
-			g.SetLevel("info")
-		}
-	}
-}
 func setLogLevel(logLevel string) {
 	if g == nil || Logger == nil {
 		_ = GetLogger[l.Logger](nil)
@@ -177,6 +157,12 @@ func setLogLevel(logLevel string) {
 	case "success":
 		g.gLogLevel = LogLevelSuccess
 		g.SetLevel("success")
+	case "silent":
+		g.gLogLevel = LogLevelSilent
+		g.SetLevel("silent")
+	case "answer":
+		g.gLogLevel = LogLevelAnswer
+		g.SetLevel("answer")
 	default:
 		// logLevel = "error"
 		// g.gLogLevel = LogLevelError
@@ -218,63 +204,14 @@ func willPrintLog(logType string) bool {
 			lTypeInt = LogLevelFatal
 		case "panic":
 			lTypeInt = LogLevelPanic
+		case "silent":
+			lTypeInt = LogLevelSilent
+		case "answer":
+			lTypeInt = LogLevelAnswer
 		default:
 			lTypeInt = LogLevelError
 		}
 		return lTypeInt >= g.gLogLevel
-	}
-}
-func GetLogger[T any](obj *T) GLog[l.Logger] {
-	if g == nil || Logger == nil {
-		g = &gLog[l.Logger]{
-			Logger:     l.GetLogger(info.GetBin()),
-			gLogLevel:  LogLevelInfo,
-			gShowTrace: showTrace,
-			gDebug:     debug,
-		}
-		Logger = g
-	}
-	if obj == nil {
-		return Logger
-	}
-	var lgr l.Logger
-	if objValueLogger := reflect.ValueOf(obj).Elem().MethodByName("GetLogger"); !objValueLogger.IsValid() {
-		if objValueLogger = reflect.ValueOf(obj).Elem().FieldByName("Logger"); !objValueLogger.IsValid() {
-			g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
-				"context":  "Log",
-				"logType":  "error",
-				"object":   obj,
-				"msg":      "object does not have a logger field",
-				"showData": getShowTrace(),
-			})
-			return g
-		} else {
-			lgrC := objValueLogger.Convert(reflect.TypeFor[l.Logger]())
-			if lgrC.IsNil() {
-				lgrC = reflect.ValueOf(g.Logger)
-			}
-			if lgr = lgrC.Interface().(l.Logger); lgr == nil {
-				lgr = g.Logger
-			}
-		}
-	} else {
-		lgr = g
-	}
-	if lgr == nil {
-		g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
-			"context":  "Log",
-			"logType":  "error",
-			"object":   obj,
-			"msg":      "object does not have a logger field",
-			"showData": getShowTrace(),
-		})
-		return Logger
-	}
-	return &gLog[l.Logger]{
-		Logger:     lgr,
-		gLogLevel:  g.gLogLevel,
-		gShowTrace: g.gShowTrace,
-		gDebug:     g.gDebug,
 	}
 }
 func getCtxMessageMap(logType, funcName, file string, line int) map[string]any {
@@ -332,9 +269,102 @@ func getFullMessage(messages ...any) string {
 			}
 		}
 	}
-	return strings.TrimSpace(fullMessage)
+	return strings.TrimSuffix(
+		strings.TrimPrefix(
+			strings.TrimSpace(fullMessage),
+			" ",
+		),
+		" ",
+	)
 }
 
+func SetDebug(d bool) {
+	if g == nil || Logger == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.gDebug = d
+	if d {
+		g.SetLevel("debug")
+	} else {
+		switch g.gLogLevel {
+		case LogLevelDebug:
+			g.SetLevel("debug")
+		case LogLevelInfo:
+			g.SetLevel("info")
+		case LogLevelWarn:
+			g.SetLevel("warn")
+		case LogLevelError:
+			g.SetLevel("error")
+		case LogLevelFatal:
+			g.SetLevel("fatal")
+		case LogLevelPanic:
+			g.SetLevel("panic")
+		case LogLevelNotice:
+			g.SetLevel("notice")
+		case LogLevelSuccess:
+			g.SetLevel("success")
+		case LogLevelSilent:
+			g.SetLevel("silent")
+		case LogLevelAnswer:
+			g.SetLevel("answer")
+		default:
+			g.SetLevel("info")
+		}
+	}
+}
+func GetLogger[T any](obj *T) GLog[l.Logger] {
+	if g == nil || Logger == nil {
+		g = &gLog[l.Logger]{
+			Logger:     l.GetLogger(info.GetBin()),
+			gLogLevel:  LogLevelInfo,
+			gShowTrace: showTrace,
+			gDebug:     debug,
+		}
+		Logger = g
+	}
+	if obj == nil {
+		return Logger
+	}
+	var lgr l.Logger
+	if objValueLogger := reflect.ValueOf(obj).Elem().MethodByName("GetLogger"); !objValueLogger.IsValid() {
+		if objValueLogger = reflect.ValueOf(obj).Elem().FieldByName("Logger"); !objValueLogger.IsValid() {
+			g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
+				"context":  "Log",
+				"logType":  "error",
+				"object":   obj,
+				"msg":      "object does not have a logger field",
+				"showData": getShowTrace(),
+			})
+			return g
+		} else {
+			lgrC := objValueLogger.Convert(reflect.TypeFor[l.Logger]())
+			if lgrC.IsNil() {
+				lgrC = reflect.ValueOf(g.Logger)
+			}
+			if lgr = lgrC.Interface().(l.Logger); lgr == nil {
+				lgr = g.Logger
+			}
+		}
+	} else {
+		lgr = g
+	}
+	if lgr == nil {
+		g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
+			"context":  "Log",
+			"logType":  "error",
+			"object":   obj,
+			"msg":      "object does not have a logger field",
+			"showData": getShowTrace(),
+		})
+		return Logger
+	}
+	return &gLog[l.Logger]{
+		Logger:     lgr,
+		gLogLevel:  g.gLogLevel,
+		gShowTrace: g.gShowTrace,
+		gDebug:     g.gDebug,
+	}
+}
 func LogObjLogger[T any](obj *T, logType string, messages ...any) {
 	lgr := GetLogger(obj)
 	if lgr == nil {
@@ -404,6 +434,10 @@ func logging(lgr l.Logger, lType LogType, fullMessage string, ctxMessageMap map[
 			lgr.FatalCtx(fullMessage, ctxMessageMap)
 		case LogTypePanic:
 			lgr.FatalCtx(fullMessage, ctxMessageMap)
+		case LogTypeSilent:
+			lgr.SilentCtx(fullMessage, ctxMessageMap)
+		case LogTypeAnswer:
+			lgr.AnswerCtx(fullMessage, ctxMessageMap)
 		default:
 			lgr.InfoCtx(fullMessage, ctxMessageMap)
 		}
@@ -424,6 +458,67 @@ func (g *gLog[T]) SetDebug(d bool)                     { SetDebug(d); g.gDebug =
 func (g *gLog[T]) Log(logType string, messages ...any) { Log(logType, messages...) }
 func (g *gLog[T]) ObjLog(obj *T, logType string, messages ...any) {
 	LogObjLogger(obj, logType, messages...)
+}
+
+func (g *gLog[T]) Notice(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("notice", m...)
+}
+func (g *gLog[T]) Info(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("info", m...)
+}
+func (g *gLog[T]) Debug(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("debug", m...)
+}
+func (g *gLog[T]) Warn(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("warn", m...)
+}
+func (g *gLog[T]) Error(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("error", m...)
+}
+func (g *gLog[T]) Fatal(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("fatal", m...)
+}
+func (g *gLog[T]) Panic(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("fatal", m...)
+}
+func (g *gLog[T]) Success(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("success", m...)
+}
+func (g *gLog[T]) Silent(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("silent", m...)
+}
+func (g *gLog[T]) Answer(m ...any) {
+	if g == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	g.Log("answer", m...)
 }
 
 func NewLogger[T any](prefix string) GLog[T] {

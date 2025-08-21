@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	mcp_llm_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/llm"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type MCPLLMRoutes struct {
@@ -33,8 +33,8 @@ func NewMCPLLMRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	mcpLLMController := mcp_llm_controller.NewLLMController(dbGorm)
 
 	routesMap := make(map[string]ar.IRoute)
-	middlewaresMap := make(map[string]gin.HandlerFunc)
 
+	middlewaresMap := make(map[string]gin.HandlerFunc)
 	secureProperties := make(map[string]bool)
 	secureProperties["secure"] = true
 	secureProperties["validateAndSanitize"] = false

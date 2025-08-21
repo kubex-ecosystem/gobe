@@ -9,7 +9,7 @@ import (
 	t "github.com/rafa-mori/gdbase/types"
 	"github.com/rafa-mori/gobe/internal/controllers/webhooks"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )

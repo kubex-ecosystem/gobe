@@ -12,7 +12,7 @@ import (
 	sau "github.com/rafa-mori/gobe/internal/security/authentication"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/types"

@@ -2,7 +2,7 @@ package cli
 
 import (
 	gb "github.com/rafa-mori/gobe"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	l "github.com/rafa-mori/logz"
 	"github.com/spf13/cobra"
 )

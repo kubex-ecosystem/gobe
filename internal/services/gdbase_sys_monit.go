@@ -2,11 +2,13 @@ package services
 
 import (
 	"fmt"
+	"net/http"
 	"runtime"
 	"syscall"
 	"time"
 	"unsafe"
 
+	"github.com/gin-gonic/gin"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/load"
@@ -134,4 +136,15 @@ func (s *SystemService) GetCurrentMetrics() (*SystemMetrics, error) {
 	}
 
 	return metrics, nil
+}
+
+func (s *SystemService) RegisterRoutes(routerGroup gin.IRoutes) {
+	routerGroup.GET("/system/metrics", func(c *gin.Context) {
+		metrics, err := s.GetCurrentMetrics()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, metrics)
+	})
 }

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	manifest "github.com/rafa-mori/gobe/info"
-	"github.com/rafa-mori/gobe/logger"
+	manifest "github.com/rafa-mori/gobe/internal/module/info"
+	"github.com/rafa-mori/gobe/internal/module/logger"
 	"github.com/spf13/cobra"
 )
 

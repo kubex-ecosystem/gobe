@@ -11,8 +11,8 @@ import (
 	"github.com/rafa-mori/gdbase/types"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	mdw "github.com/rafa-mori/gobe/internal/middlewares"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	t "github.com/rafa-mori/gobe/internal/types"
-	gl "github.com/rafa-mori/gobe/logger"
 	l "github.com/rafa-mori/logz"
 	"golang.org/x/time/rate"
 
@@ -79,6 +79,10 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		"validateAndSanitize": mdw.ValidateAndSanitize(),
 		"rateLimite":          mdw.RateLimiter(rate.Limit(serverConfig.RateLimitLimit), serverConfig.RateLimitBurst),
 		"logger":              mdw.Logger(logger),
+		"backoff":             mdw.BackoffMiddleware(),
+		"cache":               mdw.CacheMiddleware(),
+		"meter":               mdw.MeterMiddleware(),
+		"timeout":             mdw.TimeoutMiddleware(30 * time.Second),
 	}
 
 	// Set up the globals for gin (middlewares, logger, etc.)

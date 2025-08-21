@@ -25,5 +25,20 @@
   "approval": {
     "require_approval_for_responses": true,
     "approval_timeout_minutes": 10
+  },
+  "integrations": {
+    "whatsapp": {
+      "enabled": false,
+      "access_token": "",
+      "verify_token": "",
+      "phone_number_id": "",
+      "webhook_url": ""
+    },
+    "telegram": {
+      "enabled": false,
+      "bot_token": "",
+      "webhook_url": "",
+      "allowed_updates": ["message", "callback_query"]
+    }
   }
 }

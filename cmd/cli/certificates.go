@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	gbm "github.com/rafa-mori/gobe"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	crp "github.com/rafa-mori/gobe/internal/security/crypto"
-	gl "github.com/rafa-mori/gobe/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -45,7 +45,7 @@ func generateCommand() *cobra.Command {
 		Long:        long,
 		Annotations: GetDescriptions([]string{short, long}, false),
 		Run: func(cmd *cobra.Command, args []string) {
-			crtS := gbm.NewCertService(keyPath, certFilePath)
+			crtS := crt.NewCertService(keyPath, certFilePath)
 			_, _, err := crtS.GenerateCertificate(certFilePath, keyPath, []byte(certPass))
 			if err != nil {
 				gl.Log("fatal", fmt.Sprintf("Error generating certificate: %v", err))
@@ -75,7 +75,7 @@ func verifyCert() *cobra.Command {
 		Long:        long,
 		Annotations: GetDescriptions([]string{short, long}, false),
 		Run: func(cmd *cobra.Command, args []string) {
-			crtS := gbm.NewCertService(keyPath, certFilePath)
+			crtS := crt.NewCertService(keyPath, certFilePath)
 			err := crtS.VerifyCert()
 			if err != nil {
 				gl.Log("fatal", fmt.Sprintf("Error verifying certificate: %v", err))

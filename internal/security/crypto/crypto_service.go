@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 

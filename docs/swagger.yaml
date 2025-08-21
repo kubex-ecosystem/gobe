@@ -631,6 +631,21 @@ paths:
       summary: Handle Discord OAuth2 token
       tags:
       - discord
+  /discord/ping:
+    get:
+      consumes:
+      - application/json
+      description: Pings the Discord adapter to check its status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Ping Discord adapter
+      tags:
+      - discord
   /discord/socket:
     get:
       consumes:

@@ -8,21 +8,23 @@ import (
 	"github.com/rafa-mori/gobe/internal/types" // IMutexes
 )
 
-// phantom‑type Bitstate genérico
+// Bitstate is a thread-safe bit state manager.
 type Bitstate[T ~uint64, S any] struct {
 	*types.Mutexes
 	state uint64
 }
 
+// NewBitstate creates a new Bitstate instance with the specified type parameters.
 func NewBitstate[T ~uint64, S any]() *Bitstate[T, S] {
 	return &Bitstate[T, S]{Mutexes: types.NewMutexesType()}
 }
 
+// GetServiceType returns the reflect.Type of the service associated with the Bitstate.
 func (b *Bitstate[T, S]) GetServiceType() reflect.Type {
 	return reflect.TypeFor[S]()
 }
 
-// Hot-path: atomic
+// Set sets a specific flag in the current state.
 func (b *Bitstate[T, S]) Set(flag T) {
 	for {
 		old := atomic.LoadUint64(&b.state)
@@ -34,6 +36,7 @@ func (b *Bitstate[T, S]) Set(flag T) {
 	}
 }
 
+// Clear removes a flag from the current state.
 func (b *Bitstate[T, S]) Clear(flag T) {
 	for {
 		old := atomic.LoadUint64(&b.state)
@@ -45,11 +48,12 @@ func (b *Bitstate[T, S]) Clear(flag T) {
 	}
 }
 
+// Has checks if a specific flag is set in the current state.
 func (b *Bitstate[T, S]) Has(flag T) bool {
 	return atomic.LoadUint64(&b.state)&uint64(flag) != 0
 }
 
-// Slow-path com timeout
+// WaitFor blocks until a specific flag is set or a timeout occurs.
 func (b *Bitstate[T, S]) WaitFor(flag T, timeout time.Duration) bool {
 	b.MuLock()
 	defer b.MuUnlock()

@@ -7,7 +7,7 @@ import (
 	discord_controller "github.com/rafa-mori/gobe/internal/controllers/discord"
 	"github.com/rafa-mori/gobe/internal/hub"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type DiscordRoutes struct {

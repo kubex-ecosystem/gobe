@@ -5,7 +5,7 @@ import (
 
 	mcp_system_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/system"
 	ar "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type MCPSystemRoutes struct {
@@ -40,6 +40,16 @@ func NewMCPSystemRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitizeBody"] = false
 
 	routesMap["GetGeneralSystemMetrics"] = NewRoute(http.MethodGet, "/api/v1/mcp/system/metrics", "application/json", mcpSystemController.GetGeneralSystemMetrics /* middlewaresMap */, nil, dbService, secureProperties)
+	routesMap["RegisterRoutes"] = NewRoute(http.MethodGet, "/api/v1/mcp/system/routes", "application/json", mcpSystemController.RegisterResources, nil, dbService, secureProperties)
+	routesMap["RegisterTools"] = NewRoute(http.MethodGet, "/api/v1/mcp/system/tools", "application/json", mcpSystemController.RegisterTools, nil, dbService, secureProperties)
+	routesMap["HandleAnalyzeMessage"] = NewRoute(http.MethodPost, "/api/v1/mcp/system/analyze", "application/json", mcpSystemController.HandleAnalyzeMessage, nil, dbService, secureProperties)
+	routesMap["HandleSendMessage"] = NewRoute(http.MethodPost, "/api/v1/mcp/system/send-message", "application/json", mcpSystemController.SendMessage, nil, dbService, secureProperties)
+	routesMap["HandleCreateTask"] = NewRoute(http.MethodPost, "/api/v1/mcp/system/create-task", "application/json", mcpSystemController.HandleCreateTask, nil, dbService, secureProperties)
+	routesMap["HandleSystemInfo"] = NewRoute(http.MethodGet, "/api/v1/mcp/system/info", "application/json", mcpSystemController.GetCPUInfo, nil, dbService, secureProperties)
+	routesMap["HandleShellCommand"] = NewRoute(http.MethodPost, "/api/v1/mcp/system/shell-command", "application/json", mcpSystemController.ShellCommand, nil, dbService, secureProperties)
+	routesMap["GetCPUInfo"] = NewRoute(http.MethodGet, "/api/v1/mcp/system/cpu-info", "application/json", mcpSystemController.GetCPUInfo, nil, dbService, secureProperties)
+	routesMap["GetMemoryInfo"] = NewRoute(http.MethodGet, "/api/v1/mcp/system/memory-info", "application/json", mcpSystemController.GetMemoryInfo, nil, dbService, secureProperties)
+	routesMap["GetDiskInfo"] = NewRoute(http.MethodGet, "/api/v1/mcp/system/disk-info", "application/json", mcpSystemController.GetDiskInfo, nil, dbService, secureProperties)
 
 	return routesMap
 }

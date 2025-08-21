@@ -11,7 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	l "github.com/rafa-mori/logz"
 )
 
@@ -41,7 +41,8 @@ type RequestsTracer struct {
 	requestLimit  int
 	filePath      string
 	oldFilePath   string
-	Mapper        ci.IMapper[ci.IRequestsTracer] `json:"-" yaml:"-" xml:"-" toml:"-" gorm:"-"`
+
+	Mapper ci.IMapper[ci.IRequestsTracer] `json:"-" yaml:"-" xml:"-" toml:"-" gorm:"-"`
 }
 
 func newRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePath string) *RequestsTracer {

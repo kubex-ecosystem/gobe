@@ -8,11 +8,11 @@ import (
 
 	ut "github.com/rafa-mori/gdbase/utils"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	crp "github.com/rafa-mori/gobe/internal/security/crypto"
 	krs "github.com/rafa-mori/gobe/internal/security/external"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
 	t "github.com/rafa-mori/gobe/internal/types"
-	gl "github.com/rafa-mori/gobe/logger"
 )
 
 type ISecureMapper[T any] interface {

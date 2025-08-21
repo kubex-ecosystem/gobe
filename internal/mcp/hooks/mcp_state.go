@@ -1,4 +1,4 @@
-package mcp
+package hooks
 
 type MCP struct {
 	ConfigState *Bitstate[uint64, ConfigDomain]

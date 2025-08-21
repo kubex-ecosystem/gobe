@@ -1,16 +1,18 @@
 package system
 
-func UpdateSystemStateFromMetrics(bs *Bitstate[uint64, SystemDomain], cpuUsage, memFreeMB float64) {
+import "github.com/rafa-mori/gobe/internal/mcp/hooks"
+
+func UpdateSystemStateFromMetrics(bs *hooks.Bitstate[uint64, hooks.SystemDomain], cpuUsage, memFreeMB float64) {
 	if cpuUsage > 85 {
-		bs.Set(SysCPUHigh)
+		bs.Set(uint64(hooks.SysCPUHigh))
 		enterThrottleMode()
 	} else {
-		bs.Clear(SysCPUHigh)
+		bs.Clear(uint64(hooks.SysCPUHigh))
 	}
 	if memFreeMB < 500 {
-		bs.Set(SysMemLow)
+		bs.Set(uint64(hooks.SysMemLow))
 	} else {
-		bs.Clear(SysMemLow)
+		bs.Clear(uint64(hooks.SysMemLow))
 	}
 }
 

@@ -27,7 +27,7 @@ validate_versions() {
           return 1
       fi
     fi
-    local _DEPENDENCIES=( $(cat "${_ROOT_DIR:-$(git rev-parse --show-toplevel)}/info/manifest.json" | jq -r '.dependencies[]?') )
+    local _DEPENDENCIES=( $(cat "${_ROOT_DIR:-$(git rev-parse --show-toplevel)}/${_MANIFEST_SUBPATH:-/internal/module/info/manifest.json}" | jq -r '.dependencies[]?') )
     check_dependencies "${_DEPENDENCIES[@]}" || return 1
     return 0
 }
@@ -35,12 +35,12 @@ validate_versions() {
 check_dependencies() {
   for dep in "$@"; do
     if ! command -v "$dep" > /dev/null; then
-      if [[ ! $(dpkg -l --selected-only "$dep" | grep "$dep" -q >/dev/null) ]]; then
+      if ! dpkg -l --selected-only "$dep" | grep "$dep" -q >/dev/null; then
         log error "$dep is not installed." true
         if [[ -z "${_NON_INTERACTIVE:-}" ]]; then
           log warn "$dep is required for this script to run." true
           local answer=""
-          if [[ -z "${_FORCE:-}" ]]; then  
+          if [[ -z "${_FORCE:-}" ]]; then
             log question "Would you like to install it now? (y/n)" true
             read -r -n 1 -t 10 answer || answer="n"
           elif [[ "${_FORCE:-n}" == [Yy] ]]; then

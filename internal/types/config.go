@@ -10,9 +10,10 @@ import (
 
 	cm "github.com/rafa-mori/gobe/internal/common"
 	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
+// TLSConfig is a struct that holds the TLS configuration for the GoBE instance.
 type TLSConfig struct {
 	*Reference
 	*Mutexes
@@ -26,6 +27,7 @@ type TLSConfig struct {
 	Mapper        ci.IMapper[*TLSConfig]
 }
 
+// newTLSConfig creates a new TLSConfig instance with the provided name and file path.
 func newTLSConfig(name, filePath string) *TLSConfig {
 	tlsCfg := &TLSConfig{
 		Reference:     newReference("TLSConfig").GetReference(),
@@ -43,6 +45,8 @@ func newTLSConfig(name, filePath string) *TLSConfig {
 
 	return tlsCfg
 }
+
+// NewTLSConfig creates a new TLSConfig instance with the provided name and file path.
 func NewTLSConfig(name, filePath string) ci.ITLSConfig {
 	tlsCfg := &TLSConfig{
 		Reference:     newReference("TLSConfig").GetReference(),

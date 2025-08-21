@@ -1,3 +1,4 @@
+// Package middlewares provides middleware functions for the application
 package middlewares
 
 import (
@@ -18,10 +19,10 @@ import (
 
 	sau "github.com/rafa-mori/gobe/factory/security"
 	cm "github.com/rafa-mori/gobe/internal/common"
+	"github.com/rafa-mori/gobe/internal/module/logger"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
 	srv "github.com/rafa-mori/gobe/internal/services"
-	"github.com/rafa-mori/gobe/logger"
 )
 
 var gl = logger.GetLogger[l.Logger](nil)
@@ -112,8 +113,10 @@ func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handler
 			return
 		}
 
+		type CtxKey string
+
 		// Criando um contexto com o usuário autenticado
-		ctx := context.WithValue(c.Request.Context(), "user", claims)
+		ctx := context.WithValue(c.Request.Context(), CtxKey("user"), claims)
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
@@ -140,12 +143,12 @@ func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.Regis
 	}
 
 	if token == nil {
-		return nil, fmt.Errorf("Access Denied")
+		return nil, fmt.Errorf("access denied")
 	}
 
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
 		return claims, nil
 	}
 
-	return nil, fmt.Errorf("Access Denied")
+	return nil, fmt.Errorf("access denied")
 }
