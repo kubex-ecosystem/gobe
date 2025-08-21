@@ -86,6 +86,8 @@ func getTrustedProxies() ([]string, error) {
 }
 
 func validateExpectedHosts(fullBindAddress string, c *gin.Context) bool {
+	// TODO: ENABLE THIS WHEN RUNNING WITH ANY PUBLISHED ADDRESS/PORT
+
 	// if c.Request.Host == fullBindAddress ||
 	// 	c.Request.URL.Host == fullBindAddress {
 	// 	return true
@@ -124,6 +126,7 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"mcpLLMRoutes":           NewMCPLLMRoutes(&rtr),
 		"mcpPreferencesRoutes":   NewMCPPreferencesRoutes(&rtr),
 		"mcpSystemRoutes":        NewMCPSystemRoutes(&rtr),
+		"mcpGHbexRoutes":         NewMCPGHbexRoutes(&rtr),
 		"swaggerRoutes":          NewSwaggerRoutes(&rtr),
 	}
 }

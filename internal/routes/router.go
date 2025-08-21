@@ -79,6 +79,10 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		"validateAndSanitize": mdw.ValidateAndSanitize(),
 		"rateLimite":          mdw.RateLimiter(rate.Limit(serverConfig.RateLimitLimit), serverConfig.RateLimitBurst),
 		"logger":              mdw.Logger(logger),
+		"backoff":             mdw.BackoffMiddleware(),
+		"cache":               mdw.CacheMiddleware(),
+		"meter":               mdw.MeterMiddleware(),
+		"timeout":             mdw.TimeoutMiddleware(30 * time.Second),
 	}
 
 	// Set up the globals for gin (middlewares, logger, etc.)

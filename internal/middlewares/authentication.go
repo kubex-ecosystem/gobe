@@ -1,3 +1,4 @@
+// Package middlewares provides middleware functions for the application
 package middlewares
 
 import (
@@ -112,8 +113,10 @@ func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handler
 			return
 		}
 
+		type CtxKey string
+
 		// Criando um contexto com o usuário autenticado
-		ctx := context.WithValue(c.Request.Context(), "user", claims)
+		ctx := context.WithValue(c.Request.Context(), CtxKey("user"), claims)
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
@@ -140,12 +143,12 @@ func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.Regis
 	}
 
 	if token == nil {
-		return nil, fmt.Errorf("Access Denied")
+		return nil, fmt.Errorf("access denied")
 	}
 
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
 		return claims, nil
 	}
 
-	return nil, fmt.Errorf("Access Denied")
+	return nil, fmt.Errorf("access denied")
 }

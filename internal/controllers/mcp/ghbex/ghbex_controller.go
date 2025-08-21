@@ -47,18 +47,18 @@ func NewGHbexController(db *gorm.DB) *GHbexController {
 	}
 }
 
-func (c *GHbexController) GetGHbex(ctx *gin.Context) { web.GHbexDashboard(ctx) }
+func (g *GHbexController) GetGHbex(c *gin.Context) { web.GHbexDashboard(c) }
 
-func (c *GHbexController) GetHealth(ctx *gin.Context) {
-	if c.ghc == nil {
+func (g *GHbexController) GetHealth(c *gin.Context) {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	// Create intelligence operator for AI insights
-	intelligenceOp := services.NewIntelligenceOperator(c.mainConfig, c.ghc)
+	intelligenceOp := services.NewIntelligenceOperator(g.mainConfig, g.ghc)
 
-	cfgGh := c.mainConfig.GetGitHub()
+	cfgGh := g.mainConfig.GetGitHub()
 	cfgRepos := cfgGh.GetRepos()
 
 	// 🛡️ CRITICAL SECURITY: NEVER scan all repositories universally!
@@ -133,22 +133,22 @@ func (c *GHbexController) GetHealth(ctx *gin.Context) {
 		"repositories": repos,
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"status":    "success",
 		"data":      response,
 		"timestamp": time.Now().Unix(),
 	})
 }
-func (c *GHbexController) GetRepos(ctx *gin.Context) {
-	if c.ghc == nil {
+func (g *GHbexController) GetRepos(c *gin.Context) {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	// Create intelligence operator for AI insights
-	intelligenceOp := services.NewIntelligenceOperator(c.mainConfig, c.ghc)
+	intelligenceOp := services.NewIntelligenceOperator(g.mainConfig, g.ghc)
 
-	cfgGh := c.mainConfig.GetGitHub()
+	cfgGh := g.mainConfig.GetGitHub()
 	cfgRepos := cfgGh.GetRepos()
 
 	// 🛡️ CRITICAL SECURITY: NEVER scan all repositories universally!
@@ -223,24 +223,24 @@ func (c *GHbexController) GetRepos(ctx *gin.Context) {
 		"repositories": repos,
 	}
 
-	ctx.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, response)
 }
-func (c *GHbexController) AdminSanitize(ctx *gin.Context) {
+func (g *GHbexController) AdminSanitize(c *gin.Context) {
 	// This handles bulk sanitization: POST /admin/sanitize/bulk
-	if ctx.Request.Method != http.MethodPost {
-		ctx.JSON(http.StatusMethodNotAllowed, gin.H{"error": "only POST method allowed"})
+	if c.Request.Method != http.MethodPost {
+		c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "only POST method allowed"})
 		return
 	}
 
-	dryRun := ctx.Query("dry_run") == "true" || ctx.Query("dry_run") == "1"
+	dryRun := c.Query("dry_run") == "true" || c.Query("dry_run") == "1"
 
-	if c.ghc == nil {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	// Create automation service for sanitization
-	//automationSvc := services.NewAutomationService(c.ghc, c.mainConfig)
+	//automationSvc := services.NewAutomationService(g.ghc, g.mainConfig)
 
 	var bulkResults []map[string]any
 	totalRuns := 0
@@ -249,7 +249,7 @@ func (c *GHbexController) AdminSanitize(ctx *gin.Context) {
 
 	gl.Log("info", fmt.Sprintf("🚀 BULK SANITIZATION STARTED - DRY_RUN: %v", dryRun))
 
-	cfgRepos := c.mainConfig.GetGitHub().GetRepos()
+	cfgRepos := g.mainConfig.GetGitHub().GetRepos()
 	for _, repoConfig := range cfgRepos {
 		if repoConfig.GetRules() == nil {
 			gl.Log("info", fmt.Sprintf("📊 Skipping %s/%s - No rules defined", repoConfig.GetOwner(), repoConfig.GetName()))
@@ -294,30 +294,30 @@ func (c *GHbexController) AdminSanitize(ctx *gin.Context) {
 	gl.Log("info", fmt.Sprintf("🎉 BULK SANITIZATION COMPLETED - Duration: %v, Total Runs: %d, Total Artifacts: %d",
 		duration, totalRuns, totalArtifacts))
 
-	ctx.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, response)
 }
-func (c *GHbexController) AdminRepos(ctx *gin.Context) {
+func (g *GHbexController) AdminRepos(c *gin.Context) {
 	// This handles individual repo sanitization: POST /admin/repos/{owner}/{repo}/sanitize?dry_run=1
-	if ctx.Request.Method != http.MethodPost {
-		ctx.JSON(http.StatusMethodNotAllowed, gin.H{"error": "only POST method allowed"})
+	if c.Request.Method != http.MethodPost {
+		c.JSON(http.StatusMethodNotAllowed, gin.H{"error": "only POST method allowed"})
 		return
 	}
 
 	// Extract owner and repo from URL path
-	owner := ctx.Param("owner")
-	repo := ctx.Param("repo")
-	action := ctx.Param("action") // should be "sanitize"
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+	action := c.Param("action") // should be "sanitize"
 
 	if owner == "" || repo == "" || action != "sanitize" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid path, expected /admin/repos/{owner}/{repo}/sanitize"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid path, expected /admin/repos/{owner}/{repo}/sanitize"})
 		return
 	}
 
-	dryRun := ctx.Query("dry_run") == "true" || ctx.Query("dry_run") == "1"
+	dryRun := c.Query("dry_run") == "true" || c.Query("dry_run") == "1"
 
-	if c.ghc == nil {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	gl.Log("info", fmt.Sprintf("🎯 INDIVIDUAL SANITIZATION - %s/%s - DRY_RUN: %v", owner, repo, dryRun))
@@ -325,7 +325,7 @@ func (c *GHbexController) AdminRepos(ctx *gin.Context) {
 
 	// Find rules for this repository
 	var rules services.GHbexRules
-	cfgRepos := c.mainConfig.GetGitHub().GetRepos()
+	cfgRepos := g.mainConfig.GetGitHub().GetRepos()
 	for _, rc := range cfgRepos {
 		if rc.GetOwner() == owner && rc.GetName() == repo {
 			rules = rc.GetRules()
@@ -364,26 +364,26 @@ func (c *GHbexController) AdminRepos(ctx *gin.Context) {
 	gl.Log("info", fmt.Sprintf("✅ SANITIZATION COMPLETED - %s/%s - Duration: %v, Runs: %d, Artifacts: %d",
 		owner, repo, duration, 15, 8))
 
-	ctx.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, response)
 }
-func (c *GHbexController) Analytics(ctx *gin.Context) {
+func (g *GHbexController) Analytics(c *gin.Context) {
 	// Extract owner and repo from URL path: /analytics/{owner}/{repo}
-	owner := ctx.Param("owner")
-	repo := ctx.Param("repo")
+	owner := c.Param("owner")
+	repo := c.Param("repo")
 
 	if owner == "" || repo == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
 		return
 	}
 
-	if c.ghc == nil {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	// Get analysis days from query param (default 90)
 	analysisDays := 90
-	if days := ctx.Query("days"); days != "" {
+	if days := c.Query("days"); days != "" {
 		if parsed, err := time.ParseDuration(days + "h"); err == nil {
 			analysisDays = int(parsed.Hours() / 24)
 		}
@@ -393,10 +393,10 @@ func (c *GHbexController) Analytics(ctx *gin.Context) {
 	startTime := time.Now()
 
 	// Perform analytics
-	insights, err := services.AnalyzeRepository(ctx, c.ghc, owner, repo, analysisDays)
+	insights, err := services.AnalyzeRepository(c, g.ghc, owner, repo, analysisDays)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("Analytics error for %s/%s: %v", owner, repo, err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Analytics failed: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Analytics failed: %v", err)})
 		return
 	}
 
@@ -404,31 +404,31 @@ func (c *GHbexController) Analytics(ctx *gin.Context) {
 	gl.Log("info", fmt.Sprintf("✅ ANALYTICS COMPLETED - %s/%s - Duration: %v, Health Score: %.1f (%s)",
 		owner, repo, duration, insights.HealthScore.Overall, insights.HealthScore.Grade))
 
-	ctx.JSON(http.StatusOK, insights)
+	c.JSON(http.StatusOK, insights)
 }
-func (c *GHbexController) Productivity(ctx *gin.Context) {
+func (g *GHbexController) Productivity(c *gin.Context) {
 	// Extract owner and repo from URL path: /productivity/{owner}/{repo}
-	owner := ctx.Param("owner")
-	repo := ctx.Param("repo")
+	owner := c.Param("owner")
+	repo := c.Param("repo")
 
 	if owner == "" || repo == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
 		return
 	}
 
-	if c.ghc == nil {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	gl.Log("info", fmt.Sprintf("📊 PRODUCTIVITY REQUEST - %s/%s", owner, repo))
 	startTime := time.Now()
 
 	// Perform productivity analysis
-	report, err := services.AnalyzeProductivity(ctx, c.ghc, owner, repo)
+	report, err := services.AnalyzeProductivity(c, g.ghc, owner, repo)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("Productivity analysis error for %s/%s: %v", owner, repo, err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Productivity analysis failed: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Productivity analysis failed: %v", err)})
 		return
 	}
 
@@ -436,26 +436,26 @@ func (c *GHbexController) Productivity(ctx *gin.Context) {
 	gl.Log("info", fmt.Sprintf("✅ PRODUCTIVITY ANALYSIS COMPLETED - %s/%s - Duration: %v, Actions: %d",
 		owner, repo, duration, len(report.Actions)))
 
-	ctx.JSON(http.StatusOK, report)
+	c.JSON(http.StatusOK, report)
 }
-func (c *GHbexController) Intelligence(ctx *gin.Context) {
+func (g *GHbexController) Intelligence(c *gin.Context) {
 	// Extract owner and repo from URL path: /intelligence/{owner}/{repo}
-	owner := ctx.Param("owner")
-	repo := ctx.Param("repo")
+	owner := c.Param("owner")
+	repo := c.Param("repo")
 
 	if owner == "" || repo == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
 		return
 	}
 
-	if c.ghc == nil {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	// Get analysis period from query param (default 60 days)
 	analysisDays := 60
-	if days := ctx.Query("days"); days != "" {
+	if days := c.Query("days"); days != "" {
 		if parsed, err := time.ParseDuration(days + "h"); err == nil {
 			analysisDays = int(parsed.Hours() / 24)
 		}
@@ -465,10 +465,10 @@ func (c *GHbexController) Intelligence(ctx *gin.Context) {
 	startTime := time.Now()
 
 	// Perform intelligence analysis
-	insights, err := services.AnalyzeRepository(ctx, c.ghc, owner, repo, analysisDays)
+	insights, err := services.AnalyzeRepository(c, g.ghc, owner, repo, analysisDays)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("Intelligence analysis error for %s/%s: %v", owner, repo, err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Intelligence analysis failed: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Intelligence analysis failed: %v", err)})
 		return
 	}
 
@@ -476,26 +476,26 @@ func (c *GHbexController) Intelligence(ctx *gin.Context) {
 	gl.Log("info", fmt.Sprintf("✅ INTELLIGENCE ANALYSIS COMPLETED - %s/%s - Duration: %v, Health Score: %.1f (%s)",
 		owner, repo, duration, insights.HealthScore.Overall, insights.HealthScore.Grade))
 
-	ctx.JSON(http.StatusOK, insights)
+	c.JSON(http.StatusOK, insights)
 }
-func (c *GHbexController) Automation(ctx *gin.Context) {
+func (g *GHbexController) Automation(c *gin.Context) {
 	// Extract owner and repo from URL path: /automation/{owner}/{repo}
-	owner := ctx.Param("owner")
-	repo := ctx.Param("repo")
+	owner := c.Param("owner")
+	repo := c.Param("repo")
 
 	if owner == "" || repo == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing owner/repo in path"})
 		return
 	}
 
-	if c.ghc == nil {
+	if g.ghc == nil {
 		gl.Log("warn", "GitHub client is nil")
-		c.ghc = services.NewGitHubClient(ctx, c.mainConfig.GetGitHub().GetAuth().GetToken())
+		g.ghc = services.NewGitHubClient(c, "")
 	}
 
 	// Get analysis period from query param (default 30 days)
 	analysisDays := 30
-	if days := ctx.Query("days"); days != "" {
+	if days := c.Query("days"); days != "" {
 		if parsed, err := time.ParseDuration(days + "h"); err == nil {
 			analysisDays = int(parsed.Hours() / 24)
 		}
@@ -505,10 +505,10 @@ func (c *GHbexController) Automation(ctx *gin.Context) {
 	startTime := time.Now()
 
 	// Perform automation analysis
-	report, err := services.AnalyzeAutomation(ctx, c.ghc, owner, repo, analysisDays)
+	report, err := services.AnalyzeAutomation(c, g.ghc, owner, repo, analysisDays)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("Automation analysis error for %s/%s: %v", owner, repo, err))
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Automation analysis failed: %v", err)})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Automation analysis failed: %v", err)})
 		return
 	}
 
@@ -516,7 +516,7 @@ func (c *GHbexController) Automation(ctx *gin.Context) {
 	gl.Log("info", fmt.Sprintf("✅ AUTOMATION ANALYSIS COMPLETED - %s/%s - Duration: %v, Score: %.1f (%s)",
 		owner, repo, duration, report.AutomationScore, report.Grade))
 
-	ctx.JSON(http.StatusOK, report)
+	c.JSON(http.StatusOK, report)
 }
 
 // calculateFallbackRepoScore generates realistic score based on repo name characteristics
@@ -548,6 +548,7 @@ func isDefaultRules(rules services.GHbexRules) bool {
 		rules.GetArtifactsRule().GetMaxAgeDays() <= 0
 }
 
+// sortRoutes sorts the routes by their path in descending order
 func sortRouteMap(routes map[string]http.HandlerFunc) map[string]http.HandlerFunc {
 	keys := make([]string, 0, len(routes))
 	for k := range routes {
