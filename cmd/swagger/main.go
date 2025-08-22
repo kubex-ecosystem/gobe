@@ -34,7 +34,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/app/routes"
+	"github.com/rafa-mori/gobe/internal/app/router"
 
 	"github.com/rafa-mori/gobe/internal/module/logger"
 	"github.com/rafa-mori/gobe/internal/proto/types"
@@ -82,7 +82,7 @@ func SwaggerMain() {
 		return
 	}
 
-	router, err := routes.NewRouter(
+	rtr, err := router.NewRouter(
 		types.NewGoBEConfig(
 			"Swagger",
 			"",
@@ -98,10 +98,10 @@ func SwaggerMain() {
 		gl.Log("fatal", "❌ Failed to initialize router:", err)
 		return
 	}
-	router.GetEngine().MaxMultipartMemory = 8 << 20 // 8 MiB
-	router.GetEngine().Use(gin.Logger())
-	router.GetEngine().Use(gin.ErrorLogger())
-	router.GetEngine().Use(gin.Recovery())
+	rtr.GetEngine().MaxMultipartMemory = 8 << 20 // 8 MiB
+	rtr.GetEngine().Use(gin.Logger())
+	rtr.GetEngine().Use(gin.ErrorLogger())
+	rtr.GetEngine().Use(gin.Recovery())
 
 	// Initialize Swagger
 	ginSwagger.WrapHandler(swaggerfiles.Handler,
@@ -117,13 +117,13 @@ func SwaggerMain() {
 	secureProperties["validateAndSanitizeBody"] = false
 
 	// Initialize routes
-	routes.GetDefaultRouteMap(router)
+	router.GetDefaultRouteMap(rtr)
 
 	// Set up routes
-	router.RegisterRoute(
+	rtr.RegisterRoute(
 		"doc",
 		"Swagger",
-		routes.NewRoute(
+		router.NewRoute(
 			http.MethodGet,
 			"/swagger/*any",
 			"application/json",
@@ -137,7 +137,7 @@ func SwaggerMain() {
 	)
 
 	// Set up CORS
-	err = routes.SecureServerInit(router.GetEngine(), net.JoinHostPort("localhost", "8080"))
+	err = router.SecureServerInit(rtr.GetEngine(), net.JoinHostPort("localhost", "8080"))
 	if err != nil {
 		gl.Log("fatal", "❌ Failed to initialize CORS:", err)
 		return
@@ -151,7 +151,7 @@ func SwaggerMain() {
 	docs.SwaggerInfo.Host = "localhost:8080"
 	docs.SwaggerInfo.Title = "GoBE API"
 
-	if err := router.Start(); err != nil {
+	if err := rtr.Start(); err != nil {
 		gl.Log("fatal", "❌ Failed to start server:", err)
 	}
 }

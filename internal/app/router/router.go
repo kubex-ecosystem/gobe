@@ -1,4 +1,5 @@
-package proto
+// Package router provides the routing functionality for the application.
+package router
 
 import (
 	"context"
@@ -410,7 +411,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 	// Register route with individual middlewares + final handler
 	middlewaresStack = append(middlewaresStack, route.Handler())
 
-	rtr.engine.Handle(route.Method(), route.Path(), uniqueMiddlewareStack(middlewaresStack)...)
+	rtr.engine.Handle(route.Method(), route.Path(), UniqueMiddlewareStack(middlewaresStack)...)
 
 	rtr.routes[groupName][routeName] = route
 
@@ -512,7 +513,7 @@ func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 }
 
 func SecureServerInit(r *gin.Engine, fullBindAddress string) error {
-	trustedProxies, trustedProxiesErr := getTrustedProxies()
+	trustedProxies, trustedProxiesErr := GetTrustedProxies()
 	if trustedProxiesErr != nil {
 		return trustedProxiesErr
 	}
@@ -523,7 +524,7 @@ func SecureServerInit(r *gin.Engine, fullBindAddress string) error {
 
 	r.Use(
 		func(c *gin.Context) {
-			if !validateExpectedHosts(fullBindAddress, c) {
+			if !ValidateExpectedHosts(fullBindAddress, c) {
 				c.Abort()
 			} else {
 				c.Header("Access-Control-Allow-Origin", "*")
@@ -606,4 +607,20 @@ func ValidateExpectedHosts(fullBindAddress string, c *gin.Context) bool {
 	// return false
 
 	return true
+}
+
+func UniqueMiddlewareStack(middlewares []gin.HandlerFunc) []gin.HandlerFunc {
+	uniqueMap := make(map[string]gin.HandlerFunc)
+	uniqueList := []gin.HandlerFunc{}
+
+	for _, middleware := range middlewares {
+		funcPtr := fmt.Sprintf("%p", middleware) // Obtém o endereço da função como string
+
+		if _, exists := uniqueMap[funcPtr]; !exists {
+			uniqueMap[funcPtr] = middleware
+			uniqueList = append(uniqueList, middleware)
+		}
+	}
+
+	return uniqueList
 }

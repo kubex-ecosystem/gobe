@@ -1,3 +1,4 @@
+// Package sys provides the system-level routes for the application.
 package sys
 
 import (

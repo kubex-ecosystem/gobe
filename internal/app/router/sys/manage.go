@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/app/middlewares"
+	"github.com/rafa-mori/gobe/internal/app/router/proto"
 	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 )
@@ -45,16 +46,16 @@ func NewServerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	openedProperties["validateAndSanitize"] = false
 	openedProperties["validateAndSanitizeBody"] = false
 
-	routesMap["HealthPostRoute"] = NewRoute(http.MethodPost, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties, nil)
-	routesMap["HealthGetRoute"] = NewRoute(http.MethodGet, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties, nil)
-	routesMap["PingPostRoute"] = NewRoute(http.MethodPost, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties, nil)
-	routesMap["PingGetRoute"] = NewRoute(http.MethodGet, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties, nil)
+	routesMap["HealthPostRoute"] = proto.NewRoute(http.MethodPost, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties, nil)
+	routesMap["HealthGetRoute"] = proto.NewRoute(http.MethodGet, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties, nil)
+	routesMap["PingPostRoute"] = proto.NewRoute(http.MethodPost, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties, nil)
+	routesMap["PingGetRoute"] = proto.NewRoute(http.MethodGet, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties, nil)
 
-	routesMap["VersionGetRoute"] = NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
-	routesMap["ConfigGetRoute"] = NewRoute(http.MethodGet, "/api/v1/config", "application/json", ra.ConfigRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
+	routesMap["VersionGetRoute"] = proto.NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
+	routesMap["ConfigGetRoute"] = proto.NewRoute(http.MethodGet, "/api/v1/config", "application/json", ra.ConfigRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
 
-	routesMap["StartPostRoute"] = NewRoute(http.MethodPost, "/api/v1/start", "application/json", ra.StartRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
-	routesMap["StopPostRoute"] = NewRoute(http.MethodPost, "/api/v1/stop", "application/json", ra.StopRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
+	routesMap["StartPostRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/start", "application/json", ra.StartRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
+	routesMap["StopPostRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/stop", "application/json", ra.StopRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
 
 	return routesMap
 }

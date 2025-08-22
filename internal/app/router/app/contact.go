@@ -2,7 +2,8 @@ package app
 
 import (
 	"github.com/gin-gonic/gin"
-	contacts "github.com/rafa-mori/gobe/internal/app/controllers/apps/contacts"
+	cts "github.com/rafa-mori/gobe/internal/app/controllers/app/contacts"
+	"github.com/rafa-mori/gobe/internal/app/router/proto"
 	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 
@@ -20,7 +21,7 @@ func NewContactRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 	rtl := *rtr
 
-	handler := contacts.ContactController{}
+	handler := cts.ContactController{}
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)
@@ -32,9 +33,9 @@ func NewContactRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["PostContactRoute"] = NewRoute(http.MethodPost, "/api/v1/contact", "application/json", handler.PostContact, middlewaresMap, dbService, secureProperties, nil)
-	routesMap["GetContactRoute"] = NewRoute(http.MethodGet, "/api/v1/contact", "application/json", handler.GetContact, middlewaresMap, dbService, secureProperties, nil)
-	routesMap["HandleContactRoute"] = NewRoute(http.MethodPost, "/api/v1/contact/handle", "application/json", handler.HandleContact, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["PostContactRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/contact", "application/json", handler.PostContact, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetContactRoute"] = proto.NewRoute(http.MethodGet, "/api/v1/contact", "application/json", handler.GetContact, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["HandleContactRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/contact/handle", "application/json", handler.HandleContact, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
 }

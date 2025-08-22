@@ -1,3 +1,4 @@
+// Package webhooks provides the routes for the Webhook Manager.
 package webhooks
 
 import (
@@ -7,7 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	whk "github.com/rafa-mori/gdbase/factory/models"
 	t "github.com/rafa-mori/gdbase/types"
-	"github.com/rafa-mori/gobe/internal/app/controllers/admin/webhooks"
+	"github.com/rafa-mori/gobe/internal/app/controllers/webhooks"
+	"github.com/rafa-mori/gobe/internal/app/router/proto"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
@@ -77,9 +79,9 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 
 	// Mapear as rotas utilizando o WebhookController.
 	routesMap := make(map[string]ci.IRoute)
-	routesMap["RegisterWebhookRoute"] = NewRoute(http.MethodPost, "/api/v1/webhooks", "application/json", webhookController.RegisterWebhook, middlewaresMap, dbService, secureProperties, nil)
-	routesMap["ListWebhooksRoute"] = NewRoute(http.MethodGet, "/api/v1/webhooks", "application/json", webhookController.ListWebhooks, middlewaresMap, dbService, secureProperties, nil)
-	routesMap["DeleteWebhookRoute"] = NewRoute(http.MethodDelete, "/api/v1/webhooks/:id", "application/json", webhookController.DeleteWebhook, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["RegisterWebhookRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/webhooks", "application/json", webhookController.RegisterWebhook, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["ListWebhooksRoute"] = proto.NewRoute(http.MethodGet, "/api/v1/webhooks", "application/json", webhookController.ListWebhooks, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["DeleteWebhookRoute"] = proto.NewRoute(http.MethodDelete, "/api/v1/webhooks/:id", "application/json", webhookController.DeleteWebhook, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
 }

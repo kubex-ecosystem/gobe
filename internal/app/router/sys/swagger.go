@@ -3,6 +3,7 @@ package sys
 import (
 	"net/http"
 
+	"github.com/rafa-mori/gobe/internal/app/router/proto"
 	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	"github.com/rafa-mori/gobe/internal/proxy/hub"
 
@@ -51,7 +52,7 @@ func NewSwaggerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	// Set up routes
 
-	routesMap["doc"] = NewRoute(
+	routesMap["doc"] = proto.NewRoute(
 		http.MethodGet,
 		"/swagger/*any",
 		"application/json",

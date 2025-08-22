@@ -1,4 +1,4 @@
-// Package routes provides the implementation of the IRoute interface for managing routes in a web application.
+// Package proto provides the implementation of the IRoute interface for managing routes in a web application.
 package proto
 
 import (

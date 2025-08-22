@@ -3,7 +3,8 @@ package cbot
 import (
 	"net/http"
 
-	telegram_controller "github.com/rafa-mori/gobe/internal/app/controllers/apps/chatbots/telegram"
+	telegram_controller "github.com/rafa-mori/gobe/internal/app/controllers/app/chatbots/telegram"
+	"github.com/rafa-mori/gobe/internal/app/router/proto"
 	"github.com/rafa-mori/gobe/internal/config"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
@@ -35,8 +36,8 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	svc := telegram.NewService(cfg.Integrations.Telegram)
 	controller := telegram_controller.NewController(dbGorm, svc)
 	routes := make(map[string]ar.IRoute)
-	routes["TelegramWebhook"] = NewRoute(http.MethodPost, "/api/v1/telegram/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil, nil)
-	routes["TelegramSend"] = NewRoute(http.MethodPost, "/api/v1/telegram/send", "application/json", controller.SendMessage, nil, dbService, nil, nil)
-	routes["TelegramPing"] = NewRoute(http.MethodGet, "/api/v1/telegram/ping", "application/json", controller.Ping, nil, dbService, nil, nil)
+	routes["TelegramWebhook"] = proto.NewRoute(http.MethodPost, "/api/v1/telegram/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil, nil)
+	routes["TelegramSend"] = proto.NewRoute(http.MethodPost, "/api/v1/telegram/send", "application/json", controller.SendMessage, nil, dbService, nil, nil)
+	routes["TelegramPing"] = proto.NewRoute(http.MethodGet, "/api/v1/telegram/ping", "application/json", controller.Ping, nil, dbService, nil, nil)
 	return routes
 }
