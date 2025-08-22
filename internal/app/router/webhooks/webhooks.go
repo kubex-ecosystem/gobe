@@ -9,9 +9,9 @@ import (
 	whk "github.com/rafa-mori/gdbase/factory/models"
 	t "github.com/rafa-mori/gdbase/types"
 	"github.com/rafa-mori/gobe/internal/app/controllers/webhooks"
-	"github.com/rafa-mori/gobe/internal/app/router/proto"
+	proto "github.com/rafa-mori/gobe/internal/app/router/types"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )

@@ -3,7 +3,7 @@ package hooks
 import (
 	"reflect"
 
-	t "github.com/rafa-mori/gobe/internal/proto/types"
+	t "github.com/rafa-mori/gobe/internal/contracts/types"
 )
 
 type Bitstate[T ~uint64, S any] struct {

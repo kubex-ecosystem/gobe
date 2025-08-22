@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	"github.com/subosito/gotenv"
 	"gopkg.in/yaml.v3"
 )

@@ -3,8 +3,8 @@ package sys
 import (
 	"net/http"
 
-	"github.com/rafa-mori/gobe/internal/app/router/proto"
-	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	proto "github.com/rafa-mori/gobe/internal/app/router/types"
+	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	"github.com/rafa-mori/gobe/internal/proxy/hub"
 
 	gl "github.com/rafa-mori/gobe/internal/module/logger"

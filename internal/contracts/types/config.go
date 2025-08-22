@@ -9,8 +9,8 @@ import (
 	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
 
 	cm "github.com/rafa-mori/gobe/internal/commons"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 // TLSConfig is a struct that holds the TLS configuration for the GoBE instance.

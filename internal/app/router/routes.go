@@ -2,14 +2,14 @@ package router
 
 import (
 	gdbf "github.com/rafa-mori/gdbase/factory"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/app/router/app"
 	"github.com/rafa-mori/gobe/internal/app/router/cbot"
 	"github.com/rafa-mori/gobe/internal/app/router/mcp"
-	"github.com/rafa-mori/gobe/internal/app/router/proto"
 	"github.com/rafa-mori/gobe/internal/app/router/sys"
+	proto "github.com/rafa-mori/gobe/internal/app/router/types"
 	"github.com/rafa-mori/gobe/internal/app/router/user"
 	"github.com/rafa-mori/gobe/internal/app/router/webhooks"
 )

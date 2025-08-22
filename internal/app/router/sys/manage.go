@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/app/middlewares"
-	"github.com/rafa-mori/gobe/internal/app/router/proto"
-	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	proto "github.com/rafa-mori/gobe/internal/app/router/types"
+	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	l "github.com/rafa-mori/logz"
 )
 

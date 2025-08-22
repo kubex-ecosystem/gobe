@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	whatsapp_controller "github.com/rafa-mori/gobe/internal/app/controllers/app/chatbots/whatsapp"
-	"github.com/rafa-mori/gobe/internal/app/router/proto"
+	proto "github.com/rafa-mori/gobe/internal/app/router/types"
 	"github.com/rafa-mori/gobe/internal/config"
+	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	"github.com/rafa-mori/gobe/internal/services/chatbot/whatsapp"
 )
 

@@ -36,8 +36,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/app/router"
 
+	"github.com/rafa-mori/gobe/internal/contracts/types"
 	"github.com/rafa-mori/gobe/internal/module/logger"
-	"github.com/rafa-mori/gobe/internal/proto/types"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 

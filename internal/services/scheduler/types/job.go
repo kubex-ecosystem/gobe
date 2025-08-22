@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	t "github.com/rafa-mori/gobe/internal/proto/types"
+	t "github.com/rafa-mori/gobe/internal/contracts/types"
 )
 
 type IJob interface {

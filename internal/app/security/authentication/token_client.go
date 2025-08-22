@@ -9,8 +9,8 @@ import (
 	kri "github.com/rafa-mori/gobe/internal/app/security/external"
 	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
 	common "github.com/rafa-mori/gobe/internal/commons"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 type TokenClientImpl struct {

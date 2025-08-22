@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 func IsShellSpecialVar(c uint8) bool {

@@ -4,9 +4,9 @@ package user
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/app/controllers/sys/federation/users"
-	"github.com/rafa-mori/gobe/internal/app/router/proto"
+	proto "github.com/rafa-mori/gobe/internal/app/router/types"
+	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 
 	"net/http"
 )

@@ -3,8 +3,8 @@ package app
 import (
 	"github.com/gin-gonic/gin"
 	cts "github.com/rafa-mori/gobe/internal/app/controllers/app/contacts"
-	"github.com/rafa-mori/gobe/internal/app/router/proto"
-	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	proto "github.com/rafa-mori/gobe/internal/app/router/types"
+	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	l "github.com/rafa-mori/logz"
 
 	"net/http"

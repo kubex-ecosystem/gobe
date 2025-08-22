@@ -1,3 +1,4 @@
+// Package gateway provides an interface for the authentication gateway.
 package gateway
 
 import (

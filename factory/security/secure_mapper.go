@@ -1,3 +1,4 @@
+// Package security provides utilities for securing sensitive data.
 package security
 
 import (
@@ -10,9 +11,9 @@ import (
 	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
 	krs "github.com/rafa-mori/gobe/internal/app/security/external"
 	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	t "github.com/rafa-mori/gobe/internal/contracts/types"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
-	t "github.com/rafa-mori/gobe/internal/proto/types"
 )
 
 type ISecureMapper[T any] interface {

@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	tu "github.com/rafa-mori/gobe/internal/utils"
 	l "github.com/rafa-mori/logz"
 
