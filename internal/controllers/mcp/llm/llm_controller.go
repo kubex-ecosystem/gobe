@@ -9,7 +9,7 @@ import (
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/types"
+	"github.com/rafa-mori/gobe/internal/proto/types"
 	"gorm.io/gorm"
 )
 

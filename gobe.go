@@ -19,9 +19,9 @@ import (
 	is "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
 	cm "github.com/rafa-mori/gobe/internal/common"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 	"github.com/rafa-mori/gobe/internal/routes"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
-	t "github.com/rafa-mori/gobe/internal/types"
 	l "github.com/rafa-mori/logz"
 
 	gl "github.com/rafa-mori/gobe/internal/module/logger"

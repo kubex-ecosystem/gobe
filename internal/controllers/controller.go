@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	whk "github.com/rafa-mori/gdbase/factory/models"
-	"github.com/rafa-mori/gobe/internal/types"
+	"github.com/rafa-mori/gobe/internal/proto/types"
 	"github.com/streadway/amqp"
 )
 

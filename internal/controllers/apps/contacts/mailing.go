@@ -11,7 +11,7 @@ import (
 
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
-	t "github.com/rafa-mori/gobe/internal/types"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 )
 
 func enqueueEmail(cc *ContactController, emailQueue chan t.ContactForm) {

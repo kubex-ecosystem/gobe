@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	fscm "github.com/rafa-mori/gdbase/factory/models"
-	t "github.com/rafa-mori/gobe/internal/types"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 	"gorm.io/gorm"
 )
 

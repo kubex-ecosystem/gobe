@@ -5,9 +5,9 @@ import (
 	"sync"
 	"time"
 
-	m "github.com/rafa-mori/gobe/internal/scheduler/monitor"
+	m "github.com/rafa-mori/gobe/internal/services/scheduler/monitor"
 
-	tp "github.com/rafa-mori/gobe/internal/scheduler/types"
+	tp "github.com/rafa-mori/gobe/internal/services/scheduler/types"
 )
 
 // GoroutinePool gerencia a execução de tarefas usando um pool de goroutines.

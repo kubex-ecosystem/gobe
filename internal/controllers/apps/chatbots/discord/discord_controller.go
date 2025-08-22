@@ -14,14 +14,14 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 
-	"github.com/rafa-mori/gobe/internal/approval"
 	"github.com/rafa-mori/gobe/internal/config"
-	"github.com/rafa-mori/gobe/internal/events"
 	"github.com/rafa-mori/gobe/internal/hub"
+	"github.com/rafa-mori/gobe/internal/observers/approval"
+	"github.com/rafa-mori/gobe/internal/observers/events"
 	"github.com/rafa-mori/gobe/internal/services/chatbot/discord"
 
 	fscm "github.com/rafa-mori/gdbase/factory/models"
-	t "github.com/rafa-mori/gobe/internal/types"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 
 	l "github.com/rafa-mori/logz"
 
