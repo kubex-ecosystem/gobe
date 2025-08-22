@@ -51,7 +51,7 @@ func (pc *ProvidersController) CreateProvider(c *gin.Context) {
 	var providerRequest struct {
 		Provider   string  `json:"provider" binding:"required"`
 		OrgOrGroup string  `json:"org_or_group" binding:"required"`
-		Config     t.JsonB `json:"config,omitempty"`
+		Config     t.JSONB `json:"config,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
@@ -82,7 +82,7 @@ func (pc *ProvidersController) UpdateProvider(c *gin.Context) {
 	var providerRequest struct {
 		Provider   string  `json:"provider"`
 		OrgOrGroup string  `json:"org_or_group"`
-		Config     t.JsonB `json:"config"`
+		Config     t.JSONB `json:"config"`
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
@@ -172,7 +172,7 @@ func (pc *ProvidersController) UpsertProviderByNameAndOrg(c *gin.Context) {
 	var providerRequest struct {
 		Provider   string  `json:"provider" binding:"required"`
 		OrgOrGroup string  `json:"org_or_group" binding:"required"`
-		Config     t.JsonB `json:"config"`
+		Config     t.JSONB `json:"config"`
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {

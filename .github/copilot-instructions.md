@@ -275,7 +275,7 @@ if err != nil {
 // For models with JSONB fields
 type EntityModel struct {
     ID        string    `json:"id" gorm:"primary_key"`
-    Config    t.JsonB   `json:"config" gorm:"type:jsonb"`
+    Config    t.JSONB   `json:"config" gorm:"type:jsonb"`
     // ... other fields
 }
 

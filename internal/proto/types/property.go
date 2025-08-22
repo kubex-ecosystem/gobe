@@ -13,14 +13,14 @@ import (
 	"github.com/google/uuid"
 )
 
-type JsonB map[string]interface{}
+type JSONB map[string]any
 
 // Value manual para o GORM
-func (m JsonB) Value() (driver.Value, error) { return json.Marshal(m) }
+func (m JSONB) Value() (driver.Value, error) { return json.Marshal(m) }
 
-func (m *JsonB) Scan(vl any) error {
+func (m *JSONB) Scan(vl any) error {
 	if vl == nil {
-		*m = JsonB{}
+		*m = JSONB{}
 		return nil
 	}
 	return json.Unmarshal(vl.([]byte), m)
@@ -67,6 +67,7 @@ func (p *Property[T]) SetValue(v *T) {
 	p.prop.Set(v)
 	if p.cb != nil {
 		if _, err := p.cb(v); err != nil {
+			gl.Log("error", "Callback function returned an error:", err.Error())
 			//p.metrics.Log("error", "Error in callback function: "+err.Error())
 		}
 	}

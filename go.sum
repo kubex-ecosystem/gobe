@@ -258,8 +258,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 h1:o4JXh1EVt9k/+g42oCprj/FisM4qX9L3sZB3upGN2ZU=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55/go.mod h1:OmDBASR4679mdNQnz2pUhc2G8CO2JrUAVFDRBDP/hJE=
-github.com/rafa-mori/gdbase v1.2.3 h1:yowHqBMhiFkBJjdPeqJD4jtWf3GBoo3gGdNze/0nlFo=
-github.com/rafa-mori/gdbase v1.2.3/go.mod h1:iLwf8P2JJXTQJ4qJoXAlUiXi2yxBQwzubR05VvJAo0Y=
 github.com/rafa-mori/logz v1.4.0 h1:rCOu50JzonqY0VX/qEnnBXo5P1jNOwzeRr1aj1lz2SQ=
 github.com/rafa-mori/logz v1.4.0/go.mod h1:w/m/k0p1z/pNFLOTPUJMNiQJfAVtiZeGhnOsx1+/frA=
 github.com/rafa-mori/xtui v1.3.1 h1:+r+TjL3l/fftP0203P271k8olgzvf0o3TKobj316aC8=

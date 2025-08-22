@@ -10,6 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
+type CtxKey string
+
 // APIResponse encapsulando respostas
 type APIResponse struct {
 	Status string                 `json:"status"`
@@ -36,14 +38,15 @@ func NewAPIRequest() *APIRequest {
 	return &APIRequest{}
 }
 
-// API Wrapper para gerenciar requisições e respostas de maneira padronizada
+// APIWrapper para gerenciar requisições e respostas de maneira padronizada
 type APIWrapper[T any] struct{}
 
-func NewApiWrapper[T any]() *APIWrapper[T] {
+func NewAPIWrapper[T any]() *APIWrapper[T] {
 	return &APIWrapper[T]{}
 }
 
 // Gerencia requisições de forma genérica
+
 func (w *APIWrapper[T]) HandleRequest(c *gin.Context, method string, endpoint string, payload interface{}) {
 	switch method {
 	case "GET":
@@ -70,6 +73,7 @@ func (w *APIWrapper[T]) Middleware() gin.HandlerFunc {
 }
 
 // Enviar resposta padronizada
+
 func (w *APIWrapper[T]) JSONResponse(c *gin.Context, status string, msg, hash string, data interface{}, filter map[string]interface{}, httpStatus int) {
 	r := NewAPIResponse()
 	r.Status = status
@@ -107,15 +111,16 @@ func (w *APIWrapper[T]) JSONResponseWithSuccess(c *gin.Context, msgKey, hash str
 }
 
 func (w *APIWrapper[T]) GetContext(c *gin.Context) (context.Context, error) {
-	userId := c.GetHeader("X-User-ID")
-	if userId == "" {
+	userID := c.GetHeader("X-User-ID")
+	if userID == "" {
 		return nil, fmt.Errorf("user ID is required")
 	}
-	uuserID, err := uuid.Parse(userId)
+	uuserID, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %s", err)
 	}
-	ctx := context.WithValue(c.Request.Context(), "userID", uuserID)
+
+	ctx := context.WithValue(c.Request.Context(), CtxKey("userID"), uuserID)
 
 	cronID := c.Param("id")
 	if cronID != "" {
@@ -126,7 +131,7 @@ func (w *APIWrapper[T]) GetContext(c *gin.Context) (context.Context, error) {
 		if err != nil {
 			return nil, fmt.Errorf("invalid cron job ID: %s", err)
 		}
-		ctx = context.WithValue(ctx, "cronID", cronUUID)
+		ctx = context.WithValue(ctx, CtxKey("cronID"), cronUUID)
 	}
 	return ctx, nil
 }

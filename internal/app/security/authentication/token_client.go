@@ -37,14 +37,14 @@ func (t *TokenClientImpl) LoadPrivateKey() (*rsa.PrivateKey, error) {
 }
 func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error) {
 	if t == nil {
-		gl.Log("error", fmt.Sprintf("TokenClient is nil, trying to create a new one"))
+		gl.Log("error", "TokenClient is nil, trying to create a new one")
 		t = &TokenClientImpl{}
 	}
 	if t.crtSrv == nil {
-		gl.Log("error", fmt.Sprintf("crtService is nil, trying to create a new one"))
+		gl.Log("error", "crtService is nil, trying to create a new one")
 		t.crtSrv = crt.NewCertService(common.DefaultGoBEKeyPath, common.DefaultGoBECertPath)
 		if t.crtSrv == nil {
-			gl.Log("fatal", fmt.Sprintf("crtService is nil, unable to create a new one"))
+			gl.Log("fatal", "crtService is nil, unable to create a new one")
 		}
 	}
 	privKey, err := t.crtSrv.GetPrivateKey()

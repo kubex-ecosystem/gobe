@@ -28,8 +28,8 @@ type UserController struct {
 func NewUserController(db *gorm.DB) *UserController {
 	return &UserController{
 		userService:    user.NewUserService(user.NewUserRepo(db)),
-		APIWrapper:     types.NewApiWrapper[user.UserModel](),
-		APIAuthWrapper: types.NewApiWrapper[user.AuthRequestDTO](),
+		APIWrapper:     types.NewAPIWrapper[user.UserModel](),
+		APIAuthWrapper: types.NewAPIWrapper[user.AuthRequestDTO](),
 	}
 }
 

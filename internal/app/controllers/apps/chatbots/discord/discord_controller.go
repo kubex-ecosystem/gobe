@@ -49,7 +49,7 @@ type DiscordController struct {
 func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub) *DiscordController {
 	return &DiscordController{
 		discordService: fscm.NewDiscordService(fscm.NewDiscordRepo(db)),
-		APIWrapper:     t.NewApiWrapper[fscm.DiscordModel](),
+		APIWrapper:     t.NewAPIWrapper[fscm.DiscordModel](),
 		hub:            hub,
 	}
 }

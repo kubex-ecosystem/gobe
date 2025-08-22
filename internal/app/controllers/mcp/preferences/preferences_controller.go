@@ -22,7 +22,7 @@ type PreferencesController struct {
 func NewPreferencesController(db *gorm.DB) *PreferencesController {
 	return &PreferencesController{
 		preferencesService: svc.NewPreferencesService(models.NewPreferencesRepo(db)),
-		APIWrapper:         types.NewApiWrapper[svc.PreferencesModel](),
+		APIWrapper:         types.NewAPIWrapper[svc.PreferencesModel](),
 	}
 }
 
@@ -121,7 +121,7 @@ func (pc *PreferencesController) UpsertPreferencesByScope(c *gin.Context) {
 	scope := c.Param("scope")
 
 	var requestBody struct {
-		Config t.JsonB `json:"config" binding:"required"`
+		Config t.JSONB `json:"config" binding:"required"`
 		UserID string  `json:"user_id,omitempty"`
 	}
 

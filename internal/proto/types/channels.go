@@ -200,6 +200,7 @@ func (cCtl *ChannelCtl[T]) GetSubChannelTypeByName(name string) (reflect.Type, b
 }
 
 // SetSubChannelTypeByName sets the type of the sub-channel by name and returns the type.
+
 func (cCtl *ChannelCtl[T]) GetSubChannelBuffersByName(name string) (int, bool) {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)

@@ -18,7 +18,7 @@ type ProductController struct {
 func NewProductController(db *gorm.DB) *ProductController {
 	return &ProductController{
 		productService: fscm.NewProductService(fscm.NewProductRepo(db)),
-		APIWrapper:     t.NewApiWrapper[fscm.ProductModel](),
+		APIWrapper:     t.NewAPIWrapper[fscm.ProductModel](),
 	}
 }
 

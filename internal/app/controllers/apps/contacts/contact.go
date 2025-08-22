@@ -29,7 +29,7 @@ func NewContactController(properties map[string]any) *ContactController {
 	return &ContactController{
 		queue:      make(chan ci.ContactForm, 100),
 		properties: properties,
-		APIWrapper: t.NewApiWrapper[ci.ContactForm](),
+		APIWrapper: t.NewAPIWrapper[ci.ContactForm](),
 	}
 }
 

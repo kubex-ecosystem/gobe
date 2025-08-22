@@ -21,7 +21,7 @@ func NewWebhookController(service whk.WebhookService, rabbitMQConn *amqp.Connect
 	return &WebhookController{
 		Service:      service,
 		RabbitMQConn: rabbitMQConn,
-		APIWrapper:   t.NewApiWrapper[any](),
+		APIWrapper:   t.NewAPIWrapper[any](),
 	}
 }
 

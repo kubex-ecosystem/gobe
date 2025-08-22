@@ -21,7 +21,7 @@ type LLMController struct {
 func NewLLMController(db *gorm.DB) *LLMController {
 	return &LLMController{
 		llmService: svc.NewLLMService(models.NewLLMRepo(db)),
-		APIWrapper: types.NewApiWrapper[svc.LLMModel](),
+		APIWrapper: types.NewAPIWrapper[svc.LLMModel](),
 	}
 }
 

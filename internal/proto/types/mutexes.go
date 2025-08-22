@@ -200,8 +200,5 @@ func (m *Mutexes) MuTryLock() bool {
 
 // MuTryRLock tries to lock the mutex for reading without blocking
 func (m *Mutexes) MuTryRLock() bool {
-	if m.MuCtxL.TryRLock() {
-		return true
-	}
-	return false
+	return m.MuCtxL.TryRLock()
 }

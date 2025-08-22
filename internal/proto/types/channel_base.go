@@ -11,6 +11,7 @@ import (
 
 // ChannelBase is a struct that holds the base properties for a channel.
 type ChannelBase[T any] struct {
+	l.Logger              // Logger for this ChannelBase instance
 	*Mutexes              // Mutexes for this Channel instance
 	Name     string       // The name of the channel.
 	Channel  any          // The channel for the value. Main channel for this struct.
@@ -29,6 +30,7 @@ func NewChannelBase[T any](name string, buffers int, logger l.Logger) ci.IChanne
 		buffers = lgBuf
 	}
 	return &ChannelBase[any]{
+		Logger:  logger,
 		Mutexes: mu,
 		Name:    name,
 		Channel: make(chan T, buffers),

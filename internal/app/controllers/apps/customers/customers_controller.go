@@ -18,7 +18,7 @@ type CustomerController struct {
 func NewCustomerController(db *gorm.DB) *CustomerController {
 	return &CustomerController{
 		customerService: fscm.NewClientService(fscm.NewClientRepo(db)),
-		APIWrapper:      t.NewApiWrapper[fscm.ClientModel](),
+		APIWrapper:      t.NewAPIWrapper[fscm.ClientModel](),
 	}
 }
 

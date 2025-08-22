@@ -170,6 +170,7 @@ require (
 )
 
 replace (
+	github.com/rafa-mori/gdbase => ../gdbase
 	github.com/rafa-mori/ghbex => ../ghbex
 	github.com/rafa-mori/grompt => ../grompt
 )

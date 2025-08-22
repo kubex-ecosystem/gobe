@@ -1,3 +1,4 @@
+// Package crypto provides cryptographic services for encrypting and decrypting data
 package crypto
 
 import (
@@ -41,6 +42,7 @@ func NewCryptoServiceType() *CryptoService {
 }
 
 // EncodeIfDecoded encodes a byte slice to Base64 URL encoding if it is not already encoded
+
 func (s *CryptoService) Encrypt(data []byte, key []byte) (string, string, error) {
 	if len(data) == 0 {
 		return "", "", fmt.Errorf("data is empty")
@@ -319,7 +321,7 @@ func IsBase64String(s string) bool {
 }
 
 // Detecta strings Base64 dentro de um texto e corrige padding e encoding
-// Detecta strings Base64 dentro de um texto e corrige padding e encoding
+
 func DetectBase64InString(s string) []string {
 	// Múltiplas regexes para capturar Base64 padrão e URL Safe
 	base64Regex := []*regexp.Regexp{

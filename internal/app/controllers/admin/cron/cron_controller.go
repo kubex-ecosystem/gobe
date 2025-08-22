@@ -23,7 +23,7 @@ func NewCronJobController(db *gorm.DB) *CronController {
 	return &CronController{
 
 		ICronService: cron.NewCronJobService(cron.NewCronJobRepo(context.Background(), db)),
-		APIWrapper:   types.NewApiWrapper[cron.CronJobModel](),
+		APIWrapper:   types.NewAPIWrapper[cron.CronJobModel](),
 	}
 }
 
