@@ -16,7 +16,7 @@ import (
 	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
 	krs "github.com/rafa-mori/gobe/internal/app/security/external"
 	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	cm "github.com/rafa-mori/gobe/internal/common"
+	cm "github.com/rafa-mori/gobe/internal/commons"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	"golang.org/x/crypto/chacha20poly1305"
 )

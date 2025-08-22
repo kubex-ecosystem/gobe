@@ -1,3 +1,4 @@
+// Package authentication provides methods for generating and validating JWT tokens.
 package authentication
 
 import (

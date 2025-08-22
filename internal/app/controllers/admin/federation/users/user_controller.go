@@ -10,7 +10,7 @@ import (
 	user "github.com/rafa-mori/gdbase/factory/models"
 	sau "github.com/rafa-mori/gobe/internal/app/security/authentication"
 	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	cm "github.com/rafa-mori/gobe/internal/common"
+	cm "github.com/rafa-mori/gobe/internal/commons"
 
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 

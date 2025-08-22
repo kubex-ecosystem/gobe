@@ -18,7 +18,7 @@ import (
 	"github.com/rafa-mori/gobe/internal/services/chatbot/discord"
 	"github.com/rafa-mori/gobe/internal/services/llm"
 	"github.com/rafa-mori/gobe/internal/services/mcp"
-	"github.com/rafa-mori/gobe/internal/services/zmq"
+	zmq "github.com/rafa-mori/gobe/internal/sockets"
 )
 
 type DiscordMCPHub struct {

@@ -8,7 +8,7 @@ import (
 
 	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
 
-	cm "github.com/rafa-mori/gobe/internal/common"
+	cm "github.com/rafa-mori/gobe/internal/commons"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )

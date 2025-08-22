@@ -8,7 +8,7 @@ import (
 	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
 	kri "github.com/rafa-mori/gobe/internal/app/security/external"
 	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	"github.com/rafa-mori/gobe/internal/common"
+	common "github.com/rafa-mori/gobe/internal/commons"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )

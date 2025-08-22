@@ -21,7 +21,7 @@ import (
 	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
 	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
 	srv "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	cm "github.com/rafa-mori/gobe/internal/common"
+	cm "github.com/rafa-mori/gobe/internal/commons"
 	"github.com/rafa-mori/gobe/internal/module/logger"
 )
 

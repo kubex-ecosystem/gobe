@@ -14,7 +14,7 @@ import (
 	sc "github.com/rafa-mori/gdbase/types"
 	ut "github.com/rafa-mori/gdbase/utils"
 	fcs "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	cm "github.com/rafa-mori/gobe/internal/common"
+	cm "github.com/rafa-mori/gobe/internal/commons"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	t "github.com/rafa-mori/gobe/internal/proto/types"

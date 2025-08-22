@@ -19,7 +19,7 @@ import (
 	"github.com/rafa-mori/gobe/internal/app/routes"
 	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
 	is "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	cm "github.com/rafa-mori/gobe/internal/common"
+	cm "github.com/rafa-mori/gobe/internal/commons"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	t "github.com/rafa-mori/gobe/internal/proto/types"
 	l "github.com/rafa-mori/logz"
