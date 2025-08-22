@@ -1,3 +1,4 @@
+// Package services provides implementations for various services in the application.
 package services
 
 import (

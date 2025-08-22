@@ -89,6 +89,7 @@ func (p *GoroutinePool) StartWithMonitoring() {
 }
 
 // Aprimorando o monitoramento com limites configuráveis e alertas
+
 func (p *GoroutinePool) StartWithEnhancedMonitoring(maxGoroutines int, maxHeapMB float64) {
 	for i := 0; i < p.maxWorkers; i++ {
 		go func(workerID int) {
@@ -122,6 +123,7 @@ func (p *GoroutinePool) StartWithEnhancedMonitoring(maxGoroutines int, maxHeapMB
 }
 
 // Aprimorando alertas com ações automáticas para resiliência
+
 func (p *GoroutinePool) StartWithResilientMonitoring(maxGoroutines int, maxHeapMB float64) {
 	for i := 0; i < p.maxWorkers; i++ {
 		go func(workerID int) {

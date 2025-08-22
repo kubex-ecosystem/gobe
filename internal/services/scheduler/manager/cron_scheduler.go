@@ -1,3 +1,4 @@
+// Package manager fornece implementações para o gerenciamento de cronjobs usando GoroutinePool.
 package manager
 
 import (
