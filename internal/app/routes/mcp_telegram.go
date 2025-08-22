@@ -35,8 +35,8 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	svc := telegram.NewService(cfg.Integrations.Telegram)
 	controller := telegram_controller.NewController(dbGorm, svc)
 	routes := make(map[string]ar.IRoute)
-	routes["TelegramWebhook"] = NewRoute(http.MethodPost, "/api/v1/telegram/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil)
-	routes["TelegramSend"] = NewRoute(http.MethodPost, "/api/v1/telegram/send", "application/json", controller.SendMessage, nil, dbService, nil)
-	routes["TelegramPing"] = NewRoute(http.MethodGet, "/api/v1/telegram/ping", "application/json", controller.Ping, nil, dbService, nil)
+	routes["TelegramWebhook"] = NewRoute(http.MethodPost, "/api/v1/telegram/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil, nil)
+	routes["TelegramSend"] = NewRoute(http.MethodPost, "/api/v1/telegram/send", "application/json", controller.SendMessage, nil, dbService, nil, nil)
+	routes["TelegramPing"] = NewRoute(http.MethodGet, "/api/v1/telegram/ping", "application/json", controller.Ping, nil, dbService, nil, nil)
 	return routes
 }

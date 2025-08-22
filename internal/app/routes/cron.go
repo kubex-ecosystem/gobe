@@ -40,17 +40,19 @@ func NewCronRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["CreateCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs", "application/json", cronJobController.CreateCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["GetCronJobRoute"] = NewRoute("GET", "/api/v1/cronjobs/:id", "application/json", cronJobController.GetCronJobByID, middlewaresMap, dbService, secureProperties)
-	routesMap["ListCronJobsRoute"] = NewRoute("GET", "/api/v1/cronjobs", "application/json", cronJobController.ListCronJobs, middlewaresMap, dbService, secureProperties)
-	routesMap["UpdateCronJobRoute"] = NewRoute("PUT", "/api/v1/cronjobs/:id", "application/json", cronJobController.UpdateCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["DeleteCronJobRoute"] = NewRoute("DELETE", "/api/v1/cronjobs/:id", "application/json", cronJobController.DeleteCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["EnableCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/enable", "application/json", cronJobController.EnableCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["DisableCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/disable", "application/json", cronJobController.DisableCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["ExecuteCronJobManuallyRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/execute", "application/json", cronJobController.ExecuteCronJobManually, middlewaresMap, dbService, secureProperties)
-	routesMap["ListActiveCronJobsRoute"] = NewRoute("GET", "/api/v1/cronjobs/active", "application/json", cronJobController.ListActiveCronJobs, middlewaresMap, dbService, secureProperties)
-	routesMap["RescheduleCronJobRoute"] = NewRoute("PUT", "/api/v1/cronjobs/:id/reschedule", "application/json", cronJobController.RescheduleCronJob, middlewaresMap, dbService, secureProperties)
-	routesMap["ValidateCronExpressionRoute"] = NewRoute("POST", "/api/v1/cronjobs/validate", "application/json", cronJobController.ValidateCronExpression, middlewaresMap, dbService, secureProperties)
+	routesMap["CreateCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs", "application/json", cronJobController.CreateCronJob, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetCronJobRoute"] = NewRoute("GET", "/api/v1/cronjobs/:id", "application/json", cronJobController.GetCronJobByID, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["ListCronJobsRoute"] = NewRoute("GET", "/api/v1/cronjobs", "application/json", cronJobController.ListCronJobs, middlewaresMap, dbService, secureProperties, nil)
+
+	// Define the routes for cron jobs
+	routesMap["UpdateCronJobRoute"] = NewRoute("PUT", "/api/v1/cronjobs/:id", "application/json", cronJobController.UpdateCronJob, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["DeleteCronJobRoute"] = NewRoute("DELETE", "/api/v1/cronjobs/:id", "application/json", cronJobController.DeleteCronJob, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["EnableCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/enable", "application/json", cronJobController.EnableCronJob, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["DisableCronJobRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/disable", "application/json", cronJobController.DisableCronJob, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["ExecuteCronJobManuallyRoute"] = NewRoute("POST", "/api/v1/cronjobs/:id/execute", "application/json", cronJobController.ExecuteCronJobManually, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["ListActiveCronJobsRoute"] = NewRoute("GET", "/api/v1/cronjobs/active", "application/json", cronJobController.ListActiveCronJobs, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["RescheduleCronJobRoute"] = NewRoute("PUT", "/api/v1/cronjobs/:id/reschedule", "application/json", cronJobController.RescheduleCronJob, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["ValidateCronExpressionRoute"] = NewRoute("POST", "/api/v1/cronjobs/validate", "application/json", cronJobController.ValidateCronExpression, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
 }

@@ -40,14 +40,14 @@ func NewMCPLLMRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["GetAllLLMModels"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm", "application/json", mcpLLMController.GetAllLLMModels, middlewaresMap, dbService, secureProperties)
-	routesMap["GetLLMModelByID"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/:id", "application/json", mcpLLMController.GetLLMModelByID, middlewaresMap, dbService, secureProperties)
-	routesMap["CreateLLMModel"] = NewRoute(http.MethodPost, "/api/v1/mcp/llm", "application/json", mcpLLMController.CreateLLMModel, middlewaresMap, dbService, secureProperties)
-	routesMap["UpdateLLMModel"] = NewRoute(http.MethodPut, "/api/v1/mcp/llm/:id", "application/json", mcpLLMController.UpdateLLMModel, middlewaresMap, dbService, secureProperties)
-	routesMap["DeleteLLMModel"] = NewRoute(http.MethodDelete, "/api/v1/mcp/llm/:id", "application/json", mcpLLMController.DeleteLLMModel, middlewaresMap, dbService, secureProperties)
-	routesMap["GetLLMModelsByProvider"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/provider/:provider", "application/json", mcpLLMController.GetLLMModelsByProvider, middlewaresMap, dbService, secureProperties)
-	routesMap["GetLLMModelByProviderAndModel"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/provider/:provider/model/:model", "application/json", mcpLLMController.GetLLMModelByProviderAndModel, middlewaresMap, dbService, secureProperties)
-	routesMap["GetEnabledLLMModels"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/enabled", "application/json", mcpLLMController.GetEnabledLLMModels, middlewaresMap, dbService, secureProperties)
+	routesMap["GetAllLLMModels"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm", "application/json", mcpLLMController.GetAllLLMModels, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetLLMModelByID"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/:id", "application/json", mcpLLMController.GetLLMModelByID, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["CreateLLMModel"] = NewRoute(http.MethodPost, "/api/v1/mcp/llm", "application/json", mcpLLMController.CreateLLMModel, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["UpdateLLMModel"] = NewRoute(http.MethodPut, "/api/v1/mcp/llm/:id", "application/json", mcpLLMController.UpdateLLMModel, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["DeleteLLMModel"] = NewRoute(http.MethodDelete, "/api/v1/mcp/llm/:id", "application/json", mcpLLMController.DeleteLLMModel, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetLLMModelsByProvider"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/provider/:provider", "application/json", mcpLLMController.GetLLMModelsByProvider, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetLLMModelByProviderAndModel"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/provider/:provider/model/:model", "application/json", mcpLLMController.GetLLMModelByProviderAndModel, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetEnabledLLMModels"] = NewRoute(http.MethodGet, "/api/v1/mcp/llm/enabled", "application/json", mcpLLMController.GetEnabledLLMModels, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
 }

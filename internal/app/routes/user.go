@@ -40,10 +40,10 @@ func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["LoginRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-in", "application/json", userController.AuthenticateUser, nil, dbService, nil)
-	routesMap["LogoutRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-out", "application/json", userController.Logout, middlewaresMap, dbService, secureProperties)
-	routesMap["RefreshRoute"] = NewRoute(http.MethodPost, "/api/v1/check", "application/json", userController.RefreshToken, middlewaresMap, dbService, secureProperties)
-	routesMap["RegisterRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-up", "application/json", userController.CreateUser, nil, dbService, nil)
+	routesMap["LoginRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-in", "application/json", userController.AuthenticateUser, nil, dbService, nil, nil)
+	routesMap["LogoutRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-out", "application/json", userController.Logout, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["RefreshRoute"] = NewRoute(http.MethodPost, "/api/v1/check", "application/json", userController.RefreshToken, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["RegisterRoute"] = NewRoute(http.MethodPost, "/api/v1/sign-up", "application/json", userController.CreateUser, nil, dbService, nil, nil)
 
 	return routesMap
 }
@@ -76,10 +76,10 @@ func NewUserRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["GetAllUsers"] = NewRoute(http.MethodGet, "/users", "application/json", userController.GetAllUsers, middlewaresMap, dbService, secureProperties)
-	routesMap["GetUserByID"] = NewRoute(http.MethodGet, "/users/:id", "application/json", userController.GetUserByID, middlewaresMap, dbService, secureProperties)
-	routesMap["UpdateUser"] = NewRoute(http.MethodPut, "/users/:id", "application/json", userController.UpdateUser, middlewaresMap, dbService, secureProperties)
-	routesMap["DeleteUser"] = NewRoute(http.MethodDelete, "/users/:id", "application/json", userController.DeleteUser, middlewaresMap, dbService, secureProperties)
+	routesMap["GetAllUsers"] = NewRoute(http.MethodGet, "/users", "application/json", userController.GetAllUsers, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetUserByID"] = NewRoute(http.MethodGet, "/users/:id", "application/json", userController.GetUserByID, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["UpdateUser"] = NewRoute(http.MethodPut, "/users/:id", "application/json", userController.UpdateUser, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["DeleteUser"] = NewRoute(http.MethodDelete, "/users/:id", "application/json", userController.DeleteUser, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
 }

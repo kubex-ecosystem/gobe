@@ -131,6 +131,7 @@ func SwaggerMain() {
 			nil,
 			dbService,
 			secureProperties,
+			nil,
 		),
 		[]string{"authentication"},
 	)

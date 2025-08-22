@@ -40,15 +40,15 @@ func NewMCPProvidersRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["GetAllProviders"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers", "application/json", mcpProvidersController.GetAllProviders, middlewaresMap, dbService, secureProperties)
-	routesMap["GetProviderByID"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/:id", "application/json", mcpProvidersController.GetProviderByID, middlewaresMap, dbService, secureProperties)
-	routesMap["DeleteProvider"] = NewRoute(http.MethodDelete, "/api/v1/mcp/providers/:id", "application/json", mcpProvidersController.DeleteProvider, middlewaresMap, dbService, secureProperties)
-	routesMap["GetActiveProviders"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/active", "application/json", mcpProvidersController.GetActiveProviders, middlewaresMap, dbService, secureProperties)
-	routesMap["CreateProvider"] = NewRoute(http.MethodPost, "/api/v1/mcp/providers", "application/json", mcpProvidersController.CreateProvider, middlewaresMap, dbService, secureProperties)
-	routesMap["UpdateProvider"] = NewRoute(http.MethodPut, "/api/v1/mcp/providers/:id", "application/json", mcpProvidersController.UpdateProvider, middlewaresMap, dbService, secureProperties)
-	routesMap["GetProvidersByProvider"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/provider/:provider", "application/json", mcpProvidersController.GetProvidersByProvider, middlewaresMap, dbService, secureProperties)
-	routesMap["GetProvidersByOrgOrGroup"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/org/:org_or_group", "application/json", mcpProvidersController.GetProvidersByOrgOrGroup, middlewaresMap, dbService, secureProperties)
-	routesMap["UpsertProviderByNameAndOrg"] = NewRoute(http.MethodPost, "/api/v1/mcp/providers/upsert", "application/json", mcpProvidersController.UpsertProviderByNameAndOrg, middlewaresMap, dbService, secureProperties)
+	routesMap["GetAllProviders"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers", "application/json", mcpProvidersController.GetAllProviders, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetProviderByID"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/:id", "application/json", mcpProvidersController.GetProviderByID, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["DeleteProvider"] = NewRoute(http.MethodDelete, "/api/v1/mcp/providers/:id", "application/json", mcpProvidersController.DeleteProvider, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetActiveProviders"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/active", "application/json", mcpProvidersController.GetActiveProviders, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["CreateProvider"] = NewRoute(http.MethodPost, "/api/v1/mcp/providers", "application/json", mcpProvidersController.CreateProvider, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["UpdateProvider"] = NewRoute(http.MethodPut, "/api/v1/mcp/providers/:id", "application/json", mcpProvidersController.UpdateProvider, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetProvidersByProvider"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/provider/:provider", "application/json", mcpProvidersController.GetProvidersByProvider, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetProvidersByOrgOrGroup"] = NewRoute(http.MethodGet, "/api/v1/mcp/providers/org/:org_or_group", "application/json", mcpProvidersController.GetProvidersByOrgOrGroup, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["UpsertProviderByNameAndOrg"] = NewRoute(http.MethodPost, "/api/v1/mcp/providers/upsert", "application/json", mcpProvidersController.UpsertProviderByNameAndOrg, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
 }

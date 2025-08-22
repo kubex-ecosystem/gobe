@@ -41,11 +41,11 @@ func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	routesMap["GetProductsRoute"] = NewRoute(http.MethodGet, "/api/v1/products", "application/json", gin.WrapF(productController.GetAllProducts), middlewaresMap, dbService, secureProperties)
-	routesMap["GetProductRoute"] = NewRoute(http.MethodGet, "/api/v1/products/:id", "application/json", gin.WrapF(productController.GetProductByID), middlewaresMap, dbService, secureProperties)
-	routesMap["CreateProductRoute"] = NewRoute(http.MethodPost, "/api/v1/products", "application/json", gin.WrapF(productController.CreateProduct), middlewaresMap, dbService, secureProperties)
-	routesMap["UpdateProductRoute"] = NewRoute(http.MethodPut, "/api/v1/products/:id", "application/json", gin.WrapF(productController.UpdateProduct), middlewaresMap, dbService, secureProperties)
-	routesMap["DeleteProductRoute"] = NewRoute(http.MethodDelete, "/api/v1/products/:id", "application/json", gin.WrapF(productController.DeleteProduct), middlewaresMap, dbService, secureProperties)
+	routesMap["GetProductsRoute"] = NewRoute(http.MethodGet, "/api/v1/products", "application/json", gin.WrapF(productController.GetAllProducts), middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetProductRoute"] = NewRoute(http.MethodGet, "/api/v1/products/:id", "application/json", gin.WrapF(productController.GetProductByID), middlewaresMap, dbService, secureProperties, nil)
+	routesMap["CreateProductRoute"] = NewRoute(http.MethodPost, "/api/v1/products", "application/json", gin.WrapF(productController.CreateProduct), middlewaresMap, dbService, secureProperties, nil)
+	routesMap["UpdateProductRoute"] = NewRoute(http.MethodPut, "/api/v1/products/:id", "application/json", gin.WrapF(productController.UpdateProduct), middlewaresMap, dbService, secureProperties, nil)
+	routesMap["DeleteProductRoute"] = NewRoute(http.MethodDelete, "/api/v1/products/:id", "application/json", gin.WrapF(productController.DeleteProduct), middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
 }

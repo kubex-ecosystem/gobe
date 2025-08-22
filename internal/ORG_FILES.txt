@@ -1,0 +1,64 @@
+./internal
+├── app
+│   ├── controllers
+│   │   ├── admin
+│   │   │   ├── cron
+│   │   │   ├── federation
+│   │   │   └── webhooks
+│   │   ├── apps
+│   │   │   ├── chatbots
+│   │   │   ├── contacts
+│   │   │   ├── customers
+│   │   │   └── products
+│   │   └── mcp
+│   │       ├── ghbexz
+│   │       ├── llm
+│   │       ├── preferences
+│   │       ├── providers
+│   │       ├── system
+│   │       └── tasks
+│   ├── middlewares
+│   ├── routes
+│   └── security
+│       ├── authentication
+│       ├── certificates
+│       ├── crypto
+│       ├── external
+│       ├── interfaces
+│       ├── models
+│       └── storage
+├── bridges
+│   ├── gdbasez
+│   └── ghbexz
+├── commons
+├── config
+├── module
+│   ├── info
+│   ├── logger
+│   ├── version
+├── observers
+│   ├── approval
+│   └── events
+├── proto
+│   ├── interfaces
+│   └── types
+├── proxy
+│   ├── gobe
+│   └── hub
+├── services
+│   ├── chatbot
+│   │   ├── discord
+│   │   ├── telegram
+│   │   └── whatsapp
+│   ├── llm
+│   ├── mcp
+│   │   ├── hooks
+│   │   └── system
+│   └── scheduler
+│       ├── cron
+│       ├── manager
+│       ├── monitor
+│       ├── services
+│       └── types
+├── sockets
+└── utils

@@ -59,6 +59,7 @@ func NewSwaggerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		nil,
 		dbService,
 		secureProperties,
+		nil,
 	)
 
 	return routesMap

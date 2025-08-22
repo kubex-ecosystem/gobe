@@ -49,11 +49,11 @@ func NewCustomerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitizeBody"] = false
 
 	routes := map[string]ar.IRoute{
-		"GetAllCustomers": NewRoute(http.MethodGet, "/api/v1/customers", "application/json", gin.WrapF(customerController.GetAllCustomers), nil, dbService, secureProperties),
-		"GetCustomerByID": NewRoute(http.MethodGet, "/api/v1/customers/:id", "application/json", gin.WrapF(customerController.GetCustomerByID), nil, dbService, secureProperties),
-		"CreateCustomer":  NewRoute(http.MethodPost, "/api/v1/customers", "application/json", gin.WrapF(customerController.CreateCustomer), nil, dbService, secureProperties),
-		"UpdateCustomer":  NewRoute(http.MethodPut, "/api/v1/customers/:id", "application/json", gin.WrapF(customerController.UpdateCustomer), nil, dbService, secureProperties),
-		"DeleteCustomer":  NewRoute(http.MethodDelete, "/api/v1/customers/:id", "application/json", gin.WrapF(customerController.DeleteCustomer), nil, dbService, secureProperties),
+		"GetAllCustomers": NewRoute(http.MethodGet, "/api/v1/customers", "application/json", gin.WrapF(customerController.GetAllCustomers), nil, dbService, secureProperties, nil),
+		"GetCustomerByID": NewRoute(http.MethodGet, "/api/v1/customers/:id", "application/json", gin.WrapF(customerController.GetCustomerByID), nil, dbService, secureProperties, nil),
+		"CreateCustomer":  NewRoute(http.MethodPost, "/api/v1/customers", "application/json", gin.WrapF(customerController.CreateCustomer), nil, dbService, secureProperties, nil),
+		"UpdateCustomer":  NewRoute(http.MethodPut, "/api/v1/customers/:id", "application/json", gin.WrapF(customerController.UpdateCustomer), nil, dbService, secureProperties, nil),
+		"DeleteCustomer":  NewRoute(http.MethodDelete, "/api/v1/customers/:id", "application/json", gin.WrapF(customerController.DeleteCustomer), nil, dbService, secureProperties, nil),
 	}
 	return routes
 }

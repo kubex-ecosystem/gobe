@@ -35,9 +35,10 @@ type Route struct {
 	dbService   is.DBService
 	handler     gin.HandlerFunc
 	middlewares map[string]gin.HandlerFunc
+	metadata    map[string]any
 }
 
-func newRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbService gdbf.DBService, secureProperties map[string]bool) *Route {
+func newRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbService gdbf.DBService, secureProperties map[string]bool, metadata map[string]any) *Route {
 	if len(secureProperties) == 0 {
 		secureProperties = make(map[string]bool)
 		secureProperties["secure"] = false
@@ -57,17 +58,18 @@ func newRoute(method, path, contentType string, handler gin.HandlerFunc, middlew
 		dbService:        dbService,
 		handler:          handler,
 		middlewares:      middlewares,
+		metadata:         metadata,
 	}
 }
 
-func NewRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbConfig gdbf.DBService, secureProperties map[string]bool) ci.IRoute {
+func NewRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbConfig gdbf.DBService, secureProperties map[string]bool, metadata map[string]any) ci.IRoute {
 	if len(secureProperties) == 0 {
 		secureProperties = make(map[string]bool)
 		secureProperties["secure"] = false
 		secureProperties["validateAndSanitize"] = false
 		secureProperties["validateAndSanitizeBody"] = false
 	}
-	return newRoute(method, path, contentType, handler, middlewares, dbConfig, secureProperties)
+	return newRoute(method, path, contentType, handler, middlewares, dbConfig, secureProperties, metadata)
 }
 
 func (r *Route) Method() string                          { return r.properties["method"] }
