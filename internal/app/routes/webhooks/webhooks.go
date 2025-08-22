@@ -1,4 +1,4 @@
-package routes
+package webhooks
 
 import (
 	"fmt"

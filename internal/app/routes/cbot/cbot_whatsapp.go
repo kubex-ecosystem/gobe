@@ -1,4 +1,4 @@
-package routes
+package cbot
 
 import (
 	"net/http"

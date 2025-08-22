@@ -1,5 +1,5 @@
 // Package routes provides the implementation of the IRoute interface for managing routes in a web application.
-package routes
+package proto
 
 import (
 	"time"

@@ -1,4 +1,4 @@
-package routes
+package mcp
 
 import (
 	"net/http"
