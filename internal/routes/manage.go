@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	"github.com/rafa-mori/gobe/internal/middlewares"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 )
 

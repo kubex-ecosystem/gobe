@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	c "github.com/rafa-mori/gobe/internal/controllers/cron"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	c "github.com/rafa-mori/gobe/internal/controllers/admin/cron"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 )
 

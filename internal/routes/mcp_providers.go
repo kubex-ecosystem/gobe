@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	mcp_providers_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/providers"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 type MCPProvidersRoutes struct {

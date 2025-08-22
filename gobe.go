@@ -16,11 +16,11 @@ import (
 	"github.com/rafa-mori/gdbase/types"
 	ut "github.com/rafa-mori/gdbase/utils"
 	crp "github.com/rafa-mori/gobe/factory/security"
+	is "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
 	cm "github.com/rafa-mori/gobe/internal/common"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	"github.com/rafa-mori/gobe/internal/routes"
 	crt "github.com/rafa-mori/gobe/internal/security/certificates"
-	is "github.com/rafa-mori/gobe/internal/services"
 	t "github.com/rafa-mori/gobe/internal/types"
 	l "github.com/rafa-mori/logz"
 

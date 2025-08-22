@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	whk "github.com/rafa-mori/gdbase/factory/models"
 	t "github.com/rafa-mori/gdbase/types"
-	"github.com/rafa-mori/gobe/internal/controllers/webhooks"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	"github.com/rafa-mori/gobe/internal/controllers/admin/webhooks"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )

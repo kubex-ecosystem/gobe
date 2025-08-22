@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/rafa-mori/gobe/internal/config"
-	whatsapp_controller "github.com/rafa-mori/gobe/internal/controllers/whatsapp"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	whatsapp_controller "github.com/rafa-mori/gobe/internal/controllers/apps/chatbots/whatsapp"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	"github.com/rafa-mori/gobe/internal/whatsapp"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	"github.com/rafa-mori/gobe/internal/services/chatbot/whatsapp"
 )
 
 // NewWhatsAppRoutes registers WhatsApp related endpoints.

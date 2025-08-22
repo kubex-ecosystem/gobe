@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	mcp_preferences_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/preferences"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 type MCPPreferencesRoutes struct {

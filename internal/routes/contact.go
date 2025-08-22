@@ -2,8 +2,8 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	contacts "github.com/rafa-mori/gobe/internal/controllers/contacts"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	contacts "github.com/rafa-mori/gobe/internal/controllers/apps/contacts"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 
 	"net/http"

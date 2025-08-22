@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	mcp_ghbex_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/ghbex"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	mcp_ghbex_controller "github.com/rafa-mori/gobe/internal/controllers/mcp/ghbexz"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 type MCPGHbexRoutes struct {

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/rafa-mori/gobe/internal/hub"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	swaggerfiles "github.com/swaggo/files"

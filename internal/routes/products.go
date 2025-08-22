@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	products_controller "github.com/rafa-mori/gobe/internal/controllers/products"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	products_controller "github.com/rafa-mori/gobe/internal/controllers/apps/products"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 )
 

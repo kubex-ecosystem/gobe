@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	t "github.com/rafa-mori/gobe/internal/types"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 )
 
 type RequestTracerMiddleware struct {

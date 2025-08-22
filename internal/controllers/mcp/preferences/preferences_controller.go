@@ -6,11 +6,11 @@ import (
 
 	models "github.com/rafa-mori/gdbase/factory/models/mcp"
 	t "github.com/rafa-mori/gdbase/types"
+	svc "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	svc "github.com/rafa-mori/gobe/internal/services"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/types"
+	"github.com/rafa-mori/gobe/internal/proto/types"
 	"gorm.io/gorm"
 )
 

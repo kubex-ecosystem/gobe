@@ -10,15 +10,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/rafa-mori/gobe/internal/approval"
 	"github.com/rafa-mori/gobe/internal/config"
-	"github.com/rafa-mori/gobe/internal/discord"
-	"github.com/rafa-mori/gobe/internal/events"
 	"github.com/rafa-mori/gobe/internal/gobe"
 	"github.com/rafa-mori/gobe/internal/gobe_ctl"
-	"github.com/rafa-mori/gobe/internal/llm"
-	"github.com/rafa-mori/gobe/internal/mcp"
-	"github.com/rafa-mori/gobe/internal/zmq"
+	"github.com/rafa-mori/gobe/internal/observers/approval"
+	"github.com/rafa-mori/gobe/internal/observers/events"
+	"github.com/rafa-mori/gobe/internal/services/chatbot/discord"
+	"github.com/rafa-mori/gobe/internal/services/llm"
+	"github.com/rafa-mori/gobe/internal/services/mcp"
+	"github.com/rafa-mori/gobe/internal/services/zmq"
 )
 
 type DiscordMCPHub struct {

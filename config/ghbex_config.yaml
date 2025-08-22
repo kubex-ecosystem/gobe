@@ -1,0 +1,227 @@
+runtime:
+  dry_run: true # SEMPRE começamos com dry_run!
+  report_dir: reports
+
+server:
+  addr: ":8088"
+
+github:
+  auth:
+    kind: "pat"
+    token: "${GITHUB_PAT_TOKEN}"
+  repos:
+    - owner: "rafa-mori"
+      name: "gastype"
+      rules:
+        runs:
+          max_age_days: 30
+          keep_success_last: 5
+          only_workflows: []
+        artifacts:
+          max_age_days: 7
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false # Começamos com false pra testar
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 30
+          monitor_prs: true
+          monitor_issues: true
+    - owner: "rafa-mori"
+      name: "xtui"
+      rules:
+        runs:
+          max_age_days: 30
+          keep_success_last: 5
+          only_workflows: []
+        artifacts:
+          max_age_days: 7
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 30
+          monitor_prs: true
+          monitor_issues: true
+    - owner: "rafa-mori"
+      name: "logz"
+      rules:
+        runs:
+          max_age_days: 30
+          keep_success_last: 5
+          only_workflows: []
+        artifacts:
+          max_age_days: 7
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 30
+          monitor_prs: true
+          monitor_issues: true
+
+    # PROJETOS DIVERTIDOS/PORTFÓLIO
+    - owner: "rafa-mori"
+      name: "mini_games"
+      rules:
+        runs:
+          max_age_days: 60 # Mais tempo para projetos de portfólio
+          keep_success_last: 3
+          only_workflows: []
+        artifacts:
+          max_age_days: 14
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 90
+
+    # PROJETOS PUBLICADOS (VSCode Marketplace, PyPI)
+    - owner: "rafa-mori"
+      name: "byte_sleuth"
+      rules:
+        runs:
+          max_age_days: 45 # Projetos publicados - mais conservador
+          keep_success_last: 10
+          only_workflows: []
+        artifacts:
+          max_age_days: 14 # Artifacts podem ser importantes para releases
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 60
+          monitor_prs: true
+          monitor_issues: true
+
+    - owner: "rafa-mori"
+      name: "formatpilot"
+      rules:
+        runs:
+          max_age_days: 45
+          keep_success_last: 10
+          only_workflows: []
+        artifacts:
+          max_age_days: 14
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 60
+          monitor_prs: true
+          monitor_issues: true
+
+    # PROJETOS PAUSADOS MAS QUE VÃO VOLTAR
+    - owner: "rafa-mori"
+      name: "selfrestart"
+      rules:
+        runs:
+          max_age_days: 90 # Mais tempo para projetos pausados
+          keep_success_last: 3
+          only_workflows: []
+        artifacts:
+          max_age_days: 30
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 180
+          monitor_prs: true
+          monitor_issues: true
+
+    - owner: "rafa-mori"
+      name: "gocrafter"
+      rules:
+        runs:
+          max_age_days: 90
+          keep_success_last: 3
+          only_workflows: []
+        artifacts:
+          max_age_days: 30
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 180
+          monitor_prs: true
+          monitor_issues: true
+
+    # PROJETOS FUNDAMENTAIS/PROMISSORES
+    - owner: "rafa-mori"
+      name: "golife"
+      rules:
+        runs:
+          max_age_days: 30 # Projetos fundamentais - limpeza regular
+          keep_success_last: 8
+          only_workflows: []
+        artifacts:
+          max_age_days: 14
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 60
+          monitor_prs: true
+          monitor_issues: true
+
+    - owner: "rafa-mori"
+      name: "getl"
+      rules:
+        runs:
+          max_age_days: 30
+          keep_success_last: 8
+          only_workflows: []
+        artifacts:
+          max_age_days: 14
+        releases:
+          delete_drafts: true
+        security:
+          rotate_ssh_keys: false
+          remove_old_keys: false
+          key_pattern: "ghbex-auto"
+        monitoring:
+          check_inactivity: true
+          inactive_days_threshold: 60
+          monitor_prs: true
+          monitor_issues: true
+
+notifiers:
+  - type: "stdout"
+  # Uncomment for Discord notifications
+  # - type: "discord"
+  #   webhook: "${DISCORD_WEBHOOK_URL}"

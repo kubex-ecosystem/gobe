@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/controllers/users"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	"github.com/rafa-mori/gobe/internal/controllers/admin/federation/users"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 
 	"net/http"
 )

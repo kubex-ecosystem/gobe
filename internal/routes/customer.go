@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	customers_controller "github.com/rafa-mori/gobe/internal/controllers/customers"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	customers_controller "github.com/rafa-mori/gobe/internal/controllers/apps/customers"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 type CustomerRoutes struct {

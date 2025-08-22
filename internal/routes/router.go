@@ -9,10 +9,10 @@ import (
 
 	gdbf "github.com/rafa-mori/gdbase/factory"
 	"github.com/rafa-mori/gdbase/types"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	mdw "github.com/rafa-mori/gobe/internal/middlewares"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	t "github.com/rafa-mori/gobe/internal/types"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 	l "github.com/rafa-mori/logz"
 	"golang.org/x/time/rate"
 

@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/rafa-mori/gobe/internal/config"
-	telegram_controller "github.com/rafa-mori/gobe/internal/controllers/telegram"
-	ar "github.com/rafa-mori/gobe/internal/interfaces"
+	telegram_controller "github.com/rafa-mori/gobe/internal/controllers/apps/chatbots/telegram"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	"github.com/rafa-mori/gobe/internal/telegram"
+	ar "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	"github.com/rafa-mori/gobe/internal/services/chatbot/telegram"
 )
 
 // NewTelegramRoutes registers Telegram related endpoints.

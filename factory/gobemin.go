@@ -7,9 +7,9 @@ import (
 
 	t "github.com/rafa-mori/gdbase/types"
 	gb "github.com/rafa-mori/gobe"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
+	s "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	s "github.com/rafa-mori/gobe/internal/services"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )

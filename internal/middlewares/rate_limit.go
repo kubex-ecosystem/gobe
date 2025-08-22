@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	srv "github.com/rafa-mori/gobe/internal/services"
+	srv "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
 )
 
 type RateLimitMiddleware struct {

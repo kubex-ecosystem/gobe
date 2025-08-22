@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
-	t "github.com/rafa-mori/gobe/internal/types"
 	"github.com/zalando/go-keyring"
 )
 

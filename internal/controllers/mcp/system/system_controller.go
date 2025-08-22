@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/mcp/hooks"
-	"github.com/rafa-mori/gobe/internal/mcp/system"
+	services "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
 	"github.com/rafa-mori/gobe/internal/module/logger"
-	"github.com/rafa-mori/gobe/internal/services"
+	"github.com/rafa-mori/gobe/internal/services/mcp/hooks"
+	"github.com/rafa-mori/gobe/internal/services/mcp/system"
 	"gorm.io/gorm"
 
 	l "github.com/rafa-mori/logz"

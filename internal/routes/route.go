@@ -6,9 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	gdbf "github.com/rafa-mori/gdbase/factory"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	is "github.com/rafa-mori/gobe/internal/services"
-	t "github.com/rafa-mori/gobe/internal/types"
+	is "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
+	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
+	t "github.com/rafa-mori/gobe/internal/proto/types"
 )
 
 // DBConfig implements interfaces.IRoute.
