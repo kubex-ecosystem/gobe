@@ -34,7 +34,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/routes"
+	"github.com/rafa-mori/gobe/internal/app/routes"
 
 	"github.com/rafa-mori/gobe/internal/module/logger"
 	"github.com/rafa-mori/gobe/internal/proto/types"

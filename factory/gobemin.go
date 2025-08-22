@@ -1,3 +1,4 @@
+// Package factory fornece funções para criar instâncias do GoBE e seus componentes.
 package factory
 
 import (

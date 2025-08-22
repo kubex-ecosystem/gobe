@@ -19,10 +19,10 @@ import (
 	"syscall"
 	"time"
 
+	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
+	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	ci "github.com/rafa-mori/gobe/internal/proto/interfaces"
-	crp "github.com/rafa-mori/gobe/internal/security/crypto"
-	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
 	l "github.com/rafa-mori/logz"
 )
 

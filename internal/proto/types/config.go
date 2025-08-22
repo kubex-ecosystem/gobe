@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	crp "github.com/rafa-mori/gobe/internal/security/crypto"
+	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
 
 	cm "github.com/rafa-mori/gobe/internal/common"
 	gl "github.com/rafa-mori/gobe/internal/module/logger"

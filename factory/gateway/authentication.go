@@ -1,8 +1,8 @@
 package gateway
 
 import (
-	ii "github.com/rafa-mori/gobe/internal/security/authentication"
-	fsi "github.com/rafa-mori/gobe/internal/security/certificates"
+	ii "github.com/rafa-mori/gobe/internal/app/security/authentication"
+	fsi "github.com/rafa-mori/gobe/internal/app/security/certificates"
 )
 
 type AuthManager = ii.AuthManager
