@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -549,19 +548,19 @@ func isDefaultRules(rules ghbexz.GHbexRules) bool {
 		rules.GetArtifactsRule().GetMaxAgeDays() <= 0
 }
 
-// sortRoutes sorts the routes by their path in descending order
-func sortRouteMap(routes map[string]http.HandlerFunc) map[string]http.HandlerFunc {
-	keys := make([]string, 0, len(routes))
-	for k := range routes {
-		keys = append(keys, k)
-	}
+// // sortRoutes sorts the routes by their path in descending order
+// func sortRouteMap(routes map[string]http.HandlerFunc) map[string]http.HandlerFunc {
+// 	keys := make([]string, 0, len(routes))
+// 	for k := range routes {
+// 		keys = append(keys, k)
+// 	}
 
-	sort.Sort(sort.Reverse(sort.StringSlice(keys)))
+// 	sort.Sort(sort.Reverse(sort.StringSlice(keys)))
 
-	// Create a new sorted map
-	sorted := make(map[string]http.HandlerFunc)
-	for _, k := range keys {
-		sorted[k] = routes[k]
-	}
-	return sorted
-}
+// 	// Create a new sorted map
+// 	sorted := make(map[string]http.HandlerFunc)
+// 	for _, k := range keys {
+// 		sorted[k] = routes[k]
+// 	}
+// 	return sorted
+// }
