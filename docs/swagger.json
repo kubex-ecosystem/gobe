@@ -16,7 +16,7 @@
         "version": "1.0"
     },
     "host": "localhost:8080",
-    "basePath": "/",
+    "basePath": "/swagger",
     "paths": {
         "/contact": {
             "get": {
@@ -560,6 +560,29 @@
                 }
             }
         },
+        "/discord": {
+            "get": {
+                "description": "Handles Discord Application/Activity requests",
+                "consumes": [
+                    "text/html"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "discord"
+                ],
+                "summary": "Discord App Handler",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/discord/approvals": {
             "get": {
                 "description": "Retrieves a list of pending approval requests",
@@ -709,6 +732,29 @@
                     "discord"
                 ],
                 "summary": "Handle Discord OAuth2 token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/discord/ping": {
+            "get": {
+                "description": "Pings the Discord adapter to check its status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discord"
+                ],
+                "summary": "Ping Discord adapter",
                 "responses": {
                     "200": {
                         "description": "OK",

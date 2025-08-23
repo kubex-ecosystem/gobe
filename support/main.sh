@@ -90,7 +90,7 @@ __source_script_if_needed() {
   local _script_path="${2:-}"
   # shellcheck disable=SC2065
   if test -z "$(declare -f "${_check_declare}")" >/dev/null; then
-    # shellcheck source=/dev/null 
+    # shellcheck source=/dev/null
     source "${_script_path}" || {
       echo "Error: Could not source ${_script_path}. Please ensure it exists." >&2
       return 1
@@ -273,26 +273,26 @@ __main() {
         return 1
       fi
 
-      if ! go build -o "${_ROOT_DIR}/bin/${_APP_NAME}-docs" "${_ROOT_DIR}/cmd/swagger/main.go"; then
+      if ! go build -o "${_ROOT_DIR}/dist/${_APP_NAME}-docs" "${_ROOT_DIR}/cmd/swagger/main.go"; then
         log error "Failed to build documentation binary." true
         return 1
       fi
-      chmod +x "${_ROOT_DIR}/bin/${_APP_NAME}-docs" || {
+      chmod +x "${_ROOT_DIR}/dist/${_APP_NAME}-docs" || {
         log error "Failed to make documentation binary executable." true
         return 1
       }
-      log success "Documentation binary built successfully at ${_ROOT_DIR}/bin/${_APP_NAME}-docs" true
+      log success "Documentation binary built successfully at ${_ROOT_DIR}/dist/${_APP_NAME}-docs" true
       ;;
     serve-docs|SERVE-DOCS|-sdc|-SDC)
-      if [[ -f "${_ROOT_DIR}/bin/${_APP_NAME}-docs" ]]; then
+      if [[ -f "${_ROOT_DIR}/dist/${_APP_NAME}-docs" ]]; then
         log info "Starting documentation server..."
-        "${_ROOT_DIR}/bin/${_APP_NAME}-docs" || {
+        "${_ROOT_DIR}/dist/${_APP_NAME}-docs" || {
           log error "Failed to start documentation server." true
           return 1
         }
         log success "Documentation server successfully ran at http://localhost:8080/swagger/index.html" true
       else
-        log error "Documentation binary not found: ${_ROOT_DIR}/bin/${_APP_NAME}-docs" true
+        log error "Documentation binary not found: ${_ROOT_DIR}/dist/${_APP_NAME}-docs" true
         return 1
       fi
       ;;

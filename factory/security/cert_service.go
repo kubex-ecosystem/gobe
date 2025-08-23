@@ -1,8 +1,8 @@
 package security
 
 import (
-	crt "github.com/rafa-mori/gobe/internal/security/certificates"
-	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
+	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
+	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
 )
 
 type CertService interface{ sci.ICertService }

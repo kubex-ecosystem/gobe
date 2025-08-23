@@ -566,6 +566,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/discord": {
+            "get": {
+                "description": "Handles Discord Application/Activity requests",
+                "consumes": [
+                    "text/html"
+                ],
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "discord"
+                ],
+                "summary": "Discord App Handler",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/discord/approvals": {
             "get": {
                 "description": "Retrieves a list of pending approval requests",
@@ -715,6 +738,29 @@ const docTemplate = `{
                     "discord"
                 ],
                 "summary": "Handle Discord OAuth2 token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/discord/ping": {
+            "get": {
+                "description": "Pings the Discord adapter to check its status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discord"
+                ],
+                "summary": "Ping Discord adapter",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1782,7 +1828,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-	BasePath:         "/",
+	BasePath:         "/swagger",
 	Schemes:          []string{},
 	Title:            "GoBE API",
 	Description:      "GoBE is a powerful backend, MCP, and API server with a comprehensive route system following GoBE patterns.",

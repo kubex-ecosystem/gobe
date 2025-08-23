@@ -26,27 +26,27 @@ func NewEntityRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
         return nil
     }
     rtl := *rtr
-    
+
     dbService := rtl.GetDatabaseService()
     dbGorm, err := dbService.GetDB()
     if err != nil {
         gl.Log("error", "Failed to get DB from service", err)
         return nil
     }
-    
+
     entityController := entity.NewController(dbGorm)
     routesMap := make(map[string]ar.IRoute)
     middlewaresMap := make(map[string]any)
-    
+
     routesMap["RouteKey"] = NewRoute(
-        http.MethodGet, 
-        "/path", 
-        "application/json", 
-        entityController.Handler, 
-        middlewaresMap, 
+        http.MethodGet,
+        "/path",
+        "application/json",
+        entityController.Handler,
+        middlewaresMap,
         dbService,
     )
-    
+
     return routesMap
 }
 ```
@@ -275,7 +275,7 @@ if err != nil {
 // For models with JSONB fields
 type EntityModel struct {
     ID        string    `json:"id" gorm:"primary_key"`
-    Config    t.JsonB   `json:"config" gorm:"type:jsonb"`
+    Config    t.JSONB   `json:"config" gorm:"type:jsonb"`
     // ... other fields
 }
 
@@ -354,7 +354,7 @@ func NewMCPEntityRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
         l.ErrorCtx("Router is nil for MCPEntityRoute", nil)
         return nil
     }
-    
+
     rtl := *rtr
     dbService := rtl.GetDatabaseService()
     dbGorm, err := dbService.GetDB()
@@ -362,7 +362,7 @@ func NewMCPEntityRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
         gl.Log("error", "Failed to get DB from service", err)
         return nil
     }
-    
+
     entityController := entity_controller.NewEntityController(dbGorm)
     routesMap := make(map[string]ar.IRoute)
     middlewaresMap := make(map[string]any)
@@ -391,7 +391,7 @@ type IEntityRepo interface {
     FindAll(where ...interface{}) ([]IEntityModel, error)
     Update(e IEntityModel) (IEntityModel, error)
     Delete(id string) error
-    
+
     // Utility methods
     Close() error
     TableName() string
@@ -414,7 +414,7 @@ type IEntityService interface {
 Use the global logger with appropriate context:
 
 ```go
-import gl "github.com/rafa-mori/gobe/logger"
+import gl "github.com/rafa-mori/gobe/internal/module/logger"
 
 // Error logging
 gl.Log("error", "Operation failed", err)
@@ -502,7 +502,7 @@ Remember: This project prioritizes security, modularity, and clean interfaces. A
 
 Use Go Modules for dependency management. Keep `go.mod` and `go.sum` clean and minimal. Avoid indirect dependencies when possible.
 
-Organize projects using idiomatic structure: `cmd/`, `cmd/cli/`, `internal/`, `internal/types`, `internal/interfaces`, `api/`, `support/`, `support/instructions`, `tests/`.  
+Organize projects using idiomatic structure: `cmd/`, `cmd/cli/`, `internal/`, `internal/types`, `internal/interfaces`, `api/`, `support/`, `support/instructions`, `tests/`.
 
 Place the main CLI entrypoint in `cmd/main.go` and the library entrypoint in the root with the package at the same name of project.
 

@@ -1,3 +1,4 @@
+// Package gobe provides the core functionality for the GoBE framework.
 package gobe
 
 import (
@@ -16,15 +17,15 @@ import (
 	"github.com/rafa-mori/gdbase/types"
 	ut "github.com/rafa-mori/gdbase/utils"
 	crp "github.com/rafa-mori/gobe/factory/security"
-	cm "github.com/rafa-mori/gobe/internal/common"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	"github.com/rafa-mori/gobe/internal/routes"
-	crt "github.com/rafa-mori/gobe/internal/security/certificates"
-	is "github.com/rafa-mori/gobe/internal/services"
-	t "github.com/rafa-mori/gobe/internal/types"
+	rts "github.com/rafa-mori/gobe/internal/app/router"
+	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
+	is "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
+	cm "github.com/rafa-mori/gobe/internal/commons"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	t "github.com/rafa-mori/gobe/internal/contracts/types"
 	l "github.com/rafa-mori/logz"
 
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type GoBECertData struct {
@@ -369,7 +370,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 
 	//gobeminConfig.Set
 
-	router, err := routes.NewRouter(gobeminConfig, dbService, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	router, err := rts.NewRouter(gobeminConfig, dbService, g.Logger, g.environment.Getenv("DEBUG") == "true")
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("Error initializing router: %v", err))
 		return nil, err

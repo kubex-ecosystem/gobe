@@ -1,8 +1,8 @@
 package utils
 
 import (
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	gl "github.com/rafa-mori/gobe/logger"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 
 	"fmt"
 	"reflect"
