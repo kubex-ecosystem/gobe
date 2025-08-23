@@ -45,7 +45,7 @@ require (
 	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20250821153705-5981dea3221d // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
-	github.com/rafa-mori/grompt v1.0.2 // indirect
+	github.com/rafa-mori/grompt v1.0.4 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
@@ -130,7 +130,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pebbe/zmq4 v1.4.0
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rafa-mori/ghbex v0.0.0-00010101000000-000000000000
+	github.com/rafa-mori/ghbex v0.0.1
 	github.com/rafa-mori/xtui v1.3.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
@@ -167,10 +167,4 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
-)
-
-replace (
-	// github.com/rafa-mori/gdbase => ../gdbase
-	github.com/rafa-mori/ghbex => ../ghbex
-	github.com/rafa-mori/grompt => ../grompt
 )
