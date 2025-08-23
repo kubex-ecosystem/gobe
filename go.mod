@@ -169,8 +169,8 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
-replace (
-	// github.com/rafa-mori/gdbase => ../gdbase
-	github.com/rafa-mori/ghbex => ../ghbex
-	github.com/rafa-mori/grompt => ../grompt
-)
+// replace (
+// 	// github.com/rafa-mori/gdbase => ../gdbase
+// 	github.com/rafa-mori/ghbex => ../ghbex
+// 	github.com/rafa-mori/grompt => ../grompt
+// )
