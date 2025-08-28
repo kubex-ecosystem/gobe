@@ -11,8 +11,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hyperledger/fabric-contract-api-go v1.2.2
 	github.com/pelletier/go-toml/v2 v2.2.4
-	github.com/rafa-mori/gdbase v1.2.4
-	github.com/rafa-mori/logz v1.4.0
+	github.com/rafa-mori/gdbase v1.2.1
+	github.com/rafa-mori/logz v1.3.0
 	github.com/shirou/gopsutil/v4 v4.25.7
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
@@ -168,3 +168,5 @@ require (
 	gorm.io/driver/mysql v1.6.0 // indirect
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
+
+replace github.com/rafa-mori/gdbase => ../../gdbase

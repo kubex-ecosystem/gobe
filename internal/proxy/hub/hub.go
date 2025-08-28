@@ -226,7 +226,6 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 	}
 }
 
-// intelligentTriage - Sistema de triagem inteligente para decidir se e como processar mensagens
 func (h *DiscordMCPHub) intelligentTriage(msg discord.Message) (shouldProcess bool, processType string) {
 	content := strings.ToLower(strings.TrimSpace(msg.Content))
 
@@ -469,7 +468,6 @@ func (h *DiscordMCPHub) createTaskFromMessage(msg discord.Message, analysis *llm
 	})
 }
 
-// 🚀 AUTOMAÇÃO REAL: Processa comandos de sistema
 func (h *DiscordMCPHub) processSystemCommandMessage(ctx context.Context, msg discord.Message) error {
 	log.Printf("🔧 Processando comando de sistema: %s", msg.Content)
 
@@ -607,7 +605,6 @@ func (h *DiscordMCPHub) executeMCPTool(ctx context.Context, toolName string, par
 	}
 }
 
-// Implementação direta de System Info
 func (h *DiscordMCPHub) executeSystemInfo(params map[string]interface{}) (string, error) {
 	infoType, _ := params["info_type"].(string)
 	// userID, _ := params["user_id"].(string)
@@ -632,7 +629,6 @@ func (h *DiscordMCPHub) executeSystemInfo(params map[string]interface{}) (string
 	}
 }
 
-// Implementação direta de Shell Command (MUITO CUIDADOSA!)
 func (h *DiscordMCPHub) executeShellCommand(params map[string]interface{}) (string, error) {
 	command, _ := params["command"].(string)
 	// userID, _ := params["user_id"].(string)
@@ -662,7 +658,6 @@ func (h *DiscordMCPHub) executeShellCommand(params map[string]interface{}) (stri
 	return fmt.Sprintf("✅ **Comando simulado**\n```\n$ %s\n[Saída simulada do comando]\n```\n\n⚠️ Execução real desabilitada por segurança", command), nil
 }
 
-// isUserAuthorized verifica se o usuário tem permissão para executar comandos
 func (h *DiscordMCPHub) isUserAuthorized(userID string) bool {
 	// 🔧 Modo DEV: permitir qualquer usuário para teste
 	if h.config.DevMode {
@@ -715,10 +710,6 @@ func (h *DiscordMCPHub) Shutdown(ctx context.Context) error {
 	log.Println("Discord MCP Hub shutdown complete")
 	return nil
 }
-
-// ============================================================================
-// gobe Integration Methods
-// ============================================================================
 
 func (h *DiscordMCPHub) processGobeCommand(ctx context.Context, command, params string) error {
 	if h.gobeClient == nil {
@@ -801,10 +792,6 @@ func (h *DiscordMCPHub) processGobeCommand(ctx context.Context, command, params 
 		return fmt.Errorf("comando gobe desconhecido: %s", command)
 	}
 }
-
-// ============================================================================
-// Command Handlers for Discord Integration
-// ============================================================================
 
 func (h *DiscordMCPHub) handleCreateUserCommand(ctx context.Context, msg discord.Message) error {
 	log.Printf("🔗 Handling create user command from Discord")
