@@ -1,3 +1,4 @@
+// Package factory fornece funções para criar instâncias do GoBE e seus componentes.
 package factory
 
 import (
@@ -7,9 +8,9 @@ import (
 
 	t "github.com/rafa-mori/gdbase/types"
 	gb "github.com/rafa-mori/gobe"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	s "github.com/rafa-mori/gobe/internal/services"
-	gl "github.com/rafa-mori/gobe/logger"
+	s "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 	l "github.com/rafa-mori/logz"
 	"github.com/streadway/amqp"
 )

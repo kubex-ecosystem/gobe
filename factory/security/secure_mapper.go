@@ -1,3 +1,4 @@
+// Package security provides utilities for securing sensitive data.
 package security
 
 import (
@@ -7,12 +8,12 @@ import (
 	"strings"
 
 	ut "github.com/rafa-mori/gdbase/utils"
-	ci "github.com/rafa-mori/gobe/internal/interfaces"
-	crp "github.com/rafa-mori/gobe/internal/security/crypto"
-	krs "github.com/rafa-mori/gobe/internal/security/external"
-	sci "github.com/rafa-mori/gobe/internal/security/interfaces"
-	t "github.com/rafa-mori/gobe/internal/types"
-	gl "github.com/rafa-mori/gobe/logger"
+	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
+	krs "github.com/rafa-mori/gobe/internal/app/security/external"
+	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
+	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	t "github.com/rafa-mori/gobe/internal/contracts/types"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 type ISecureMapper[T any] interface {

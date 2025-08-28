@@ -111,7 +111,7 @@ clear_script_cache() {
 
 clear_build_artifacts() {
   clear_script_cache
-  local build_dir="${_ROOT_DIR:-$(realpath '../')}/bin"
+  local build_dir="${_ROOT_DIR:-$(realpath '../')}/dist"
   if [[ -d "${build_dir}" ]]; then
     rm -rf "${build_dir}" || true
     if [[ -d "${build_dir}" ]]; then

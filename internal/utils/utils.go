@@ -1,3 +1,4 @@
+// Package utils fornece funções auxiliares para o projeto.
 package utils
 
 import (
@@ -9,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	gl "github.com/rafa-mori/gobe/logger"
+	gl "github.com/rafa-mori/gobe/internal/module/logger"
 )
 
 // ValidateWorkerLimit valida o limite de workers
@@ -111,11 +112,11 @@ func IsBase64ByteSliceStringWithPadding(s string) bool {
 	return matched
 }
 
-func IsUrlEncodeString(s string) bool {
+func IsURLEncodeString(s string) bool {
 	matched, _ := regexp.MatchString("^[a-zA-Z0-9%_.-]+$", s)
 	return matched
 }
-func IsUrlEncodeByteSlice(s []byte) bool {
+func IsURLEncodeByteSlice(s []byte) bool {
 	matched, _ := regexp.Match("^[a-zA-Z0-9%_.-]+$", s)
 	return matched
 }

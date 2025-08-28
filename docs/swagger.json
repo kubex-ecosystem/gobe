@@ -742,6 +742,29 @@
                 }
             }
         },
+        "/discord/ping": {
+            "get": {
+                "description": "Pings the Discord adapter to check its status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "discord"
+                ],
+                "summary": "Ping Discord adapter",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/discord/socket": {
             "get": {
                 "description": "Upgrades the HTTP connection to a WebSocket connection",
