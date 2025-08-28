@@ -1,10 +1,14 @@
-// Package gdbase provides the MetricsController for handling system metrics and related operations in the GDBASE module.
+// Package gdbase provides controllers for managing GDBase operations including Cloudflare tunneling.
 package gdbase
 
 import (
-	"encoding/json"
+	"context"
+	"fmt"
 	"net/http"
+	"strconv"
+	"sync"
 
+	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 	"github.com/rafa-mori/gobe/internal/bridges/gdbasez"
 	"github.com/rafa-mori/gobe/internal/module/logger"
@@ -15,181 +19,264 @@ import (
 	l "github.com/rafa-mori/logz"
 )
 
-// type TunnelMode string
-
-// const (
-// 	ModeOff   TunnelMode = "off"
-// 	ModeQuick TunnelMode = "quick"
-// 	ModeNamed TunnelMode = "named"
-// )
-
-// type TunnelManager interface {
-// 	Up(ctx context.Context, mode TunnelMode, args any) (public string, err error)
-// 	Down(ctx context.Context) error
-// 	Status() (mode TunnelMode, public string, running bool)
-// }
-
-// // --- args “genéricos” (ajuste aos teus bridges/SDK) ---
-// type QuickArgs struct {
-// 	Network string        `json:"network"`
-// 	Target  string        `json:"target"` // service DNS no docker (ex.: "pgadmin")
-// 	Port    int           `json:"port"`   // ex.: 80
-// 	Timeout time.Duration `json:"timeout,omitempty"`
-// }
-
-// type NamedArgs struct {
-// 	Network string `json:"network"`
-// 	Token   string `json:"token"` // TUNNEL_TOKEN
-// }
-
-// // --- Controller ---
-// type TunnelController struct {
-//
-// }
-
-// POST /_admin/tunnel/up
-// body: { "mode":"quick","target":"pgadmin","port":80,"network":"gdbase_net" }
-
-// }
-
-// // POST /_admin/tunnel/down
-
-// }
-
-// // GET /_admin/tunnel/status
-// func (c *TunnelController) Status(w http.ResponseWriter, r *http.Request) {
-
-// }
-
-// func NewTunnelController(tm TunnelManager) *TunnelController { return &TunnelController{TM: tm} }
-
 var (
 	gl = logger.GetLogger[l.Logger](nil)
 )
 
-type GDBaseController struct {
-	dbConn   *gorm.DB
-	mcpState *hooks.Bitstate[uint64, system.SystemDomain]
-	TM       *gdbasez.TunnelHandle
+// TunnelStatus represents the current tunnel state
+type TunnelStatus struct {
+	Mode    gdbasez.TunnelMode `json:"mode"`
+	Public  string             `json:"public"`
+	Running bool               `json:"running"`
+	Network string             `json:"network,omitempty"`
+	Target  string             `json:"target,omitempty"`
 }
 
+// TunnelRequest represents the request payload for tunnel operations
+type TunnelRequest struct {
+	Mode    string `json:"mode" binding:"required"`
+	Network string `json:"network,omitempty"`
+	Target  string `json:"target,omitempty"`
+	Port    int    `json:"port,omitempty"`
+	Token   string `json:"token,omitempty"`
+	Timeout string `json:"timeout,omitempty"` // "10s"
+}
+
+// GDBaseController handles GDBase tunnel operations
+type GDBaseController struct {
+	dbConn       *gorm.DB
+	mcpState     *hooks.Bitstate[uint64, system.SystemDomain]
+	dockerCli    *client.Client
+	tunnelState  *TunnelStatus
+	tunnelMutex  sync.RWMutex
+	activeHandle gdbasez.TunnelHandle
+}
+
+// NewGDBaseController creates a new GDBaseController instance
 func NewGDBaseController(db *gorm.DB) *GDBaseController {
 	if db == nil {
 		gl.Log("warn", "Database connection is nil")
 	}
 
-	// We allow the system service to be nil, as it can be set later.
+	// Initialize Docker client
+	dockerCli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		gl.Log("error", "Failed to create Docker client", err)
+		dockerCli = nil
+	}
+
 	return &GDBaseController{
-		dbConn: db,
+		dbConn:    db,
+		dockerCli: dockerCli,
+		tunnelState: &TunnelStatus{
+			Running: false,
+		},
 	}
 }
 
+// PostGDBaseTunnelUp handles tunnel creation requests
 func (g *GDBaseController) PostGDBaseTunnelUp(c *gin.Context) {
-	//
-	//	{ "mode":"named","token":"***","network":"gdbase_net" }
-	//
-	// func (c *TunnelController) Up(w http.ResponseWriter, r *http.Request) {
-	// 	type req struct {
-	// 		Mode    string `json:"mode"`
-	// 		Network string `json:"network,omitempty"`
-	// 		Target  string `json:"target,omitempty"`
-	// 		Port    int    `json:"port,omitempty"`
-	// 		Token   string `json:"token,omitempty"`
-	// 		Timeout string `json:"timeout,omitempty"` // "10s"
-	// 	}
-	// 	var in req
-	// 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-	// 		writeErr(w, http.StatusBadRequest, "invalid json: "+err.Error())
-	// 		return
-	// 	}
+	if g.dockerCli == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Internal Server Error",
+			"message": "Docker client not available",
+		})
+		return
+	}
 
-	// 	mode := TunnelMode(in.Mode)
-	// 	switch mode {
-	// 	case ModeQuick:
-	// 		to := 10 * time.Second
-	// 		if in.Timeout != "" {
-	// 			if d, err := time.ParseDuration(in.Timeout); err == nil && d > 0 {
-	// 				to = d
-	// 			}
-	// 		}
-	// 		if in.Target == "" || in.Port <= 0 {
-	// 			writeErr(w, http.StatusBadRequest, "quick mode requires target and port")
-	// 			return
-	// 		}
-	// 		pub, err := c.TM.Up(r.Context(), ModeQuick, QuickArgs{
-	// 			Network: in.Network,
-	// 			Target:  in.Target,
-	// 			Port:    in.Port,
-	// 			Timeout: to,
-	// 		})
-	// 		if err != nil {
-	// 			writeErr(w, http.StatusInternalServerError, err.Error())
-	// 			return
-	// 		}
-	// 		writeJSON(w, http.StatusOK, map[string]any{
-	// 			"mode":    ModeQuick,
-	// 			"public":  pub, // *.trycloudflare.com
-	// 			"network": in.Network,
-	// 			"target":  in.Target + ":" + strconv.Itoa(in.Port),
-	// 		})
-	// 		return
+	var req TunnelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "Invalid JSON: " + err.Error(),
+		})
+		return
+	}
 
-	// case ModeNamed:
-	//
-	//	if in.Token == "" {
-	//		writeErr(w, http.StatusBadRequest, "named mode requires token")
-	//		return
-	//	}
-	//	_, err := c.TM.Up(r.Context(), ModeNamed, NamedArgs{
-	//		Network: in.Network,
-	//		Token:   in.Token,
-	//	})
-	//	if err != nil {
-	//		writeErr(w, http.StatusInternalServerError, err.Error())
-	//		return
-	//	}
-	//	writeJSON(w, http.StatusOK, map[string]any{
-	//		"mode":    ModeNamed,
-	//		"public":  "(use seus hostnames do tunnel)",
-	//		"network": in.Network,
-	//	})
-	//	return
-	//
-	// default:
-	//
-	//		writeErr(w, http.StatusBadRequest, "mode must be quick or named")
-	//		return
-	//	}
+	g.tunnelMutex.Lock()
+	defer g.tunnelMutex.Unlock()
+
+	// Check if tunnel is already running
+	if g.tunnelState.Running {
+		c.JSON(http.StatusConflict, gin.H{
+			"error":   "Conflict",
+			"message": "Tunnel is already running",
+			"current": g.tunnelState,
+		})
+		return
+	}
+
+	mode := gdbasez.TunnelMode(req.Mode)
+	ctx := c.Request.Context()
+
+	switch mode {
+	case gdbasez.TunnelQuick:
+		if err := g.handleQuickTunnel(ctx, &req); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Internal Server Error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"mode":    mode,
+			"public":  g.tunnelState.Public,
+			"network": req.Network,
+			"target":  req.Target + ":" + strconv.Itoa(req.Port),
+			"running": true,
+		})
+
+	case gdbasez.TunnelNamed:
+		if err := g.handleNamedTunnel(ctx, &req); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Internal Server Error",
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"mode":    mode,
+			"public":  "Use your configured tunnel hostnames",
+			"network": req.Network,
+			"running": true,
+		})
+
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":   "Bad Request",
+			"message": "Mode must be 'quick' or 'named'",
+		})
+	}
 }
 
+// PostGDBaseTunnelDown handles tunnel termination requests
 func (g *GDBaseController) PostGDBaseTunnelDown(c *gin.Context) {
-	//	func (c *TunnelController) Down(w http.ResponseWriter, r *http.Request) {
-	//		if err := c.TM.Down(r.Context()); err != nil {
-	//			writeErr(w, http.StatusInternalServerError, err.Error())
-	//			return
-	//		}
-	//		w.WriteHeader(http.StatusNoContent)
+	g.tunnelMutex.Lock()
+	defer g.tunnelMutex.Unlock()
+
+	if !g.tunnelState.Running || g.activeHandle == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error":   "Not Found",
+			"message": "No active tunnel to stop",
+		})
+		return
+	}
+
+	ctx := c.Request.Context()
+	if err := g.activeHandle.Stop(ctx); err != nil {
+		gl.Log("error", "Failed to stop tunnel", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Internal Server Error",
+			"message": "Failed to stop tunnel: " + err.Error(),
+		})
+		return
+	}
+
+	// Reset tunnel state
+	g.tunnelState = &TunnelStatus{Running: false}
+	g.activeHandle = nil
+
+	gl.Log("info", "Tunnel stopped successfully")
+	c.Status(http.StatusNoContent)
 }
+
+// GetGDBaseTunnelStatus returns the current tunnel status
 func (g *GDBaseController) GetGDBaseTunnelStatus(c *gin.Context) {
-	// mode, pub, running := c.TM.Status()
-	//
-	//	writeJSON(w, http.StatusOK, map[string]any{
-	//		"mode":    mode,
-	//		"public":  pub,
-	//		"running": running,
-	//	})
+	g.tunnelMutex.RLock()
+	defer g.tunnelMutex.RUnlock()
+
+	c.JSON(http.StatusOK, g.tunnelState)
 }
 
-// --- helpers ---
-func writeJSON(w http.ResponseWriter, code int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(v)
+// handleQuickTunnel creates a quick tunnel
+func (g *GDBaseController) handleQuickTunnel(ctx context.Context, req *TunnelRequest) error {
+	// Validate required fields for quick mode
+	if req.Target == "" || req.Port <= 0 {
+		return fmt.Errorf("quick mode requires target and port")
+	}
+
+	// Parse timeout (currently not used but could be implemented later)
+	// timeout := 10 * time.Second
+	// if req.Timeout != "" {
+	// 	if d, err := time.ParseDuration(req.Timeout); err == nil && d > 0 {
+	// 		timeout = d
+	// 	}
+	// }
+
+	// Set default network if not provided
+	networkName := req.Network
+	if networkName == "" {
+		networkName = "gdbase_net"
+	}
+
+	// Create tunnel options
+	opts := gdbasez.NewCloudflaredOpts(
+		gdbasez.TunnelQuick,
+		networkName,
+		req.Target,
+		req.Port,
+		"", // no token for quick mode
+	)
+
+	// Start tunnel
+	handle, publicURL, err := opts.Start(ctx, g.dockerCli)
+	if err != nil {
+		return fmt.Errorf("failed to start quick tunnel: %w", err)
+	}
+
+	// Update state
+	g.activeHandle = handle
+	g.tunnelState = &TunnelStatus{
+		Mode:    gdbasez.TunnelQuick,
+		Public:  publicURL,
+		Running: true,
+		Network: networkName,
+		Target:  req.Target + ":" + strconv.Itoa(req.Port),
+	}
+
+	gl.Log("info", "Quick tunnel started successfully", "url", publicURL)
+	return nil
 }
 
-func writeErr(w http.ResponseWriter, code int, msg string) {
-	writeJSON(w, code, map[string]any{
-		"error":   http.StatusText(code),
-		"message": msg,
-	})
+// handleNamedTunnel creates a named tunnel
+func (g *GDBaseController) handleNamedTunnel(ctx context.Context, req *TunnelRequest) error {
+	// Validate required fields for named mode
+	if req.Token == "" {
+		return fmt.Errorf("named mode requires token")
+	}
+
+	// Set default network if not provided
+	networkName := req.Network
+	if networkName == "" {
+		networkName = "gdbase_net"
+	}
+
+	// Create tunnel options
+	opts := gdbasez.NewCloudflaredOpts(
+		gdbasez.TunnelNamed,
+		networkName,
+		"", // no target for named mode
+		0,  // no port for named mode
+		req.Token,
+	)
+
+	// Start tunnel
+	handle, _, err := opts.Start(ctx, g.dockerCli)
+	if err != nil {
+		return fmt.Errorf("failed to start named tunnel: %w", err)
+	}
+
+	// Update state
+	g.activeHandle = handle
+	g.tunnelState = &TunnelStatus{
+		Mode:    gdbasez.TunnelNamed,
+		Public:  "Use your configured tunnel hostnames",
+		Running: true,
+		Network: networkName,
+	}
+
+	gl.Log("info", "Named tunnel started successfully")
+	return nil
 }
