@@ -32,10 +32,12 @@ type TraditionalController struct {
 func NewTraditionalController(db *gorm.DB) *TraditionalController {
 	return &TraditionalController{
 		config: TraditionalDiscordConfig{
-			EnableBot:      true,
-			EnableCommands: true,
-			EnableLogging:  true,
-			EnableSecurity: true,
+			Flags: 0,
+			// EnableMCP:      1,
+			// EnableBot:      1,
+			// EnableCommands: 1,
+			// EnableLogging:  1,
+			// EnableSecurity: 1,
 		},
 		db: db,
 	}
@@ -46,32 +48,32 @@ func NewTraditionalController(db *gorm.DB) *TraditionalController {
 func (dc *TraditionalController) HandleDiscordApp(c *gin.Context) {
 	// Traditional approach with multiple if statements (slow!)
 	// GoFlux will replace these with bitwise checks
-	if dc.config.EnableBot {
+	if dc.config.Flags&(1<<0) != 0 {
 		// Bot logic - will become: if flags&FlagBot != 0
 		c.Header("X-Discord-Bot", "enabled")
 	}
 
-	if dc.config.EnableCommands {
+	if dc.config.Flags&(1<<1) != 0 {
 		// Commands logic - will become: if flags&FlagCommands != 0
 		c.Header("X-Discord-Commands", "enabled")
 	}
 
-	if dc.config.EnableLogging {
+	if dc.config.Flags&(1<<2) != 0 {
 		// Logging logic - will become: if flags&FlagLogging != 0
 		c.Header("X-Discord-Logging", "enabled")
 	}
 
-	if dc.config.EnableSecurity {
+	if dc.config.Flags&(1<<3) != 0 {
 		// Security logic - will become: if flags&FlagSecurity != 0
 		c.Header("X-Discord-Security", "enabled")
 	}
 
 	// Complex conditional that GoFlux will optimize
-	if dc.config.EnableMCP && dc.config.EnableLLM {
+	if dc.config.Flags&(1<<6) != 0 && dc.config.Flags&(1<<7) != 0 {
 		// Both MCP and LLM enabled
 		// Will become: if flags&(FlagMCP|FlagLLM) == (FlagMCP|FlagLLM)
 		c.Header("X-Discord-AI", "full")
-	} else if dc.config.EnableMCP {
+	} else if dc.config.Flags&(1<<6) != 0 {
 		// Only MCP enabled
 		// Will become: if flags&FlagMCP != 0 && flags&FlagLLM == 0
 		c.Header("X-Discord-AI", "mcp-only")
@@ -79,10 +81,13 @@ func (dc *TraditionalController) HandleDiscordApp(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"status":   "traditional",
-		"bot":      dc.config.EnableBot,
-		"commands": dc.config.EnableCommands,
-		"logging":  dc.config.EnableLogging,
-		"security": dc.config.EnableSecurity,
+		"flags":    dc.config.Flags,
+		"bot":      dc.config.Flags&(1<<0) != 0,
+		"commands": dc.config.Flags&(1<<1) != 0,
+		"logging":  dc.config.Flags&(1<<2) != 0,
+		"security": dc.config.Flags&(1<<3) != 0,
+		"mcp":      dc.config.Flags&(1<<6) != 0,
+		"llm":      dc.config.Flags&(1<<7) != 0,
 	})
 }
 
@@ -93,13 +98,13 @@ func (dc *TraditionalController) ProcessMessage(message string) map[string]inter
 
 	// Multiple boolean checks - lots of branching!
 	// GoFlux will replace this with a jump table
-	if dc.config.EnableMCP && dc.config.EnableLLM {
+	if dc.config.Flags&(1<<6) != 0 && dc.config.Flags&(1<<7) != 0 {
 		result["processing"] = "mcp_llm"
 		result["features"] = []string{"mcp", "llm"}
-	} else if dc.config.EnableMCP {
+	} else if dc.config.Flags&(1<<6) != 0 {
 		result["processing"] = "mcp_only"
 		result["features"] = []string{"mcp"}
-	} else if dc.config.EnableLLM {
+	} else if dc.config.Flags&(1<<7) != 0 {
 		result["processing"] = "llm_only"
 		result["features"] = []string{"llm"}
 	} else {
@@ -108,11 +113,11 @@ func (dc *TraditionalController) ProcessMessage(message string) map[string]inter
 	}
 
 	// More boolean logic that GoFlux will optimize
-	if dc.config.EnableEvents && dc.config.EnableLogging {
+	if dc.config.Flags&(1<<4) != 0 && dc.config.Flags&(1<<2) != 0 {
 		result["monitoring"] = "full"
-	} else if dc.config.EnableEvents {
+	} else if dc.config.Flags&(1<<4) != 0 {
 		result["monitoring"] = "events_only"
-	} else if dc.config.EnableLogging {
+	} else if dc.config.Flags&(1<<2) != 0 {
 		result["monitoring"] = "logs_only"
 	} else {
 		result["monitoring"] = "none"
@@ -127,19 +132,19 @@ func (dc *TraditionalController) FeatureRouter(feature string) gin.HandlerFunc {
 	// Traditional switch statement - GoFlux will optimize to jump table
 	switch feature {
 	case "bot":
-		if dc.config.EnableBot {
+		if dc.config.Flags&(1<<0) != 0 {
 			return dc.HandleBot
 		}
 	case "commands":
-		if dc.config.EnableCommands {
+		if dc.config.Flags&(1<<1) != 0 {
 			return dc.HandleCommands
 		}
 	case "webhooks":
-		if dc.config.EnableWebhooks {
+		if dc.config.Flags&(1<<2) != 0 {
 			return dc.HandleWebhooks
 		}
 	case "events":
-		if dc.config.EnableEvents {
+		if dc.config.Flags&(1<<4) != 0 {
 			return dc.HandleEvents
 		}
 	}
