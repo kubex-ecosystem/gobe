@@ -98,7 +98,11 @@ func (cb *ChannelBase[T]) Close() error {
 	defer cb.MuUnlock()
 	if cb.Channel != nil {
 		gl.LogObjLogger(cb, "info", "Closing channel for:", cb.Name)
-		close(cb.Channel.(chan T))
+
+		ch := reflect.ValueOf(cb.Channel)
+		if ch.Kind() == reflect.Chan {
+			ch.Close()
+		}
 	}
 	return nil
 }

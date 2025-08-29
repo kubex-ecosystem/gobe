@@ -150,11 +150,17 @@ func (v *PropertyValBase[T]) Get(async bool) any {
 		gl.Log("error", "Get: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return nil
 	}
+	vl := v.Load()
 	if async {
 		if v.channelCtl != nil {
 			gl.Log("debug", "Getting value from channel for:", v.Name, "ID:", v.ID.String())
-			v.channelCtl.Channels["get"].(chan T) <- *v.Load()
+			mCh := v.channelCtl.Channels["get"]
+			if mCh != nil {
+				ch := reflect.ValueOf(mCh)
+				ch.Send(reflect.ValueOf(vl))
+			}
 		}
+		return vl
 	} else {
 		gl.Log("debug", "Getting value for:", v.Name, "ID:", v.ID.String())
 		return v.Load()

@@ -39,7 +39,7 @@ type Property[T any] struct {
 // NewProperty creates a new IProperty[T] with the given value and Reference.
 func NewProperty[T any](name string, v *T, withMetrics bool, cb func(any) (bool, error)) ci.IProperty[T] {
 	p := &Property[T]{
-		prop: newVal[T](name, v),
+		prop: newVal(name, v),
 		cb:   cb,
 	}
 	if withMetrics {
@@ -55,11 +55,11 @@ func (p *Property[T]) GetName() string {
 
 // GetValue returns the value of the property.
 func (p *Property[T]) GetValue() T {
-	value := p.prop.Get(false)
+	value := p.prop.Value()
 	if value == nil {
-		return *new(T)
+		value = new(T)
 	}
-	return *value.(*T)
+	return *value
 }
 
 // SetValue sets the value of the property.
