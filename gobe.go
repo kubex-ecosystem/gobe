@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -468,4 +469,36 @@ func (g *GoBE) GetDatabaseService() gdbf.DBService {
 		gl.Log("error", "Database service is nil")
 		return nil
 	}
+}
+func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
+	//g.Mutexes.MuRLock()
+	//defer g.Mutexes.MuRUnlock()
+	if loggerProp, ok := g.Properties["logger"].(*t.Property[l.Logger]); ok {
+		if loggerProp == nil {
+			gl.Log("error", "Logger is nil")
+			return nil, errors.New("logger is nil")
+		}
+		gl.Log("info", "Retrieving logs...")
+		logger := loggerProp.GetValue()
+		if logger == nil {
+			gl.Log("error", "Logger is nil")
+			return nil, errors.New("logger is nil")
+		}
+		logsWriterInt := logger.GetWriter()
+		if logsWriterInt == nil {
+			gl.Log("error", "Logs writer is nil")
+			return nil, errors.New("logs writer is nil")
+		}
+		logsWriter, ok := logsWriterInt.(io.Writer)
+		if !ok {
+			gl.Log("error", "Logs writer is not an io.Writer")
+			return nil, errors.New("logs writer is not an io.Writer")
+		}
+		logsWriter.Write([]byte("Retrieving logs...\n"))
+		if offsetWriter, ok := logsWriter.(*io.OffsetWriter); ok {
+			return offsetWriter, nil
+		}
+	}
+	gl.Log("error", "Logger is nil")
+	return nil, errors.New("logger is nil")
 }

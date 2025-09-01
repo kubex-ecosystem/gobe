@@ -11,10 +11,15 @@ import (
 )
 
 func CertificatesCmdList() *cobra.Command {
+
+	shortDesc := "Certificates commands"
+	longDesc := "Certificates commands for GoBE or any other service"
+
 	certificatesCmd := &cobra.Command{
-		Use:   "certificates",
-		Short: "Certificates commands",
-		Long:  "Certificates commands for GoBE or any other service",
+		Use:         "certificates",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
 			if err != nil {
@@ -36,14 +41,14 @@ func generateCommand() *cobra.Command {
 	var keyPath, certFilePath, certPass string
 	var debug bool
 
-	short := "Generate certificates for GoBE or any other service"
-	long := "Generate certificates for GoBE or any other service using the provided configuration file"
+	shortDesc := "Generate certificates for GoBE or any other service"
+	longDesc := "Generate certificates for GoBE or any other service using the provided configuration file"
 
 	var startCmd = &cobra.Command{
 		Use:         "generate",
-		Short:       short,
-		Long:        long,
-		Annotations: GetDescriptions([]string{short, long}, false),
+		Short:       shortDesc,
+		Long:        longDesc,
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			crtS := crt.NewCertService(keyPath, certFilePath)
 			_, _, err := crtS.GenerateCertificate(certFilePath, keyPath, []byte(certPass))
@@ -66,14 +71,14 @@ func verifyCert() *cobra.Command {
 	var keyPath, certFilePath string
 	var debug bool
 
-	short := "Verify certificates for GoBE or any other service"
-	long := "Verify certificates for GoBE or any other service using the provided configuration file"
+	shortDesc := "Verify certificates for GoBE or any other service"
+	longDesc := "Verify certificates for GoBE or any other service using the provided configuration file"
 
 	var startCmd = &cobra.Command{
 		Use:         "verify",
-		Short:       short,
-		Long:        long,
-		Annotations: GetDescriptions([]string{short, long}, false),
+		Short:       shortDesc,
+		Long:        longDesc,
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			crtS := crt.NewCertService(keyPath, certFilePath)
 			err := crtS.VerifyCert()
@@ -96,14 +101,14 @@ func generateRandomKey() *cobra.Command {
 	var length int
 	var debug bool
 
-	short := "Generate a random key for GoBE or any other service"
-	long := "Generate a random key for GoBE or any other service using the provided configuration file"
+	shortDesc := "Generate a random key for GoBE or any other service"
+	longDesc := "Generate a random key for GoBE or any other service using the provided configuration file"
 
 	var startCmd = &cobra.Command{
 		Use:         "random-key",
-		Short:       short,
-		Long:        long,
-		Annotations: GetDescriptions([]string{short, long}, false),
+		Short:       shortDesc,
+		Long:        longDesc,
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			crtS := crp.NewCryptoService()
 			var bts []byte

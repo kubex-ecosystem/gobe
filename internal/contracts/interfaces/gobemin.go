@@ -1,6 +1,8 @@
 package interfaces
 
 import (
+	"io"
+
 	gdbf "github.com/rafa-mori/gdbase/factory"
 	l "github.com/rafa-mori/logz"
 )
@@ -26,4 +28,5 @@ type IGoBE interface {
 	GetConfigFilePath() string
 	SetDatabaseService(dbService gdbf.DBService)
 	GetDatabaseService() gdbf.DBService
+	LogsGoBE() (*io.OffsetWriter, error)
 }
