@@ -242,9 +242,17 @@ func (cCtl *ChannelCtl[T]) SetMainChannel(channel chan T) chan T {
 	if cCtl.Channels == nil {
 		cCtl.Channels = initChannelsMap(cCtl)
 	}
-	cCtl.MuLock()
-	defer cCtl.MuUnlock()
-	cCtl.ch = channel
+
+	if channel != nil {
+		cCtl.MuLock()
+		defer cCtl.MuUnlock()
+		cCtl.ch = channel
+	} else {
+		gl.LogObjLogger(cCtl, "warn", "SetMainChannel: provided channel is nil, keeping existing channel")
+		cCtl.MuRLock()
+		defer cCtl.MuRUnlock()
+		cCtl.ch = nil
+	}
 	return cCtl.ch
 }
 

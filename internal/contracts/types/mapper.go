@@ -76,9 +76,14 @@ func (m *Mapper[T]) Deserialize(data []byte, format string) (*T, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("os dados estão vazios")
 	}
-	if !reflect.ValueOf(m.object).IsValid() || reflect.ValueOf(m.object).IsNil() {
+	if !reflect.ValueOf(m.object).IsValid() && reflect.TypeFor[T]() != nil && reflect.TypeFor[T]().Kind() != reflect.Ptr {
 		m.object = reflect.New(reflect.TypeFor[T]()).Interface().(T)
+	} else if reflect.TypeFor[T]().Kind() == reflect.Ptr {
+		if !reflect.ValueOf(m.object).IsValid() || reflect.ValueOf(m.object).IsNil() {
+			m.object = reflect.New(reflect.TypeFor[T]()).Interface().(T)
+		}
 	}
+
 	var err error
 	switch format {
 	case "json", "js":

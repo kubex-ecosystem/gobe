@@ -50,7 +50,7 @@ env
 *_debug_*
 *.log
 *.log.*
-tests/**/*
+# tests/**/*
 *_linux_amd64*
 */docs/mcp_implementation
 *.sarif
