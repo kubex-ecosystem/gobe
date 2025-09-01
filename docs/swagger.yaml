@@ -1,0 +1,1211 @@
+basePath: /swagger
+definitions:
+  github_com_rafa-mori_gdbase_types.JsonB:
+    additionalProperties: {}
+    type: object
+  github_com_rafa-mori_gobe_internal_types.ContactForm:
+    properties:
+      email:
+        type: string
+      message:
+        type: string
+      name:
+        type: string
+      token:
+        type: string
+    type: object
+  jobqueue.JobQueue:
+    properties:
+      code:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      cronjob_id:
+        type: string
+      error_message:
+        type: string
+      execution_time:
+        type: string
+      id:
+        type: string
+      job_api_endpoint:
+        type: string
+      job_command:
+        type: string
+      job_expression:
+        type: string
+      job_headers:
+        $ref: '#/definitions/github_com_rafa-mori_gdbase_types.JsonB'
+      job_method:
+        type: string
+      job_payload:
+        $ref: '#/definitions/github_com_rafa-mori_gdbase_types.JsonB'
+      job_retries:
+        type: integer
+      job_timeout:
+        type: integer
+      job_type:
+        type: string
+      last_executed_by:
+        type: string
+      metadata:
+        type: string
+      next_run_time:
+        type: string
+      retry_count:
+        type: integer
+      scheduled_time:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      user_id:
+        type: string
+    type: object
+  mcp.CronJobIntegration:
+    properties:
+      api_endpoint:
+        type: string
+      command:
+        type: string
+      cron_expression:
+        type: string
+      headers:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      method:
+        type: string
+      payload:
+        type: string
+      retries:
+        type: integer
+      timeout:
+        type: integer
+      user_id:
+        type: string
+    type: object
+  types.APIResponse:
+    properties:
+      data: {}
+      filter:
+        additionalProperties: true
+        type: object
+      hash:
+        type: string
+      msg:
+        type: string
+      status:
+        type: string
+    type: object
+  user.UserModel:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      document:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      last_login:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role_id:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8080
+info:
+  contact:
+    email: support@gobe.dev
+    name: GoBE API Support
+    url: https://github.com/rafa-mori/gobe
+  description: GoBE is a powerful backend, MCP, and API server with a comprehensive
+    route system following GoBE patterns.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://github.com/rafa-mori/gobe/terms
+  title: GoBE API
+  version: "1.0"
+paths:
+  /contact:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint handles the contact form submissions and sends messages
+        through the appropriate channels.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Contact flow for messaging through Email or other channels
+      tags:
+      - contact
+    post:
+      consumes:
+      - application/json
+      description: This endpoint handles the contact form submissions and sends messages
+        through the appropriate channels.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Contact flow for messaging through Email or other channels
+      tags:
+      - contact
+  /contact/form:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint handles the contact form submissions and sends messages
+        through the appropriate channels.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_rafa-mori_gobe_internal_types.ContactForm'
+      summary: Contact flow for messaging through Email or other channels
+      tags:
+      - contact
+  /contact/form/:id:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a specific contact form submission by its
+        ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_rafa-mori_gobe_internal_types.ContactForm'
+      summary: Get contact form by ID
+      tags:
+      - contact
+  /cronjobs:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        This controller manages cron jobs, allowing users to create, update, delete, and execute cron jobs.
+        Retrieves all cron jobs in the system.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get All Cron Jobs
+      tags:
+      - cron
+    post:
+      consumes:
+      - application/json
+      description: Creates a new cron job.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Create Cron Job
+  /cronjobs/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a specific cron job by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Delete Cron Job
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific cron job by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get Cron Job by ID
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing cron job.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Update Cron Job
+  /cronjobs/{id}/disable:
+    post:
+      consumes:
+      - application/json
+      description: Disables a specific cron job by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Disable Cron Job
+  /cronjobs/{id}/enable:
+    post:
+      consumes:
+      - application/json
+      description: Enables a specific cron job by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Enable Cron Job
+  /cronjobs/{id}/execute:
+    post:
+      consumes:
+      - application/json
+      description: Executes a specific cron job manually by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Execute Cron Job Manually
+  /cronjobs/{id}/execute/{job_id}:
+    post:
+      consumes:
+      - application/json
+      description: Executes a specific cron job manually by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Execute Cron Job Manually by ID
+  /cronjobs/{id}/reschedule:
+    post:
+      consumes:
+      - application/json
+      description: Reschedules a specific cron job by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Reschedule Cron Job
+  /cronjobs/active:
+    get:
+      consumes:
+      - application/json
+      description: Lists all active cron jobs.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: List Active Cron Jobs
+  /cronjobs/list:
+    get:
+      consumes:
+      - application/json
+      description: Lists all cron jobs.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: List Cron Jobs
+  /cronjobs/logs:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the execution logs for a specific cron job by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get Execution Logs
+  /cronjobs/queue:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the current state of the job queue.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/jobqueue.JobQueue'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Get Job Queue
+  /cronjobs/reprocess:
+    post:
+      consumes:
+      - application/json
+      description: Reprocesses all failed jobs in the queue.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Reprocess Failed Jobs
+  /cronjobs/validate:
+    post:
+      consumes:
+      - application/json
+      description: Validates a cron expression.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Validate Cron Expression
+  /discord:
+    get:
+      consumes:
+      - text/html
+      description: Handles Discord Application/Activity requests
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Discord App Handler
+      tags:
+      - discord
+  /discord/approvals:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of pending approval requests
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pending approvals
+          schema:
+            items:
+              type: string
+            type: array
+      summary: Get pending approvals
+      tags:
+      - discord
+  /discord/approvals/{id}/approve:
+    post:
+      consumes:
+      - application/json
+      description: Approves a pending approval request
+      parameters:
+      - description: Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Approve request
+      tags:
+      - discord
+  /discord/approvals/{id}/reject:
+    post:
+      consumes:
+      - application/json
+      description: Rejects a pending approval request
+      parameters:
+      - description: Request ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Reject request
+      tags:
+      - discord
+  /discord/authorize:
+    get:
+      consumes:
+      - application/json
+      description: Initiates the OAuth2 authorization flow for Discord
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Discord OAuth2 Authorization
+      tags:
+      - discord
+  /discord/interactions:
+    post:
+      consumes:
+      - application/json
+      description: Handles interactions from Discord
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Handle Discord interactions
+      tags:
+      - discord
+  /discord/oauth2/token:
+    post:
+      consumes:
+      - application/json
+      description: Handles the OAuth2 token exchange for Discord
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Handle Discord OAuth2 token
+      tags:
+      - discord
+  /discord/ping:
+    get:
+      consumes:
+      - application/json
+      description: Pings the Discord adapter to check its status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Ping Discord adapter
+      tags:
+      - discord
+  /discord/socket:
+    get:
+      consumes:
+      - application/json
+      description: Upgrades the HTTP connection to a WebSocket connection
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+      summary: WebSocket connection
+      tags:
+      - discord
+  /discord/test:
+    post:
+      consumes:
+      - application/json
+      description: Handles a test message from the user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Handle test message
+      tags:
+      - discord
+  /discord/webhook/{webhookId}/{webhookToken}:
+    post:
+      consumes:
+      - application/json
+      description: Handles incoming webhook events from Discord
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Handle Discord webhook
+      tags:
+      - discord
+  /mcp/tasks:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        Controller for managing tasks in the MCP
+        Retrieves a list of all tasks.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get All Tasks
+      tags:
+      - tasks
+  /mcp/tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a task by its ID.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Delete Task
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a task by its ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema: {}
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get Task by ID
+  /mcp/tasks/{id}/completed:
+    post:
+      consumes:
+      - application/json
+      description: Marks a task as completed.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Mark Task as Completed
+  /mcp/tasks/{id}/cronjob:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the CronJob representation of a task.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mcp.CronJobIntegration'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get Task CronJob
+  /mcp/tasks/{id}/failed:
+    post:
+      consumes:
+      - application/json
+      description: Marks a task as failed.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Mark Task as Failed
+  /mcp/tasks/{id}/running:
+    post:
+      consumes:
+      - application/json
+      description: Marks a task as running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Mark Task as Running
+  /mcp/tasks/active:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves all active tasks.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get Active Tasks
+  /mcp/tasks/due:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tasks due for execution.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get Tasks Due for Execution
+  /mcp/tasks/provider/{provider}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tasks by provider.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get Tasks by Provider
+  /mcp/tasks/target/{target}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves tasks by target.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items: {}
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get Tasks by Target
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        UserController provides endpoints for user management.
+        Retrieves a list of all users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Get All Users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user.
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Create User
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a user by their ID.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Delete User
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a specific user by their ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Get User by ID
+    put:
+      consumes:
+      - application/json
+      description: Updates a user's information.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/user.UserModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Update User
+  /users/email/{email}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a user by their email address.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Get User By Email
+  /users/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logs out the user by invalidating the refresh token.
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Logout
+  /users/refresh-token:
+    post:
+      consumes:
+      - application/json
+      description: Refreshes the user's authentication token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Refresh Token
+  /users/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Authenticate User
+  /users/username/{username}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a user by their username.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/types.APIResponse'
+      summary: Get User By Username
+security:
+- OAuth2: []
+securityDefinitions:
+  ApiKeyAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

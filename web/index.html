@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoBE Discord Bot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #00ff00;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .info-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .info-card h3 {
+            margin: 0 0 10px 0;
+            color: #FFD700;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .info-card p {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+        }
+        .actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            margin: 5px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(31, 38, 135, 0.6);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 GoBE Discord Bot</h1>
+            <p>Aplicação Discord integrada com sucesso!</p>
+        </div>
+        
+        <div class="status">
+            <div class="status-indicator"></div>
+            <span>Conectado e funcionando</span>
+        </div>
+        
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>📍 Channel ID</h3>
+                <p>%s</p>
+            </div>
+            <div class="info-card">
+                <h3>🆔 Instance ID</h3>
+                <p>%s</p>
+            </div>
+            <div class="info-card">
+                <h3>🚀 Launch ID</h3>
+                <p>%s</p>
+            </div>
+            <div class="info-card">
+                <h3>📱 Platform</h3>
+                <p>%s</p>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="btn" onclick="testBot()">🧪 Testar Bot</button>
+            <button class="btn" onclick="openWebSocket()">🔗 WebSocket</button>
+        </div>
+        
+        <div class="footer">
+            <p>GoBE Discord Integration • Instance: %s</p>
+        </div>
+    </div>
+
+    <script>
+        function testBot() {
+            fetch('/discord/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: 'Teste do Discord App!',
+                    user_id: 'discord_app_user',
+                    username: 'Discord App'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('✅ Bot testado com sucesso: ' + data.message);
+            })
+            .catch(error => {
+                alert('❌ Erro ao testar bot: ' + error);
+            });
+        }
+
+        function openWebSocket() {
+            // Redirect to WebSocket test page or open connection
+            alert('🔗 WebSocket connection would be opened here');
+        }
+
+        // Initialize Discord SDK if available
+        if (typeof DiscordSDK !== 'undefined') {
+            console.log('🎮 Discord SDK detected');
+        }
+    </script>
+</body>
+</html>
+    
