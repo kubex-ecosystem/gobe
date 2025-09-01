@@ -236,3 +236,5 @@ bkp/
 *.bkp/
 bkp.*/
 docs/jobs/*.md
+*/prompt/*.md
+*/prompt/**/*.md
