@@ -1,7 +1,7 @@
 {
   "name": "Kubex GoBE",
   "application": "gobe",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "private": false,
   "published": true,
   "aliases": [
