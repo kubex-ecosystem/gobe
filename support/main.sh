@@ -341,23 +341,27 @@ __secure_logic_main() {
   fi
 }
 
-if [[ "${_DEBUG}" != true ]]; then
+if [[ "${_DEBUG:-false}" != true ]]; then
   show_headers || log fatal "Failed to display headers." true
-  if [[ -z "${_HIDE_ABOUT}" ]]; then
+  if [[ -z "${_HIDE_ABOUT:-}" ]]; then
     show_about || log fatal "Failed to display about information." true
   fi
 else
   log info "Debug mode enabled; banner will be ignored..."
-  if [[ -z "${_HIDE_ABOUT}" ]]; then
+  if [[ -z "${_HIDE_ABOUT:-}" ]]; then
     show_about || log fatal "Failed to display about information." true
   fi
 fi
 
-__run_custom_scripts "pre" "$@" || log fatal "Failed to execute pre-installation scripts."
+if [[ "${_RUN_PRE_SCRIPTS:-true}" == "true" ]]; then
+  __run_custom_scripts "pre" "$@" || log fatal "Failed to execute pre-installation scripts."
+fi
 
 __secure_logic_main "$@"
 
-__run_custom_scripts "post" "$@" || log fatal "Failed to execute post-installation scripts."
+if [[ "${_RUN_POST_SCRIPTS:-true}" == "true" ]]; then
+  __run_custom_scripts "post" "$@" || log fatal "Failed to execute post-installation scripts."
+fi
 
 __secure_logic_elapsed_time="$(($(date +%s) - __secure_logic_init_timestamp))"
 
