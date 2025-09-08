@@ -85,7 +85,7 @@ require (
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/docker v28.3.3+incompatible
+	github.com/docker/docker v28.4.0+incompatible
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -107,7 +107,6 @@ require (
 	github.com/gobuffalo/packr v1.30.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/gorilla/websocket v1.5.3
 	github.com/hyperledger/fabric-chaincode-go v0.0.0-20240704073638-9fb89180dc17 // indirect
