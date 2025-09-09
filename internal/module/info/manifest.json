@@ -5,8 +5,7 @@
   "private": false,
   "published": true,
   "aliases": [
-    "gobe",
-    "kbx"
+    "gobe"
   ],
   "repository": "https://github.com/kubex-ecosystem/gobe",
   "homepage": "https://github.com/kubex-ecosystem/gobe",
@@ -14,7 +13,7 @@
   "main": "cmd/main.go",
   "bin": "gobe",
   "author": "Rafael Mori <faelmori@gmail.com>",
-  "organization": "rafa-mori",
+  "organization": "kubex-ecosystem",
   "license": "MIT",
   "keywords": [
     "gobe",
@@ -35,7 +34,6 @@
     "git",
     "zip",
     "unzip",
-    "jq",
-    "libzmq3-dev"
+    "jq"
   ]
 }

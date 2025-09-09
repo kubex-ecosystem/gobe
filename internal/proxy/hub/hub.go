@@ -18,7 +18,6 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
-	zmq "github.com/kubex-ecosystem/gobe/internal/sockets"
 )
 
 type DiscordMCPHub struct {
@@ -28,11 +27,11 @@ type DiscordMCPHub struct {
 	approvalManager *approval.Manager
 	eventStream     *events.Stream
 	mcpServer       *mcp.Server
-	zmqPublisher    *zmq.Publisher
-	gobeCtlClient   *gobe_ctl.Client // ⚙️ K8s Integration
-	gobeClient      *gobe.Client     // 🔗 GoBE Integration
-	mu              sync.RWMutex
-	running         bool
+	// zmqPublisher    *zmq.Publisher
+	gobeCtlClient *gobe_ctl.Client // ⚙️ K8s Integration
+	gobeClient    *gobe.Client     // 🔗 GoBE Integration
+	mu            sync.RWMutex
+	running       bool
 }
 
 func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
@@ -54,8 +53,8 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 	// ✅ Approval System
 	approvalManager := approval.NewManager(cfg.Approval, eventStream)
 
-	//  ZMQ Publisher
-	zmqPublisher := zmq.NewPublisher(cfg.ZMQ)
+	// //  ZMQ Publisher
+	// zmqPublisher := zmq.NewPublisher(cfg.ZMQ)
 
 	// 🔗 GoBE Integration
 	var gobeClient *gobe.Client
@@ -86,9 +85,9 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 		llmClient:       llmClient,
 		approvalManager: approvalManager,
 		eventStream:     eventStream,
-		zmqPublisher:    zmqPublisher,
-		gobeCtlClient:   gobeCtlClient,
-		gobeClient:      gobeClient,
+		// zmqPublisher:    zmqPublisher,
+		gobeCtlClient: gobeCtlClient,
+		gobeClient:    gobeClient,
 	}
 
 	// 🔌 MCP Server (needs hub as handler)
@@ -459,7 +458,7 @@ func (h *DiscordMCPHub) createTaskFromMessage(msg discord.Message, analysis *llm
 	}
 
 	// Publish task creation to ZMQ
-	h.zmqPublisher.PublishMessage("task.create", task)
+	// h.zmqPublisher.PublishMessage("task.create", task)
 
 	// Notify frontend
 	h.eventStream.Broadcast(events.Event{
@@ -704,7 +703,7 @@ func (h *DiscordMCPHub) Shutdown(ctx context.Context) error {
 
 	h.discordAdapter.Disconnect()
 	h.eventStream.Close()
-	h.zmqPublisher.Close()
+	// h.zmqPublisher.Close()
 	h.running = false
 
 	log.Println("Discord MCP Hub shutdown complete")
