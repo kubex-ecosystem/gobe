@@ -1,7 +1,7 @@
 package gdbasez
 
 import (
-	tnl "github.com/rafa-mori/gdbase/factory"
+	tnl "github.com/kubex-ecosystem/gdbase/factory"
 )
 
 type TunnelMode = tnl.TunnelMode

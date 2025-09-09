@@ -8,8 +8,8 @@
     "gobe",
     "kbx"
   ],
-  "repository": "https://github.com/rafa-mori/gobe",
-  "homepage": "https://github.com/rafa-mori/gobe",
+  "repository": "https://github.com/kubex-ecosystem/gobe",
+  "homepage": "https://github.com/kubex-ecosystem/gobe",
   "description": "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and more for help you managing your technology stack.",
   "main": "cmd/main.go",
   "bin": "gobe",

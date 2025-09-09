@@ -1,17 +1,17 @@
 package router
 
 import (
-	gdbf "github.com/rafa-mori/gdbase/factory"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	gdbf "github.com/kubex-ecosystem/gdbase/factory"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/app/router/app"
-	"github.com/rafa-mori/gobe/internal/app/router/cbot"
-	"github.com/rafa-mori/gobe/internal/app/router/mcp"
-	"github.com/rafa-mori/gobe/internal/app/router/sys"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	"github.com/rafa-mori/gobe/internal/app/router/user"
-	"github.com/rafa-mori/gobe/internal/app/router/webhooks"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/app"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/cbot"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/mcp"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/sys"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/user"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/webhooks"
 )
 
 func NewRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbConfig gdbf.DBService, secureProperties map[string]bool, metadata map[string]any) ci.IRoute {

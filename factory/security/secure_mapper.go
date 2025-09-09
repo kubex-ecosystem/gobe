@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	ut "github.com/rafa-mori/gdbase/utils"
-	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
-	krs "github.com/rafa-mori/gobe/internal/app/security/external"
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ut "github.com/kubex-ecosystem/gdbase/utils"
+	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
+	krs "github.com/kubex-ecosystem/gobe/internal/app/security/external"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type ISecureMapper[T any] interface {

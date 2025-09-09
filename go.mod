@@ -1,4 +1,4 @@
-module github.com/rafa-mori/gobe
+module github.com/kubex-ecosystem/gobe
 
 go 1.25.0
 
@@ -11,8 +11,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/hyperledger/fabric-contract-api-go v1.2.2
 	github.com/pelletier/go-toml/v2 v2.2.4
-	github.com/rafa-mori/gdbase v1.2.5
-	github.com/rafa-mori/logz v1.4.0
+	github.com/kubex-ecosystem/gdbase v1.2.5
+	github.com/kubex-ecosystem/logz v1.4.0
 	github.com/shirou/gopsutil/v4 v4.25.8
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
@@ -56,7 +56,7 @@ require (
 	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20250827001030-24949be3fa54 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
-	github.com/rafa-mori/grompt v1.0.6 // indirect
+	github.com/kubex-ecosystem/grompt v1.0.6 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
@@ -141,8 +141,8 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pebbe/zmq4 v1.4.0
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rafa-mori/ghbex v0.0.1
-	github.com/rafa-mori/xtui v1.3.1 // indirect
+	github.com/kubex-ecosystem/ghbex v0.0.1
+	github.com/kubex-ecosystem/xtui v1.3.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sagikazarmark/locafero v0.10.0 // indirect
@@ -180,4 +180,4 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
-// replace github.com/rafa-mori/gdbase => ../gdbase
+// replace github.com/kubex-ecosystem/gdbase => ../gdbase

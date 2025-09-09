@@ -1,8 +1,8 @@
 package security
 
 import (
-	sau "github.com/rafa-mori/gobe/internal/app/security/authentication"
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
+	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 )
 
 func NewTokenService(c *sci.TSConfig) sci.TokenService {

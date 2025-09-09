@@ -2,7 +2,7 @@
 package services
 
 import (
-	tp "github.com/rafa-mori/gobe/internal/services/scheduler/types"
+	tp "github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
 )
 
 // ICronService define os métodos necessários para interagir com o serviço de cronjobs.

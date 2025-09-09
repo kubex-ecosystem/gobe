@@ -13,20 +13,20 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	gdbf "github.com/rafa-mori/gdbase/factory"
-	"github.com/rafa-mori/gdbase/services"
-	"github.com/rafa-mori/gdbase/types"
-	ut "github.com/rafa-mori/gdbase/utils"
-	crp "github.com/rafa-mori/gobe/factory/security"
-	rts "github.com/rafa-mori/gobe/internal/app/router"
-	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	is "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	cm "github.com/rafa-mori/gobe/internal/commons"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
-	l "github.com/rafa-mori/logz"
+	gdbf "github.com/kubex-ecosystem/gdbase/factory"
+	"github.com/kubex-ecosystem/gdbase/services"
+	"github.com/kubex-ecosystem/gdbase/types"
+	ut "github.com/kubex-ecosystem/gdbase/utils"
+	crp "github.com/kubex-ecosystem/gobe/factory/security"
+	rts "github.com/kubex-ecosystem/gobe/internal/app/router"
+	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	cm "github.com/kubex-ecosystem/gobe/internal/commons"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	l "github.com/kubex-ecosystem/logz"
 
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type GoBECertData struct {

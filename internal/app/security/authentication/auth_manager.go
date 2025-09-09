@@ -9,8 +9,8 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/google/uuid"
-	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	"github.com/rafa-mori/gobe/internal/module/logger"
+	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type AuthManager struct {

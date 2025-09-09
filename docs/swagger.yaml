@@ -140,13 +140,13 @@ info:
   contact:
     email: support@gobe.dev
     name: GoBE API Support
-    url: https://github.com/rafa-mori/gobe
+    url: https://github.com/kubex-ecosystem/gobe
   description: GoBE is a powerful backend, MCP, and API server with a comprehensive
     route system following GoBE patterns.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  termsOfService: https://github.com/rafa-mori/gobe/terms
+  termsOfService: https://github.com/kubex-ecosystem/gobe/terms
   title: GoBE API
   version: "1.0"
 paths:

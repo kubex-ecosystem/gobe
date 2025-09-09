@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/rafa-mori/gobe/internal/observers/events"
+	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"

@@ -6,12 +6,12 @@ import (
 	"log"
 	"time"
 
-	t "github.com/rafa-mori/gdbase/types"
-	gb "github.com/rafa-mori/gobe"
-	s "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	l "github.com/rafa-mori/logz"
+	t "github.com/kubex-ecosystem/gdbase/types"
+	gb "github.com/kubex-ecosystem/gobe"
+	s "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	l "github.com/kubex-ecosystem/logz"
 	"github.com/streadway/amqp"
 )
 

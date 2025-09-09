@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	types "github.com/rafa-mori/gobe/internal/contracts/types"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 func TestChannelCtl_DefaultChannels(t *testing.T) {

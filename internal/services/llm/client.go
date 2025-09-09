@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rafa-mori/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/config"
 
 	"github.com/patrickmn/go-cache"
 	"github.com/sashabaranov/go-openai"

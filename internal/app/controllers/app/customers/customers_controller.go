@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	fscm "github.com/rafa-mori/gdbase/factory/models"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
+	fscm "github.com/kubex-ecosystem/gdbase/factory/models"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"gorm.io/gorm"
 )
 

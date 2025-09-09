@@ -4,13 +4,13 @@ package preferences
 import (
 	"net/http"
 
-	models "github.com/rafa-mori/gdbase/factory/models/mcp"
-	t "github.com/rafa-mori/gdbase/types"
-	svc "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
+	t "github.com/kubex-ecosystem/gdbase/types"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/contracts/types"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"gorm.io/gorm"
 )
 

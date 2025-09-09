@@ -1,7 +1,7 @@
 package scheduler
 
 import (
-	tp "github.com/rafa-mori/gobe/internal/services/scheduler/types"
+	tp "github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
 )
 
 type IScheduler interface {

@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/rafa-mori/gobe/internal/contracts/types" // IMutexes
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types" // IMutexes
 )
 
 // Bitstate is a thread-safe bit state manager.

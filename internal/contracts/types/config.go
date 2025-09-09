@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
-	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
+	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
 
-	cm "github.com/rafa-mori/gobe/internal/commons"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	cm "github.com/kubex-ecosystem/gobe/internal/commons"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 // TLSConfig is a struct that holds the TLS configuration for the GoBE instance.

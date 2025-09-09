@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/google/uuid"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 
 	"fmt"
 	"sort"

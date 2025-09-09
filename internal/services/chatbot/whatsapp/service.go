@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/rafa-mori/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/config"
 )
 
 // Service provides methods to interact with the WhatsApp Business API.

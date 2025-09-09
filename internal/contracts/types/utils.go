@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 func IsShellSpecialVar(c uint8) bool {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 func AutoEncode[T any](v T, format, filePath string) ([]byte, error) {

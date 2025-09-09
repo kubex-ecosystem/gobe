@@ -1,7 +1,7 @@
 package gdbasez
 
 import (
-	models "github.com/rafa-mori/gdbase/factory/models/mcp"
+	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 )
 
 // LLM aliases

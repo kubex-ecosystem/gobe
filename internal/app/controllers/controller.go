@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	whk "github.com/rafa-mori/gdbase/factory/models"
-	"github.com/rafa-mori/gobe/internal/contracts/types"
+	whk "github.com/kubex-ecosystem/gdbase/factory/models"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/streadway/amqp"
 )
 

@@ -3,7 +3,7 @@ package types_test
 
 import (
 	"testing"
-	types "github.com/rafa-mori/gobe/internal/contracts/types"
+	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 func TestIsShellSpecialVar(t *testing.T) {

@@ -3,12 +3,12 @@ package cbot
 import (
 	"net/http"
 
-	whatsapp_controller "github.com/rafa-mori/gobe/internal/app/controllers/app/chatbots/whatsapp"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	"github.com/rafa-mori/gobe/internal/config"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	"github.com/rafa-mori/gobe/internal/services/chatbot/whatsapp"
+	whatsapp_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/whatsapp"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	"github.com/kubex-ecosystem/gobe/internal/config"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
 )
 
 // NewWhatsAppRoutes registers WhatsApp related endpoints.

@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	products_controller "github.com/rafa-mori/gobe/internal/app/controllers/app/products"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	l "github.com/rafa-mori/logz"
+	products_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/products"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 type ProductRoutes struct {

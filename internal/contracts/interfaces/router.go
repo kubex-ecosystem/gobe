@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	gdbf "github.com/rafa-mori/gdbase/factory"
-	l "github.com/rafa-mori/logz"
+	gdbf "github.com/kubex-ecosystem/gdbase/factory"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 type IRouter interface {

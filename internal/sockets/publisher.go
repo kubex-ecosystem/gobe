@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rafa-mori/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/config"
 
 	zmq "github.com/pebbe/zmq4"
 )

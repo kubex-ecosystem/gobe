@@ -3,7 +3,7 @@ package utils_test
 
 import (
 	"testing"
-	utils "github.com/rafa-mori/gobe/internal/utils"
+	utils "github.com/kubex-ecosystem/gobe/internal/utils"
 )
 
 func TestIsBase62String(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/spf13/cobra"
 )
 

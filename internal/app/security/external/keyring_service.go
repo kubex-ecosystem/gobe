@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/zalando/go-keyring"
 )
 

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	l "github.com/rafa-mori/logz"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 // Cron keeps track of any number of entries, invoking the associated func as

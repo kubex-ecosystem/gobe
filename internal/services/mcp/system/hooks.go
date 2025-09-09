@@ -1,6 +1,6 @@
 package system
 
-import "github.com/rafa-mori/gobe/internal/services/mcp/hooks"
+import "github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 
 func UpdateSystemStateFromMetrics(bs *hooks.Bitstate[uint64, hooks.SystemDomain], cpuUsage, memFreeMB float64) {
 	if cpuUsage > 85 {

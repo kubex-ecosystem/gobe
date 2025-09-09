@@ -4,7 +4,7 @@ site_description: "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and m
 site_author: "Rafael Mori"
 
 repo_name: "rafa-mori/gobe"
-repo_url: https://github.com/rafa-mori/gobe
+repo_url: https://github.com/kubex-ecosystem/gobe
 
 theme:
   name: material
@@ -95,7 +95,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/rafa-mori/gobe
+      link: https://github.com/kubex-ecosystem/gobe
       name: GoBE on GitHub
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/rafa-mori/

@@ -3,10 +3,10 @@ package mcp
 import (
 	"net/http"
 
-	mcp_system_controller "github.com/rafa-mori/gobe/internal/app/controllers/mcp/system"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	mcp_system_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/system"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type MCPSystemRoutes struct {

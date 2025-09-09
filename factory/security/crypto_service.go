@@ -1,8 +1,8 @@
 package security
 
 import (
-	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
+	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 )
 
 type CryptoService interface {
