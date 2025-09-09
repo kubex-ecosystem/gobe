@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	types "github.com/rafa-mori/gobe/internal/contracts/types"
+	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 func TestProperty_GetSetSerialize(t *testing.T) {

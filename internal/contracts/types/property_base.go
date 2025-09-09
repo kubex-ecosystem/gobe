@@ -1,9 +1,9 @@
 package types
 
 import (
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	l "github.com/rafa-mori/logz"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	l "github.com/kubex-ecosystem/logz"
 
 	"fmt"
 	"reflect"

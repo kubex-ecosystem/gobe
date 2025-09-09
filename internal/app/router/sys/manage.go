@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/app/middlewares"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	l "github.com/rafa-mori/logz"
+	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 type ServerRoutes struct {

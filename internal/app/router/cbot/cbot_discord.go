@@ -4,12 +4,12 @@ package cbot
 import (
 	"net/http"
 
-	discord_controller "github.com/rafa-mori/gobe/internal/app/controllers/app/chatbots/discord"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	"github.com/rafa-mori/gobe/internal/config"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	"github.com/rafa-mori/gobe/internal/proxy/hub"
+	discord_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/discord"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	"github.com/kubex-ecosystem/gobe/internal/config"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
 )
 
 type DiscordRoutes struct {

@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/rafa-mori/gobe/internal/config"
+	zmq "github.com/pebbe/zmq4@v1.4.0"
 
-	zmq "github.com/pebbe/zmq4"
+	"github.com/kubex-ecosystem/gobe/internal/config"
 )
 
 type Publisher struct {
-	socket  *zmq.Socket
+	socket  *zmq4.Socket
 	config  config.ZMQConfig
 	address string
 }

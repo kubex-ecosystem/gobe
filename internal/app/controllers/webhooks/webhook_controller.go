@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	whk "github.com/rafa-mori/gdbase/factory/models"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
+	whk "github.com/kubex-ecosystem/gdbase/factory/models"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/streadway/amqp"
 )
 

@@ -4,13 +4,13 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	s "github.com/rafa-mori/gdbase/factory"
-	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	kri "github.com/rafa-mori/gobe/internal/app/security/external"
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	common "github.com/rafa-mori/gobe/internal/commons"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	s "github.com/kubex-ecosystem/gdbase/factory"
+	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	kri "github.com/kubex-ecosystem/gobe/internal/app/security/external"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	common "github.com/kubex-ecosystem/gobe/internal/commons"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type TokenClientImpl struct {

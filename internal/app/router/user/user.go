@@ -3,10 +3,10 @@ package user
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/app/controllers/sys/federation/users"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/federation/users"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 
 	"net/http"
 )

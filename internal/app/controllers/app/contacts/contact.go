@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type SMTPConfig struct {

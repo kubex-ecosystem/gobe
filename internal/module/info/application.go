@@ -5,7 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 
-	l "github.com/rafa-mori/logz"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 //go:embed manifest.json

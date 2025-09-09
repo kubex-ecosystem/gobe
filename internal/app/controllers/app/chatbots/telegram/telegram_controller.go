@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	tg "github.com/rafa-mori/gobe/internal/services/chatbot/telegram"
+	tg "github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
 )
 
 // Controller handles Telegram webhook events and messaging.

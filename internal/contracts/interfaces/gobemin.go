@@ -3,8 +3,8 @@ package interfaces
 import (
 	"io"
 
-	gdbf "github.com/rafa-mori/gdbase/factory"
-	l "github.com/rafa-mori/logz"
+	gdbf "github.com/kubex-ecosystem/gdbase/factory"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 type ContactForm struct {

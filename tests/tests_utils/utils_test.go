@@ -5,7 +5,7 @@ import (
 	// Importamos o pacote 'utils' com um alias para evitar ambiguidade.
 	"testing"
 
-	utils "github.com/rafa-mori/gobe/internal/utils"
+	utils "github.com/kubex-ecosystem/gobe/internal/utils"
 )
 
 // Teste corrigido para a função IsBase64String.

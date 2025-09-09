@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	pl "github.com/rafa-mori/gobe/internal/services/scheduler/services"
+	pl "github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
 )
 
 // CronJobScheduler gerencia a execução de cronjobs usando o GoroutinePool.

@@ -4,8 +4,8 @@ package logger_test
 import (
 	"testing"
 
-	logger "github.com/rafa-mori/gobe/internal/module/logger"
-	l "github.com/rafa-mori/logz"
+	logger "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 // helper para detectar panic sem falhar o processo

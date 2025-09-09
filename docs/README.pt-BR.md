@@ -2,13 +2,13 @@
 
 ![GoBE Banner](/docs/assets/top_banner_lg_b.png)
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/rafa-mori/gobe/release.yml?branch=main)](https://github.com/rafa-mori/gobe/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/kubex-ecosystem/gobe/release.yml?branch=main)](https://github.com/kubex-ecosystem/gobe/actions)
 [![Go](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go&logoColor=white)](https://go.dev/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/rafa-mori/gobe/blob/main/LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/kubex-ecosystem/gobe/blob/main/LICENSE)
 [![Automation](https://img.shields.io/badge/automation-zero%20config-blue)](#features)
 [![Modular](https://img.shields.io/badge/modular-yes-yellow)](#features)
 [![Security](https://img.shields.io/badge/security-high-red)](#features)
-[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/rafa-mori/gobe/blob/main/CONTRIBUTING.md)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/kubex-ecosystem/gobe/blob/main/CONTRIBUTING.md)
 
 ---
 
@@ -82,7 +82,7 @@ Clone o repositório e compile o GoBE:
 
 ```sh
 # Clone o repositório
-git clone https://github.com/rafa-mori/gobe.git
+git clone https://github.com/kubex-ecosystem/gobe.git
 cd gobe
 go build -o gobe .
 ```
@@ -165,9 +165,7 @@ Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar
 
 ## **Contact**
 
-💌 **Developer**:  
-[Rafael Mori](mailto:rafa-mori@gmail.com)  
-💼 [Follow me on GitHub](https://github.com/rafa-mori)  
+💌 **Developer**:
+[Rafael Mori](mailto:rafa-mori@gmail.com)
+💼 [Follow me on GitHub](https://github.com/kubex-ecosystem)
 Estou aberto a colaborações e novas ideias. Se achou o projeto interessante, entre em contato!
-
-

@@ -6,13 +6,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	whk "github.com/rafa-mori/gdbase/factory/models"
-	t "github.com/rafa-mori/gdbase/types"
-	"github.com/rafa-mori/gobe/internal/app/controllers/webhooks"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	l "github.com/rafa-mori/logz"
+	whk "github.com/kubex-ecosystem/gdbase/factory/models"
+	t "github.com/kubex-ecosystem/gdbase/types"
+	"github.com/kubex-ecosystem/gobe/internal/app/controllers/webhooks"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	l "github.com/kubex-ecosystem/logz"
 	"github.com/streadway/amqp"
 )
 

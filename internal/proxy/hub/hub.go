@@ -10,15 +10,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/rafa-mori/gobe/internal/config"
-	"github.com/rafa-mori/gobe/internal/observers/approval"
-	"github.com/rafa-mori/gobe/internal/observers/events"
-	"github.com/rafa-mori/gobe/internal/proxy/gobe"
-	"github.com/rafa-mori/gobe/internal/proxy/gobe_ctl"
-	"github.com/rafa-mori/gobe/internal/services/chatbot/discord"
-	"github.com/rafa-mori/gobe/internal/services/llm"
-	"github.com/rafa-mori/gobe/internal/services/mcp"
-	zmq "github.com/rafa-mori/gobe/internal/sockets"
+	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
+	"github.com/kubex-ecosystem/gobe/internal/observers/events"
+	"github.com/kubex-ecosystem/gobe/internal/proxy/gobe"
+	"github.com/kubex-ecosystem/gobe/internal/proxy/gobe_ctl"
+	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
+	"github.com/kubex-ecosystem/gobe/internal/services/llm"
+	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	zmq "github.com/kubex-ecosystem/gobe/internal/sockets"
 )
 
 type DiscordMCPHub struct {

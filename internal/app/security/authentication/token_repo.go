@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	"github.com/rafa-mori/gobe/internal/app/security/models"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	"github.com/kubex-ecosystem/gobe/internal/app/security/models"
 	"gorm.io/gorm"
 )
 

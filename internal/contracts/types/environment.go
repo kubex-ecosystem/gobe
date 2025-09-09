@@ -19,11 +19,11 @@ import (
 	"syscall"
 	"time"
 
-	crp "github.com/rafa-mori/gobe/internal/app/security/crypto"
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	l "github.com/rafa-mori/logz"
+	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 type EnvCache struct {

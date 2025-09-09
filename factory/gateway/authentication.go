@@ -2,8 +2,8 @@
 package gateway
 
 import (
-	ii "github.com/rafa-mori/gobe/internal/app/security/authentication"
-	fsi "github.com/rafa-mori/gobe/internal/app/security/certificates"
+	ii "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
+	fsi "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 )
 
 type AuthManager = ii.AuthManager

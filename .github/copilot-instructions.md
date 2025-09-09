@@ -414,7 +414,7 @@ type IEntityService interface {
 Use the global logger with appropriate context:
 
 ```go
-import gl "github.com/rafa-mori/gobe/internal/module/logger"
+import gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 
 // Error logging
 gl.Log("error", "Operation failed", err)

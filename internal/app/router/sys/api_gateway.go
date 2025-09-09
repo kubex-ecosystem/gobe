@@ -9,8 +9,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	apia "github.com/rafa-mori/gobe/internal/app/security/authentication"
-	"github.com/rafa-mori/gobe/internal/module/logger"
+	apia "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
+	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type APIGateway struct {

@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/rafa-mori/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/config"
 
 	"github.com/bwmarrin/discordgo"
 )

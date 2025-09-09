@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	gdbf "github.com/rafa-mori/gdbase/factory"
-	is "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
+	gdbf "github.com/kubex-ecosystem/gdbase/factory"
+	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 // DBConfig implements interfaces.IRoute.

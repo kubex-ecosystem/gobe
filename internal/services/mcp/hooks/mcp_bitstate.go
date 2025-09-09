@@ -3,7 +3,7 @@ package hooks
 import (
 	"reflect"
 
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 type Bitstate[T ~uint64, S any] struct {

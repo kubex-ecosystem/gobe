@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	services "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	"github.com/rafa-mori/gobe/internal/module/logger"
-	"github.com/rafa-mori/gobe/internal/services/mcp/hooks"
-	"github.com/rafa-mori/gobe/internal/services/mcp/system"
+	services "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
+	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
 	"gorm.io/gorm"
 
-	l "github.com/rafa-mori/logz"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 var (

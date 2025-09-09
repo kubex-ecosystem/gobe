@@ -9,10 +9,10 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "https://github.com/rafa-mori/gobe/terms",
+        "termsOfService": "https://github.com/kubex-ecosystem/gobe/terms",
         "contact": {
             "name": "GoBE API Support",
-            "url": "https://github.com/rafa-mori/gobe",
+            "url": "https://github.com/kubex-ecosystem/gobe",
             "email": "support@gobe.dev"
         },
         "license": {

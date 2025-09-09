@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	cron "github.com/rafa-mori/gdbase/factory/models"
-	"github.com/rafa-mori/gobe/internal/contracts/types"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	cron "github.com/kubex-ecosystem/gdbase/factory/models"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"gorm.io/gorm"
 )
 

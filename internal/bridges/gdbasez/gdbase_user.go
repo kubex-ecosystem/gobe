@@ -1,7 +1,7 @@
 package gdbasez
 
 import (
-	user "github.com/rafa-mori/gdbase/factory/models"
+	user "github.com/kubex-ecosystem/gdbase/factory/models"
 )
 
 type UserService = user.UserService

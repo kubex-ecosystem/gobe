@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/rafa-mori/gobe/internal/module"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/module"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 // main initializes the logger and creates a new GoBE instance.

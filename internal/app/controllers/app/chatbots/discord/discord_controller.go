@@ -14,18 +14,18 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 
-	"github.com/rafa-mori/gobe/internal/config"
-	"github.com/rafa-mori/gobe/internal/observers/approval"
-	"github.com/rafa-mori/gobe/internal/observers/events"
-	"github.com/rafa-mori/gobe/internal/proxy/hub"
-	"github.com/rafa-mori/gobe/internal/services/chatbot/discord"
+	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
+	"github.com/kubex-ecosystem/gobe/internal/observers/events"
+	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
+	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 
-	fscm "github.com/rafa-mori/gdbase/factory/models"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
+	fscm "github.com/kubex-ecosystem/gdbase/factory/models"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 
-	l "github.com/rafa-mori/logz"
+	l "github.com/kubex-ecosystem/logz"
 
-	"github.com/rafa-mori/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 var (

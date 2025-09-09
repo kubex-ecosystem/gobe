@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	customers_controller "github.com/rafa-mori/gobe/internal/app/controllers/app/customers"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	customers_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/customers"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type CustomerRoutes struct {

@@ -7,15 +7,15 @@ import (
 	"os"
 	"strings"
 
-	user "github.com/rafa-mori/gdbase/factory/models"
-	sau "github.com/rafa-mori/gobe/internal/app/security/authentication"
-	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	cm "github.com/rafa-mori/gobe/internal/commons"
+	user "github.com/kubex-ecosystem/gdbase/factory/models"
+	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
+	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rafa-mori/gobe/internal/contracts/types"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"gorm.io/gorm"
 )
 

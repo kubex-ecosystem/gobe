@@ -2,7 +2,7 @@
 # lib/validate.sh – Validação da versão do Go e dependências
 
 validate_versions() {
-    local _GO_SETUP='https://raw.githubusercontent.com/rafa-mori/gosetup/main/go.sh'
+    local _GO_SETUP='https://raw.githubusercontent.com/kubex-ecosystem/gosetup/main/go.sh'
     local go_version
     go_version=$(go version | awk '{print $3}' | tr -d 'go' || echo "")
     if [[ -z "$go_version" ]]; then

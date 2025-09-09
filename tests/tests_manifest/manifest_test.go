@@ -3,7 +3,7 @@ package manifest_test
 
 import (
 	"testing"
-	manifest "github.com/rafa-mori/gobe/internal/module/info"
+	manifest "github.com/kubex-ecosystem/gobe/internal/module/info"
 )
 
 func TestGetManifest_LoadsEmbeddedData(t *testing.T) {

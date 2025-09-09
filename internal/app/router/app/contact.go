@@ -2,10 +2,10 @@ package app
 
 import (
 	"github.com/gin-gonic/gin"
-	cts "github.com/rafa-mori/gobe/internal/app/controllers/app/contacts"
-	proto "github.com/rafa-mori/gobe/internal/app/router/types"
-	ar "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	l "github.com/rafa-mori/logz"
+	cts "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/contacts"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	l "github.com/kubex-ecosystem/logz"
 
 	"net/http"
 )

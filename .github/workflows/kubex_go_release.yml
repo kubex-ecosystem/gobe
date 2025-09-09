@@ -140,7 +140,7 @@ jobs:
         run: |
           GO_VERSION=$(grep '^go ' $(git rev-parse --show-toplevel)/go.mod | awk '{print $2}')
 
-          bash -c "$(curl -sSfL 'https://raw.githubusercontent.com/rafa-mori/gosetup/main/go.sh')" -s --version "$GO_VERSION"
+          bash -c "$(curl -sSfL 'https://raw.githubusercontent.com/kubex-ecosystem/gosetup/main/go.sh')" -s --version "$GO_VERSION"
 
           # Verify installation
           go version
@@ -160,35 +160,35 @@ jobs:
       - name: Cross-Platform Build
         if: steps.version-check.outputs.continue == 'true'
         run: |
-          MODULE_NAME="${{ steps.manifest.outputs.module-name }}"
-          PLATFORMS="${{ steps.manifest.outputs.platforms }}"
+          export MODULE_NAME="${{ steps.manifest.outputs.module-name }}"
+          export PLATFORMS="${{ steps.manifest.outputs.platforms }}"
 
           echo "Building $MODULE_NAME for platforms: $PLATFORMS"
-          ENV_PLATFORMS="${ENV_PLATFORMS:-${{ github.event.inputs.platforms }}}"
-          if [[ -z $ENV_PLATFORMS ]]; then
+          export ENV_PLATFORMS="${ENV_PLATFORMS:-${{ github.event.inputs.platforms }}}"
+          if [[ -z ${ENV_PLATFORMS:-} ]]; then
             echo "No platforms specified, using default from manifest."
           else
-            PLATFORMS="$ENV_PLATFORMS"
+            export PLATFORMS="${ENV_PLATFORMS}"
           fi
           for platform in $PLATFORMS; do
             # Parse platform (format: os/arch or os-arch)
-            if [[ "$platform" == *"/"* ]]; then
-              OS=$(echo "$platform" | cut -d'/' -f1)
-              ARCH=$(echo "$platform" | cut -d'/' -f2)
-            elif [[ "$platform" == *"-"* ]]; then
-              OS=$(echo "$platform" | cut -d'-' -f1)
-              ARCH=$(echo "$platform" | cut -d'-' -f2)
+            if [[ "${platform:-}" == *"/"* ]]; then
+              export OS=$(echo "$platform" | cut -d'/' -f1)
+              export ARCH=$(echo "$platform" | cut -d'/' -f2)
+            elif [[ "${platform:-}" == *"-"* ]]; then
+              export OS=$(echo "$platform" | cut -d'-' -f1)
+              export ARCH=$(echo "$platform" | cut -d'-' -f2)
             else
               echo "❌ Invalid platform format: $platform (expected: os/arch or os-arch)"
               continue
             fi
             # Set environment variables
-            export NON_INTERACTIVE=${NON_INTERACTIVE:-${{ github.event.env.NON_INTERACTIVE }}}
-            export FORCE=${FORCE:-${{ github.event.env.FORCE }}}
-            export CI=${CI:-${{ github.event.env.CI }}}
+            export NON_INTERACTIVE=${NON_INTERACTIVE:-${{ github.env.NON_INTERACTIVE }}}
+            export FORCE=${FORCE:-${{ github.env.FORCE }}}
+            export CI=${CI:-${{ github.env.CI }}}
             export DRY_RUN=${DRY_RUN:-${{ github.event.inputs.dry_run }}}
             export DEBUG=${DEBUG:-${{ github.event.inputs.debug }}}
-            echo "🔨 Building for $OS/$ARCH..."
+            echo "🔨 Building for ${OS:-}/${ARCH:-}..."
             make build "${OS:-}" "${ARCH:-}"
           done
       - name: Verify Build Artifacts
@@ -273,7 +273,7 @@ jobs:
   #       run: |
   #         GO_VERSION=$(grep '^go ' $(git rev-parse --show-toplevel)/go.mod | awk '{print $2}')
 
-  #         bash -c "$(curl -sSfL 'https://raw.githubusercontent.com/rafa-mori/gosetup/main/go.sh')" -s --version "${GO_VERSION:-1.24.5}"
+  #         bash -c "$(curl -sSfL 'https://raw.githubusercontent.com/kubex-ecosystem/gosetup/main/go.sh')" -s --version "${GO_VERSION:-1.24.5}"
 
   #         # Verify installation
   #         go version

@@ -9,9 +9,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
-	"github.com/rafa-mori/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 
-	l "github.com/rafa-mori/logz"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 var gl = logger.GetLogger[l.Logger](nil)

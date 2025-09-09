@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/rafa-mori/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/config"
 )
 
 // Service interacts with Telegram Bot API.

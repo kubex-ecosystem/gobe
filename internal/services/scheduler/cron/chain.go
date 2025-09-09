@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	l "github.com/rafa-mori/logz"
+	l "github.com/kubex-ecosystem/logz"
 )
 
 // JobWrapper decorates the given Job with some behavior.

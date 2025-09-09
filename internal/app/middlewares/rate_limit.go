@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	srv "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
+	srv "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 )
 
 type RateLimitMiddleware struct {

@@ -3,8 +3,8 @@ site_url: https://gobe.rafa-mori.dev/
 site_description: "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and more for help you managing your technology stack."
 site_author: "Rafael Mori"
 
-repo_name: "rafa-mori/gobe"
-repo_url: https://github.com/rafa-mori/gobe
+repo_name: "kubex-ecosystem/gobe"
+repo_url: https://github.com/kubex-ecosystem/gobe
 
 theme:
   name: material
@@ -95,10 +95,10 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/rafa-mori/gobe
+      link: https://github.com/kubex-ecosystem/gobe
       name: GoBE on GitHub
     - icon: fontawesome/brands/linkedin
-      link: https://www.linkedin.com/in/rafa-mori/
+      link: https://www.linkedin.com/in/kubex-ecosystem/
       name: Rafael Mori on LinkedIn
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/faelOmori

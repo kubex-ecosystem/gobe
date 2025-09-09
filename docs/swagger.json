@@ -3,10 +3,10 @@
     "info": {
         "description": "GoBE is a powerful backend, MCP, and API server with a comprehensive route system following GoBE patterns.",
         "title": "GoBE API",
-        "termsOfService": "https://github.com/rafa-mori/gobe/terms",
+        "termsOfService": "https://github.com/kubex-ecosystem/gobe/terms",
         "contact": {
             "name": "GoBE API Support",
-            "url": "https://github.com/rafa-mori/gobe",
+            "url": "https://github.com/kubex-ecosystem/gobe",
             "email": "support@gobe.dev"
         },
         "license": {

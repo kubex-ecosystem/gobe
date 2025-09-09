@@ -1,9 +1,9 @@
 package security
 
 import (
-	s "github.com/rafa-mori/gdbase/factory"
-	sau "github.com/rafa-mori/gobe/internal/app/security/authentication"
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
+	s "github.com/kubex-ecosystem/gdbase/factory"
+	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 )
 
 func NewTokenClient(certService sci.ICertService, db s.DBService) sci.TokenClient {

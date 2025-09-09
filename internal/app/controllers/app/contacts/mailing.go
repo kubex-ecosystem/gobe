@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	ci "github.com/rafa-mori/gobe/internal/contracts/interfaces"
-	t "github.com/rafa-mori/gobe/internal/contracts/types"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
+	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 func enqueueEmail(cc *ContactController, emailQueue chan t.ContactForm) {

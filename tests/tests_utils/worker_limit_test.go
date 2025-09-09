@@ -4,7 +4,7 @@ package utils_test
 import (
 	"errors"
 	"testing"
-	utils "github.com/rafa-mori/gobe/internal/utils"
+	utils "github.com/kubex-ecosystem/gobe/internal/utils"
 )
 
 func TestValidateWorkerLimit(t *testing.T) {

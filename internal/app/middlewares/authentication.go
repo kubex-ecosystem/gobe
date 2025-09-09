@@ -15,14 +15,14 @@ import (
 
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 
-	l "github.com/rafa-mori/logz"
+	l "github.com/kubex-ecosystem/logz"
 
-	sau "github.com/rafa-mori/gobe/factory/security"
-	crt "github.com/rafa-mori/gobe/internal/app/security/certificates"
-	sci "github.com/rafa-mori/gobe/internal/app/security/interfaces"
-	srv "github.com/rafa-mori/gobe/internal/bridges/gdbasez"
-	cm "github.com/rafa-mori/gobe/internal/commons"
-	"github.com/rafa-mori/gobe/internal/module/logger"
+	sau "github.com/kubex-ecosystem/gobe/factory/security"
+	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	srv "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	cm "github.com/kubex-ecosystem/gobe/internal/commons"
+	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 var gl = logger.GetLogger[l.Logger](nil)

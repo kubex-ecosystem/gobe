@@ -5,8 +5,8 @@ import (
 	"crypto/rsa"
 	"time"
 
-	is "github.com/rafa-mori/gdbase/factory"
-	ism "github.com/rafa-mori/gdbase/factory/models"
+	is "github.com/kubex-ecosystem/gdbase/factory"
+	ism "github.com/kubex-ecosystem/gdbase/factory/models"
 )
 
 type TSConfig struct {

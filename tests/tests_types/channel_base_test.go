@@ -4,7 +4,7 @@ package types_test
 import (
 	"reflect"
 	"testing"
-	types "github.com/rafa-mori/gobe/internal/contracts/types"
+	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 func TestChannelBase_Basics(t *testing.T) {

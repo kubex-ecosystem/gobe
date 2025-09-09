@@ -4,7 +4,7 @@ package cli_test
 import (
 	"os"
 	"testing"
-	cli "github.com/rafa-mori/gobe/cmd/cli"
+	cli "github.com/kubex-ecosystem/gobe/cmd/cli"
 )
 
 func TestGetDescriptions_BannerAndDescription(t *testing.T) {

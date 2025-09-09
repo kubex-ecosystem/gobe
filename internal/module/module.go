@@ -2,9 +2,9 @@
 package module
 
 import (
-	cc "github.com/rafa-mori/gobe/cmd/cli"
-	gl "github.com/rafa-mori/gobe/internal/module/logger"
-	vs "github.com/rafa-mori/gobe/internal/module/version"
+	cc "github.com/kubex-ecosystem/gobe/cmd/cli"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	vs "github.com/kubex-ecosystem/gobe/internal/module/version"
 	"github.com/spf13/cobra"
 
 	"os"
