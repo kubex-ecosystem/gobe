@@ -1,13 +1,19 @@
-site_name: Kubex GoBE
-site_url: https://gobe.rafa-mori.dev/
-site_description: "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and more for help you managing your technology stack."
+site_name: Grompt
+site_url: https://kubex-ecosystem.github.io/grompt/
+site_description: "CLI poderosa para gerenciar e transformar prompts com práticas de engenharia — Go 1.25, React 19, Next 15."
 site_author: "Rafael Mori"
 
-repo_name: "kubex-ecosystem/gobe"
-repo_url: https://github.com/kubex-ecosystem/gobe
+repo_name: "kubex-ecosystem/grompt"
+repo_url: https://github.com/kubex-ecosystem/grompt
+
+docs_dir: ../../docs
+
+# Permite links "Editar esta página" no GitHub
+edit_uri: edit/main/docs/
 
 theme:
   name: material
+  language: pt-BR
   palette:
     primary: "indigo"
     accent: "indigo"
@@ -19,14 +25,8 @@ theme:
     - navigation.sections
     - navigation.tracking
     - navigation.tabs.sticky
-    - navigation.tabs.sticky.scroll
-    - navigation.tabs.sticky.scroll.offset: 64
-    - navigation.tabs.sticky.scroll.offset.mobile: 0
-    - navigation.tabs.sticky.scroll.offset.desktop: 64
-    - navigation.tabs.sticky.scroll.offset.tablet: 64
-    - search.highlight
-    - search.share
-    - search.suggest
+    - content.code.copy
+    - content.tabs.link
   font:
     text: Roboto
     code: Roboto Mono
@@ -38,8 +38,8 @@ markdown_extensions:
   - codehilite:
       linenums: true
   - toc:
-      permalink: True
-      title: On this page
+      permalink: true
+      title: Nesta página
   - attr_list
   - def_list
   - footnotes
@@ -58,8 +58,8 @@ markdown_extensions:
   - pymdownx.keys
   - pymdownx.magiclink:
       repo_url_shorthand: true
-      user: rafa-mori
-      repo: gobe
+      user: kubex-ecosystem
+      repo: grompt
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.superfences:
@@ -74,31 +74,42 @@ markdown_extensions:
   - pymdownx.tilde
 
 nav:
-  - Home: index.md
-  - Documentation:
-      - Getting Started:
-          - README: README.en.md
-          - Installation: INSTALL.md
-      - User Guide:
-          - README (Portuguese): README.pt-BR.md
-  - Community:
-      - Contributing: CONTRIBUTING.md
-      - Code of Conduct: CODE_OF_CONDUCT.md
-      - Support: SUPPORT.md
-      - Authors: AUTHORS.md
-  - Project Info:
-      - License: LICENSE
-      - Notice: NOTICE.md
-      - Security Policy: SECURITY.md
-      - Changelog: CHANGELOG.md
+  - Início: index.md
+  - Primeiros Passos:
+      - Instalação: getting-started/installation.md
+      - Início Rápido: getting-started/quickstart.md
+  - Guia do Usuário:
+      - Comandos CLI: user-guide/cli-commands.md
+      - Configuração: user-guide/configuration.md
+      - Exemplos de Uso: user-guide/usage-examples.md
+      - FAQ: user-guide/faq.md
+      - API Reference: user-guide/api-reference.md
+      - Tópicos Avançados:
+          - Wrapper WRPR: pages/wrpr-wrapper.md
+  - Desenvolvimento:
+      - Contribuindo: development/contributing.md
+      - Testes: development/testing.md
+      - Comandos Makefile: development/makefile.md
+      - Publicando Docs: development/docs-publishing.md
+      - Solução de Problemas: development/troubleshooting.md
+      - Arquitetura: development/architecture.md
+  - Comunidade:
+      - Código de Conduta: community/code-of-conduct.md
+      - Suporte: community/support.md
+      - Autores: community/authors.md
+  - Informações do Projeto:
+      - Licença: project-info/license.md
+      - Aviso Legal: project-info/notice.md
+      - Política de Segurança: project-info/security.md
+      - Changelog: project-info/changelog.md
 
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/kubex-ecosystem/gobe
-      name: GoBE on GitHub
+      link: https://github.com/kubex-ecosystem/grompt
+      name: Grompt on GitHub
     - icon: fontawesome/brands/linkedin
-      link: https://www.linkedin.com/in/kubex-ecosystem/
+      link: https://www.linkedin.com/in/rafa-mori/
       name: Rafael Mori on LinkedIn
     - icon: fontawesome/brands/twitter
       link: https://twitter.com/faelOmori
@@ -107,12 +118,17 @@ extra:
     provider: mike
   analytics:
     provider: google
-    property: ${G-7HLY17F3DK}
-# plugins:
-#   - search:
-#       lang: en
-#   - git-revision-date-localized:
-#       type: datetime
-#       timezone: America/Sao_Paulo
-#       locale: en
-#       fallback_to_build_date: true
+    property: G-7HLY17F3DK
+
+plugins:
+  - search:
+      lang: pt
+  - git-revision-date-localized:
+      type: datetime
+      timezone: America/Sao_Paulo
+      locale: pt_BR
+      fallback_to_build_date: true
+  # - linkcheck:
+  #     fail_on_dead_links: true
+  #     timeout: 10
+  #     retry_count: 2
