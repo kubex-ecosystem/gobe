@@ -56,7 +56,7 @@ require (
 	github.com/invopop/jsonschema v0.13.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20250827001030-24949be3fa54 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
-	github.com/kubex-ecosystem/grompt v1.0.7 // indirect
+	github.com/kubex-ecosystem/gemx/grompt v1.0.9 // indirect
 	github.com/tklauser/go-sysconf v0.3.15 // indirect
 	github.com/tklauser/numcpus v0.10.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
@@ -141,8 +141,8 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pebbe/zmq4 v1.4.0
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/kubex-ecosystem/ghbex v0.0.1
-	github.com/kubex-ecosystem/xtui v1.3.2 // indirect
+	github.com/kubex-ecosystem/gemx/ghbex v0.0.1
+	github.com/kubex-ecosystem/xtui v1.3.2
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/sagikazarmark/locafero v0.10.0 // indirect

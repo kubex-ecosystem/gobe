@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/google/go-github/v61/github"
-	ghbex "github.com/kubex-ecosystem/ghbex"
+	ghbex "github.com/kubex-ecosystem/gemx/ghbex"
 )
 
 // Type aliases from GHbex
