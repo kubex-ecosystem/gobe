@@ -7,6 +7,8 @@
 ROOT_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 TARGET_MANIFEST = $(ROOT_DIR)internal/module/info/manifest.json
 APP_NAME := $(shell jq -r '.name' < $(TARGET_MANIFEST))
+_RUN_PRE_SCRIPTS := $(shell echo "true")
+_RUN_POST_SCRIPTS := $(shell echo "true")
 
 ifeq ($(APP_NAME),)
 APP_NAME := $(shell  echo $(basename $(CURDIR)) | tr '[:upper:]' '[:lower:]')
@@ -37,9 +39,9 @@ DESCRIPTION := $(shell git log -1 --pretty=%B | head -n 1)
 endif
 BINARY_NAME := $(shell jq -r '.bin' < $(TARGET_MANIFEST))
 ifeq ($(BINARY_NAME),)
-BINARY_NAME := $(ROOT_DIR)bin/$(APP_NAME)
+BINARY_NAME := $(ROOT_DIR)dist/$(APP_NAME)
 else
-BINARY_NAME := $(ROOT_DIR)bin/$(BINARY_NAME)
+BINARY_NAME := $(ROOT_DIR)dist/$(BINARY_NAME)
 endif
 CMD_DIR := $(ROOT_DIR)cmd
 
@@ -93,6 +95,49 @@ clean:
 # Run tests.
 test:
 	@bash $(INSTALL_SCRIPT) test $(ARGS)
+	$(shell exit 0)
+
+optimize-images:
+	@bash $(INSTALL_SCRIPT) optimize-images $(ARGS)
+	$(shell exit 0)
+
+# Platform-specific targets (prevent wildcard capture)
+linux:
+	@echo "Process finished for platform: linux"
+
+amd64:
+	@echo "Process finished for architecture: amd64"
+
+windows:
+	@echo "Process finished for platform: windows"
+
+darwin:
+	@echo "Process finished for platform: darwin"
+
+arm64:
+	@echo "Process finished for architecture: arm64"
+
+armv6l:
+	@echo "Process finished for architecture: armv6l"
+
+386:
+	@echo "Process finished for architecture: 386"
+
+all:
+	@echo "Process finished for all platforms and architectures"
+
+build-docs:
+	@echo "Building documentation..."
+	@bash $(INSTALL_SCRIPT) build-docs $(ARGS)
+	$(shell exit 0)
+
+serve-docs:
+	@echo "Starting documentation server..."
+	@bash $(INSTALL_SCRIPT) serve-docs $(ARGS)
+
+pub-docs:
+	@echo "Publishing documentation..."
+	@bash $(INSTALL_SCRIPT) pub-docs $(ARGS)
 	$(shell exit 0)
 
 ## Run dynamic commands with arguments calling the install script.
