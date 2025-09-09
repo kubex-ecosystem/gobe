@@ -286,8 +286,8 @@ github.com/kubex-ecosystem/ghbex v0.0.1 h1:FYThhad4OpCSziHQV6PJuYanOT9yjq1YGNaef
 github.com/kubex-ecosystem/ghbex v0.0.1/go.mod h1:+JKY85LhOgHCuiVGLEzX1BMahYDJhY1UXbHPnzGrbm0=
 github.com/kubex-ecosystem/grompt v1.0.6 h1:ZCGAccePm6dxWk48FFteUvYIyVYMzl8KpGTGMB/oC+w=
 github.com/kubex-ecosystem/grompt v1.0.6/go.mod h1:4O7olhAmuOryACH1QJKN1pdgguG2YmYXCatBjk5E2tM=
-github.com/kubex-ecosystem/logz v1.4.0 h1:rCOu50JzonqY0VX/qEnnBXo5P1jNOwzeRr1aj1lz2SQ=
-github.com/kubex-ecosystem/logz v1.4.0/go.mod h1:w/m/k0p1z/pNFLOTPUJMNiQJfAVtiZeGhnOsx1+/frA=
+github.com/kubex-ecosystem/logz v1.5.0 h1:rCOu50JzonqY0VX/qEnnBXo5P1jNOwzeRr1aj1lz2SQ=
+github.com/kubex-ecosystem/logz v1.5.0/go.mod h1:w/m/k0p1z/pNFLOTPUJMNiQJfAVtiZeGhnOsx1+/frA=
 github.com/kubex-ecosystem/xtui v1.3.1 h1:+r+TjL3l/fftP0203P271k8olgzvf0o3TKobj316aC8=
 github.com/kubex-ecosystem/xtui v1.3.1/go.mod h1:MGPBak9ADdN7ALsyvuErNRNu4fUvpsBpj8P9O5GNb1M=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=

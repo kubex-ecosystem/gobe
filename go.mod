@@ -1,6 +1,6 @@
 module github.com/kubex-ecosystem/gobe
 
-go 1.25.0
+go 1.25.1
 
 require (
 	github.com/fatih/color v1.18.0
@@ -12,7 +12,7 @@ require (
 	github.com/hyperledger/fabric-contract-api-go v1.2.2
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/kubex-ecosystem/gdbase v1.2.5
-	github.com/kubex-ecosystem/logz v1.4.0
+	github.com/kubex-ecosystem/logz v1.5.0
 	github.com/shirou/gopsutil/v4 v4.25.8
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.20.1
