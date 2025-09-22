@@ -16,6 +16,29 @@ type HealthController struct {
 	startedAt      time.Time
 }
 
+// GatewayProvidersStatus encapsulates aggregated provider availability information.
+type GatewayProvidersStatus struct {
+	Total       int `json:"total"`
+	Available   int `json:"available"`
+	Unavailable int `json:"unavailable"`
+}
+
+// GatewayServiceHealth reports the health of a specific gateway dependency.
+type GatewayServiceHealth struct {
+	Healthy bool                    `json:"healthy"`
+	Detail  *GatewayProvidersStatus `json:"detail,omitempty"`
+}
+
+// GatewayHealthResponse is the primary schema returned by gateway health endpoints.
+type GatewayHealthResponse struct {
+	Status    string                          `json:"status"`
+	Timestamp *time.Time                      `json:"timestamp,omitempty"`
+	Uptime    string                          `json:"uptime,omitempty"`
+	Started   *time.Time                      `json:"started,omitempty"`
+	Version   string                          `json:"version,omitempty"`
+	Services  map[string]GatewayServiceHealth `json:"services,omitempty"`
+}
+
 func NewHealthController(dbService svc.DBService, gatewayService *gatewaysvc.Service) *HealthController {
 	return &HealthController{
 		dbService:      dbService,
@@ -24,27 +47,62 @@ func NewHealthController(dbService svc.DBService, gatewayService *gatewaysvc.Ser
 	}
 }
 
+// Healthz provides a lightweight readiness probe for upstream load balancers.
+//
+// @Summary     Healthcheck
+// @Description Validates service availability for gateway integrations.
+// @Tags        health
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} GatewayHealthResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /healthz [get]
 func (hc *HealthController) Healthz(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":    "ok",
-		"timestamp": time.Now().UTC(),
+	now := time.Now().UTC()
+	c.JSON(http.StatusOK, GatewayHealthResponse{
+		Status:    "ok",
+		Timestamp: &now,
 	})
 }
 
+// Status returns dependencies and uptime information for monitoring dashboards.
+//
+// @Summary     Service status
+// @Description Reports uptime and dependency health for the gateway module.
+// @Tags        health
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} GatewayHealthResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /status [get]
 func (hc *HealthController) Status(c *gin.Context) {
-	c.JSON(http.StatusOK, hc.buildStatusPayload())
-}
-
-func (hc *HealthController) APIHealth(c *gin.Context) {
 	payload := hc.buildStatusPayload()
-	payload["version"] = "gateway"
 	c.JSON(http.StatusOK, payload)
 }
 
-func (hc *HealthController) buildStatusPayload() gin.H {
+// APIHealth exposes health data for clients interfacing through the API gateway.
+//
+// @Summary     Gateway health
+// @Description Augments status payload with module version for API consumers.
+// @Tags        health
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} GatewayHealthResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/health [get]
+func (hc *HealthController) APIHealth(c *gin.Context) {
+	payload := hc.buildStatusPayload()
+	payload.Version = "gateway"
+	c.JSON(http.StatusOK, payload)
+}
+
+func (hc *HealthController) buildStatusPayload() GatewayHealthResponse {
 	uptime := time.Since(hc.startedAt)
-	services := gin.H{
-		"database": gin.H{"healthy": hc.checkDatabase()},
+	now := time.Now().UTC()
+	services := map[string]GatewayServiceHealth{
+		"database": {
+			Healthy: hc.checkDatabase(),
+		},
 	}
 
 	if hc.gatewayService != nil {
@@ -55,18 +113,24 @@ func (hc *HealthController) buildStatusPayload() gin.H {
 				available++
 			}
 		}
-		services["providers"] = gin.H{
-			"total":       len(summaries),
-			"available":   available,
-			"unavailable": len(summaries) - available,
+		services["providers"] = GatewayServiceHealth{
+			Healthy: available > 0,
+			Detail: &GatewayProvidersStatus{
+				Total:       len(summaries),
+				Available:   available,
+				Unavailable: len(summaries) - available,
+			},
 		}
 	}
 
-	return gin.H{
-		"status":  "ok",
-		"uptime":  uptime.String(),
-		"started": hc.startedAt,
-		"services": services,
+	started := hc.startedAt
+
+	return GatewayHealthResponse{
+		Status:    "ok",
+		Timestamp: &now,
+		Uptime:    uptime.String(),
+		Started:   &started,
+		Services:  services,
 	}
 }
 
@@ -79,4 +143,3 @@ func (hc *HealthController) checkDatabase() bool {
 	}
 	return true
 }
-

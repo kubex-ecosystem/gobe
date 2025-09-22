@@ -25,6 +25,13 @@ type ContactController struct {
 	APIWrapper *t.APIWrapper[ci.ContactForm]
 }
 
+type (
+	// ErrorResponse padroniza respostas de erro nos endpoints de contato.
+	ErrorResponse = t.ErrorResponse
+	// MessageResponse padroniza mensagens simples de sucesso.
+	MessageResponse = t.MessageResponse
+)
+
 func NewContactController(properties map[string]any) *ContactController {
 	return &ContactController{
 		queue:      make(chan ci.ContactForm, 100),
@@ -33,10 +40,25 @@ func NewContactController(properties map[string]any) *ContactController {
 	}
 }
 
+// HandleContact processa o formulário e encaminha para o canal configurado.
+//
+// @Summary     Processar contato
+// @Description Valida o token secreto e dispara o fluxo de envio de mensagem.
+// @Tags        contact
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       payload body t.ContactForm true "Dados do formulário de contato"
+// @Success     200 {object} MessageResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     403 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/contact/handle [post]
 func (c *ContactController) HandleContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error processing data"})
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
 		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
@@ -46,33 +68,40 @@ func (c *ContactController) HandleContact(ctx *gin.Context) {
 	secretToken := env.Getenv("SECRET_TOKEN")
 
 	if form.Token != secretToken {
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "Invalid token"})
+		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
 		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending email"})
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
 		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Message sent successfully!"})
+	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
 	gl.Log("success", "Message sent successfully!")
 }
 
-// @Summary Contact flow for messaging through Email or other channels
-// @Description This endpoint handles the contact form submissions and sends messages through the appropriate channels.
-// @Schemes http https
-// @Tags contact
-// @Accept json
-// @Produce json
-// @Success 200 {string} Message sent successfully
-// @Router /contact [get]
+// GetContact retorna o status do fluxo de contato validando o token informado.
+//
+// @Summary     Consultar contato
+// @Description Executa a mesma validação e envio do fluxo principal, retornando o resultado.
+// @Tags        contact
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       payload body t.ContactForm true "Dados do formulário de contato"
+// @Success     200 {object} MessageResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     403 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/contact [get]
 func (c *ContactController) GetContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error processing data"})
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
 		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
@@ -82,33 +111,40 @@ func (c *ContactController) GetContact(ctx *gin.Context) {
 	secretToken := env.Getenv("SECRET_TOKEN")
 
 	if form.Token != secretToken {
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "Invalid token"})
+		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
 		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending email"})
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
 		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Message sent successfully!"})
+	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
 	gl.Log("success", "Message sent successfully!")
 }
 
-// @Summary Contact flow for messaging through Email or other channels
-// @Description This endpoint handles the contact form submissions and sends messages through the appropriate channels.
-// @Schemes http https
-// @Tags contact
-// @Accept json
-// @Produce json
-// @Success 200 {string} Message sent successfully
-// @Router /contact [post]
+// PostContact cria um novo contato seguindo as mesmas validações do fluxo padrão.
+//
+// @Summary     Enviar contato
+// @Description Cria uma nova entrada de contato e dispara notificações conforme configuração.
+// @Tags        contact
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       payload body t.ContactForm true "Dados do formulário de contato"
+// @Success     200 {object} MessageResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     403 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/contact [post]
 func (c *ContactController) PostContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Error processing data"})
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
 		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
@@ -118,29 +154,21 @@ func (c *ContactController) PostContact(ctx *gin.Context) {
 	secretToken := env.Getenv("SECRET_TOKEN")
 
 	if form.Token != secretToken {
-		ctx.JSON(http.StatusForbidden, gin.H{"error": "Invalid token"})
+		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
 		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending email"})
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
 		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Message sent successfully!"})
+	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
 	gl.Log("success", "Message sent successfully!")
 }
 
-// @Summary Contact flow for messaging through Email or other channels
-// @Description This endpoint handles the contact form submissions and sends messages through the appropriate channels.
-// @Schemes http https
-// @Tags contact
-// @Accept json
-// @Produce json
-// @Success 200 {object} t.ContactForm
-// @Router /contact/form [get]
 func (c *ContactController) GetContactForm(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
@@ -169,14 +197,6 @@ func (c *ContactController) GetContactForm(ctx *gin.Context) {
 	gl.Log("success", "Message sent successfully!")
 }
 
-// @Summary Get contact form by ID
-// @Description This endpoint retrieves a specific contact form submission by its ID.
-// @Schemes http https
-// @Tags contact
-// @Accept json
-// @Produce json
-// @Success 200 {object} t.ContactForm
-// @Router /contact/form/:id [get]
 func (c *ContactController) GetContactFormByID(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {

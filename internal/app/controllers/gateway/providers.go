@@ -17,6 +17,17 @@ func NewProvidersController(service *gatewaysvc.Service) *ProvidersController {
 	return &ProvidersController{service: service}
 }
 
+// ListProviders returns availability metadata for gateway providers.
+//
+// @Summary     Listar provedores
+// @Description Exibe os provedores configurados e seus estados de disponibilidade.
+// @Tags        gateway
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} ProvidersResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     503 {object} ErrorResponse
+// @Router      /providers [get]
 func (pc *ProvidersController) ListProviders(c *gin.Context) {
 	if pc.service == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "providers service unavailable"})
@@ -38,9 +49,8 @@ func (pc *ProvidersController) ListProviders(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"providers": items,
-		"timestamp": time.Now().UTC(),
+	c.JSON(http.StatusOK, ProvidersResponse{
+		Providers: items,
+		Timestamp: time.Now().UTC(),
 	})
 }
-

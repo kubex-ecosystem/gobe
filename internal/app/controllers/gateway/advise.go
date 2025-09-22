@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
-	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 )
 
 type AdviseController struct {
@@ -24,6 +24,23 @@ func NewAdviseController(service *gatewaysvc.Service) *AdviseController {
 	return &AdviseController{service: service}
 }
 
+// Advise generates guidance using the configured provider, optionally streaming SSE deltas.
+//
+// @Summary     Gerar aconselhamento
+// @Description Processa o prompt e retorna respostas via JSON ou SSE (`data: {"delta"}`) até concluir.
+// @Tags        gateway
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Produce     text/event-stream
+// @Param       X-External-API-Key header string false "Chave externa do cliente"
+// @Param       payload body AdviceRequest true "Parâmetros do aconselhamento"
+// @Success     200 {object} AdviceResponse "Resposta final consolidada"
+// @Failure     400 {object} ErrorResponse "Requisição inválida"
+// @Failure     401 {object} ErrorResponse "Não autorizado"
+// @Failure     503 {object} ErrorResponse "Gateway indisponível"
+// @Router      /api/v1/advise [post]
+// @Router      /advise [post]
 func (ac *AdviseController) Advise(c *gin.Context) {
 	if ac.service == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "advisor unavailable"})
@@ -85,8 +102,8 @@ func (ac *AdviseController) respondJSON(c *gin.Context, req *AdviceRequest) {
 	}
 
 	metadata := map[string]interface{}{
-		"provider": config.Name,
-		"model":    config.DefaultModel,
+		"provider":  config.Name,
+		"model":     config.DefaultModel,
 		"timestamp": time.Now().UTC(),
 	}
 	if usage != nil {
@@ -233,4 +250,3 @@ func (ac *AdviseController) buildChatRequest(c *gin.Context, req *AdviceRequest)
 		Headers:     headers,
 	}
 }
-

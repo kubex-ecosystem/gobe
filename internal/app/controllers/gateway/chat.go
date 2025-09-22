@@ -8,8 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
-	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 )
 
 type ChatController struct {
@@ -23,6 +23,23 @@ func NewChatController(service *gatewaysvc.Service) *ChatController {
 	return &ChatController{service: service}
 }
 
+// ChatSSE streams provider responses as Server-Sent Events for conversational use cases.
+//
+// @Summary     Chat streaming
+// @Description Dispara uma conversação streaming (`data: {"delta"}`) com o provedor configurado.
+// @Tags        gateway
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     text/event-stream
+// @Param       X-External-API-Key header string false "Chave externa do cliente"
+// @Param       X-Tenant-ID       header string false "Tenant que originou a requisição"
+// @Param       X-User-ID         header string false "Identificador do usuário"
+// @Param       payload body ChatRequest true "Dados da sessão de chat"
+// @Success     200 {string} string "Fluxo SSE com eventos {\"delta\":string}"
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     503 {object} ErrorResponse
+// @Router      /chat [post]
 func (cc *ChatController) ChatSSE(c *gin.Context) {
 	if cc.service == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "gateway service unavailable"})
@@ -76,7 +93,7 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 		Headers: map[string]string{
 			"x-external-api-key": externalKey,
 			"x-tenant-id":        tenantID,
-			"x-user-id":         userID,
+			"x-user-id":          userID,
 		},
 	}
 
@@ -116,7 +133,7 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 
 	var lastUsage *gatewaysvc.Usage
 
-	streamLoop:
+streamLoop:
 	for {
 		select {
 		case <-ctx.Done():
@@ -169,4 +186,3 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 
 	sendEvent(response)
 }
-
