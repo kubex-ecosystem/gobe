@@ -1,9 +1,539 @@
-basePath: /swagger
+basePath: /
 definitions:
-  github_com_rafa-mori_gdbase_types.JsonB:
+  clients.ArchiveInfo:
+    properties:
+      archivedAt:
+        type: string
+      archivedBy:
+        type: string
+      reason:
+        type: string
+    type: object
+  clients.ClientContact:
+    properties:
+      contactName:
+        type: string
+      email:
+        type: string
+      mobilePhone:
+        type: string
+      phone:
+        type: string
+    type: object
+  clients.ClientStatus:
+    enum:
+    - ACTIVE
+    - INACTIVE
+    - PENDING
+    - BLOCKED
+    - ARCHIVED
+    type: string
+    x-enum-varnames:
+    - Active
+    - Inactive
+    - Pending
+    - Blocked
+    - Archived
+  clients.ClientType:
+    enum:
+    - individual
+    - company
+    type: string
+    x-enum-varnames:
+    - Individual
+    - Company
+  contacts.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  contacts.MessageResponse:
+    properties:
+      message:
+        example: operation completed
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  cron.CronActionResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  cron.CronExecutionLogsResponse:
+    properties:
+      logs:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
+    type: object
+  cron.CronJobListResponse:
+    properties:
+      jobs:
+        items:
+          $ref: '#/definitions/models.CronJobModel'
+        type: array
+    type: object
+  cron.CronJobQueueResponse:
+    properties:
+      queue:
+        items:
+          additionalProperties: {}
+          type: object
+        type: array
+    type: object
+  cron.CronJobRequest:
+    properties:
+      description:
+        type: string
+      enabled:
+        type: boolean
+      expression:
+        type: string
+      name:
+        type: string
+    type: object
+  cron.CronJobResponse:
+    properties:
+      job:
+        $ref: '#/definitions/models.CronJobModel'
+    type: object
+  cron.CronValidateRequest:
+    properties:
+      expression:
+        type: string
+    type: object
+  cron.CronValidateResponse:
+    properties:
+      error:
+        type: string
+      valid:
+        type: boolean
+    type: object
+  cron.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  cron.RescheduleRequest:
+    properties:
+      new_expression:
+        type: string
+    type: object
+  customers.ClientModel:
+    properties:
+      addresses:
+        items:
+          $ref: '#/definitions/types.Address'
+        type: array
+      archiveInfo:
+        $ref: '#/definitions/clients.ArchiveInfo'
+      code:
+        type: string
+      contact:
+        $ref: '#/definitions/clients.ClientContact'
+      createdAt:
+        type: string
+      creditLimit:
+        type: number
+      documentType:
+        $ref: '#/definitions/clients.ClientType'
+      id:
+        type: string
+      lastOrderDate:
+        type: string
+      lastSync:
+        type: string
+      mainAddress:
+        $ref: '#/definitions/types.Address'
+      notes:
+        type: string
+      paymentTerms:
+        type: string
+      status:
+        $ref: '#/definitions/clients.ClientStatus'
+      totalOrders:
+        type: integer
+      totalSpent:
+        type: number
+      tradingName:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  customers.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  discord.DiscordActionResponse:
+    properties:
+      message:
+        type: string
+      request_id:
+        type: string
+    type: object
+  discord.DiscordApprovalList:
+    properties:
+      approvals:
+        items: {}
+        type: array
+    type: object
+  discord.DiscordInteractionEvent:
     additionalProperties: {}
     type: object
-  github_com_rafa-mori_gobe_internal_types.ContactForm:
+  discord.DiscordInteractionResponse:
+    properties:
+      data:
+        additionalProperties: true
+        type: object
+      type:
+        type: integer
+    type: object
+  discord.DiscordOAuthAuthorizeResponse:
+    properties:
+      client_id:
+        type: string
+      code:
+        type: string
+      message:
+        type: string
+      redirect_uri:
+        type: string
+      scope:
+        type: string
+      state:
+        type: string
+    type: object
+  discord.DiscordOAuthTokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      scope:
+        type: string
+      token_type:
+        type: string
+    type: object
+  discord.DiscordPingResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  discord.DiscordTestMessageRequest:
+    properties:
+      content:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  discord.DiscordTestResponse:
+    properties:
+      content:
+        type: string
+      message:
+        type: string
+      user:
+        type: string
+    type: object
+  discord.DiscordWebhookAck:
+    properties:
+      message:
+        type: string
+    type: object
+  discord.DiscordWebhookEvent:
+    additionalProperties: {}
+    type: object
+  discord.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  gateway.AdviceRequest:
+    properties:
+      audience:
+        type: string
+      context:
+        additionalProperties: true
+        type: object
+      metadata:
+        additionalProperties: true
+        type: object
+      model:
+        type: string
+      prompt:
+        type: string
+      provider:
+        type: string
+      stream:
+        type: boolean
+      tone:
+        type: string
+    type: object
+  gateway.AdviceResponse:
+    properties:
+      advice:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+    type: object
+  gateway.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  gateway.GatewayHealthResponse:
+    properties:
+      services:
+        additionalProperties:
+          $ref: '#/definitions/gateway.GatewayServiceHealth'
+        type: object
+      started:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+      uptime:
+        type: string
+      version:
+        type: string
+    type: object
+  gateway.GatewayProvidersStatus:
+    properties:
+      available:
+        type: integer
+      total:
+        type: integer
+      unavailable:
+        type: integer
+    type: object
+  gateway.GatewayServiceHealth:
+    properties:
+      detail:
+        $ref: '#/definitions/gateway.GatewayProvidersStatus'
+      healthy:
+        type: boolean
+    type: object
+  gateway.LookAtniActionResponse:
+    properties:
+      message:
+        type: string
+      operation:
+        type: string
+      payload:
+        additionalProperties: true
+        type: object
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  gateway.LookAtniDownloadResponse:
+    properties:
+      download_url:
+        type: string
+      expires_in:
+        type: integer
+      note:
+        type: string
+    type: object
+  gateway.LookAtniProjectsResponse:
+    properties:
+      projects:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      version:
+        type: string
+    type: object
+  gateway.Message:
+    properties:
+      content:
+        type: string
+      role:
+        type: string
+    type: object
+  gateway.MessageResponse:
+    properties:
+      message:
+        example: operation completed
+        type: string
+      status:
+        example: ok
+        type: string
+    type: object
+  gateway.ProviderItem:
+    properties:
+      available:
+        type: boolean
+      default_model:
+        type: string
+      last_error:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      org:
+        type: string
+      type:
+        type: string
+    type: object
+  gateway.ProvidersResponse:
+    properties:
+      providers:
+        items:
+          $ref: '#/definitions/gateway.ProviderItem'
+        type: array
+      timestamp:
+        type: string
+    type: object
+  gateway.SchedulerActionResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  gateway.SchedulerStats:
+    properties:
+      average_duration:
+        $ref: '#/definitions/time.Duration'
+      jobs_completed:
+        type: integer
+      jobs_pending:
+        type: integer
+      jobs_running:
+        type: integer
+      last_failure:
+        type: string
+      last_run:
+        type: string
+      uptime:
+        $ref: '#/definitions/time.Duration'
+    type: object
+  gateway.SchedulerStatsResponse:
+    properties:
+      stats:
+        $ref: '#/definitions/gateway.SchedulerStats'
+      version:
+        type: string
+    type: object
+  gateway.ScorecardAdviceResponse:
+    properties:
+      advice:
+        type: string
+      version:
+        type: string
+    type: object
+  gateway.ScorecardEntry:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      score:
+        type: number
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  gateway.ScorecardMetricsResponse:
+    properties:
+      metrics:
+        additionalProperties: true
+        type: object
+      version:
+        type: string
+    type: object
+  gateway.ScorecardResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/gateway.ScorecardEntry'
+        type: array
+      version:
+        type: string
+    type: object
+  gateway.WebhookAckResponse:
+    properties:
+      message:
+        type: string
+      payload:
+        additionalProperties: true
+        type: object
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  gateway.WebhookHealthResponse:
+    properties:
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  github_com_kubex-ecosystem_gdbase_types.JSONB:
+    additionalProperties: {}
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_app_controllers_gateway.ChatRequest:
+    properties:
+      messages:
+        items:
+          $ref: '#/definitions/gateway.Message'
+        type: array
+      meta:
+        additionalProperties: true
+        type: object
+      model:
+        type: string
+      provider:
+        type: string
+      stream:
+        type: boolean
+      temperature:
+        type: number
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_contracts_types.ContactForm:
     properties:
       email:
         type: string
@@ -14,57 +544,41 @@ definitions:
       token:
         type: string
     type: object
-  jobqueue.JobQueue:
+  manage.ActionResponse:
     properties:
-      code:
-        type: integer
-      created_at:
+      message:
         type: string
-      created_by:
+    type: object
+  manage.ConfigResponse:
+    properties:
+      config:
+        additionalProperties: {}
+        type: object
+    type: object
+  manage.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
         type: string
-      cronjob_id:
+      status:
+        example: error
         type: string
-      error_message:
-        type: string
-      execution_time:
-        type: string
-      id:
-        type: string
-      job_api_endpoint:
-        type: string
-      job_command:
-        type: string
-      job_expression:
-        type: string
-      job_headers:
-        $ref: '#/definitions/github_com_rafa-mori_gdbase_types.JsonB'
-      job_method:
-        type: string
-      job_payload:
-        $ref: '#/definitions/github_com_rafa-mori_gdbase_types.JsonB'
-      job_retries:
-        type: integer
-      job_timeout:
-        type: integer
-      job_type:
-        type: string
-      last_executed_by:
-        type: string
-      metadata:
-        type: string
-      next_run_time:
-        type: string
-      retry_count:
-        type: integer
-      scheduled_time:
+    type: object
+  manage.HealthResponse:
+    properties:
+      message:
         type: string
       status:
         type: string
-      updated_at:
+    type: object
+  manage.PingResponse:
+    properties:
+      message:
         type: string
-      updated_by:
-        type: string
-      user_id:
+    type: object
+  manage.VersionResponse:
+    properties:
+      version:
         type: string
     type: object
   mcp.CronJobIntegration:
@@ -92,465 +606,908 @@ definitions:
       user_id:
         type: string
     type: object
-  types.APIResponse:
+  models.CronJobModel:
     properties:
-      data: {}
-      filter:
-        additionalProperties: true
-        type: object
-      hash:
+      api_endpoint:
         type: string
-      msg:
+      command:
+        description: ajustar para que não seja obrigatório, mas revisar a lógica de
+          execução antes
         type: string
-      status:
-        type: string
-    type: object
-  user.UserModel:
-    properties:
-      active:
-        type: boolean
       created_at:
         type: string
-      document:
+      created_by:
         type: string
-      email:
+      cron_expression:
+        type: string
+      cron_type:
+        type: string
+      description:
+        type: string
+      ends_at:
+        type: string
+      exec_timeout:
+        type: integer
+      headers:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gdbase_types.JSONB'
+      id:
+        type: string
+      is_active:
+        type: boolean
+      is_recurring:
+        type: boolean
+      last_executed_at:
+        type: string
+      last_executed_by:
+        type: string
+      last_run_message:
+        type: string
+      last_run_status:
+        type: string
+      last_run_time:
+        type: string
+      max_execution_time:
+        type: integer
+      max_retries:
+        type: integer
+      metadata:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gdbase_types.JSONB'
+      method:
+        description: ajustar para que não seja obrigatório, mas revisar a lógica de
+          execução antes
+        type: string
+      name:
+        type: string
+      payload:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gdbase_types.JSONB'
+      retries:
+        type: integer
+      retry_interval:
+        type: integer
+      starts_at:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: string
+      user_id:
+        type: string
+    required:
+    - name
+    type: object
+  models.ProductModel:
+    properties:
+      category:
+        $ref: '#/definitions/products.ProductCategory'
+      categoryId:
+        type: string
+      code:
+        type: string
+      createdAt:
+        type: string
+      description:
+        type: string
+      dimensions:
+        $ref: '#/definitions/products.Dimensions'
+      ean:
         type: string
       id:
         type: string
-      last_login:
+      imageUrl:
+        type: string
+      isActive:
+        type: boolean
+      minOrderQuantity:
+        type: integer
+      multipleOrderQuantity:
+        type: integer
+      name:
+        type: string
+      priceTables:
+        items:
+          $ref: '#/definitions/products.PriceTable'
+        type: array
+      sku:
+        type: string
+      stock:
+        $ref: '#/definitions/products.Stock'
+      unit:
+        type: string
+      updatedAt:
+        type: string
+      weight:
+        type: number
+    type: object
+  products.Dimensions:
+    properties:
+      height:
+        type: number
+      length:
+        type: number
+      width:
+        type: number
+    type: object
+  products.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  products.PriceTable:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      price:
+        $ref: '#/definitions/types.Money'
+    type: object
+  products.ProductCategory:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      parentId:
+        type: string
+    type: object
+  products.Stock:
+    properties:
+      available:
+        type: integer
+      reserved:
+        type: integer
+      virtual:
+        type: integer
+    type: object
+  telegram.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  telegram.SendMessageRequest:
+    properties:
+      chat_id:
+        type: integer
+      text:
+        type: string
+    type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    format: int64
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+  types.Address:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      postalCode:
+        type: string
+      state:
+        type: string
+      street:
+        type: string
+    type: object
+  types.Money:
+    properties:
+      amount:
+        type: integer
+      currency:
+        type: string
+    type: object
+  users.AuthRequest:
+    properties:
+      password:
+        type: string
+      remember:
+        type: boolean
+      username:
+        type: string
+    type: object
+  users.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      refresh_expires_in:
+        type: integer
+      refresh_token:
+        type: string
+      token_type:
+        type: string
+      user:
+        $ref: '#/definitions/users.UserSummary'
+    type: object
+  users.CreateUserRequest:
+    properties:
+      email:
         type: string
       name:
         type: string
       password:
         type: string
-      phone:
-        type: string
       role_id:
-        type: string
-      updated_at:
         type: string
       username:
         type: string
     type: object
-externalDocs:
-  description: OpenAPI
-  url: https://swagger.io/resources/open-api/
+  users.DeleteResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  users.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  users.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  users.RefreshRequest:
+    properties:
+      id_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  users.UpdateUserRequest:
+    properties:
+      active:
+        type: boolean
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      role_id:
+        type: string
+    type: object
+  users.UserListResponse:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/users.UserSummary'
+        type: array
+    type: object
+  users.UserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/users.UserSummary'
+    type: object
+  users.UserSummary:
+    properties:
+      active:
+        type: boolean
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    type: object
+  whatsapp.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  whatsapp.SendMessageRequest:
+    properties:
+      message:
+        type: string
+      to:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
     email: support@gobe.dev
     name: GoBE API Support
     url: https://github.com/kubex-ecosystem/gobe
-  description: GoBE is a powerful backend, MCP, and API server with a comprehensive
-    route system following GoBE patterns.
+  description: Backend modular do ecossistema Kubex.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
   termsOfService: https://github.com/kubex-ecosystem/gobe/terms
   title: GoBE API
-  version: "1.0"
+  version: 0.2.1
 paths:
-  /contact:
+  /:
     get:
-      consumes:
-      - application/json
-      description: This endpoint handles the contact form submissions and sends messages
-        through the appropriate channels.
+      description: Retorna o index da UI ou mensagem indicando ausência do bundle.
+        [Em desenvolvimento]
       produces:
+      - text/html
       - application/json
       responses:
         "200":
-          description: OK
+          description: Mensagem informativa
           schema:
-            type: string
-      summary: Contact flow for messaging through Email or other channels
+            $ref: '#/definitions/gateway.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      summary: Servir UI raiz
       tags:
-      - contact
+      - gateway
+  /advise:
     post:
       consumes:
       - application/json
-      description: This endpoint handles the contact form submissions and sends messages
-        through the appropriate channels.
+      description: 'Processa o prompt e retorna respostas via JSON ou SSE (`data:
+        {"delta"}`) até concluir. [Em desenvolvimento]'
+      parameters:
+      - description: Chave externa do cliente
+        in: header
+        name: X-External-API-Key
+        type: string
+      - description: Parâmetros do aconselhamento
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/gateway.AdviceRequest'
       produces:
       - application/json
+      - text/event-stream
       responses:
         "200":
-          description: OK
+          description: Resposta final consolidada
           schema:
-            type: string
-      summary: Contact flow for messaging through Email or other channels
+            $ref: '#/definitions/gateway.AdviceResponse'
+        "400":
+          description: Requisição inválida
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "401":
+          description: Não autorizado
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "503":
+          description: Gateway indisponível
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Gerar aconselhamento
       tags:
-      - contact
-  /contact/form:
-    get:
+      - gateway beta
+  /api/v1/advise:
+    post:
       consumes:
       - application/json
-      description: This endpoint handles the contact form submissions and sends messages
-        through the appropriate channels.
+      description: 'Processa o prompt e retorna respostas via JSON ou SSE (`data:
+        {"delta"}`) até concluir. [Em desenvolvimento]'
+      parameters:
+      - description: Chave externa do cliente
+        in: header
+        name: X-External-API-Key
+        type: string
+      - description: Parâmetros do aconselhamento
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/gateway.AdviceRequest'
       produces:
       - application/json
+      - text/event-stream
       responses:
         "200":
-          description: OK
+          description: Resposta final consolidada
           schema:
-            $ref: '#/definitions/github_com_rafa-mori_gobe_internal_types.ContactForm'
-      summary: Contact flow for messaging through Email or other channels
+            $ref: '#/definitions/gateway.AdviceResponse'
+        "400":
+          description: Requisição inválida
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "401":
+          description: Não autorizado
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "503":
+          description: Gateway indisponível
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Gerar aconselhamento
       tags:
-      - contact
-  /contact/form/:id:
-    get:
+      - gateway beta
+  /api/v1/check:
+    post:
       consumes:
       - application/json
-      description: This endpoint retrieves a specific contact form submission by its
-        ID.
+      description: Gera um novo par de tokens a partir do refresh token válido. [Em
+        desenvolvimento]
+      parameters:
+      - description: Tokens atuais
+        in: body
+        name: payload
+        schema:
+          $ref: '#/definitions/users.RefreshRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_rafa-mori_gobe_internal_types.ContactForm'
-      summary: Get contact form by ID
-      tags:
-      - contact
-  /cronjobs:
-    get:
-      consumes:
-      - application/json
-      description: |-
-        This controller manages cron jobs, allowing users to create, update, delete, and execute cron jobs.
-        Retrieves all cron jobs in the system.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
+            $ref: '#/definitions/users.AuthResponse'
+        "400":
+          description: Bad Request
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
-      summary: Get All Cron Jobs
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Renovar tokens
       tags:
-      - cron
+      - users beta
+  /api/v1/config:
+    get:
+      description: Retorna configuração básica da aplicação. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.ConfigResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manage.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Configuração
+      tags:
+      - system beta
+  /api/v1/contact:
+    get:
+      consumes:
+      - application/json
+      description: Executa a mesma validação e envio do fluxo principal, retornando
+        o resultado. [Em desenvolvimento]
+      parameters:
+      - description: Dados do formulário de contato
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_contracts_types.ContactForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contacts.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Consultar contato
+      tags:
+      - contact beta
     post:
       consumes:
       - application/json
-      description: Creates a new cron job.
+      description: Cria uma nova entrada de contato e dispara notificações conforme
+        configuração. [Em desenvolvimento]
+      parameters:
+      - description: Dados do formulário de contato
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_contracts_types.ContactForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contacts.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Enviar contato
+      tags:
+      - contact beta
+  /api/v1/contact/form:
+    get:
+      consumes:
+      - application/json
+      description: Recupera o formulário persistido após validar token do solicitante.
+        [Em desenvolvimento]
+      parameters:
+      - description: Dados do formulário (inclui token)
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_contracts_types.ContactForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contacts.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter formulário
+      tags:
+      - contact beta
+  /api/v1/contact/form/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retorna a submissão identificada pelo ID após validar o token.
+        [Em desenvolvimento]
+      parameters:
+      - description: ID do formulário
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados do formulário (inclui token)
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_contracts_types.ContactForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contacts.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter formulário por ID
+      tags:
+      - contact beta
+  /api/v1/contact/handle:
+    post:
+      consumes:
+      - application/json
+      description: Valida o token secreto e dispara o fluxo de envio de mensagem.
+        [Em desenvolvimento]
+      parameters:
+      - description: Dados do formulário de contato
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_contracts_types.ContactForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/contacts.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/contacts.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Processar contato
+      tags:
+      - contact beta
+  /api/v1/cronjobs:
+    get:
+      description: Retorna todos os cron jobs cadastrados. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronJobListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar cron jobs
+      tags:
+      - cron beta
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo cron job com os dados informados. [Em desenvolvimento]
+      parameters:
+      - description: Dados do cron job
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/cron.CronJobRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/cron.CronJobResponse'
         "400":
           description: Bad Request
           schema:
-            type: string
-      summary: Create Cron Job
-  /cronjobs/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Deletes a specific cron job by its ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
+            $ref: '#/definitions/cron.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            type: string
-      summary: Delete Cron Job
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a specific cron job by its ID.
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar cron job
+      tags:
+      - cron beta
+  /api/v1/cronjobs/{id}:
+    delete:
+      description: Exclui um cron job pelo ID informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cron job
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/cron.CronActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            type: string
-      summary: Get Cron Job by ID
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover cron job
+      tags:
+      - cron beta
+    get:
+      description: Recupera um cron job específico pelo ID informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cron job
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronJobResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter cron job
+      tags:
+      - cron beta
     put:
       consumes:
       - application/json
-      description: Updates an existing cron job.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Update Cron Job
-  /cronjobs/{id}/disable:
-    post:
-      consumes:
-      - application/json
-      description: Disables a specific cron job by its ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Disable Cron Job
-  /cronjobs/{id}/enable:
-    post:
-      consumes:
-      - application/json
-      description: Enables a specific cron job by its ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Enable Cron Job
-  /cronjobs/{id}/execute:
-    post:
-      consumes:
-      - application/json
-      description: Executes a specific cron job manually by its ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Execute Cron Job Manually
-  /cronjobs/{id}/execute/{job_id}:
-    post:
-      consumes:
-      - application/json
-      description: Executes a specific cron job manually by its ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Execute Cron Job Manually by ID
-  /cronjobs/{id}/reschedule:
-    post:
-      consumes:
-      - application/json
-      description: Reschedules a specific cron job by its ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: Reschedule Cron Job
-  /cronjobs/active:
-    get:
-      consumes:
-      - application/json
-      description: Lists all active cron jobs.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: List Active Cron Jobs
-  /cronjobs/list:
-    get:
-      consumes:
-      - application/json
-      description: Lists all cron jobs.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: List Cron Jobs
-  /cronjobs/logs:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves the execution logs for a specific cron job by its ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Get Execution Logs
-  /cronjobs/queue:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves the current state of the job queue.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/jobqueue.JobQueue'
-            type: array
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Get Job Queue
-  /cronjobs/reprocess:
-    post:
-      consumes:
-      - application/json
-      description: Reprocesses all failed jobs in the queue.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Reprocess Failed Jobs
-  /cronjobs/validate:
-    post:
-      consumes:
-      - application/json
-      description: Validates a cron expression.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "404":
-          description: Not Found
-          schema:
-            type: string
-      summary: Validate Cron Expression
-  /discord:
-    get:
-      consumes:
-      - text/html
-      description: Handles Discord Application/Activity requests
-      produces:
-      - text/html
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      summary: Discord App Handler
-      tags:
-      - discord
-  /discord/approvals:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a list of pending approval requests
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Pending approvals
-          schema:
-            items:
-              type: string
-            type: array
-      summary: Get pending approvals
-      tags:
-      - discord
-  /discord/approvals/{id}/approve:
-    post:
-      consumes:
-      - application/json
-      description: Approves a pending approval request
+      description: Atualiza os dados de um cron job identificado pelo ID. [Em desenvolvimento]
       parameters:
-      - description: Request ID
+      - description: ID do cron job
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados do cron job
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/cron.CronJobRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronJobResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar cron job
+      tags:
+      - cron beta
+  /api/v1/cronjobs/{id}/disable:
+    post:
+      description: Desativa o cron job informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cron job
         in: path
         name: id
         required: true
@@ -561,17 +1518,33 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Approve request
+            $ref: '#/definitions/cron.CronActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Desabilitar cron job
       tags:
-      - discord
-  /discord/approvals/{id}/reject:
+      - cron beta
+  /api/v1/cronjobs/{id}/enable:
     post:
-      consumes:
-      - application/json
-      description: Rejects a pending approval request
+      description: Ativa o cron job informado. [Em desenvolvimento]
       parameters:
-      - description: Request ID
+      - description: ID do cron job
         in: path
         name: id
         required: true
@@ -582,115 +1555,1651 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Reject request
+            $ref: '#/definitions/cron.CronActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Habilitar cron job
       tags:
-      - discord
-  /discord/authorize:
-    get:
-      consumes:
-      - application/json
-      description: Initiates the OAuth2 authorization flow for Discord
+      - cron beta
+  /api/v1/cronjobs/{id}/execute:
+    post:
+      description: Dispara manualmente a execução do cron job informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cron job
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Discord OAuth2 Authorization
+            $ref: '#/definitions/cron.CronActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Executar cron job manualmente
       tags:
-      - discord
-  /discord/interactions:
+      - cron beta
+  /api/v1/cronjobs/{id}/logs:
+    get:
+      description: Recupera os logs associados ao cron job informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cron job
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronExecutionLogsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar logs de execução
+      tags:
+      - cron beta
+  /api/v1/cronjobs/{id}/reschedule:
+    put:
+      consumes:
+      - application/json
+      description: Atualiza a expressão do cron job informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cron job
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Nova expressão
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/cron.RescheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Reagendar cron job
+      tags:
+      - cron beta
+  /api/v1/cronjobs/active:
+    get:
+      description: Retorna apenas os cron jobs marcados como ativos. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronJobListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar cron jobs ativos
+      tags:
+      - cron beta
+  /api/v1/cronjobs/queue:
+    get:
+      description: Recupera o estado atual da fila de jobs agendados. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronJobQueueResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar fila de jobs
+      tags:
+      - cron beta
+  /api/v1/cronjobs/reprocess:
+    post:
+      description: Reenvia para execução os jobs que falharam anteriormente. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronActionResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Reprocessar jobs com falha
+      tags:
+      - cron beta
+  /api/v1/cronjobs/validate:
     post:
       consumes:
       - application/json
-      description: Handles interactions from Discord
+      description: Valida a expressão cron fornecida. [Em desenvolvimento]
+      parameters:
+      - description: Expressão
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/cron.CronValidateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Handle Discord interactions
+            $ref: '#/definitions/cron.CronValidateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Validar expressão cron
       tags:
-      - discord
-  /discord/oauth2/token:
+      - cron beta
+  /api/v1/customers:
+    get:
+      description: Recupera a coleção de clientes registrados. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/customers.ClientModel'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar clientes
+      tags:
+      - customers beta
     post:
       consumes:
       - application/json
-      description: Handles the OAuth2 token exchange for Discord
+      description: Persiste um novo cliente com os dados enviados no corpo. [Em desenvolvimento]
+      parameters:
+      - description: Dados do cliente
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/customers.ClientModel'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Handle Discord OAuth2 token
+            $ref: '#/definitions/customers.ClientModel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar cliente
       tags:
-      - discord
-  /discord/ping:
-    get:
-      consumes:
+      - customers beta
+  /api/v1/customers/{id}:
+    delete:
+      description: Exclui o cliente identificado pelo ID informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cliente
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
       - application/json
-      description: Pings the Discord adapter to check its status
+      responses:
+        "204":
+          description: Cliente removido
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover cliente
+      tags:
+      - customers beta
+    get:
+      description: Busca um cliente específico utilizando o identificador no caminho.
+        [Em desenvolvimento]
+      parameters:
+      - description: ID do cliente
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Ping Discord adapter
+            $ref: '#/definitions/customers.ClientModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter cliente
       tags:
-      - discord
-  /discord/socket:
-    get:
+      - customers beta
+    put:
       consumes:
       - application/json
-      description: Upgrades the HTTP connection to a WebSocket connection
+      description: Atualiza um cliente identificado pelo ID. [Em desenvolvimento]
+      parameters:
+      - description: ID do cliente
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados atualizados
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/customers.ClientModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customers.ClientModel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/customers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar cliente
+      tags:
+      - customers beta
+  /api/v1/discord:
+    get:
+      description: Entrega o bundle HTML da activity Discord. [Em desenvolvimento]
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: HTML da activity
+          schema:
+            type: string
+      summary: Servir activity Discord
+      tags:
+      - discord beta
+  /api/v1/discord/approvals:
+    post:
+      description: Retorna solicitações aguardando aprovação manual. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordApprovalList'
+      summary: Listar aprovações pendentes
+      tags:
+      - discord beta
+  /api/v1/discord/approve:
+    post:
+      description: Confirma solicitações pendentes para liberar ações no hub. [Em
+        desenvolvimento]
+      parameters:
+      - description: ID da solicitação
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Aprovar solicitação Discord
+      tags:
+      - discord beta
+  /api/v1/discord/interactions:
+    post:
+      consumes:
+      - application/json
+      description: Responde PINGs e interações de componentes enviados pelo Discord.
+        [Em desenvolvimento]
+      parameters:
+      - description: Interação recebida
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/discord.DiscordInteractionEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordInteractionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Processar interação Discord
+      tags:
+      - discord beta
+  /api/v1/discord/interactions/pending:
+    post:
+      description: Retorna solicitações aguardando aprovação manual. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordApprovalList'
+      summary: Listar aprovações pendentes
+      tags:
+      - discord beta
+  /api/v1/discord/oauth2/authorize:
+    get:
+      description: Controla respostas HTML/JSON para autorizações OAuth2 do Discord.
+        [Em desenvolvimento]
+      produces:
+      - text/html
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordOAuthAuthorizeResponse'
+      summary: Iniciar OAuth2 Discord
+      tags:
+      - discord beta
+    post:
+      description: Controla respostas HTML/JSON para autorizações OAuth2 do Discord.
+        [Em desenvolvimento]
+      produces:
+      - text/html
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordOAuthAuthorizeResponse'
+      summary: Iniciar OAuth2 Discord
+      tags:
+      - discord beta
+  /api/v1/discord/oauth2/token:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Realiza a troca do código por token em ambiente de testes. [Em
+        desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordOAuthTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Trocar token OAuth2 Discord
+      tags:
+      - discord beta
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Realiza a troca do código por token em ambiente de testes. [Em
+        desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordOAuthTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Trocar token OAuth2 Discord
+      tags:
+      - discord beta
+  /api/v1/discord/ping:
+    get:
+      description: Checa se o hub MCP em execução está respondendo. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordPingResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Ping hub Discord
+      tags:
+      - discord beta
+    post:
+      description: Realiza ping utilizando o adaptador direto do Discord. [Em desenvolvimento]
+      parameters:
+      - description: Mensagem customizada
+        in: query
+        name: msg
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordPingResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Ping ativo Discord
+      tags:
+      - discord beta
+  /api/v1/discord/reject:
+    post:
+      description: Marca a solicitação como rejeitada no fluxo de aprovação. [Em desenvolvimento]
+      parameters:
+      - description: ID da solicitação
+        in: query
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Rejeitar solicitação Discord
+      tags:
+      - discord beta
+  /api/v1/discord/test:
+    post:
+      consumes:
+      - application/json
+      description: Envia uma mensagem de teste para validar o pipeline MCP. [Em desenvolvimento]
+      parameters:
+      - description: Conteúdo da mensagem
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/discord.DiscordTestMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordTestResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Simular mensagem Discord
+      tags:
+      - discord beta
+  /api/v1/discord/webhook/{webhookId}/{webhookToken}:
+    post:
+      consumes:
+      - application/json
+      description: Processa eventos recebidos do webhook oficial do Discord. [Em desenvolvimento]
+      parameters:
+      - description: ID do webhook
+        in: path
+        name: webhookId
+        required: true
+        type: string
+      - description: Token do webhook
+        in: path
+        name: webhookToken
+        required: true
+        type: string
+      - description: Evento do Discord
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/discord.DiscordWebhookEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/discord.DiscordWebhookAck'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Receber webhook Discord
+      tags:
+      - discord beta
+  /api/v1/discord/websocket:
+    get:
+      description: Estabelece canal WebSocket com o hub MCP para eventos Discord.
+        [Em desenvolvimento]
       produces:
       - application/json
       responses:
         "101":
-          description: Switching Protocols
+          description: WebSocket connection established
           schema:
             type: string
-      summary: WebSocket connection
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/discord.ErrorResponse'
+      summary: Abrir WebSocket Discord
       tags:
-      - discord
-  /discord/test:
-    post:
-      consumes:
-      - application/json
-      description: Handles a test message from the user
+      - discord beta
+  /api/v1/health:
+    get:
+      description: Augments status payload with module version for API consumers.
+        [Em desenvolvimento]
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Handle test message
+            $ref: '#/definitions/gateway.GatewayHealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Gateway health
       tags:
-      - discord
-  /discord/webhook/{webhookId}/{webhookToken}:
+      - health
+  /api/v1/lookatni/archive:
     post:
       consumes:
       - application/json
-      description: Handles incoming webhook events from Discord
+      description: Agenda o arquivamento de artefatos processados pelo LookAtni. [Em
+        desenvolvimento]
+      parameters:
+      - description: Configuração do arquivamento
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/gateway.LookAtniActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Arquivar LookAtni
+      tags:
+      - gateway beta
+  /api/v1/lookatni/download/{id}:
+    get:
+      description: Retorna URL temporária para download do artefato processado. [Em
+        desenvolvimento]
+      parameters:
+      - description: Identificador do recurso
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            type: string
-      summary: Handle Discord webhook
+            $ref: '#/definitions/gateway.LookAtniDownloadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Baixar ativo LookAtni
       tags:
-      - discord
+      - gateway beta
+  /api/v1/lookatni/extract:
+    post:
+      consumes:
+      - application/json
+      description: Enfileira uma extração de artefatos para processamento assíncrono.
+        [Em desenvolvimento]
+      parameters:
+      - description: Configuração da extração
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/gateway.LookAtniActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Extrair LookAtni
+      tags:
+      - gateway beta
+  /api/v1/lookatni/projects:
+    get:
+      description: Lista projetos cadastrados para automações LookAtni. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.LookAtniProjectsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar projetos LookAtni
+      tags:
+      - gateway beta
+  /api/v1/metrics/ai:
+    get:
+      description: Entrega métricas agregadas para monitoramento do gateway. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.ScorecardMetricsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Métricas de IA
+      tags:
+      - gateway beta
+  /api/v1/products:
+    get:
+      description: Recupera a lista de produtos registrados na base. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ProductModel'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar produtos
+      tags:
+      - products beta
+    post:
+      consumes:
+      - application/json
+      description: Persiste um novo produto com os dados enviados no corpo. [Em desenvolvimento]
+      parameters:
+      - description: Dados do produto
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductModel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Criar produto
+      tags:
+      - products beta
+  /api/v1/products/{id}:
+    delete:
+      description: Exclui um produto identificado pelo ID informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Produto removido
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover produto
+      tags:
+      - products beta
+    get:
+      description: Busca um produto específico pelo ID informado no caminho. [Em desenvolvimento]
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductModel'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter produto
+      tags:
+      - products beta
+    put:
+      consumes:
+      - application/json
+      description: Atualiza os dados de um produto identificado por ID. [Em desenvolvimento]
+      parameters:
+      - description: ID do produto
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados atualizados
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProductModel'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ProductModel'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/products.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar produto
+      tags:
+      - products beta
+  /api/v1/scorecard:
+    get:
+      description: Retorna os indicadores disponíveis enquanto a integração real não
+        está ativa. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.ScorecardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar scorecard
+      tags:
+      - gateway beta
+  /api/v1/scorecard/advice:
+    get:
+      description: Fornece sugestões de alto nível com base na métrica atual. [Em
+        desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.ScorecardAdviceResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Aconselhar scorecard
+      tags:
+      - gateway beta
+  /api/v1/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Valida credenciais e retorna par de tokens. [Em desenvolvimento]
+      parameters:
+      - description: Credenciais
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/users.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      summary: Autenticar usuário
+      tags:
+      - users beta
+  /api/v1/sign-out:
+    post:
+      consumes:
+      - application/json
+      description: Invalida o refresh token ativo do usuário. [Em desenvolvimento]
+      parameters:
+      - description: Token de refresh
+        in: body
+        name: payload
+        schema:
+          $ref: '#/definitions/users.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.DeleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Encerrar sessão
+      tags:
+      - users beta
+  /api/v1/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Cria um novo usuário no sistema. [Em desenvolvimento]
+      parameters:
+      - description: Dados do usuário
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/users.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/users.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      summary: Registrar usuário
+      tags:
+      - users beta
+  /api/v1/start:
+    post:
+      description: Dispara processo de inicialização do serviço GoBE. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.ActionResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manage.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Iniciar serviço
+      tags:
+      - system beta
+  /api/v1/stop:
+    post:
+      description: Finaliza o serviço GoBE. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.ActionResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manage.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Parar serviço
+      tags:
+      - system beta
+  /api/v1/telegram/ping:
+    get:
+      description: Verifica se o serviço do bot está respondendo. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Ping Telegram
+      tags:
+      - telegram beta
+  /api/v1/telegram/send:
+    post:
+      consumes:
+      - application/json
+      description: Dispara uma mensagem usando o serviço configurado. [Em desenvolvimento]
+      parameters:
+      - description: Dados da mensagem
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/telegram.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/telegram.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/telegram.ErrorResponse'
+      summary: Enviar mensagem Telegram
+      tags:
+      - telegram beta
+  /api/v1/telegram/webhook:
+    post:
+      consumes:
+      - application/json
+      description: Recebe eventos do Telegram e armazena a mensagem básica. [Em desenvolvimento]
+      parameters:
+      - description: Atualização do Telegram
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: acknowledged
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/telegram.ErrorResponse'
+      summary: Webhook Telegram
+      tags:
+      - telegram beta
+  /api/v1/whatsapp/ping:
+    get:
+      description: Verifica se o adaptador de WhatsApp está ativo. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Ping WhatsApp
+      tags:
+      - whatsapp beta
+  /api/v1/whatsapp/send:
+    post:
+      consumes:
+      - application/json
+      description: Dispara mensagem via canal de integração configurado. [Em desenvolvimento]
+      parameters:
+      - description: Dados da mensagem
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/whatsapp.SendMessageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/whatsapp.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/whatsapp.ErrorResponse'
+      summary: Enviar mensagem WhatsApp
+      tags:
+      - whatsapp beta
+  /api/v1/whatsapp/webhook:
+    get:
+      consumes:
+      - application/json
+      description: Recebe chamadas de verificação (GET) e eventos (POST) vindo do
+        WhatsApp Business. [Em desenvolvimento]
+      parameters:
+      - description: Modo do webhook
+        example: subscribe
+        in: query
+        name: hub.mode
+        type: string
+      - description: Token de verificação
+        in: query
+        name: hub.verify_token
+        type: string
+      - description: Token de desafio
+        in: query
+        name: hub.challenge
+        type: string
+      - description: Evento enviado pelo WhatsApp
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/whatsapp.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/whatsapp.ErrorResponse'
+      summary: Webhook WhatsApp
+      tags:
+      - whatsapp beta
+    post:
+      consumes:
+      - application/json
+      description: Recebe chamadas de verificação (GET) e eventos (POST) vindo do
+        WhatsApp Business. [Em desenvolvimento]
+      parameters:
+      - description: Modo do webhook
+        example: subscribe
+        in: query
+        name: hub.mode
+        type: string
+      - description: Token de verificação
+        in: query
+        name: hub.verify_token
+        type: string
+      - description: Token de desafio
+        in: query
+        name: hub.challenge
+        type: string
+      - description: Evento enviado pelo WhatsApp
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/whatsapp.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/whatsapp.ErrorResponse'
+      summary: Webhook WhatsApp
+      tags:
+      - whatsapp beta
+  /app/{path}:
+    get:
+      description: Carrega assets estáticos da SPA hospedada no gateway. [Em desenvolvimento]
+      parameters:
+      - description: Caminho para o asset
+        in: path
+        name: path
+        type: string
+      produces:
+      - text/html
+      - application/json
+      responses:
+        "200":
+          description: Conteúdo HTML/estático
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      summary: Servir UI
+      tags:
+      - gateway
+  /chat:
+    post:
+      consumes:
+      - application/json
+      description: 'Dispara uma conversação streaming (`data: {"delta"}`) com o provedor
+        configurado. [Em desenvolvimento]'
+      parameters:
+      - description: Chave externa do cliente
+        in: header
+        name: X-External-API-Key
+        type: string
+      - description: Tenant que originou a requisição
+        in: header
+        name: X-Tenant-ID
+        type: string
+      - description: Identificador do usuário
+        in: header
+        name: X-User-ID
+        type: string
+      - description: Dados da sessão de chat
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_app_controllers_gateway.ChatRequest'
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: Fluxo SSE com eventos {\"delta\":string}
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Chat streaming
+      tags:
+      - gateway beta
+  /cronjobs:
+    get:
+      description: Retorna todos os cron jobs cadastrados. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronJobListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar cron jobs (legacy)
+      tags:
+      - cron beta
+  /cronjobs/{id}/execute/{job_id}:
+    post:
+      description: Dispara manualmente a execução do cron job informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do cron job
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: ID adicional do job
+        in: path
+        name: job_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/cron.CronActionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/cron.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Executar cron job manualmente (legacy)
+      tags:
+      - cron beta
+  /health:
+    get:
+      description: Retorna status "healthy" para monitoramento. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.HealthResponse'
+      summary: Healthcheck
+      tags:
+      - system beta
+    post:
+      description: Retorna status "healthy" para monitoramento. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.HealthResponse'
+      summary: Healthcheck
+      tags:
+      - system beta
+  /health/scheduler/force:
+    post:
+      description: Agenda uma execução manual assíncrona do scheduler. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/gateway.SchedulerActionResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Forçar execução do scheduler
+      tags:
+      - gateway beta
+  /health/scheduler/stats:
+    get:
+      description: Exibe contadores básicos e o horário da última execução. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.SchedulerStatsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Estatísticas do scheduler
+      tags:
+      - gateway beta
+  /healthz:
+    get:
+      description: Validates service availability for gateway integrations. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.GatewayHealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Healthcheck
+      tags:
+      - health
   /mcp/tasks:
     get:
       consumes:
@@ -973,238 +3482,366 @@ paths:
           schema:
             type: string
       summary: Get Tasks by Target
+  /ping:
+    get:
+      description: Retorna mensagem de ping/pong para verificação de conectividade.
+        [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.PingResponse'
+      summary: Ping
+      tags:
+      - system beta
+    post:
+      description: Retorna mensagem de ping/pong para verificação de conectividade.
+        [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.PingResponse'
+      summary: Ping
+      tags:
+      - system beta
+  /providers:
+    get:
+      description: Exibe os provedores configurados e seus estados de disponibilidade.
+        [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.ProvidersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar provedores
+      tags:
+      - gateway beta
+  /status:
+    get:
+      description: Reports uptime and dependency health for the gateway module. [Em
+        desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.GatewayHealthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Service status
+      tags:
+      - health
   /users:
     get:
-      consumes:
-      - application/json
-      description: |-
-        UserController provides endpoints for user management.
-        Retrieves a list of all users.
+      description: Retorna a lista de usuários ativos do sistema. [Em desenvolvimento]
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.UserListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Get All Users
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar usuários
       tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      description: Creates a new user.
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Create User
+      - users beta
   /users/{id}:
     delete:
-      consumes:
-      - application/json
-      description: Deletes a user by their ID.
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Delete User
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a specific user by their ID.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Get User by ID
-    put:
-      consumes:
-      - application/json
-      description: Updates a user's information.
+      description: Remove o usuário identificado pelo ID. [Em desenvolvimento]
       parameters:
-      - description: User ID
+      - description: ID do usuário
         in: path
         name: id
         required: true
         type: string
-      - description: User information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.DeleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remover usuário
+      tags:
+      - users beta
+    get:
+      description: Recupera um usuário específico pelo ID informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do usuário
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter usuário
+      tags:
+      - users beta
+    put:
+      consumes:
+      - application/json
+      description: Atualiza os campos permitidos para o usuário informado. [Em desenvolvimento]
+      parameters:
+      - description: ID do usuário
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Dados a atualizar
         in: body
-        name: user
+        name: payload
         required: true
         schema:
-          $ref: '#/definitions/user.UserModel'
+          $ref: '#/definitions/users.UpdateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Update User
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Atualizar usuário
+      tags:
+      - users beta
   /users/email/{email}:
     get:
-      consumes:
-      - application/json
-      description: Retrieves a user by their email address.
+      description: Retorna o usuário associado ao email informado. [Em desenvolvimento]
+      parameters:
+      - description: E-mail
+        in: path
+        name: email
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Get User By Email
-  /users/logout:
-    post:
-      consumes:
-      - application/json
-      description: Logs out the user by invalidating the refresh token.
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Logout
-  /users/refresh-token:
-    post:
-      consumes:
-      - application/json
-      description: Refreshes the user's authentication token.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Refresh Token
-  /users/sign-in:
-    post:
-      consumes:
-      - application/json
-      description: Authenticates a user and returns a token.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Authenticate User
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buscar usuário por email
+      tags:
+      - users beta
   /users/username/{username}:
     get:
-      consumes:
-      - application/json
-      description: Retrieves a user by their username.
+      description: Retorna usuário associado ao username informado. [Em desenvolvimento]
+      parameters:
+      - description: Username
+        in: path
+        name: username
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/types.APIResponse'
+            $ref: '#/definitions/users.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/types.APIResponse'
-      summary: Get User By Username
-security:
-- OAuth2: []
+            $ref: '#/definitions/users.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/users.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buscar usuário por username
+      tags:
+      - users beta
+  /v1/webhooks:
+    post:
+      consumes:
+      - application/json
+      description: Aceita eventos externos, valida o JSON e agenda processamento interno.
+        [Em desenvolvimento]
+      parameters:
+      - description: Evento enviado pelo provedor
+        in: body
+        name: payload
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/gateway.WebhookAckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Receber webhook
+      tags:
+      - gateway beta
+  /v1/webhooks/health:
+    get:
+      description: Retorna status simplificado do receptor de webhooks. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.WebhookHealthResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Healthcheck webhooks
+      tags:
+      - gateway beta
+  /version:
+    get:
+      description: Informa a versão corrente da aplicação. [Em desenvolvimento]
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/manage.VersionResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/manage.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Versão
+      tags:
+      - system beta
 securityDefinitions:
-  ApiKeyAuth:
-    description: Type "Bearer" followed by a space and JWT token.
+  BearerAuth:
+    description: Forneça "Bearer <token>"
     in: header
     name: Authorization
     type: apiKey

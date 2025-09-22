@@ -57,8 +57,8 @@ type AuthResponse struct {
 	TokenType        string      `json:"token_type"`
 	AccessToken      string      `json:"access_token"`
 	RefreshToken     string      `json:"refresh_token"`
-	ExpiresIn        int         `json:"expires_in"`
-	RefreshExpiresIn int         `json:"refresh_expires_in"`
+	ExpiresIn        int64       `json:"expires_in"`
+	RefreshExpiresIn int64       `json:"refresh_expires_in"`
 	User             UserSummary `json:"user"`
 }
 

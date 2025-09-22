@@ -235,9 +235,9 @@ func Load(configPath string) (*Config, error) {
 	geminiKey := os.Getenv("GEMINI_API_KEY")
 	openaiKey := os.Getenv("OPENAI_API_KEY")
 
-	log.Printf("🔍 Config Debug - Environment Variables:")
-	log.Printf("   GEMINI_API_KEY: '%s' (len=%d)", geminiKey, len(geminiKey))
-	log.Printf("   OPENAI_API_KEY: '%s' (len=%d)", openaiKey, len(openaiKey))
+	// log.Printf("🔍 Config Debug - Environment Variables:")
+	// log.Printf("   GEMINI_API_KEY: '%s' (len=%d)", geminiKey, len(geminiKey))
+	// log.Printf("   OPENAI_API_KEY: '%s' (len=%d)", openaiKey, len(openaiKey))
 
 	if geminiKey != "" && geminiKey != "dev_api_key" {
 		viper.Set("llm.api_key", geminiKey)

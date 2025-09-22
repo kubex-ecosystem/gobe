@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"net/http"
 
-	fscm "github.com/kubex-ecosystem/gdbase/factory/models"
+	fscm "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"gorm.io/gorm"
 )
 
+type ClientModel = fscm.ClientModel
+
 type CustomerController struct {
 	customerService fscm.ClientService
-	APIWrapper      *t.APIWrapper[fscm.ClientModel]
+	APIWrapper      *t.APIWrapper[ClientModel]
 }
 
 type (
@@ -34,7 +36,7 @@ func NewCustomerController(db *gorm.DB) *CustomerController {
 // @Tags        customers beta
 // @Security    BearerAuth
 // @Produce     json
-// @Success     200 {array} fscm.ClientModel
+// @Success     200 {array} ClientModel
 // @Failure     401 {object} ErrorResponse
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/customers [get]
@@ -55,7 +57,7 @@ func (cc *CustomerController) GetAllCustomers(w http.ResponseWriter, r *http.Req
 // @Security    BearerAuth
 // @Produce     json
 // @Param       id path string true "ID do cliente"
-// @Success     200 {object} fscm.ClientModel
+// @Success     200 {object} ClientModel
 // @Failure     401 {object} ErrorResponse
 // @Failure     404 {object} ErrorResponse
 // @Router      /api/v1/customers/{id} [get]
@@ -77,8 +79,8 @@ func (cc *CustomerController) GetCustomerByID(w http.ResponseWriter, r *http.Req
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     json
-// @Param       payload body fscm.ClientModel true "Dados do cliente"
-// @Success     200 {object} fscm.ClientModel
+// @Param       payload body ClientModel true "Dados do cliente"
+// @Success     200 {object} ClientModel
 // @Failure     400 {object} ErrorResponse
 // @Failure     401 {object} ErrorResponse
 // @Failure     500 {object} ErrorResponse
@@ -106,8 +108,8 @@ func (cc *CustomerController) CreateCustomer(w http.ResponseWriter, r *http.Requ
 // @Accept      json
 // @Produce     json
 // @Param       id      path string           true "ID do cliente"
-// @Param       payload body fscm.ClientModel true "Dados atualizados"
-// @Success     200 {object} fscm.ClientModel
+// @Param       payload body ClientModel true "Dados atualizados"
+// @Success     200 {object} ClientModel
 // @Failure     400 {object} ErrorResponse
 // @Failure     401 {object} ErrorResponse
 // @Failure     404 {object} ErrorResponse

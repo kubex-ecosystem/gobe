@@ -346,15 +346,18 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	rateLimitLimit := gobeminConfig.RateLimitLimit
 	rateLimitBurst := gobeminConfig.RateLimitBurst
 	requestWindow := gobeminConfig.RequestWindow
-	if rateLimitLimit == 0 {
+	if rateLimitLimit <= 0 {
 		rateLimitLimit = cm.DefaultRateLimitLimit
 	}
-	if rateLimitBurst == 0 {
+	if rateLimitBurst <= 0 {
 		rateLimitBurst = cm.DefaultRateLimitBurst
 	}
-	if requestWindow == 0 {
-		requestWindow = cm.DefaultRequestWindow
+	if requestWindow <= 0 {
+		requestWindow = time.Duration(cm.DefaultRequestWindow) * time.Millisecond
 	}
+	gobeminConfig.SetRateLimitLimit(rateLimitLimit)
+	gobeminConfig.SetRateLimitBurst(rateLimitBurst)
+	gobeminConfig.SetRequestWindow(requestWindow)
 
 	dbServiceT := g.Properties["dbService"].(*t.Property[gdbf.DBService])
 	dbService := dbServiceT.GetValue()
