@@ -44,7 +44,7 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"mcpLLMRoutes":         mcp.NewMCPLLMRoutes(&rtr),
 		"mcpPreferencesRoutes": mcp.NewMCPPreferencesRoutes(&rtr),
 		"mcpSystemRoutes":      mcp.NewMCPSystemRoutes(&rtr),
-		"mcpGHbexRoutes":       mcp.NewMCPGHbexRoutes(&rtr),
-		"mcpGDBaseRoutes":      mcp.NewMCPGDBaseRoutes(&rtr),
+		// "mcpGHbexRoutes":       mcp.NewMCPGHbexRoutes(&rtr),
+		"mcpGDBaseRoutes": mcp.NewMCPGDBaseRoutes(&rtr),
 	}
 }
