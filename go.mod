@@ -25,7 +25,7 @@ require (
 	golang.org/x/time v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.2
+	gorm.io/gorm v1.31.0
 )
 
 require (
@@ -182,3 +182,5 @@ require (
 )
 
 replace github.com/kubex-ecosystem/gdbase => ../gdbase
+
+replace github.com/kubex-ecosystem/ghbex => ../ghbex

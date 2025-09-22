@@ -32,7 +32,7 @@ func NewWebUIController(root string) *WebUIController {
 // ServeRoot entrega o arquivo inicial da interface web, caso disponível.
 //
 // @Summary  Servir UI raiz
-// @Description Retorna o index da UI ou mensagem indicando ausência do bundle.
+// @Description Retorna o index da UI ou mensagem indicando ausência do bundle. [Em desenvolvimento]
 // @Tags     gateway
 // @Produce  text/html
 // @Produce  json
@@ -50,7 +50,7 @@ func (wc *WebUIController) ServeRoot(c *gin.Context) {
 // ServeApp entrega assets arbitrários da UI ou realiza fallback para SPA.
 //
 // @Summary  Servir UI
-// @Description Carrega assets estáticos da SPA hospedada no gateway.
+// @Description Carrega assets estáticos da SPA hospedada no gateway. [Em desenvolvimento]
 // @Tags     gateway
 // @Produce  text/html
 // @Produce  json

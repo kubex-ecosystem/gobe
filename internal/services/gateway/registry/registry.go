@@ -1,3 +1,4 @@
+// Package registry provides a registry for managing AI model provider configurations.
 package registry
 
 import (
@@ -7,9 +8,9 @@ import (
 	"sync"
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	gateway "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	"github.com/kubex-ecosystem/gobe/internal/services/gateway/providers"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type Registry struct {
@@ -164,4 +165,3 @@ func (r *Registry) ConfigFor(name string) (gateway.ProviderConfig, error) {
 
 	return entry.Config, nil
 }
-

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 )
 
 // ProvidersController exposes aggregated provider information for the gateway.
@@ -20,8 +20,8 @@ func NewProvidersController(service *gatewaysvc.Service) *ProvidersController {
 // ListProviders returns availability metadata for gateway providers.
 //
 // @Summary     Listar provedores
-// @Description Exibe os provedores configurados e seus estados de disponibilidade.
-// @Tags        gateway
+// @Description Exibe os provedores configurados e seus estados de disponibilidade. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200 {object} ProvidersResponse

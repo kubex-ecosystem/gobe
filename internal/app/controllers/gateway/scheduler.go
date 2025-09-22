@@ -15,8 +15,8 @@ func NewSchedulerController() *SchedulerController { return &SchedulerController
 // Stats reports aggregated scheduler execution metrics.
 //
 // @Summary     Estatísticas do scheduler
-// @Description Exibe contadores básicos e o horário da última execução.
-// @Tags        gateway
+// @Description Exibe contadores básicos e o horário da última execução. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200 {object} SchedulerStatsResponse
@@ -41,8 +41,8 @@ func (sc *SchedulerController) Stats(c *gin.Context) {
 // ForceRun queues a manual execution request for the scheduler.
 //
 // @Summary     Forçar execução do scheduler
-// @Description Agenda uma execução manual assíncrona do scheduler.
-// @Tags        gateway
+// @Description Agenda uma execução manual assíncrona do scheduler. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     202 {object} SchedulerActionResponse

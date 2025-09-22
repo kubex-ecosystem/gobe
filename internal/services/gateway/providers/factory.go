@@ -1,3 +1,4 @@
+// Package providers provides a factory for creating AI model provider instances.
 package providers
 
 import (
@@ -22,4 +23,3 @@ func New(cfg Config) (gateway.Provider, error) {
 		return nil, fmt.Errorf("unsupported provider type: %s", cfg.Type)
 	}
 }
-

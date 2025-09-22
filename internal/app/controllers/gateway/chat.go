@@ -9,7 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
-	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gatewayService "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 )
 
 type ChatController struct {
@@ -26,8 +27,8 @@ func NewChatController(service *gatewaysvc.Service) *ChatController {
 // ChatSSE streams provider responses as Server-Sent Events for conversational use cases.
 //
 // @Summary     Chat streaming
-// @Description Dispara uma conversação streaming (`data: {"delta"}`) com o provedor configurado.
-// @Tags        gateway
+// @Description Dispara uma conversação streaming (`data: {"delta"}`) com o provedor configurado. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     text/event-stream
@@ -83,7 +84,7 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 		req.Meta["user_id"] = userID
 	}
 
-	svcReq := gatewaysvc.ChatRequest{
+	svcReq := gatewayService.ChatRequest{
 		Provider:    req.Provider,
 		Model:       req.Model,
 		Messages:    req.Messages,
@@ -131,7 +132,7 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 		sendEvent(gin.H{"delta": chunk})
 	})
 
-	var lastUsage *gatewaysvc.Usage
+	var lastUsage *gatewayService.Usage
 
 streamLoop:
 	for {

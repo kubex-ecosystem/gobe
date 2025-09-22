@@ -17,8 +17,8 @@ func NewScorecardController() *ScorecardController {
 // GetScorecard lists the placeholder scorecard entries exposed by the gateway.
 //
 // @Summary     Listar scorecard
-// @Description Retorna os indicadores disponíveis enquanto a integração real não está ativa.
-// @Tags        gateway
+// @Description Retorna os indicadores disponíveis enquanto a integração real não está ativa. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200 {object} ScorecardResponse
@@ -44,8 +44,8 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 // GetScorecardAdvice returns high-level guidance associated with the scorecard snapshot.
 //
 // @Summary     Aconselhar scorecard
-// @Description Fornece sugestões de alto nível com base na métrica atual.
-// @Tags        gateway
+// @Description Fornece sugestões de alto nível com base na métrica atual. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200 {object} ScorecardAdviceResponse
@@ -61,8 +61,8 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 // GetMetrics exposes synthetic gateway metrics for observability tests.
 //
 // @Summary     Métricas de IA
-// @Description Entrega métricas agregadas para monitoramento do gateway.
-// @Tags        gateway
+// @Description Entrega métricas agregadas para monitoramento do gateway. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200 {object} ScorecardMetricsResponse

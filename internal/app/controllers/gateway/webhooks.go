@@ -15,8 +15,8 @@ func NewWebhookController() *WebhookController { return &WebhookController{} }
 // Handle receives webhook events and acknowledges their processing.
 //
 // @Summary     Receber webhook
-// @Description Aceita eventos externos, valida o JSON e agenda processamento interno.
-// @Tags        gateway
+// @Description Aceita eventos externos, valida o JSON e agenda processamento interno. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     json
@@ -43,8 +43,8 @@ func (wc *WebhookController) Handle(c *gin.Context) {
 // Health validates the readiness of the gateway webhook receiver.
 //
 // @Summary     Healthcheck webhooks
-// @Description Retorna status simplificado do receptor de webhooks.
-// @Tags        gateway
+// @Description Retorna status simplificado do receptor de webhooks. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200 {object} WebhookHealthResponse

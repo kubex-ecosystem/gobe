@@ -17,8 +17,8 @@ func NewLookAtniController() *LookAtniController { return &LookAtniController{} 
 // Extract queues a LookAtni extraction job.
 //
 // @Summary     Extrair LookAtni
-// @Description Enfileira uma extração de artefatos para processamento assíncrono.
-// @Tags        gateway
+// @Description Enfileira uma extração de artefatos para processamento assíncrono. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     json
@@ -45,8 +45,8 @@ func (lc *LookAtniController) Extract(c *gin.Context) {
 // Archive queues an archive operation for LookAtni artifacts.
 //
 // @Summary     Arquivar LookAtni
-// @Description Agenda o arquivamento de artefatos processados pelo LookAtni.
-// @Tags        gateway
+// @Description Agenda o arquivamento de artefatos processados pelo LookAtni. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     json
@@ -73,8 +73,8 @@ func (lc *LookAtniController) Archive(c *gin.Context) {
 // Download issues a temporary URL to fetch LookAtni artifacts.
 //
 // @Summary     Baixar ativo LookAtni
-// @Description Retorna URL temporária para download do artefato processado.
-// @Tags        gateway
+// @Description Retorna URL temporária para download do artefato processado. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Param       id path string true "Identificador do recurso"
@@ -99,8 +99,8 @@ func (lc *LookAtniController) Download(c *gin.Context) {
 // Projects lists available LookAtni projects.
 //
 // @Summary     Listar projetos LookAtni
-// @Description Lista projetos cadastrados para automações LookAtni.
-// @Tags        gateway
+// @Description Lista projetos cadastrados para automações LookAtni. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Produce     json
 // @Success     200 {object} LookAtniProjectsResponse

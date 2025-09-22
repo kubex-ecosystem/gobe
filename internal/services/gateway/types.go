@@ -1,3 +1,4 @@
+// Package gateway defines interfaces and types for interacting with various AI model providers.
 package gateway
 
 import "context"
@@ -77,4 +78,3 @@ type ProviderEntry struct {
 	Config   ProviderConfig
 	Provider Provider
 }
-

@@ -10,7 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
-	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gatewayService "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 )
 
 type AdviseController struct {
@@ -27,8 +28,8 @@ func NewAdviseController(service *gatewaysvc.Service) *AdviseController {
 // Advise generates guidance using the configured provider, optionally streaming SSE deltas.
 //
 // @Summary     Gerar aconselhamento
-// @Description Processa o prompt e retorna respostas via JSON ou SSE (`data: {"delta"}`) até concluir.
-// @Tags        gateway
+// @Description Processa o prompt e retorna respostas via JSON ou SSE (`data: {"delta"}`) até concluir. [Em desenvolvimento]
+// @Tags        gateway beta
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     json
@@ -86,7 +87,7 @@ func (ac *AdviseController) respondJSON(c *gin.Context, req *AdviceRequest) {
 	}
 
 	var builder strings.Builder
-	var usage *gatewaysvc.Usage
+	var usage *gatewayService.Usage
 
 	for chunk := range stream {
 		if chunk.Error != "" {
@@ -153,7 +154,7 @@ func (ac *AdviseController) streamSSE(c *gin.Context, req *AdviceRequest) {
 		send(gin.H{"delta": chunk})
 	})
 
-	var usage *gatewaysvc.Usage
+	var usage *gatewayService.Usage
 
 streamLoop:
 	for {
@@ -201,7 +202,7 @@ streamLoop:
 	send(response)
 }
 
-func (ac *AdviseController) buildChatRequest(c *gin.Context, req *AdviceRequest) gatewaysvc.ChatRequest {
+func (ac *AdviseController) buildChatRequest(c *gin.Context, req *AdviceRequest) gatewayService.ChatRequest {
 	meta := map[string]interface{}{}
 	for k, v := range req.Metadata {
 		meta[k] = v
@@ -209,22 +210,22 @@ func (ac *AdviseController) buildChatRequest(c *gin.Context, req *AdviceRequest)
 
 	externalKey := strings.TrimSpace(c.GetHeader("x-external-api-key"))
 
-	messages := make([]gatewaysvc.Message, 0, 4)
-	messages = append(messages, gatewaysvc.Message{
+	messages := make([]gatewayService.Message, 0, 4)
+	messages = append(messages, gatewayService.Message{
 		Role:    "system",
 		Content: "You are the Kubex GoBE advisor. Provide concise, actionable insights and highlight next steps.",
 	})
 
 	if len(req.Context) > 0 {
 		if ctxJSON, err := json.Marshal(req.Context); err == nil {
-			messages = append(messages, gatewaysvc.Message{
+			messages = append(messages, gatewayService.Message{
 				Role:    "system",
 				Content: fmt.Sprintf("Context: %s", string(ctxJSON)),
 			})
 		}
 	}
 
-	messages = append(messages, gatewaysvc.Message{Role: "user", Content: req.Prompt})
+	messages = append(messages, gatewayService.Message{Role: "user", Content: req.Prompt})
 
 	headers := map[string]string{}
 	if externalKey != "" {
@@ -240,7 +241,7 @@ func (ac *AdviseController) buildChatRequest(c *gin.Context, req *AdviceRequest)
 		headers["x-user-id"] = userID
 	}
 
-	return gatewaysvc.ChatRequest{
+	return gatewayService.ChatRequest{
 		Provider:    req.Provider,
 		Model:       req.Model,
 		Messages:    messages,

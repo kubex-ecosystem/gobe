@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 )
 
 // HealthController exposes health and status endpoints compatible with Analyzer gateway.
@@ -50,7 +50,7 @@ func NewHealthController(dbService svc.DBService, gatewayService *gatewaysvc.Ser
 // Healthz provides a lightweight readiness probe for upstream load balancers.
 //
 // @Summary     Healthcheck
-// @Description Validates service availability for gateway integrations.
+// @Description Validates service availability for gateway integrations. [Em desenvolvimento]
 // @Tags        health
 // @Security    BearerAuth
 // @Produce     json
@@ -68,7 +68,7 @@ func (hc *HealthController) Healthz(c *gin.Context) {
 // Status returns dependencies and uptime information for monitoring dashboards.
 //
 // @Summary     Service status
-// @Description Reports uptime and dependency health for the gateway module.
+// @Description Reports uptime and dependency health for the gateway module. [Em desenvolvimento]
 // @Tags        health
 // @Security    BearerAuth
 // @Produce     json
@@ -83,7 +83,7 @@ func (hc *HealthController) Status(c *gin.Context) {
 // APIHealth exposes health data for clients interfacing through the API gateway.
 //
 // @Summary     Gateway health
-// @Description Augments status payload with module version for API consumers.
+// @Description Augments status payload with module version for API consumers. [Em desenvolvimento]
 // @Tags        health
 // @Security    BearerAuth
 // @Produce     json
