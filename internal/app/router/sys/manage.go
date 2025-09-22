@@ -2,20 +2,17 @@ package sys
 
 import (
 	"fmt"
-
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	manage "github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/manage"
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	l "github.com/kubex-ecosystem/logz"
 )
 
-type ServerRoutes struct {
-	ar.IRouter
-}
-
+// NewServerRoutes cria rotas básicas de gestão da aplicação.
 func NewServerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
 		fmt.Println("Router is nil for ServerRoute")
@@ -23,88 +20,36 @@ func NewServerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 	rtl := *rtr
 
-	ra := ServerRoutes{IRouter: rtl}
 	dbService := rtl.GetDatabaseService()
-	// if dbService == nil {
-	// 	fmt.Println("Database service is nil for ServerRoute")
-	// 	return nil
-	// }
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)
 	middlewaresMap["logging"] = middlewares.Logger(l.GetLogger("GoBE-ServerRoutes"))
-	middlewaresMap["rateLimit"] = middlewares.RateLimiter(5, 10) // 5 requests per 10 seconds
+	middlewaresMap["rateLimit"] = middlewares.RateLimiter(5, 10)
 	middlewaresMap["sanitize"] = middlewares.ValidateAndSanitize()
 
-	secureProperties := make(map[string]bool)
-	secureProperties["secure"] = true
-	secureProperties["validateAndSanitize"] = true
-	secureProperties["validateAndSanitizeBody"] = true
+	secureProperties := map[string]bool{
+		"secure":                  true,
+		"validateAndSanitize":     true,
+		"validateAndSanitizeBody": true,
+	}
+	openedProperties := map[string]bool{
+		"secure":                  false,
+		"validateAndSanitize":     false,
+		"validateAndSanitizeBody": false,
+	}
 
-	openedProperties := make(map[string]bool)
-	openedProperties["secure"] = false
-	openedProperties["validateAndSanitize"] = false
-	openedProperties["validateAndSanitizeBody"] = false
+	controller := manage.NewServerController()
 
-	routesMap["HealthPostRoute"] = proto.NewRoute(http.MethodPost, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties, nil)
-	routesMap["HealthGetRoute"] = proto.NewRoute(http.MethodGet, "/health", "application/json", ra.HealthRouteHandler(nil), nil, dbService, openedProperties, nil)
-	routesMap["PingPostRoute"] = proto.NewRoute(http.MethodPost, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties, nil)
-	routesMap["PingGetRoute"] = proto.NewRoute(http.MethodGet, "/ping", "application/json", ra.PingRouteHandler(nil), nil, dbService, openedProperties, nil)
+	routesMap["HealthPostRoute"] = proto.NewRoute(http.MethodPost, "/health", "application/json", controller.Health, nil, dbService, openedProperties, nil)
+	routesMap["HealthGetRoute"] = proto.NewRoute(http.MethodGet, "/health", "application/json", controller.Health, nil, dbService, openedProperties, nil)
+	routesMap["PingPostRoute"] = proto.NewRoute(http.MethodPost, "/ping", "application/json", controller.Ping, nil, dbService, openedProperties, nil)
+	routesMap["PingGetRoute"] = proto.NewRoute(http.MethodGet, "/ping", "application/json", controller.Ping, nil, dbService, openedProperties, nil)
 
-	routesMap["VersionGetRoute"] = proto.NewRoute(http.MethodGet, "/version", "application/json", ra.VersionRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
-	routesMap["ConfigGetRoute"] = proto.NewRoute(http.MethodGet, "/api/v1/config", "application/json", ra.ConfigRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
-
-	routesMap["StartPostRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/start", "application/json", ra.StartRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
-	routesMap["StopPostRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/stop", "application/json", ra.StopRouteHandler(nil), ra.GetMiddlewares(), dbService, secureProperties, nil)
+	routesMap["VersionGetRoute"] = proto.NewRoute(http.MethodGet, "/version", "application/json", controller.Version, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["ConfigGetRoute"] = proto.NewRoute(http.MethodGet, "/api/v1/config", "application/json", controller.Config, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["StartPostRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/start", "application/json", controller.Start, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["StopPostRoute"] = proto.NewRoute(http.MethodPost, "/api/v1/stop", "application/json", controller.Stop, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
-}
-
-func (r *ServerRoutes) PingRouteHandler(_ chan interface{}) gin.HandlerFunc {
-	return func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"message": "pong"}) }
-}
-func (r *ServerRoutes) PingBrokerRouteHandler(_ chan interface{}) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if r == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "unexpected error"})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
-	}
-}
-func (r *ServerRoutes) HealthRouteHandler(_ chan interface{}) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "healthy"})
-	}
-}
-func (r *ServerRoutes) VersionRouteHandler(_ chan interface{}) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"version": "v1.0.0"})
-	}
-}
-func (r *ServerRoutes) ConfigRouteHandler(_ chan interface{}) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"config": "config"})
-	}
-}
-func (r *ServerRoutes) StartRouteHandler(_ chan interface{}) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Parse all we need from the request to create a child server
-		//g := c.NewServer()
-
-		/*if err := c.StartServer(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to start gobe"})
-			return
-		}*/
-		c.JSON(http.StatusOK, gin.H{"message": "gobe started successfully"})
-	}
-}
-func (r *ServerRoutes) StopRouteHandler(_ chan interface{}) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		/*if err := c.StopServer(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to stop gobe"})
-			return
-		}*/
-		c.JSON(http.StatusOK, gin.H{"message": "gobe stopped successfully"})
-	}
 }

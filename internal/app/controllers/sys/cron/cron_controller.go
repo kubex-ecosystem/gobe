@@ -3,8 +3,10 @@ package cron
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -17,6 +19,53 @@ import (
 type CronController struct {
 	ICronService cron.CronJobService
 	APIWrapper   *types.APIWrapper[cron.CronJobModel]
+}
+
+func respondCronError(c *gin.Context, status int, message string) {
+	c.JSON(status, ErrorResponse{Status: "error", Message: message})
+}
+
+func cronIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	if value := ctx.Value(types.CtxKey("cronID")); value != nil {
+		if id, ok := value.(uuid.UUID); ok {
+			return id, true
+		}
+	}
+	return uuid.Nil, false
+}
+
+func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	if value := ctx.Value(types.CtxKey("userID")); value != nil {
+		if id, ok := value.(uuid.UUID); ok {
+			return id, true
+		}
+	}
+	return uuid.Nil, false
+}
+
+func toCronJobSlice(models []*cron.CronJobModel) []cron.CronJobModel {
+	if len(models) == 0 {
+		return []cron.CronJobModel{}
+	}
+	result := make([]cron.CronJobModel, 0, len(models))
+	for _, m := range models {
+		if m != nil {
+			result = append(result, *m)
+		}
+	}
+	return result
+}
+
+func marshalToMapSlice(value any) ([]map[string]any, error) {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	var response []map[string]any
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
 }
 
 func NewCronJobController(db *gorm.DB) *CronController {
@@ -45,473 +94,591 @@ func (cc *CronController) RegisterRoutes(router *gin.Engine) {
 	}
 }
 
-// @Summary Cron Job Management
-// @Description This controller manages cron jobs, allowing users to create, update, delete, and execute cron jobs.
-// @Tags cron
-// @Schemes http https
-// @Summary Get All Cron Jobs
-// @Description Retrieves all cron jobs in the system.
-// @Accept json
-// @Produce json
-// @Success 200 {object} types.APIResponse[[]cron.CronJobModel]
-// @Failure 500 {string} Failed to fetch cron jobs
-// @Router /cronjobs [get]
+// GetAllCronJobs mantém compatibilidade com rotas legadas de listagem.
+//
+// @Summary     Listar cron jobs (legacy)
+// @Description Retorna todos os cron jobs cadastrados. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} CronJobListResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /cronjobs [get]
 func (cc *CronController) GetAllCronJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
 	jobs, err := cc.ICronService.ListCronJobs(ctx)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to fetch cron jobs", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to fetch cron jobs")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron jobs fetched successfully", "", jobs, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronJobListResponse{Jobs: toCronJobSlice(jobs)})
 }
 
-// @Summary Get Cron Job by ID
-// @Description Retrieves a specific cron job by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {object} types.APIResponse[cron.CronJobModel]
-// @Failure 404 {string} Cron job not found
-// @Router /cronjobs/{id} [get]
+// GetCronJobByID retorna um cron job específico.
+//
+// @Summary     Obter cron job
+// @Description Recupera um cron job específico pelo ID informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id path string true "ID do cron job"
+// @Success     200 {object} CronJobResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id} [get]
 func (cc *CronController) GetCronJobByID(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
 	job, err := cc.ICronService.GetCronJobByID(ctx, cronID)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job not found", "", nil, nil, http.StatusNotFound)
+		respondCronError(c, http.StatusNotFound, "cron job not found")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job fetched successfully", "", job, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronJobResponse{Job: *job})
 }
 
-// @Summary Create Cron Job
-// @Description Creates a new cron job.
-// @Accept json
-// @Produce json
-// @Success 201 {object} types.APIResponse[cron.CronJobModel]
-// @Failure 400 {string} Failed to create cron job
-// @Router /cronjobs [post]
+// CreateCronJob registra um novo cron job.
+//
+// @Summary     Criar cron job
+// @Description Cria um novo cron job com os dados informados. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       payload body CronJobRequest true "Dados do cron job"
+// @Success     201 {object} CronJobResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs [post]
 func (cc *CronController) CreateCronJob(c *gin.Context) {
-	var job *cron.CronJobModel
-	if err := c.ShouldBindJSON(&job); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to bind JSON: %s", err))
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid request payload", "", nil, nil, http.StatusBadRequest)
+	var req CronJobRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondCronError(c, http.StatusBadRequest, "invalid request payload")
+		return
+	}
+	if strings.TrimSpace(req.Name) == "" {
+		respondCronError(c, http.StatusBadRequest, "name is required")
 		return
 	}
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	job.ID, err = uuid.NewRandom()
+	userID, ok := userIDFromContext(ctx)
+	if !ok || userID == uuid.Nil {
+		respondCronError(c, http.StatusUnauthorized, "user id is required")
+		return
+	}
+	identifier, err := uuid.NewRandom()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to generate UUID: %s", err))
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to generate UUID", "", nil, nil, http.StatusInternalServerError)
+		gl.Log("error", fmt.Sprintf("failed to generate uuid: %s", err))
+		respondCronError(c, http.StatusInternalServerError, "failed to create cron job")
 		return
 	}
-	job.UserID = ctx.Value("userID").(uuid.UUID)
-	if job.UserID == uuid.Nil {
-		gl.Log("error", "User ID is required")
-		cc.APIWrapper.JSONResponse(c, "error", "User ID is required", "", nil, nil, http.StatusBadRequest)
-		return
+	job := &cron.CronJobModel{
+		ID:             identifier,
+		Name:           req.Name,
+		CronExpression: req.Expression,
+		Description:    req.Description,
+		IsActive:       req.Enabled,
+		LastRunStatus:  "pending",
+		UserID:         userID,
+		CreatedBy:      userID,
+		UpdatedBy:      userID,
 	}
-	job.LastRunStatus = "pending"
 	createdJob, err := cc.ICronService.CreateCronJob(ctx, job)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to create cron job", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to create cron job")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job created successfully", "", createdJob, nil, http.StatusCreated)
+	c.JSON(http.StatusCreated, CronJobResponse{Job: *createdJob})
 }
 
-// @Summary Update Cron Job
-// @Description Updates an existing cron job.
-// @Accept json
-// @Produce json
-// @Success 200 {object} types.APIResponse[cron.CronJobModel]
-// @Failure 400 {string} Failed to update cron job
-// @Failure 404 {string} Cron job not found
-// @Failure 500 {string} Failed to update cron job
-// @Router /cronjobs/{id} [put]
+// UpdateCronJob atualiza um cron job existente.
+//
+// @Summary     Atualizar cron job
+// @Description Atualiza os dados de um cron job identificado pelo ID. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       id      path string        true "ID do cron job"
+// @Param       payload body CronJobRequest true "Dados do cron job"
+// @Success     200 {object} CronJobResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id} [put]
 func (cc *CronController) UpdateCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
-	var job cron.CronJobModel
-	if err := c.ShouldBindJSON(&job); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid request payload", "", nil, nil, http.StatusBadRequest)
+	var req CronJobRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		respondCronError(c, http.StatusBadRequest, "invalid request payload")
 		return
 	}
-	if cronID == uuid.Nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job ID is required", "", nil, nil, http.StatusBadRequest)
+	existing, err := cc.ICronService.GetCronJobByID(ctx, cronID)
+	if err != nil || existing == nil {
+		respondCronError(c, http.StatusNotFound, "cron job not found")
 		return
 	}
-	job.ID = cronID
-	updatedJob, err := cc.ICronService.UpdateCronJob(ctx, &job)
+	existing.Name = req.Name
+	if strings.TrimSpace(req.Expression) != "" {
+		existing.CronExpression = req.Expression
+	}
+	existing.Description = req.Description
+	existing.IsActive = req.Enabled
+	if userID, ok := userIDFromContext(ctx); ok {
+		existing.UpdatedBy = userID
+	}
+	updatedJob, err := cc.ICronService.UpdateCronJob(ctx, existing)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to update cron job", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to update cron job")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job updated successfully", "", updatedJob, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronJobResponse{Job: *updatedJob})
 }
 
-// @Summary Delete Cron Job
-// @Description Deletes a specific cron job by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron job deleted successfully
-// @Failure 404 {string} Cron job not found
-// @Failure 400 {string} Invalid cron job ID
-// @Failure 500 {string} Failed to delete cron job
-// @Router /cronjobs/{id} [delete]
+// DeleteCronJob remove um cron job existente.
+//
+// @Summary     Remover cron job
+// @Description Exclui um cron job pelo ID informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id path string true "ID do cron job"
+// @Success     200 {object} CronActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id} [delete]
 func (cc *CronController) DeleteCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
 	job, err := cc.ICronService.GetCronJobByID(ctx, cronID)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job not found", "", nil, nil, http.StatusNotFound)
+		respondCronError(c, http.StatusNotFound, "cron job not found")
 		return
 	}
 	if job.UserID != uuid.Nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job is associated with a user and cannot be deleted", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "cron job associated to a user cannot be deleted")
 		return
 	}
 	// Check if the cron job is currently running
 	if job.LastRunStatus == "running" {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job is currently running and cannot be deleted", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "cron job currently running")
 		return
 	}
 	// Check if the cron job has any pending executions
 	if job.LastRunStatus == "pending" {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job has pending executions and cannot be deleted", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "cron job has pending executions")
 		return
 	}
 
 	if err := cc.ICronService.DeleteCronJob(ctx, cronID); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to delete cron job", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to delete cron job")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job deleted successfully", "", nil, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronActionResponse{Message: "Cron job deleted successfully"})
 }
 
-// @Summary Enable Cron Job
-// @Description Enables a specific cron job by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron job enabled successfully
-// @Failure 404 {string} Cron job not found
-// @Router /cronjobs/{id}/enable [post]
+// EnableCronJob habilita um cron job existente.
+//
+// @Summary     Habilitar cron job
+// @Description Ativa o cron job informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id path string true "ID do cron job"
+// @Success     200 {object} CronActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id}/enable [post]
 func (cc *CronController) EnableCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
 	if err := cc.ICronService.EnableCronJob(ctx, cronID); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to enable cron job", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to enable cron job")
 		return
 	}
-
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job enabled successfully", "", nil, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronActionResponse{Message: "Cron job enabled successfully"})
 }
 
-// @Summary Disable Cron Job
-// @Description Disables a specific cron job by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron job disabled successfully
-// @Failure 404 {string} Cron job not found
-// @Router /cronjobs/{id}/disable [post]
+// DisableCronJob desabilita um cron job.
+//
+// @Summary     Desabilitar cron job
+// @Description Desativa o cron job informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id path string true "ID do cron job"
+// @Success     200 {object} CronActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id}/disable [post]
 func (cc *CronController) DisableCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
 	if err := cc.ICronService.DisableCronJob(ctx, cronID); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to disable cron job", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to disable cron job")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job disabled successfully", "", nil, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronActionResponse{Message: "Cron job disabled successfully"})
 }
 
-// @Summary Execute Cron Job Manually
-// @Description Executes a specific cron job manually by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron job executed successfully
-// @Failure 404 {string} Cron job not found
-// @Router /cronjobs/{id}/execute [post]
+// ExecuteCronJobManually executa o cron job imediatamente.
+//
+// @Summary     Executar cron job manualmente
+// @Description Dispara manualmente a execução do cron job informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id path string true "ID do cron job"
+// @Success     200 {object} CronActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id}/execute [post]
 func (cc *CronController) ExecuteCronJobManually(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
 	if err := cc.ICronService.ExecuteCronJobManually(ctx, cronID); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to execute cron job manually", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to execute cron job")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job executed successfully", "", nil, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronActionResponse{Message: "Cron job executed successfully"})
 }
 
-// @Summary Execute Cron Job Manually by ID
-// @Description Executes a specific cron job manually by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron job executed successfully
-// @Failure 404 {string} Cron job not found
-// @Router /cronjobs/{id}/execute/{job_id} [post]
+// ExecuteCronJobManuallyByID mantém compatibilidade com rotas antigas.
+//
+// @Summary     Executar cron job manualmente (legacy)
+// @Description Dispara manualmente a execução do cron job informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id     path string true "ID do cron job"
+// @Param       job_id path string false "ID adicional do job"
+// @Success     200 {object} CronActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /cronjobs/{id}/execute/{job_id} [post]
 func (cc *CronController) ExecuteCronJobManuallyByID(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
 	// Check if the cron job is currently running
 	job, err := cc.ICronService.GetCronJobByID(ctx, cronID)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job not found", "", nil, nil, http.StatusNotFound)
+		respondCronError(c, http.StatusNotFound, "cron job not found")
 		return
 	}
 	if job.LastRunStatus == "running" {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job is currently running and cannot be executed manually", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "cron job currently running")
 		return
 	}
 	if err := cc.ICronService.ExecuteCronJobManually(ctx, cronID); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to execute cron job manually", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to execute cron job")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job executed successfully", "", nil, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronActionResponse{Message: "Cron job executed successfully"})
 }
 
-// @Summary Reschedule Cron Job
-// @Description Reschedules a specific cron job by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron job rescheduled successfully
-// @Failure 400 {string} Invalid cron job ID
-// @Failure 404 {string} Cron job not found
-// @Failure 500 {string} Failed to reschedule cron job
-// @Router /cronjobs/{id}/reschedule [post]
+// RescheduleCronJob atualiza a expressão de agendamento.
+//
+// @Summary     Reagendar cron job
+// @Description Atualiza a expressão do cron job informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       id      path string           true "ID do cron job"
+// @Param       payload body RescheduleRequest true "Nova expressão"
+// @Success     200 {object} CronActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id}/reschedule [put]
 func (cc *CronController) RescheduleCronJob(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
-	var payload struct {
-		NewExpression string `json:"new_expression" binding:"required"`
-	}
+	var payload RescheduleRequest
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid request payload", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid request payload")
 		return
 	}
-	if cronID == uuid.Nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job ID is required", "", nil, nil, http.StatusBadRequest)
+	if strings.TrimSpace(payload.NewExpression) == "" {
+		respondCronError(c, http.StatusBadRequest, "new_expression is required")
 		return
 	}
 	job, err := cc.ICronService.GetCronJobByID(ctx, cronID)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job not found", "", nil, nil, http.StatusNotFound)
+		respondCronError(c, http.StatusNotFound, "cron job not found")
 		return
 	}
 	if job.UserID != uuid.Nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Cron job is associated with a user and cannot be rescheduled", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "cron job is associated with a user and cannot be rescheduled")
 		return
 	}
 	if err := cc.ICronService.RescheduleCronJob(ctx, cronID, payload.NewExpression); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to reschedule cron job", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to reschedule cron job")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron job rescheduled successfully", "", nil, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronActionResponse{Message: "Cron job rescheduled successfully"})
 }
 
-// @Summary List Cron Jobs
-// @Description Lists all cron jobs.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron jobs listed successfully
-// @Failure 404 {string} Cron jobs not found
-// @Router /cronjobs/list [get]
+// ListCronJobs lista cron jobs (rota principal).
+//
+// @Summary     Listar cron jobs
+// @Description Retorna todos os cron jobs cadastrados. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} CronJobListResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs [get]
 func (cc *CronController) ListCronJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
 	jobs, err := cc.ICronService.ListCronJobs(ctx)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to list cron jobs", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to list cron jobs")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron jobs listed successfully", "", jobs, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronJobListResponse{Jobs: toCronJobSlice(jobs)})
 }
 
-// @Summary List Active Cron Jobs
-// @Description Lists all active cron jobs.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Active cron jobs listed successfully
-// @Failure 404 {string} Cron jobs not found
-// @Router /cronjobs/active [get]
+// ListActiveCronJobs retorna cron jobs ativos.
+//
+// @Summary     Listar cron jobs ativos
+// @Description Retorna apenas os cron jobs marcados como ativos. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} CronJobListResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/active [get]
 func (cc *CronController) ListActiveCronJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
 	jobs, err := cc.ICronService.ListActiveCronJobs(ctx)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to list active cron jobs", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to list active cron jobs")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Active cron jobs listed successfully", "", jobs, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronJobListResponse{Jobs: toCronJobSlice(jobs)})
 }
 
-// @Summary Validate Cron Expression
-// @Description Validates a cron expression.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Cron expression is valid
-// @Failure 404 {string} Invalid cron expression
-// @Router /cronjobs/validate [post]
+// ValidateCronExpression verifica se a expressão é válida.
+//
+// @Summary     Validar expressão cron
+// @Description Valida a expressão cron fornecida. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Accept      json
+// @Produce     json
+// @Param       payload body CronValidateRequest true "Expressão"
+// @Success     200 {object} CronValidateResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/validate [post]
 func (cc *CronController) ValidateCronExpression(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	var payload struct {
-		Expression string `json:"expression" binding:"required"`
-	}
+	var payload CronValidateRequest
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid request payload", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid request payload")
 		return
 	}
 	if err := cc.ICronService.ValidateCronExpression(ctx, payload.Expression); err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron expression", "", nil, nil, http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, CronValidateResponse{Valid: false, Error: err.Error()})
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Cron expression is valid", "", nil, nil, http.StatusOK)
+	c.JSON(http.StatusOK, CronValidateResponse{Valid: true})
 }
 
-// @Summary Get Job Queue
-// @Description Retrieves the current state of the job queue.
-// @Accept json
-// @Produce json
-// @Success 200 {object} []jobqueue.JobQueue
-// @Failure 404 {string} Job queue not found
-// @Router /cronjobs/queue [get]
+// GetJobQueue lista a fila de jobs pendentes.
+//
+// @Summary     Listar fila de jobs
+// @Description Recupera o estado atual da fila de jobs agendados. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} CronJobQueueResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/queue [get]
 func (cc *CronController) GetJobQueue(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
 	queue, err := cc.ICronService.GetJobQueue(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondCronError(c, http.StatusInternalServerError, "failed to retrieve job queue")
 		return
 	}
-	c.JSON(http.StatusOK, queue)
+	items, err := marshalToMapSlice(queue)
+	if err != nil {
+		respondCronError(c, http.StatusInternalServerError, "failed to serialize job queue")
+		return
+	}
+	c.JSON(http.StatusOK, CronJobQueueResponse{Queue: items})
 }
 
-// @Summary Reprocess Failed Jobs
-// @Description Reprocesses all failed jobs in the queue.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Failed jobs reprocessed successfully
-// @Failure 404 {string} Failed jobs not found
-// @Router /cronjobs/reprocess [post]
+// ReprocessFailedJobs reprocesa jobs com falha.
+//
+// @Summary     Reprocessar jobs com falha
+// @Description Reenvia para execução os jobs que falharam anteriormente. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} CronActionResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/reprocess [post]
 func (cc *CronController) ReprocessFailedJobs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
 	err = cc.ICronService.ReprocessFailedJobs(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		respondCronError(c, http.StatusInternalServerError, "failed to reprocess failed jobs")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Failed jobs reprocessed successfully"})
+	c.JSON(http.StatusOK, CronActionResponse{Message: "Failed jobs reprocessed successfully"})
 }
 
-// @Summary Get Execution Logs
-// @Description Retrieves the execution logs for a specific cron job by its ID.
-// @Accept json
-// @Produce json
-// @Success 200 {string} Execution logs retrieved successfully
-// @Failure 404 {string} Cron job not found
-// @Router /cronjobs/logs [get]
+// GetExecutionLogs lista os logs de execução de um cron job.
+//
+// @Summary     Listar logs de execução
+// @Description Recupera os logs associados ao cron job informado. [Em desenvolvimento]
+// @Tags        cron beta
+// @Security    BearerAuth
+// @Produce     json
+// @Param       id path string true "ID do cron job"
+// @Success     200 {object} CronExecutionLogsResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     401 {object} ErrorResponse
+// @Failure     404 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/cronjobs/{id}/logs [get]
 func (cc *CronController) GetExecutionLogs(c *gin.Context) {
 	ctx, err := cc.APIWrapper.GetContext(c)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to get context", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusUnauthorized, "failed to resolve context")
 		return
 	}
-	cronID, ok := ctx.Value("cronID").(uuid.UUID)
+	cronID, ok := cronIDFromContext(ctx)
 	if !ok {
-		cc.APIWrapper.JSONResponse(c, "error", "Invalid cron job ID", "", nil, nil, http.StatusBadRequest)
+		respondCronError(c, http.StatusBadRequest, "invalid cron job id")
 		return
 	}
 	logs, err := cc.ICronService.GetExecutionLogs(ctx, cronID)
 	if err != nil {
-		cc.APIWrapper.JSONResponse(c, "error", "Failed to retrieve execution logs", "", nil, nil, http.StatusInternalServerError)
+		respondCronError(c, http.StatusInternalServerError, "failed to retrieve execution logs")
 		return
 	}
-	cc.APIWrapper.JSONResponse(c, "success", "Execution logs retrieved successfully", "", logs, nil, http.StatusOK)
+	items, err := marshalToMapSlice(logs)
+	if err != nil {
+		respondCronError(c, http.StatusInternalServerError, "failed to serialize execution logs")
+		return
+	}
+	c.JSON(http.StatusOK, CronExecutionLogsResponse{Logs: items})
 }
