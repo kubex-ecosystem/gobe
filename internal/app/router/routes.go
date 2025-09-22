@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/app"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/cbot"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/gateway"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/mcp"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/sys"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
@@ -25,6 +26,7 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"swaggerRoutes":          sys.NewSwaggerRoutes(&rtr),
 
 		"webhookRoutes": webhooks.NewWebhookRoutes(&rtr),
+		"gatewayRoutes": gateway.NewGatewayRoutes(&rtr),
 
 		"contactRoutes":  app.NewContactRoutes(&rtr),
 		"productRoutes":  app.NewProductRoutes(&rtr),
