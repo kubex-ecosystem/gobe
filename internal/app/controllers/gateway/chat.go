@@ -1,133 +1,172 @@
 package gateway
 
 import (
-    "encoding/json"
-    "fmt"
-    "net/http"
-    "strings"
-    "time"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strings"
 
-    "github.com/gin-gonic/gin"
-    "github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
-    gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
-// ChatController handles /chat SSE traffic.
-type ChatController struct{}
+type ChatController struct {
+	service *gatewaysvc.Service
+}
 
-func NewChatController() *ChatController {
-    return &ChatController{}
+func NewChatController(service *gatewaysvc.Service) *ChatController {
+	if service == nil {
+		gl.Log("warn", "chat controller created without gateway service")
+	}
+	return &ChatController{service: service}
 }
 
 func (cc *ChatController) ChatSSE(c *gin.Context) {
-    var req ChatRequest
-    if err := c.ShouldBindJSON(&req); err != nil {
-        gl.Log("warn", fmt.Sprintf("invalid chat payload: %v", err))
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
-        return
-    }
+	if cc.service == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "gateway service unavailable"})
+		return
+	}
 
-    if req.Temperature == 0 {
-        req.Temperature = 0.7
-    }
-    req.Stream = true
-    if req.Meta == nil {
-        req.Meta = make(map[string]interface{})
-    }
+	var req ChatRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		gl.Log("warn", fmt.Sprintf("invalid chat payload: %v", err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+		return
+	}
 
-    // Propagate BYOK and tenant headers into metadata for downstream providers.
-    req.Meta["external_api_key"] = strings.TrimSpace(c.GetHeader("x-external-api-key"))
-    req.Meta["tenant_id"] = strings.TrimSpace(c.GetHeader("x-tenant-id"))
-    req.Meta["user_id"] = strings.TrimSpace(c.GetHeader("x-user-id"))
+	if req.Provider == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "provider is required"})
+		return
+	}
+	if len(req.Messages) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "messages cannot be empty"})
+		return
+	}
 
-    // Prepare SSE response.
-    c.Header("Content-Type", "text/event-stream")
-    c.Header("Cache-Control", "no-cache")
-    c.Header("Connection", "keep-alive")
-    c.Header("X-Accel-Buffering", "no")
-    c.Status(http.StatusOK)
+	if req.Temperature == 0 {
+		req.Temperature = 0.7
+	}
+	if req.Meta == nil {
+		req.Meta = make(map[string]interface{})
+	}
 
-    ctx := c.Request.Context()
-    usage := struct {
-        PromptTokens     int `json:"prompt_tokens"`
-        CompletionTokens int `json:"completion_tokens"`
-        TotalTokens      int `json:"total_tokens"`
-    }{
-        PromptTokens: len(req.Messages),
-    }
+	externalKey := strings.TrimSpace(c.GetHeader("x-external-api-key"))
+	tenantID := strings.TrimSpace(c.GetHeader("x-tenant-id"))
+	userID := strings.TrimSpace(c.GetHeader("x-user-id"))
 
-    sendEvent := func(payload interface{}) {
-        data, err := json.Marshal(payload)
-        if err != nil {
-            gl.Log("error", fmt.Sprintf("failed to marshal SSE payload: %v", err))
-            return
-        }
-        if _, err := fmt.Fprintf(c.Writer, "data: %s\n\n", data); err != nil {
-            gl.Log("error", fmt.Sprintf("failed to write SSE payload: %v", err))
-            return
-        }
-        if flusher, ok := c.Writer.(http.Flusher); ok {
-            flusher.Flush()
-        }
-    }
+	if externalKey != "" {
+		req.Meta["external_api_key"] = externalKey
+	}
+	if tenantID != "" {
+		req.Meta["tenant_id"] = tenantID
+	}
+	if userID != "" {
+		req.Meta["user_id"] = userID
+	}
 
-    coalescer := sse.NewCoalescer(0, 0, func(chunk string) {
-        sendEvent(gin.H{"delta": chunk})
-        usage.CompletionTokens += len(chunk)
-        usage.TotalTokens = usage.PromptTokens + usage.CompletionTokens
-    })
+	svcReq := gatewaysvc.ChatRequest{
+		Provider:    req.Provider,
+		Model:       req.Model,
+		Messages:    req.Messages,
+		Temperature: req.Temperature,
+		Stream:      true,
+		Meta:        req.Meta,
+		Headers: map[string]string{
+			"x-external-api-key": externalKey,
+			"x-tenant-id":        tenantID,
+			"x-user-id":         userID,
+		},
+	}
 
-    stream := cc.simulateStream(&req)
-    for _, chunk := range stream {
-        if err := coalescer.Add(chunk); err != nil {
-            gl.Log("warn", fmt.Sprintf("coalescer add failed: %v", err))
-            break
-        }
-        select {
-        case <-ctx.Done():
-            gl.Log("warn", "chat stream cancelled by client")
-            coalescer.Flush()
-            coalescer.Close()
-            sendEvent(gin.H{"done": true, "cancelled": true})
-            return
-        case <-time.After(25 * time.Millisecond):
-        }
-    }
+	ctx := c.Request.Context()
+	stream, config, err := cc.service.Chat(ctx, svcReq)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("chat service failed: %v", err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-    coalescer.Close()
-    sendEvent(gin.H{"done": true, "usage": usage})
-}
+	c.Header("Content-Type", "text/event-stream")
+	c.Header("Cache-Control", "no-cache")
+	c.Header("Connection", "keep-alive")
+	c.Header("X-Accel-Buffering", "no")
+	c.Status(http.StatusOK)
 
-func (cc *ChatController) simulateStream(req *ChatRequest) []string {
-    if len(req.Messages) == 0 {
-        return []string{"Hello!", " I'm the GoBE gateway placeholder response."}
-    }
+	flusher, _ := c.Writer.(http.Flusher)
+	sendEvent := func(payload interface{}) {
+		bytes, err := json.Marshal(payload)
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("failed to marshal SSE payload: %v", err))
+			return
+		}
+		if _, err := fmt.Fprintf(c.Writer, "data: %s\n\n", bytes); err != nil {
+			gl.Log("error", fmt.Sprintf("failed to write SSE payload: %v", err))
+			return
+		}
+		if flusher != nil {
+			flusher.Flush()
+		}
+	}
 
-    last := req.Messages[len(req.Messages)-1]
-    reply := fmt.Sprintf("Echoing (%s/%s): %s", req.Provider, req.Model, last.Content)
-    if strings.TrimSpace(reply) == "" {
-        reply = "Hi there!"
-    }
+	coalescer := sse.NewCoalescer(0, 0, func(chunk string) {
+		sendEvent(gin.H{"delta": chunk})
+	})
 
-    // Basic chunking to emulate tokenized output.
-    words := strings.Fields(reply)
-    if len(words) == 0 {
-        return []string{"(empty response)"}
-    }
+	var lastUsage *gatewaysvc.Usage
 
-    chunks := make([]string, 0, len(words))
-    current := words[0]
-    for i := 1; i < len(words); i++ {
-        next := words[i]
-        if len(current)+len(next)+1 > 20 {
-            chunks = append(chunks, current+" ")
-            current = next
-        } else {
-            current += " " + next
-        }
-    }
-    chunks = append(chunks, current+".")
+	streamLoop:
+	for {
+		select {
+		case <-ctx.Done():
+			gl.Log("warn", "chat stream cancelled by client")
+			sendEvent(gin.H{"done": true, "cancelled": true})
+			return
+		case chunk, ok := <-stream:
+			if !ok {
+				break streamLoop
+			}
 
-    return chunks
+			if chunk.Error != "" {
+				coalescer.Close()
+				sendEvent(gin.H{"error": chunk.Error, "done": true})
+				return
+			}
+
+			if chunk.Content != "" {
+				if err := coalescer.Add(chunk.Content); err != nil {
+					gl.Log("warn", fmt.Sprintf("chat coalescer failed: %v", err))
+				}
+			}
+
+			if chunk.ToolCall != nil {
+				sendEvent(gin.H{"tool_call": chunk.ToolCall})
+			}
+
+			if chunk.Usage != nil {
+				lastUsage = chunk.Usage
+			}
+
+			if chunk.Done {
+				break streamLoop
+			}
+		}
+	}
+
+	coalescer.Close()
+
+	response := gin.H{"done": true, "provider": config.Name}
+	if lastUsage != nil {
+		response["usage"] = lastUsage
+		if lastUsage.Model != "" {
+			response["model"] = lastUsage.Model
+		}
+	}
+	if _, ok := response["model"]; !ok && config.DefaultModel != "" {
+		response["model"] = config.DefaultModel
+	}
+
+	sendEvent(response)
 }
 

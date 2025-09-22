@@ -1,32 +1,33 @@
 package gateway
 
-import "time"
+import (
+	"time"
+
+	gatewaytypes "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+)
+
 
 // ChatMessage represents a single conversational message from client or assistant.
-type ChatMessage struct {
-    Role    string `json:"role"`
-    Content string `json:"content"`
-}
+type ChatMessage = gatewaytypes.Message
 
 // ChatRequest captures the payload expected by the chat SSE endpoint.
 type ChatRequest struct {
     Provider    string                 `json:"provider"`
     Model       string                 `json:"model"`
-    Messages    []ChatMessage          `json:"messages"`
+    Messages    []gatewaytypes.Message `json:"messages"`
     Stream      bool                   `json:"stream"`
-    Temperature float64                `json:"temperature"`
+    Temperature float32                `json:"temperature"`
     Meta        map[string]interface{} `json:"meta"`
 }
 
 // ProviderItem holds provider metadata for the gateway /providers response.
 type ProviderItem struct {
     Name        string                 `json:"name"`
-    Provider    string                 `json:"provider"`
+    Type        string                 `json:"type"`
     Org         string                 `json:"org,omitempty"`
-    Active      bool                   `json:"active"`
-    LatencyMS   int64                  `json:"latency_ms"`
-    LastChecked *time.Time             `json:"last_checked,omitempty"`
-    Health      string                 `json:"health"`
+    DefaultModel string                `json:"default_model,omitempty"`
+    Available   bool                   `json:"available"`
+    LastError   string                 `json:"last_error,omitempty"`
     Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 

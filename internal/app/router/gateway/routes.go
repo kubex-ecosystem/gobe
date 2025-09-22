@@ -1,14 +1,17 @@
 package gateway
 
 import (
-    "net/http"
+	"net/http"
 
-    "github.com/gin-gonic/gin"
-    gatewayController "github.com/kubex-ecosystem/gobe/internal/app/controllers/gateway"
-    proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
-    ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-    gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
-    "gorm.io/gorm"
+	"github.com/gin-gonic/gin"
+	gatewayController "github.com/kubex-ecosystem/gobe/internal/app/controllers/gateway"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
+	"gorm.io/gorm"
 )
 
 type GatewayRoutes struct {
@@ -22,23 +25,34 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
     }
     rtl := *rtr
 
-    dbService := rtl.GetDatabaseService()
-    var db *gorm.DB
-    if dbService != nil {
-        var err error
-        db, err = dbService.GetDB()
-        if err != nil {
-            gl.Log("warn", "Failed to fetch DB for gateway module", err)
-        }
-    } else {
-        gl.Log("warn", "Database service is nil for GatewayRoutes")
-    }
+	dbService := rtl.GetDatabaseService()
+	var db *gorm.DB
+	if dbService != nil {
+		var err error
+		db, err = dbService.GetDB()
+		if err != nil {
+			gl.Log("warn", "Failed to fetch DB for gateway module", err)
+		}
+	} else {
+		gl.Log("warn", "Database service is nil for GatewayRoutes")
+	}
 
-    chatController := gatewayController.NewChatController()
-    providersController := gatewayController.NewProvidersController(db)
-    adviseController := gatewayController.NewAdviseController()
-    scorecardController := gatewayController.NewScorecardController()
-    healthController := gatewayController.NewHealthController(dbService)
+	var gatewayService *gatewaysvc.Service
+	if db != nil {
+		providersSvc := svc.NewProvidersService(models.NewProvidersRepo(db))
+		gw, err := gatewaysvc.NewService(providersSvc)
+		if err != nil {
+			gl.Log("error", "failed to initialize gateway service", err)
+		} else {
+			gatewayService = gw
+		}
+	}
+
+	chatController := gatewayController.NewChatController(gatewayService)
+	providersController := gatewayController.NewProvidersController(gatewayService)
+	adviseController := gatewayController.NewAdviseController(gatewayService)
+	scorecardController := gatewayController.NewScorecardController()
+	healthController := gatewayController.NewHealthController(dbService, gatewayService)
     lookAtniController := gatewayController.NewLookAtniController()
     webhookController := gatewayController.NewWebhookController()
     schedulerController := gatewayController.NewSchedulerController()

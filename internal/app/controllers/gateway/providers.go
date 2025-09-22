@@ -1,63 +1,46 @@
 package gateway
 
 import (
-    "net/http"
-    "time"
+	"net/http"
+	"time"
 
-    "github.com/gin-gonic/gin"
-    models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
-    svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-    gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
-    "gorm.io/gorm"
+	"github.com/gin-gonic/gin"
+	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 )
 
 // ProvidersController exposes aggregated provider information for the gateway.
 type ProvidersController struct {
-    service svc.ProvidersService
+	service *gatewaysvc.Service
 }
 
-func NewProvidersController(db *gorm.DB) *ProvidersController {
-    if db == nil {
-        gl.Log("warn", "providers controller received nil db; responses will be unavailable")
-        return &ProvidersController{}
-    }
-    return &ProvidersController{service: svc.NewProvidersService(models.NewProvidersRepo(db))}
+func NewProvidersController(service *gatewaysvc.Service) *ProvidersController {
+	return &ProvidersController{service: service}
 }
 
 func (pc *ProvidersController) ListProviders(c *gin.Context) {
-    if pc.service == nil {
-        c.JSON(http.StatusServiceUnavailable, gin.H{"error": "providers service unavailable"})
-        return
-    }
+	if pc.service == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "providers service unavailable"})
+		return
+	}
 
-    providers, err := pc.service.ListProviders()
-    if err != nil {
-        gl.Log("error", "failed to list providers", err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list providers"})
-        return
-    }
+	summaries := pc.service.ProviderSummaries()
+	items := make([]ProviderItem, 0, len(summaries))
 
-    items := make([]ProviderItem, 0, len(providers))
-    now := time.Now().UTC()
-    for _, provider := range providers {
-        item := ProviderItem{
-            Name:        provider.GetProvider(),
-            Provider:    provider.GetProvider(),
-            Org:         provider.GetOrgOrGroup(),
-            Active:      true,
-            LatencyMS:   0,
-            LastChecked: &now,
-            Health:      "unknown",
-            Metadata: map[string]interface{}{
-                "config": provider.GetConfig(),
-            },
-        }
-        items = append(items, item)
-    }
+	for _, summary := range summaries {
+		items = append(items, ProviderItem{
+			Name:         summary.Name,
+			Type:         summary.Type,
+			Org:          summary.Org,
+			DefaultModel: summary.DefaultModel,
+			Available:    summary.Available,
+			LastError:    summary.LastError,
+			Metadata:     summary.Metadata,
+		})
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "providers": items,
-        "version":   "gateway-placeholder-1",
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"providers": items,
+		"timestamp": time.Now().UTC(),
+	})
 }
 
