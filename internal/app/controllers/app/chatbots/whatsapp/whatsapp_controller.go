@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 
 	wa "github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 // Controller manages WhatsApp webhooks and message sending.
@@ -15,12 +16,38 @@ type Controller struct {
 	service *wa.Service
 }
 
+type (
+	// ErrorResponse padroniza mensagens de erro para os endpoints do WhatsApp.
+	ErrorResponse = t.ErrorResponse
+)
+
+// SendMessageRequest descreve o payload para disparo manual de mensagens.
+type SendMessageRequest struct {
+	To      string `json:"to"`
+	Message string `json:"message"`
+}
+
 // NewController returns a new WhatsApp controller.
 func NewController(db *gorm.DB, service *wa.Service) *Controller {
 	return &Controller{db: db, service: service}
 }
 
 // HandleWebhook processes incoming WhatsApp webhook events and verification.
+//
+// @Summary     Webhook WhatsApp
+// @Description Recebe chamadas de verificação (GET) e eventos (POST) vindo do WhatsApp Business. [Em desenvolvimento]
+// @Tags        whatsapp beta
+// @Accept      json
+// @Produce     json
+// @Param       hub.mode         query string false "Modo do webhook"       example(subscribe)
+// @Param       hub.verify_token query string false "Token de verificação"
+// @Param       hub.challenge    query string false "Token de desafio"
+// @Param       payload body map[string]any true "Evento enviado pelo WhatsApp"
+// @Success     200 {object} map[string]string
+// @Failure     400 {object} ErrorResponse
+// @Failure     403 {object} ErrorResponse
+// @Router      /api/v1/whatsapp/webhook [get]
+// @Router      /api/v1/whatsapp/webhook [post]
 func (c *Controller) HandleWebhook(ctx *gin.Context) {
 	if ctx.Request.Method == http.MethodGet {
 		mode := ctx.Query("hub.mode")
@@ -36,7 +63,7 @@ func (c *Controller) HandleWebhook(ctx *gin.Context) {
 
 	var payload map[string]any
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: err.Error()})
 		return
 	}
 	// Persist a simplified message record if possible
@@ -56,27 +83,42 @@ func (c *Controller) HandleWebhook(ctx *gin.Context) {
 		}
 	}
 	c.db.Create(&msg)
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 // SendMessage sends a message using the service.
+//
+// @Summary     Enviar mensagem WhatsApp
+// @Description Dispara mensagem via canal de integração configurado. [Em desenvolvimento]
+// @Tags        whatsapp beta
+// @Accept      json
+// @Produce     json
+// @Param       payload body SendMessageRequest true "Dados da mensagem"
+// @Success     200 {object} map[string]string "status"
+// @Failure     400 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/whatsapp/send [post]
 func (c *Controller) SendMessage(ctx *gin.Context) {
-	var req struct {
-		To      string `json:"to"`
-		Message string `json:"message"`
-	}
+	var req SendMessageRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: err.Error()})
 		return
 	}
 	if err := c.service.SendMessage(wa.OutgoingMessage{To: req.To, Text: req.Message}); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": "sent"})
 }
 
 // Ping verifies service availability.
+//
+// @Summary     Ping WhatsApp
+// @Description Verifica se o adaptador de WhatsApp está ativo. [Em desenvolvimento]
+// @Tags        whatsapp beta
+// @Produce     json
+// @Success     200 {object} map[string]string "status"
+// @Router      /api/v1/whatsapp/ping [get]
 func (c *Controller) Ping(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }

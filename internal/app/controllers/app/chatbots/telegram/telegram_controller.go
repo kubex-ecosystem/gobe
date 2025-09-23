@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	tg "github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 // Controller handles Telegram webhook events and messaging.
@@ -16,16 +17,37 @@ type Controller struct {
 	service *tg.Service
 }
 
+type (
+	// ErrorResponse padroniza erros da API do chatbot Telegram.
+	ErrorResponse = t.ErrorResponse
+)
+
+// SendMessageRequest representa o corpo da requisição de envio manual.
+type SendMessageRequest struct {
+	ChatID int64  `json:"chat_id"`
+	Text   string `json:"text"`
+}
+
 // NewController creates a new Telegram controller.
 func NewController(db *gorm.DB, service *tg.Service) *Controller {
 	return &Controller{db: db, service: service}
 }
 
 // HandleWebhook processes incoming Telegram updates.
+//
+// @Summary     Webhook Telegram
+// @Description Recebe eventos do Telegram e armazena a mensagem básica. [Em desenvolvimento]
+// @Tags        telegram beta
+// @Accept      json
+// @Produce     json
+// @Param       payload body map[string]any true "Atualização do Telegram"
+// @Success     200 {object} map[string]string "acknowledged"
+// @Failure     400 {object} ErrorResponse
+// @Router      /api/v1/telegram/webhook [post]
 func (c *Controller) HandleWebhook(ctx *gin.Context) {
 	var update map[string]any
 	if err := ctx.ShouldBindJSON(&update); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: err.Error()})
 		return
 	}
 	msg := tg.Message{}
@@ -37,7 +59,7 @@ func (c *Controller) HandleWebhook(ctx *gin.Context) {
 		msg.Text, _ = m["text"].(string)
 	}
 	c.db.Create(&msg)
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 
 func getInt64(v any) (int64, bool) {
@@ -52,23 +74,38 @@ func getInt64(v any) (int64, bool) {
 }
 
 // SendMessage sends a message via Telegram service.
+//
+// @Summary     Enviar mensagem Telegram
+// @Description Dispara uma mensagem usando o serviço configurado. [Em desenvolvimento]
+// @Tags        telegram beta
+// @Accept      json
+// @Produce     json
+// @Param       payload body SendMessageRequest true "Dados da mensagem"
+// @Success     200 {object} map[string]string "status"
+// @Failure     400 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/telegram/send [post]
 func (c *Controller) SendMessage(ctx *gin.Context) {
-	var req struct {
-		ChatID int64  `json:"chat_id"`
-		Text   string `json:"text"`
-	}
+	var req SendMessageRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: err.Error()})
 		return
 	}
 	if err := c.service.SendMessage(tg.OutgoingMessage{ChatID: req.ChatID, Text: req.Text}); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: err.Error()})
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"status": "sent"})
 }
 
 // Ping endpoint for health checks.
+//
+// @Summary     Ping Telegram
+// @Description Verifica se o serviço do bot está respondendo. [Em desenvolvimento]
+// @Tags        telegram beta
+// @Produce     json
+// @Success     200 {object} map[string]string "status"
+// @Router      /api/v1/telegram/ping [get]
 func (c *Controller) Ping(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
