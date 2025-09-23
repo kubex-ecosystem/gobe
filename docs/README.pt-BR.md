@@ -40,7 +40,7 @@ curl http://localhost:3666/mcp/tools  # Ferramentas MCP prontas
 2. [Funcionalidades](#features)
 3. [Como Executar](#como-executar)
 4. [Suporte MCP](#suporte-mcp)
-5. [Uso](#usage
+5. [Uso](#usage)
     - [CLI](#cli)
     - [Configuração](#configuration)
 6. [Roadmap](#roadmap)
