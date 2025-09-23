@@ -330,16 +330,16 @@ I'm open to collaborations and new ideas. If you found the project interesting, 
 
 ---
 
-## **Riscos & Mitigações**
+## **Risks & Mitigations**
 
-• **Zero-config pode mascarar configurações necessárias** → Logs verbosos + documentação de override
-• **MCP registry thread-safety** → RWMutex implementado + testes de concorrência
-• **Dependency on gdbase for DB** → Fallback SQLite sempre disponível
-• **Certificate auto-generation** → Keyring backup + regeneração automática
+• **Zero-config may hide necessary configurations** → Verbose logs + override documentation
+• **MCP registry thread-safety** → RWMutex implemented + concurrency tests
+• **Dependency on gdbase for DB** → Fallback SQLite always available
+• **Certificate auto-generation** → Keyring backup + automatic regeneration
 
 ---
 
-## **Próximos Passos**
+## **Next Steps**
 
 1. **Extend MCP tools** - file operations, network diagnostics, database queries
 2. **WebSocket MCP** - real-time tool communication for AI agents
