@@ -1,3 +1,14 @@
+---
+title: GoBE - Modular & Secure Back-end
+version: 1.3.4
+owner: kubex
+audience: dev
+languages: [en, pt-BR]
+sources: [internal/module/info/manifest.json, https://github.com/kubex-ecosystem/gobe]
+assumptions: []
+---
+
+<!-- markdownlint-disable MD013 MD025 -->
 # GoBE - Modular & Secure Back-end
 
 ![GoBE Banner](docs/assets/top_banner_lg_b.png)
@@ -7,50 +18,60 @@
 [![Automation](https://img.shields.io/badge/automation-zero%20config-blue)](#features)
 [![Modular](https://img.shields.io/badge/modular-yes-yellow)](#features)
 [![Security](https://img.shields.io/badge/security-high-red)](#features)
+[![MCP](https://img.shields.io/badge/MCP-enabled-orange)](#mcp-support)
 [![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/kubex-ecosystem/gobe/blob/main/CONTRIBUTING.md)
 [![Build](https://github.com/kubex-ecosystem/gobe/actions/workflows/kubex_go_release.yml/badge.svg)](https://github.com/kubex-ecosystem/gobe/actions/workflows/kubex_go_release.yml)
 
----
+**Code Fast. Own Everything.** — A modular, secure, and zero-config backend for modern Go applications.
 
-**A modular, secure, and zero-config backend for modern Go applications.**
+## TL;DR
 
----
+GoBE is a modular Go backend that runs **with zero configuration** and provides ready-to-use REST APIs + MCP (Model Context Protocol). One command = a complete server with authentication, database, and integrated system tools.
+
+```bash
+make build && ./gobe start  # Zero config, instant backend
+curl http://localhost:3666/mcp/tools  # MCP tools ready
+```
 
 ## **Table of Contents**
 
 1. [About the Project](#about-the-project)
 2. [Features](#features)
-3. [Installation](#installation)
-4. [Usage](#usage)
+3. [How to Run](#how-to-run)
+4. [MCP Support](#mcp-support)
+5. [Usage](#usage)
     - [CLI](#cli)
     - [Configuration](#configuration)
-5. [Roadmap](#roadmap)
-6. [Contributing](#contributing)
-7. [Contact](#contact)
+6. [Roadmap](#roadmap)
+7. [Contributing](#contributing)
+8. [Contact](#contact)
 
 ---
 
 ## **About the Project**
 
-GoBE is a modular backend developed in Go, focused on **security, automation, and flexibility**. It can run as a **main server** or be used **as a module** for managing features like **encryption, certificates, middlewares, logging, and authentication**.
+GoBE is a modular backend built with Go that embodies the Kubex principle: **No Lock-in. No Excuses.** It delivers **security, automation, and flexibility** in a single binary that runs anywhere — from your laptop to enterprise clusters.
 
-### **Current Status**
+### **Mission Alignment**
 
-- **Zero-config:** No manual configuration required, generates all certificates and securely stores sensitive information in the system keyring.
-- **Extensible:** Can be integrated with other systems or run standalone.
-- **Modularization:** The project is fully modular, with all logic encapsulated in well-defined interfaces.
-- **Integration with `gdbase`:** Database management is handled via Docker, allowing for easy setup and optimization.
-- **REST API:** Provides endpoints for authentication, user management, products, clients, and cronjobs.
-- **Authentication:** Uses dynamically generated certificates, random passwords, and secure keyring for robust security.
-- **CLI:** A powerful command-line interface for managing the server, including commands to start, stop, and monitor services.
-- **Logging and Security Management:** Protected routes, secure storage, and request monitoring are implemented to ensure data integrity and security.
-- **Multi-database support:** Currently supports PostgreSQL and SQLite, with plans for more databases in the future.
-- **Prometheus and Grafana integration:** Planned for monitoring and metrics visualization.
-- **Documentation:** Continuous improvement to provide comprehensive documentation for all endpoints and functionalities.
-- **Unit Tests:** While all functionalities are operational, unit tests are being developed to ensure reliability and robustness.
-- **CI/CD:** Automated tests and continuous integration are in progress to maintain code quality and deployment efficiency.
-- **Complete Documentation:** The documentation is being expanded to cover all aspects of the project, including usage examples and detailed endpoint descriptions.
-- **Automated Tests:** Although the functionalities are implemented, unit tests are being developed to ensure reliability and robustness.
+Following Kubex's mission to democratize modular technology, GoBE provides:
+
+- **DX First:** One command starts everything — server, database, authentication, MCP tools
+- **Total Accessibility:** Runs without Kubernetes, Docker, or complex setup
+- **Module Independence:** Every component (CLI/HTTP/Jobs/Events) is a full citizen
+
+### **Current Status - Production Ready**
+
+✅ **Zero-config:** Auto-generates certificates, passwords, keyring storage
+✅ **MCP Protocol:** Model Context Protocol with dynamic tool registry
+✅ **Modular Architecture:** Clean interfaces, exportable via `factory/`
+✅ **Database Integration:** PostgreSQL/SQLite via `gdbase` Docker management
+✅ **REST API:** Authentication, users, products, clients, jobs, webhooks
+✅ **Security Stack:** Dynamic certificates, JWT, keyring, rate limiting
+✅ **CLI Interface:** Complete management via Cobra commands
+✅ **Multi-platform:** Linux, macOS, Windows (AMD64, ARM64)
+✅ **Testing:** Unit tests + integration tests for MCP endpoints
+✅ **CI/CD:** Automated builds and releases
 
 ## **Project Evolution**
 
@@ -98,21 +119,79 @@ Documentation and CI/CD are key focus areas for the next updates
 
 ---
 
-## **Installation**
+## **How to Run**
 
-Requirements:
+**One Command. All the Power.**
 
-- Go 1.19+
-- Docker (for database integration via gdbase)
+### Quick Start
 
-Clone the repository and build GoBE:
-
-```sh
-# Clone the repository
+```bash
+# Clone and build
 git clone https://github.com/kubex-ecosystem/gobe.git
 cd gobe
-go build -o gobe .
+make build
+
+# Start everything (zero config)
+./gobe start
+
+# Server ready at http://localhost:3666
+# MCP endpoints: /mcp/tools, /mcp/exec
+# Health check: /health
 ```
+
+### Requirements
+
+- **Go 1.24+** (for building from source)
+- **Docker** (optional, for advanced database features)
+- **No Kubernetes, no complex setup required**
+
+### Build Options
+
+```bash
+make build          # Production build
+make build-dev      # Development build
+make install        # Install binary + environment setup
+make clean          # Clean artifacts
+make test           # Run all tests
+```
+
+---
+
+## **MCP Support**
+
+GoBE implements the **Model Context Protocol (MCP)** for seamless AI tool integration.
+
+### Available Endpoints
+
+```bash
+GET  /mcp/tools     # List available tools
+POST /mcp/exec      # Execute tools
+```
+
+### Built-in Tools
+
+| Tool | Description | Args |
+|------|-------------|------|
+| `system.status` | Comprehensive system status | `detailed: boolean` |
+
+### Example Usage
+
+```bash
+# List available tools
+curl http://localhost:3666/mcp/tools
+
+# Execute system status
+curl -X POST http://localhost:3666/mcp/exec \
+  -H "Content-Type: application/json" \
+  -d '{"tool": "system.status", "args": {"detailed": true}}'
+```
+
+### MCP Architecture
+
+- **Dynamic Registry:** Tools registered at runtime, no restart needed
+- **Thread-Safe:** Concurrent tool execution with RWMutex protection
+- **Extensible:** Add custom tools via the Registry interface
+- **Integrated:** Uses existing manage controllers for system data
 
 ---
 
@@ -199,6 +278,8 @@ Each route also provides a `/ping` endpoint for health checks.
 
 ## **Roadmap**
 
+### ✅ **Completed (v1.3.3)**
+
 - [x] Full modularization and pluggable interfaces
 - [x] Zero-config with automatic certificate generation
 - [x] Integration with system keyring
@@ -206,12 +287,31 @@ Each route also provides a `/ping` endpoint for health checks.
 - [x] Authentication via certificates and secure passwords
 - [x] CLI for management and monitoring
 - [x] Integration with `gdbase` for database management via Docker
-- [–] Multi-database support (Partially completed)
-- [  ] Prometheus integration for monitoring
-- [  ] Support for custom middlewares
-- [  ] Grafana integration for metrics visualization
-- [–] Complete documentation and usage examples (Partially completed)
-- [–] Automated tests and CI/CD (Partially completed)
+- [x] **MCP Protocol implementation with dynamic tool registry**
+- [x] **Built-in system.status tool with runtime metrics**
+- [x] **Thread-safe tool execution with comprehensive testing**
+- [x] Multi-database support (PostgreSQL, SQLite)
+- [x] Complete documentation following Kubex standards
+- [x] Automated tests and CI/CD
+
+### 🚧 **In Progress**
+
+- [ ] Extended MCP tool library (file operations, network tools)
+- [ ] Prometheus integration for monitoring
+- [ ] Grafana integration for metrics visualization
+
+### 📋 **Planned**
+
+- [ ] Support for custom middlewares
+- [ ] WebSocket support for real-time MCP communication
+- [ ] Plugin system for external tool registration
+- [ ] Advanced security policies and RBAC
+
+### 🎯 **Next Milestones**
+
+1. **v1.4.0** - Extended MCP tools and WebSocket support
+2. **v1.5.0** - Monitoring stack integration (Prometheus/Grafana)
+3. **v2.0.0** - Plugin architecture and advanced security
 
 ---
 
@@ -223,9 +323,38 @@ Contributions are welcome! Feel free to open issues or submit pull requests. See
 
 ## **Contact**
 
-💌 **Developer**:  
-[Rafael Mori](mailto:faelmori@gmail.com)  
-💼 [Follow me on GitHub](https://github.com/kubex-ecosystem)  
+💌 **Developer**:
+[Rafael Mori](mailto:faelmori@gmail.com)
+💼 [Follow me on GitHub](https://github.com/kubex-ecosystem)
 I'm open to collaborations and new ideas. If you found the project interesting, get in touch!
 
+---
 
+## **Risks & Mitigations**
+
+• **Zero-config may hide necessary configurations** → Verbose logs + override documentation
+• **MCP registry thread-safety** → RWMutex implemented + concurrency tests
+• **Dependency on gdbase for DB** → Fallback SQLite always available
+• **Certificate auto-generation** → Keyring backup + automatic regeneration
+
+---
+
+## **Next Steps**
+
+1. **Extend MCP tools** - file operations, network diagnostics, database queries
+2. **WebSocket MCP** - real-time tool communication for AI agents
+3. **Plugin system** - external tool registration via shared libraries
+4. **Advanced monitoring** - Prometheus metrics + Grafana dashboards
+5. **Security hardening** - RBAC, audit logs, policy enforcement
+
+---
+
+## **Changelog**
+
+### v1.3.4 (2025-09-23)
+
+- ✅ MCP Protocol implementation with dynamic registry
+- ✅ Built-in system.status tool with runtime metrics
+- ✅ Thread-safe tool execution with comprehensive tests
+- ✅ Documentation updated following Kubex standards
+- ✅ Zero-config MCP endpoints (/mcp/tools, /mcp/exec)
