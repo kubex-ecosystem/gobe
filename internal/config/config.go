@@ -5,16 +5,55 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"reflect"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
 	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/utils"
 
 	l "github.com/kubex-ecosystem/logz"
 )
 
 var gl = logger.GetLogger[l.Logger](nil)
+
+func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | any](configType string) (T, bool) {
+	switch configType {
+	case "main_config":
+		return IConfig(newConfig()).(T), true
+	case "discord_config":
+		var out = newDiscordConfig()
+		return IConfig(out).(T), true
+	case "llm_config":
+		return IConfig(newLLMConfig()).(T), true
+	case "approval_config":
+		return IConfig(newApprovalConfig()).(T), true
+	case "server_config":
+		return IConfig(newServerConfig()).(T), true
+	case "zmq_config":
+		return IConfig(newZMQConfig()).(T), true
+	case "gobe_config":
+		return IConfig(newGoBeConfig()).(T), true
+	case "gobeCtl_config":
+		return IConfig(newGobeCtlConfig()).(T), true
+	case "integration_config":
+		return IConfig(newIntegrationConfig()).(T), true
+	case "whatsapp_config":
+		return IConfig(newWhatsAppConfig()).(T), true
+	case "telegram_config":
+		return IConfig(newTelegramConfig()).(T), true
+	}
+	return *new(T), false
+}
+
+type IConfig interface {
+	// Define methods that your configuration struct should implement
+	GetSettings() map[string]interface{}
+	GetType() string
+	SetDevMode(bool)
+}
 
 type Config struct {
 	Discord      DiscordConfig     `json:"discord"`
@@ -26,6 +65,24 @@ type Config struct {
 	GobeCtl      GobeCtlConfig     `json:"gobeCtl"`
 	Integrations IntegrationConfig `json:"integrations"`
 	DevMode      bool              `json:"dev_mode"`
+}
+
+func newConfig() *Config              { return &Config{} }
+func NewConfig() IConfig              { return newConfig() }
+func (c *Config) GetType() string     { return "gobe_config" }
+func (c *Config) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *Config) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["discord"] = c.Discord
+	settings["llm"] = c.LLM
+	settings["approval"] = c.Approval
+	settings["server"] = c.Server
+	settings["zmq"] = c.ZMQ
+	settings["gobe"] = c.GoBE
+	settings["gobeCtl"] = c.GobeCtl
+	settings["integrations"] = c.Integrations
+	settings["dev_mode"] = c.DevMode
+	return settings
 }
 
 type DiscordConfig struct {
@@ -54,6 +111,21 @@ type DiscordConfig struct {
 		TaskCreation            bool `json:"task_creation"`
 		CrossPlatformForwarding bool `json:"cross_platform_forwarding"`
 	} `json:"features"`
+	DevMode bool `json:"dev_mode"`
+}
+
+func newDiscordConfig() *DiscordConfig       { return &DiscordConfig{} }
+func NewDiscordConfig() *DiscordConfig       { return newDiscordConfig() }
+func (c *DiscordConfig) GetType() string     { return "discord_config" }
+func (c *DiscordConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *DiscordConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["bot"] = c.Bot.Intents
+	settings["oauth2"] = c.OAuth2.ClientID
+	settings["webhook"] = c.Webhook.URL
+	settings["rate_limits"] = c.RateLimits.RequestsPerMinute
+	settings["features"] = c.Features
+	return settings
 }
 
 type LLMConfig struct {
@@ -62,22 +134,74 @@ type LLMConfig struct {
 	MaxTokens   int     `json:"max_tokens" mapstructure:"max_tokens"`
 	Temperature float64 `json:"temperature" mapstructure:"temperature"`
 	APIKey      string  `json:"api_key" mapstructure:"api_key"`
+	DevMode     bool    `json:"dev_mode"`
+}
+
+func newLLMConfig() *LLMConfig           { return &LLMConfig{} }
+func NewLLMConfig() *LLMConfig           { return newLLMConfig() }
+func (c *LLMConfig) GetType() string     { return "llm_config" }
+func (c *LLMConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *LLMConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["provider"] = c.Provider
+	settings["model"] = c.Model
+	settings["max_tokens"] = c.MaxTokens
+	settings["temperature"] = c.Temperature
+	// Do not include API key for security reasons
+	return settings
 }
 
 type ApprovalConfig struct {
 	RequireApprovalForResponses bool `json:"require_approval_for_responses"`
 	ApprovalTimeoutMinutes      int  `json:"approval_timeout_minutes"`
+	DevMode                     bool `json:"dev_mode"`
+}
+
+func newApprovalConfig() *ApprovalConfig      { return &ApprovalConfig{} }
+func NewApprovalConfig() *ApprovalConfig      { return newApprovalConfig() }
+func (c *ApprovalConfig) GetType() string     { return "approval_config" }
+func (c *ApprovalConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *ApprovalConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["require_approval_for_responses"] = c.RequireApprovalForResponses
+	settings["approval_timeout_minutes"] = c.ApprovalTimeoutMinutes
+	return settings
 }
 
 type ServerConfig struct {
 	Port       int    `json:"port"`
 	Host       string `json:"host"`
 	EnableCORS bool   `json:"enable_cors"`
+	DevMode    bool   `json:"dev_mode"`
+}
+
+func newServerConfig() *ServerConfig        { return &ServerConfig{} }
+func NewServerConfig() *ServerConfig        { return newServerConfig() }
+func (c *ServerConfig) GetType() string     { return "server_config" }
+func (c *ServerConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *ServerConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["port"] = c.Port
+	settings["host"] = c.Host
+	settings["enable_cors"] = c.EnableCORS
+	return settings
 }
 
 type ZMQConfig struct {
 	Address string `json:"address"`
 	Port    int    `json:"port"`
+	DevMode bool   `json:"dev_mode"`
+}
+
+func newZMQConfig() *ZMQConfig           { return &ZMQConfig{} }
+func NewZMQConfig() *ZMQConfig           { return newZMQConfig() }
+func (c *ZMQConfig) GetType() string     { return "zmq_config" }
+func (c *ZMQConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *ZMQConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["address"] = c.Address
+	settings["port"] = c.Port
+	return settings
 }
 
 type GoBeConfig struct {
@@ -85,6 +209,20 @@ type GoBeConfig struct {
 	APIKey  string `json:"api_key" mapstructure:"api_key"`
 	Timeout int    `json:"timeout" mapstructure:"timeout"`
 	Enabled bool   `json:"enabled" mapstructure:"enabled"`
+	DevMode bool   `json:"dev_mode" mapstructure:"dev_mode"`
+}
+
+func newGoBeConfig() *GoBeConfig          { return &GoBeConfig{} }
+func NewGoBeConfig() *GoBeConfig          { return newGoBeConfig() }
+func (c *GoBeConfig) GetType() string     { return "gobe_config" }
+func (c *GoBeConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *GoBeConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["base_url"] = c.BaseURL
+	// Do not include API key for security reasons
+	settings["timeout"] = c.Timeout
+	settings["enabled"] = c.Enabled
+	return settings
 }
 
 type GobeCtlConfig struct {
@@ -92,11 +230,37 @@ type GobeCtlConfig struct {
 	Namespace  string `json:"namespace" mapstructure:"namespace"`
 	Kubeconfig string `json:"kubeconfig" mapstructure:"kubeconfig"`
 	Enabled    bool   `json:"enabled" mapstructure:"enabled"`
+	DevMode    bool   `json:"dev_mode" mapstructure:"dev_mode"`
+}
+
+func newGobeCtlConfig() *GobeCtlConfig       { return &GobeCtlConfig{} }
+func NewGobeCtlConfig() *GobeCtlConfig       { return newGobeCtlConfig() }
+func (c *GobeCtlConfig) GetType() string     { return "gobe_ctl_config" }
+func (c *GobeCtlConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *GobeCtlConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["path"] = c.Path
+	settings["namespace"] = c.Namespace
+	settings["kubeconfig"] = c.Kubeconfig
+	settings["enabled"] = c.Enabled
+	return settings
 }
 
 type IntegrationConfig struct {
 	WhatsApp WhatsAppConfig `json:"whatsapp"`
 	Telegram TelegramConfig `json:"telegram"`
+	DevMode  bool           `json:"dev_mode"`
+}
+
+func newIntegrationConfig() *IntegrationConfig   { return &IntegrationConfig{} }
+func NewIntegrationConfig() *IntegrationConfig   { return newIntegrationConfig() }
+func (c *IntegrationConfig) GetType() string     { return "integration_config" }
+func (c *IntegrationConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *IntegrationConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["whatsapp"] = c.WhatsApp.Enabled
+	settings["telegram"] = c.Telegram.Enabled
+	return settings
 }
 
 type WhatsAppConfig struct {
@@ -105,6 +269,20 @@ type WhatsAppConfig struct {
 	VerifyToken   string `json:"verify_token" mapstructure:"verify_token"`
 	PhoneNumberID string `json:"phone_number_id" mapstructure:"phone_number_id"`
 	WebhookURL    string `json:"webhook_url" mapstructure:"webhook_url"`
+	DevMode       bool   `json:"dev_mode" mapstructure:"dev_mode"`
+}
+
+func newWhatsAppConfig() *WhatsAppConfig      { return &WhatsAppConfig{} }
+func NewWhatsAppConfig() *WhatsAppConfig      { return newWhatsAppConfig() }
+func (c *WhatsAppConfig) GetType() string     { return "whatsapp_config" }
+func (c *WhatsAppConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *WhatsAppConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["enabled"] = c.Enabled
+	// Do not include AccessToken or VerifyToken for security reasons
+	settings["phone_number_id"] = c.PhoneNumberID
+	settings["webhook_url"] = c.WebhookURL
+	return settings
 }
 
 type TelegramConfig struct {
@@ -112,25 +290,59 @@ type TelegramConfig struct {
 	BotToken       string   `json:"bot_token" mapstructure:"bot_token"`
 	WebhookURL     string   `json:"webhook_url" mapstructure:"webhook_url"`
 	AllowedUpdates []string `json:"allowed_updates" mapstructure:"allowed_updates"`
+	DevMode        bool     `json:"dev_mode" mapstructure:"dev_mode"`
 }
 
-func Load(configPath string) (*Config, error) {
+func newTelegramConfig() *TelegramConfig      { return &TelegramConfig{} }
+func NewTelegramConfig() *TelegramConfig      { return newTelegramConfig() }
+func (c *TelegramConfig) GetType() string     { return "telegram_config" }
+func (c *TelegramConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *TelegramConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["enabled"] = c.Enabled
+	// Do not include BotToken for security reasons
+	settings["webhook_url"] = c.WebhookURL
+	settings["allowed_updates"] = c.AllowedUpdates
+	return settings
+}
+
+func Load[C Config | DiscordConfig | LLMConfig | ApprovalConfig | ServerConfig | ZMQConfig | GoBeConfig | GobeCtlConfig | IntegrationConfig | WhatsAppConfig | TelegramConfig | *IConfig](
+	configPath string,
+	configType string,
+) (*C, error) {
 	// Check if .env file exists and load it
-	if _, err := os.Stat("config/.env"); os.IsNotExist(err) {
-		log.Println("No .env file found, skipping environment variable loading")
+	if configPath == "" {
+		configPath = GetConfigFilePath()
+		configPath = filepath.Join(configPath, "gobe", "config.json")
+		gl.Log("info", "No config path provided, using default:", configPath)
+	}
+
+	gl.Log("info", "Using config path:", configPath)
+
+	if configType == "" {
+		configType = "main_config"
+		gl.Log("info", "No config type provided, using default: main_config")
+	}
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		gl.Log("info", "No config.json file found, skipping environment variable loading")
 	} else if os.IsPermission(err) {
-		return nil, fmt.Errorf("permission denied to read .env file: %w", err)
+		return nil, fmt.Errorf("permission denied to read config.json file: %w", err)
 	} else {
-		log.Println("Loading environment variables from .env file")
-		if err := godotenv.Load("config/.env"); err != nil {
+		gl.Log("info", "Loading settings from .env file")
+		configPath = filepath.Join(filepath.Dir(configPath), ".env")
+		// Load .env file if it exists
+		if err := godotenv.Load(configPath); err != nil {
 			return nil, fmt.Errorf("error loading .env file: %w", err)
 		}
+
+		gl.Log("info", "Loaded environment variables from .env file")
+		configPath = filepath.Join(filepath.Dir(configPath), "config.json")
 	}
 
 	// Initialize viper
-	viper.SetConfigName("config/discord_config.json")
+	viper.SetConfigName(configPath)
 	viper.SetConfigType("json")
-	viper.AddConfigPath(configPath)
+	viper.AddConfigPath(filepath.Dir(configPath))
 
 	// Set defaults
 	viper.SetDefault("server.port", 8080)
@@ -253,22 +465,75 @@ func Load(configPath string) (*Config, error) {
 		log.Printf("   ⚠️ Using DEV mode (no valid API keys found)")
 	}
 
-	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
-		return nil, fmt.Errorf("error unmarshaling config: %w", err)
+	viper.SetConfigName(fmt.Sprintf("config/%s.json", configType))
+	configInstance, exists := getFromConfigMap[C](configType)
+	if !exists {
+		return nil, fmt.Errorf("no constructor found for config type: %s", configType)
+	}
+
+	// Unmarshal into the provided config struct
+	if err := viper.UnmarshalKey("", &configInstance); err != nil {
+		return nil, fmt.Errorf("error unmarshaling %s: %w", configType, err)
 	}
 
 	// Force dev mode values after unmarshal if in dev mode
 	if devMode {
-		config.DevMode = true
-		if config.Discord.Bot.Token == "" {
-			config.Discord.Bot.Token = "dev_token"
+		inter := reflect.ValueOf(configInstance).Interface()
+		switch reflect.TypeFor[C]().String() {
+		case "*LLMConfig":
+			inter.(*LLMConfig).DevMode = true
+		case "*DiscordConfig":
+			inter.(*DiscordConfig).DevMode = true
+		case "*GoBeConfig":
+			inter.(*GoBeConfig).DevMode = true
+		case "*GobeCtlConfig":
+			inter.(*GobeCtlConfig).DevMode = true
 		}
-		// Only override API key if it's actually empty
-		if config.LLM.APIKey == "" {
-			config.LLM.APIKey = "dev_api_key"
+		// Set default values for dev models
+		switch configType {
+		case "llm_config":
+			// Set dev defaults for LLM
+			viper.Set("llm.model", "gpt-3.5-turbo")
+			viper.Set("llm.max_tokens", 500)
+			viper.Set("llm.temperature", 0.7)
+			if inter.(*LLMConfig).APIKey == "" || inter.(*LLMConfig).APIKey == "dev_api_key" {
+				inter.(*LLMConfig).APIKey = "dev_api_key"
+			}
+			gl.Log("info", "LLM Config - Model:", inter.(*LLMConfig).Model, "MaxTokens:", inter.(*LLMConfig).MaxTokens, "Temperature:", inter.(*LLMConfig).Temperature)
+		case "discord_config":
+			if inter.(*DiscordConfig).Bot.Token == "" || inter.(*DiscordConfig).Bot.Token == "dev_token" {
+				inter.(*DiscordConfig).Bot.Token = "dev_token"
+			}
+			gl.Log("info", "Discord Config - Bot Token set for Dev Mode")
+		case "gobe_config":
+			if inter.(*GoBeConfig).BaseURL == "" {
+				inter.(*GoBeConfig).BaseURL = "http://localhost:8080"
+			}
+			if inter.(*GoBeConfig).APIKey == "" || inter.(*GoBeConfig).APIKey == "dev_api_key" {
+				inter.(*GoBeConfig).APIKey = "dev_api_key"
+			}
+			gl.Log("info", "GoBE Config - BaseURL:", inter.(*GoBeConfig).BaseURL)
+		case "gobe_ctl_config":
+			if inter.(*GobeCtlConfig).Path == "" {
+				inter.(*GobeCtlConfig).Path = "gobeCtl"
+			}
+			if inter.(*GobeCtlConfig).Namespace == "" {
+				inter.(*GobeCtlConfig).Namespace = "default"
+			}
+			gl.Log("info", "GoBE CTL Config - Path:", inter.(*GobeCtlConfig).Path, "Namespace:", inter.(*GobeCtlConfig).Namespace)
 		}
+		configInstance = inter.(C)
 	}
 
-	return &config, nil
+	return &configInstance, nil
+}
+
+func GetConfigFilePath() string {
+	var cfgPath string
+	if path, err := utils.GetDefaultConfigPath(); path != "" && err == nil {
+		cfgPath = path
+	} else {
+		gl.Log("fatal", "Failed to determine config path, using current directory:", err)
+	}
+	return cfgPath
 }

@@ -41,28 +41,14 @@ func newTLSConfig(name, filePath string) *TLSConfig {
 		MinVersion:    "TLS1.2",
 	}
 
-	tlsCfg.Mapper = NewMapper[*TLSConfig](&tlsCfg, filePath)
+	tlsCfg.Mapper = NewMapper(&tlsCfg, filePath)
 
 	return tlsCfg
 }
 
 // NewTLSConfig creates a new TLSConfig instance with the provided name and file path.
 func NewTLSConfig(name, filePath string) ci.ITLSConfig {
-	tlsCfg := &TLSConfig{
-		Reference:     newReference("TLSConfig").GetReference(),
-		Mutexes:       NewMutexesType(),
-		CertFile:      "",
-		KeyFile:       "",
-		CAFile:        "",
-		Enabled:       false,
-		SkipVerify:    false,
-		StrictHostKey: false,
-		MinVersion:    "TLS1.2",
-	}
-
-	tlsCfg.Mapper = NewMapper[*TLSConfig](&tlsCfg, filePath)
-
-	return tlsCfg
+	return newTLSConfig(name, filePath)
 }
 
 func (t *TLSConfig) GetCertFile() string                 { return t.CertFile }

@@ -24,6 +24,7 @@ import (
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	"github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
 
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
@@ -308,7 +309,16 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 		addressT.SetValue(&address)
 	}
 
-	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "yaml", bind, port)
+	if g.configFile == "" {
+		var err error
+		g.configFile, err = utils.GetDefaultConfigPath()
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("Error getting default config path: %v", err))
+			return nil, err
+		}
+	}
+
+	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "json", bind, port)
 	if _, err := os.Stat(g.configFile); err != nil {
 		if os.IsNotExist(err) {
 			if err := ut.EnsureDir(filepath.Dir(g.configFile), 0644, []string{}); err != nil {
@@ -320,7 +330,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 				return nil, err
 			}
 			mapper := t.NewMapper(gobeminConfig, g.configFile)
-			mapper.SerializeToFile("yaml")
+			mapper.SerializeToFile("json")
 		} else {
 			gl.Log("error", fmt.Sprintf("Error reading config file: %v", err))
 			return nil, err

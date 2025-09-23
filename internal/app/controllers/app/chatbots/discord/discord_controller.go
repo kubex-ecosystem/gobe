@@ -654,14 +654,14 @@ func (dc *DiscordController) PingDiscord(c *gin.Context) {
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/discord/ping [post]
 func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
-	config, err := config.Load("./")
+	cfg, err := config.Load[config.Config]("./", "discord_config")
 	if err != nil {
 		gl.Log("error", "Failed to load config for Discord adapter", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to load config"})
 		return
 	}
 
-	adapter, adapterErr := discord.NewAdapter(config.Discord)
+	adapter, adapterErr := discord.NewAdapter(cfg.Discord)
 	if adapterErr != nil {
 		gl.Log("error", "Failed to create Discord adapter", adapterErr)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to create Discord adapter"})

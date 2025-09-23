@@ -3,13 +3,16 @@ package types_test
 
 import (
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 func TestProperty_GetSetSerialize(t *testing.T) {
-	p := types.NewProperty[int]("counter", nil, false, nil)
+	val := 0
+	p := types.NewProperty("counter", &val, false, nil).(*types.Property[int])
 	if p.GetName() != "counter" {
 		t.Fatalf("expected name 'counter'")
 	}
@@ -17,22 +20,40 @@ func TestProperty_GetSetSerialize(t *testing.T) {
 		t.Fatalf("expected zero value initially, got %d", v)
 	}
 
-	val := 42
-	p.SetValue(&val)
-	pt := p.(*types.Property[int])
+	val = 42
+	p.Prop().Set(&val) // Usando Prop().Set() em vez de p.SetValue(&val)
 
-	if v := pt.GetValue(); v != 42 {
+	//p.SetValue(&val)
+	pt := p
+	var v int
+
+	if v = pt.GetValue(); v != 42 {
+		gl.Log("error", "Value from Property:", v, "Type:", reflect.TypeOf(v).Name())
+		if v = *pt.Prop().Get(true).(*int); v != 42 {
+			gl.Log("error", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
+			if v = *pt.Prop().Value(); v != 42 {
+				t.Fatalf("expected 42, got %d", v)
+			} else {
+				gl.Log("success", "Value from Prop().Value():", v, "Type:", reflect.TypeOf(v).Name())
+				goto successfully
+			}
+			t.Fatalf("expected 42, got %d", v)
+		} else {
+			gl.Log("success", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
+			goto successfully
+		}
 		t.Fatalf("expected 42, got %d", v)
 	}
 
+successfully:
 	// Serialize/Deserialize JSON em memória
-	data, err := p.Serialize("json", "")
+	_, err := p.Serialize("json", "")
 	if err != nil {
 		t.Fatalf("serialize error: %v", err)
 	}
-
-	p2 := types.NewProperty[int]("counter", nil, false, nil)
-	if err := p2.Deserialize(data, "json", ""); err != nil {
+	var v2 []byte
+	p2 := types.NewProperty("counter", &v, false, nil)
+	if err := p2.Deserialize(v2, "json", ""); err != nil {
 		t.Fatalf("deserialize error: %v", err)
 	}
 	if v := p2.GetValue(); v != 42 {

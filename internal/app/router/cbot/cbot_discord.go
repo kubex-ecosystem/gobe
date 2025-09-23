@@ -48,14 +48,15 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	config, configErr := config.Load(
-		"./",
+	cfg, configErr := config.Load[config.Config](
+		rtl.GetConfigPath(),
+		"main_config",
 	)
 	if configErr != nil {
 		gl.Log("error", "Failed to load config for DiscordRoute", configErr)
 		return nil
 	}
-	h, err := hub.NewDiscordMCPHub(config)
+	h, err := hub.NewDiscordMCPHub(cfg)
 	if err != nil {
 		gl.Log("error", "Failed to create Discord hub", err)
 		return nil

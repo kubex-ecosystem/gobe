@@ -28,9 +28,12 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to get DB for WhatsAppRoutes", err)
 		return nil
 	}
-	cfg, err := config.Load("./")
-	if err != nil {
-		gl.Log("error", "Failed to load config for WhatsAppRoutes", err)
+	cfg, configErr := config.Load[config.Config](
+		rtl.GetConfigPath(),
+		"main_config",
+	)
+	if configErr != nil {
+		gl.Log("error", "Failed to load config for WhatsAppRoutes", configErr)
 		return nil
 	}
 	svc := whatsapp.NewService(cfg.Integrations.WhatsApp)
