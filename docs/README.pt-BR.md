@@ -1,4 +1,4 @@
----
+<!-- ---
 title: GoBE - Modular & Secure Back-end
 version: 1.3.4
 owner: kubex
@@ -6,7 +6,7 @@ audience: dev
 languages: [pt-BR, en]
 sources: [internal/module/info/manifest.json, https://github.com/kubex-ecosystem/gobe]
 assumptions: []
----
+--- -->
 <!-- markdownlint-disable MD013 MD025 -->
 # GoBE - Modular & Secure Back-end
 
@@ -134,7 +134,7 @@ make build
 
 ### Requisitos
 
-- **Go 1.24+** (para compilar do código fonte)
+- **Go 1.25+** (para compilar do código fonte)
 - **Docker** (opcional, para recursos avançados de banco)
 - **Não precisa Kubernetes nem setup complexo**
 
