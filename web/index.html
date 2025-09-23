@@ -1,190 +1,582 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoBE Discord Bot</title>
+    <title>GoBE - Modular & Secure Backend</title>
+    <meta name="description" content="GoBE - Modular, secure, zero-config backend for modern Go applications. MCP enabled, Docker integrated, production ready.">
+    <meta name="keywords" content="go, backend, modular, secure, mcp, kubex, zero-config">
+    <meta name="author" content="Kubex Ecosystem">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* Inline critical styles for faster loading */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(45deg, #FFD700, #FFA500);
+            --accent-color: #00ff88;
+            --bg-dark: #0d1117;
+            --bg-secondary: #161b22;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --shadow-primary: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 12px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        * {
             margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
+            padding: 0;
             box-sizing: border-box;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
+
+        /* Background Animation */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--primary-gradient);
+            opacity: 0.1;
+        }
+
+        .bg-animation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-opacity="0.1" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') repeat;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        /* Header */
         .header {
+            position: relative;
+            padding: 2rem 1rem;
             text-align: center;
-            margin-bottom: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
         }
-        .header h1 {
-            margin: 0 0 10px 0;
-            font-size: 2.5em;
-            background: linear-gradient(45deg, #FFD700, #FFA500);
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 10px var(--accent-color));
+            }
+            50% {
+                transform: scale(1.1);
+                filter: drop-shadow(0 0 20px var(--accent-color));
+            }
+        }
+
+        .logo h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--secondary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* Status Section */
+        .status-section {
+            padding: 2rem 1rem;
+            text-align: center;
+            background: var(--glass-bg);
+            margin: 2rem 0;
+            border-radius: 20px;
+            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: rgba(0, 255, 136, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--secondary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--secondary-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
-        .status {
+
+        .card p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        /* API Endpoints */
+        .endpoint {
             display: flex;
             align-items: center;
-            justify-content: center;
-            margin: 20px 0;
-            font-size: 1.2em;
+            gap: 1rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
         }
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            background: #00ff00;
-            border-radius: 50%;
-            margin-right: 10px;
-            animation: pulse 2s infinite;
+
+        .endpoint:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateX(5px);
         }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .info-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .info-card h3 {
-            margin: 0 0 10px 0;
-            color: #FFD700;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .info-card p {
-            margin: 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.8em;
-            word-break: break-all;
-        }
-        .actions {
-            margin-top: 30px;
+
+        .method {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            min-width: 60px;
             text-align: center;
         }
+
+        .method.get { background: #22c55e; color: white; }
+        .method.post { background: #3b82f6; color: white; }
+        .method.put { background: #f59e0b; color: white; }
+        .method.delete { background: #ef4444; color: white; }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
         .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            margin: 5px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: var(--primary-gradient);
             color: white;
             text-decoration: none;
-            border-radius: 25px;
+            border-radius: 12px;
             border: none;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 1rem;
+            font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.4);
+            box-shadow: var(--shadow-primary);
+            position: relative;
+            overflow: hidden;
         }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px 0 rgba(31, 38, 135, 0.6);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
         }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn.secondary {
+            background: transparent;
+            border: 2px solid var(--border-subtle);
+            color: var(--text-primary);
+        }
+
+        .btn.secondary:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Footer */
         .footer {
             text-align: center;
-            margin-top: 30px;
-            font-size: 0.8em;
-            opacity: 0.7;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-subtle);
+            background: var(--glass-bg);
+        }
+
+        .footer .kubex-branding {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .logo h1 { font-size: 2rem; }
+            .tagline { font-size: 1rem; }
+            .dashboard { grid-template-columns: 1fr; padding: 1rem; }
+            .card { padding: 1.5rem; }
+            .actions { flex-direction: column; align-items: center; }
+            .btn { width: 100%; max-width: 300px; justify-content: center; }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            box-shadow: var(--shadow-primary);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--accent-color);
+        }
+
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🤖 GoBE Discord Bot</h1>
-            <p>Aplicação Discord integrada com sucesso!</p>
-        </div>
-        
-        <div class="status">
-            <div class="status-indicator"></div>
-            <span>Conectado e funcionando</span>
-        </div>
-        
-        <div class="info-grid">
-            <div class="info-card">
-                <h3>📍 Channel ID</h3>
-                <p>%s</p>
-            </div>
-            <div class="info-card">
-                <h3>🆔 Instance ID</h3>
-                <p>%s</p>
-            </div>
-            <div class="info-card">
-                <h3>🚀 Launch ID</h3>
-                <p>%s</p>
-            </div>
-            <div class="info-card">
-                <h3>📱 Platform</h3>
-                <p>%s</p>
-            </div>
-        </div>
-        
-        <div class="actions">
-            <button class="btn" onclick="testBot()">🧪 Testar Bot</button>
-            <button class="btn" onclick="openWebSocket()">🔗 WebSocket</button>
-        </div>
-        
-        <div class="footer">
-            <p>GoBE Discord Integration • Instance: %s</p>
-        </div>
-    </div>
+    <div class="bg-animation"></div>
 
+    <header class="header">
+        <div class="logo">
+            <span class="logo-icon">🚀</span>
+            <h1>GoBE</h1>
+        </div>
+        <p class="tagline">Code Fast. Own Everything.</p>
+        <p class="subtitle">Modular & Secure Backend • Zero Config • MCP Enabled</p>
+    </header>
+
+    <section class="status-section">
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span id="status-text">System Operational</span>
+        </div>
+        <p>Server running on <strong>http://localhost:3666</strong> • Uptime: <span id="uptime">Loading...</span></p>
+    </section>
+
+    <main class="dashboard">
+        <!-- System Status Card -->
+        <div class="card">
+            <span class="card-icon">📊</span>
+            <h3>System Status</h3>
+            <p>Real-time system metrics and health monitoring.</p>
+            <div id="system-metrics">
+                <div style="margin-bottom: 1rem;">
+                    <strong>Version:</strong> <span id="version">v1.3.4</span><br>
+                    <strong>Go Version:</strong> <span id="go-version">Loading...</span><br>
+                    <strong>Memory:</strong> <span id="memory">Loading...</span><br>
+                    <strong>Goroutines:</strong> <span id="goroutines">Loading...</span>
+                </div>
+            </div>
+            <button class="btn secondary" onclick="refreshSystemStatus()">
+                🔄 Refresh Status
+            </button>
+        </div>
+
+        <!-- MCP Tools Card -->
+        <div class="card">
+            <span class="card-icon">🤖</span>
+            <h3>MCP Protocol</h3>
+            <p>Model Context Protocol for AI tool integration with dynamic registry.</p>
+            <div id="mcp-tools">
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span>/mcp/tools</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span>/mcp/exec</span>
+                </div>
+            </div>
+            <button class="btn secondary" onclick="testMCPTools()">
+                🧪 Test MCP Tools
+            </button>
+        </div>
+
+        <!-- API Endpoints Card -->
+        <div class="card">
+            <span class="card-icon">🌐</span>
+            <h3>REST API</h3>
+            <p>Comprehensive REST endpoints for authentication, users, products, and more.</p>
+            <div style="max-height: 200px; overflow-y: auto;">
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span>/health</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span>/api/v1/auth/login</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span>/api/v1/users</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method get">GET</span>
+                    <span>/api/v1/products</span>
+                </div>
+                <div class="endpoint">
+                    <span class="method post">POST</span>
+                    <span>/api/v1/webhooks</span>
+                </div>
+            </div>
+            <button class="btn secondary" onclick="openAPIDoc()">
+                📖 View API Docs
+            </button>
+        </div>
+
+        <!-- Database Integration Card -->
+        <div class="card">
+            <span class="card-icon">🗄️</span>
+            <h3>Database</h3>
+            <p>PostgreSQL/SQLite integration via gdbase with auto-setup and Docker management.</p>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <strong>Connection:</strong> <span id="db-status" style="color: var(--accent-color);">Connected ✓</span><br>
+                <strong>Type:</strong> <span id="db-type">PostgreSQL</span><br>
+                <strong>Tables:</strong> <span id="db-tables">Loading...</span>
+            </div>
+            <button class="btn secondary" onclick="checkDatabase()">
+                🔍 Check Database
+            </button>
+        </div>
+
+        <!-- Security Features Card -->
+        <div class="card">
+            <span class="card-icon">🔒</span>
+            <h3>Security</h3>
+            <p>Auto-generated certificates, JWT authentication, keyring storage, and rate limiting.</p>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <strong>TLS:</strong> <span style="color: var(--accent-color);">Enabled ✓</span><br>
+                <strong>JWT:</strong> <span style="color: var(--accent-color);">Active ✓</span><br>
+                <strong>Rate Limiting:</strong> <span style="color: var(--accent-color);">Active ✓</span><br>
+                <strong>CORS:</strong> <span style="color: var(--accent-color);">Configured ✓</span>
+            </div>
+            <button class="btn secondary" onclick="viewSecurityInfo()">
+                🛡️ Security Details
+            </button>
+        </div>
+
+        <!-- Integrations Card -->
+        <div class="card">
+            <span class="card-icon">🔗</span>
+            <h3>Integrations</h3>
+            <p>WhatsApp, Telegram, Discord bots, RabbitMQ messaging, and webhook support.</p>
+            <div id="integrations-status">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>WhatsApp Bot:</span>
+                    <span id="whatsapp-status" style="color: var(--text-secondary);">Checking...</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>Telegram Bot:</span>
+                    <span id="telegram-status" style="color: var(--text-secondary);">Checking...</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>RabbitMQ:</span>
+                    <span id="rabbitmq-status" style="color: var(--text-secondary);">Checking...</span>
+                </div>
+            </div>
+            <button class="btn secondary" onclick="testIntegrations()">
+                🧪 Test Integrations
+            </button>
+        </div>
+    </main>
+
+    <section class="actions">
+        <button class="btn" onclick="window.open('/health', '_blank')">
+            💚 Health Check
+        </button>
+        <button class="btn" onclick="testSystemStatus()">
+            🧪 Test System.Status
+        </button>
+        <button class="btn" onclick="runSystemTest()">
+            🎯 Run Full Test
+        </button>
+        <button class="btn secondary" onclick="viewLogs()">
+            📋 View Logs
+        </button>
+        <button class="btn secondary" onclick="downloadConfig()">
+            ⚙️ Download Config
+        </button>
+        <a href="https://github.com/kubex-ecosystem/gobe" target="_blank" class="btn secondary">
+            📖 Documentation
+        </a>
+    </section>
+
+    <footer class="footer">
+        <p><strong class="kubex-branding">Kubex Ecosystem</strong> • No Lock-in. No Excuses.</p>
+        <p>Built with ❤️ using Go • Version 1.3.4 • <a href="mailto:faelmori@gmail.com" style="color: var(--accent-color);">Contact Developer</a></p>
+    </footer>
+
+    <script src="app.js" type="module"></script>
     <script>
-        function testBot() {
-            fetch('/discord/test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    content: 'Teste do Discord App!',
-                    user_id: 'discord_app_user',
-                    username: 'Discord App'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('✅ Bot testado com sucesso: ' + data.message);
-            })
-            .catch(error => {
-                alert('❌ Erro ao testar bot: ' + error);
+        // Performance monitoring
+        window.addEventListener('load', function() {
+            if ('performance' in window) {
+                const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                console.log(`🚀 Page loaded in ${loadTime}ms`);
+            }
+        });
+
+        // Service Worker registration for caching (optional)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('📦 SW registered with scope:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('📦 SW registration failed:', error);
+                    });
             });
-        }
-
-        function openWebSocket() {
-            // Redirect to WebSocket test page or open connection
-            alert('🔗 WebSocket connection would be opened here');
-        }
-
-        // Initialize Discord SDK if available
-        if (typeof DiscordSDK !== 'undefined') {
-            console.log('🎮 Discord SDK detected');
         }
     </script>
 </body>
 </html>
-    
