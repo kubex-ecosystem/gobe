@@ -173,6 +173,7 @@ func setLogLevel(logLevel string) {
 }
 func getShowTrace() bool {
 	if debug {
+		showTrace = true
 		return true
 	} else {
 		if !showTrace {
@@ -284,6 +285,8 @@ func SetDebug(d bool) {
 	}
 	g.gDebug = d
 	if d {
+		showTrace = true
+		debug = true
 		g.SetLevel("debug")
 	} else {
 		switch g.gLogLevel {
@@ -444,7 +447,7 @@ func logging(lgr l.Logger, lType LogType, fullMessage string, ctxMessageMap map[
 	} else {
 		ctxMessageMap["msg"] = fullMessage
 		ctxMessageMap["showData"] = false
-		lgr.DebugCtx("Log: message not printed due to log level", ctxMessageMap)
+		lgr.DebugCtx(ctxMessageMap["msg"].(string), ctxMessageMap)
 	}
 }
 

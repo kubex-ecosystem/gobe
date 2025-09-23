@@ -293,7 +293,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	bind := bindT.GetValue()
 	if !reflect.ValueOf(port).IsValid() {
 		gl.Log("warn", "No port specified, using default port 8666")
-		port = ":8666"
+		port = "8666"
 		portT.SetValue(&port)
 	}
 	if !reflect.ValueOf(bind).IsValid() {
@@ -304,8 +304,8 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	addressT := g.Properties["address"].(*t.Property[string])
 	address := addressT.GetValue()
 	if !reflect.ValueOf(address).IsValid() {
-		gl.Log("warn", "No address specified, using default address %s", net.JoinHostPort(bind, port))
 		address = net.JoinHostPort(bind, port)
+		gl.Log("warn", "No address specified, using default address %s", address)
 		addressT.SetValue(&address)
 	}
 

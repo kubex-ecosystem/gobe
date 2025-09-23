@@ -56,15 +56,16 @@ type IConfig interface {
 }
 
 type Config struct {
-	Discord      DiscordConfig     `json:"discord"`
-	LLM          LLMConfig         `json:"llm"`
-	Approval     ApprovalConfig    `json:"approval"`
-	Server       ServerConfig      `json:"server"`
-	ZMQ          ZMQConfig         `json:"zmq"`
-	GoBE         GoBeConfig        `json:"gobe"`
-	GobeCtl      GobeCtlConfig     `json:"gobeCtl"`
-	Integrations IntegrationConfig `json:"integrations"`
-	DevMode      bool              `json:"dev_mode"`
+	ConfigFilePath string            `json:"config_file_path"`
+	Discord        DiscordConfig     `json:"discord"`
+	LLM            LLMConfig         `json:"llm"`
+	Approval       ApprovalConfig    `json:"approval"`
+	Server         ServerConfig      `json:"server"`
+	ZMQ            ZMQConfig         `json:"zmq"`
+	GoBE           GoBeConfig        `json:"gobe"`
+	GobeCtl        GobeCtlConfig     `json:"gobeCtl"`
+	Integrations   IntegrationConfig `json:"integrations"`
+	DevMode        bool              `json:"dev_mode"`
 }
 
 func newConfig() *Config              { return &Config{} }
@@ -306,19 +307,35 @@ func (c *TelegramConfig) GetSettings() map[string]interface{} {
 	return settings
 }
 
-func Load[C Config | DiscordConfig | LLMConfig | ApprovalConfig | ServerConfig | ZMQConfig | GoBeConfig | GobeCtlConfig | IntegrationConfig | WhatsAppConfig | TelegramConfig | *IConfig](
+func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *IConfig](
 	configPath string,
 	configType string,
-) (*C, error) {
+) (C, error) {
+
+	var envFilePath string
+
 	// Check if .env file exists and load it
 	if configPath == "" {
+		gl.Log("warn", "No config path provided, using default:", configPath)
+		envFilePath = ".env"
 		configPath = GetConfigFilePath()
 		configPath = filepath.Join(configPath, "gobe", "config.json")
-		gl.Log("info", "No config path provided, using default:", configPath)
 	}
 
-	gl.Log("info", "Using config path:", configPath)
+	if _, err := os.Stat(envFilePath); os.IsNotExist(err) {
+		gl.Log("info", ".env file not found, skipping loading environment variables from file")
+		goto postEnvLoad
+	}
 
+	gl.Log("info", "Loading settings from .env file")
+	if err := godotenv.Load(envFilePath); err != nil {
+		// return nil, fmt.Errorf("error loading %s file: %w", envFilePath, err)
+		gl.Log("fatal", fmt.Sprintf("error loading %s file: %w", envFilePath, err))
+	}
+	gl.Log("info", "Loaded environment variables from .env file")
+
+postEnvLoad:
+	gl.Log("info", "Using config path:", configPath)
 	if configType == "" {
 		configType = "main_config"
 		gl.Log("info", "No config type provided, using default: main_config")
@@ -327,20 +344,10 @@ func Load[C Config | DiscordConfig | LLMConfig | ApprovalConfig | ServerConfig |
 		gl.Log("info", "No config.json file found, skipping environment variable loading")
 	} else if os.IsPermission(err) {
 		return nil, fmt.Errorf("permission denied to read config.json file: %w", err)
-	} else {
-		gl.Log("info", "Loading settings from .env file")
-		configPath = filepath.Join(filepath.Dir(configPath), ".env")
-		// Load .env file if it exists
-		if err := godotenv.Load(configPath); err != nil {
-			return nil, fmt.Errorf("error loading .env file: %w", err)
-		}
-
-		gl.Log("info", "Loaded environment variables from .env file")
-		configPath = filepath.Join(filepath.Dir(configPath), "config.json")
 	}
 
 	// Initialize viper
-	viper.SetConfigName(configPath)
+	viper.SetConfigName(filepath.Base(configPath))
 	viper.SetConfigType("json")
 	viper.AddConfigPath(filepath.Dir(configPath))
 
@@ -525,7 +532,7 @@ func Load[C Config | DiscordConfig | LLMConfig | ApprovalConfig | ServerConfig |
 		configInstance = inter.(C)
 	}
 
-	return &configInstance, nil
+	return configInstance, nil
 }
 
 func GetConfigFilePath() string {

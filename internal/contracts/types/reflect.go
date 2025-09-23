@@ -18,7 +18,7 @@ func AutoEncode[T any](v T, format, filePath string) ([]byte, error) {
 }
 
 func AutoDecode[T any](data []byte, target *T, format string) error {
-	mapper := NewMapperTypeWithObject[T](target, "")
+	mapper := NewMapper[T](target, "")
 	if obj, err := mapper.Deserialize(data, format); err != nil {
 		gl.Log("error", "AutoDecode: unknown type for deserialization (", reflect.TypeOf(target).Name(), "):", err.Error())
 		return fmt.Errorf("error: %s", err.Error())
