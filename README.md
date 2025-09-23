@@ -351,7 +351,7 @@ I'm open to collaborations and new ideas. If you found the project interesting, 
 
 ## **Changelog**
 
-### v1.3.3 (2024-09-23)
+### v1.3.4 (2025-09-23)
 
 - ✅ MCP Protocol implementation with dynamic registry
 - ✅ Built-in system.status tool with runtime metrics
