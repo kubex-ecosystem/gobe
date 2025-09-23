@@ -1,4 +1,4 @@
----
+<!-- ---
 title: GoBE - Modular & Secure Back-end
 version: 1.3.4
 owner: kubex
@@ -6,7 +6,7 @@ audience: dev
 languages: [en, pt-BR]
 sources: [internal/module/info/manifest.json, https://github.com/kubex-ecosystem/gobe]
 assumptions: []
----
+--- -->
 
 <!-- markdownlint-disable MD013 MD025 -->
 # GoBE - Modular & Secure Back-end
