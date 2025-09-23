@@ -252,8 +252,21 @@ class GoBEDashboard {
         this.showToast('🛡️ Security: TLS, JWT, Rate Limiting, CORS all active', 'success');
     }
 
-    viewLogs() {
-        this.showToast('📋 Log viewer would open here (./gobe logs)', 'success');
+    async viewLogs() {
+        try {
+            const response = await fetch('/api/v1/logs');
+            if (response.ok) {
+                const logs = await response.text();
+                // For now, display logs in a simple alert. Replace with a modal in the future.
+                alert('📋 Logs:\n\n' + logs);
+            } else if (response.status === 501 || response.status === 404) {
+                this.showToast('🚧 Log viewer is under development.', 'info');
+            } else {
+                this.showToast('❌ Failed to fetch logs.', 'error');
+            }
+        } catch (error) {
+            this.showToast('❌ Error fetching logs.', 'error');
+        }
     }
 
     // Download configuration file
