@@ -53,7 +53,7 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 		return nil
 	}
 	url := getRabbitMQURL(dbConfig)
-	url = "amqp://192.168.100.61:5672/" // Remover após testes
+	// url = "amqp://192.168.100.61:5672/" // Remover após testes
 	gl.Log("info", fmt.Sprintf("RabbitMQ URL: %s", url))
 	var rabbitMQConn *amqp.Connection
 	if url != "" {
