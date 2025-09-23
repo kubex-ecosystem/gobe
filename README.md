@@ -26,7 +26,7 @@ assumptions: []
 
 ## TL;DR
 
-GoBE é um backend Go modular que roda **sem configuração** e oferece APIs REST + MCP (Model Context Protocol) prontas para uso. Um comando = servidor completo com autenticação, banco de dados, e ferramentas de sistema integradas.
+GoBE is a modular Go backend that runs **with zero configuration** and provides ready-to-use REST APIs + MCP (Model Context Protocol). One command = a complete server with authentication, database, and integrated system tools.
 
 ```bash
 make build && ./gobe start  # Zero config, instant backend
