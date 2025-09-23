@@ -22,6 +22,7 @@ import (
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
+	cfg "github.com/kubex-ecosystem/gobe/internal/config"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
@@ -122,6 +123,10 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		requestWindow:   t.RequestWindow,
 		requestLimit:    t.RequestLimit,
 		requestsTracers: make(map[string]ci.IRequestsTracer),
+	}
+
+	if err := cfg.BootstrapMainConfig(gbm.configFile); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
 	}
 
 	var err error

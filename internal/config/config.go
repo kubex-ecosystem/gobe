@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
@@ -315,11 +316,37 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 	var envFilePath string
 
 	// Check if .env file exists and load it
+
 	if configPath == "" {
 		gl.Log("warn", "No config path provided, using default:", configPath)
 		envFilePath = ".env"
 		configPath = GetConfigFilePath()
 		configPath = filepath.Join(configPath, "gobe", "config.json")
+	}
+
+	if info, statErr := os.Stat(configPath); statErr == nil {
+		if info.IsDir() {
+			gobeDir := configPath
+			if filepath.Base(gobeDir) != "gobe" {
+				candidate := filepath.Join(gobeDir, "gobe")
+				if _, err := os.Stat(candidate); err == nil {
+					gobeDir = candidate
+				}
+			}
+			configPath = filepath.Join(gobeDir, "config.json")
+		}
+	} else if os.IsNotExist(statErr) {
+		if filepath.Ext(configPath) == "" && !strings.HasSuffix(configPath, ".json") {
+			configPath = filepath.Join(configPath, "gobe", "config.json")
+		}
+	}
+
+	if reflect.TypeFor[C]().String() == "*config.Config" && configType == "gobe_config" {
+		configType = "main_config"
+	}
+
+	if err := BootstrapMainConfig(configPath); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
 	}
 
 	if _, err := os.Stat(envFilePath); os.IsNotExist(err) {
@@ -330,7 +357,7 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 	gl.Log("info", "Loading settings from .env file")
 	if err := godotenv.Load(envFilePath); err != nil {
 		// return nil, fmt.Errorf("error loading %s file: %w", envFilePath, err)
-		gl.Log("fatal", fmt.Sprintf("error loading %s file: %w", envFilePath, err))
+		gl.Log("fatal", fmt.Sprintf("error loading %s file: %v", envFilePath, err))
 	}
 	gl.Log("info", "Loaded environment variables from .env file")
 

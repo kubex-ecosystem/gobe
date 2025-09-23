@@ -147,57 +147,29 @@ func GetEnvOrDefault(key, defaultValue string) string {
 }
 
 func GetDefaultConfigPath() (string, error) {
-	var configPath string
-	var willCreateDir bool
 	var err error
 	vprFile := filepath.Dir(viper.ConfigFileUsed())
 	if strings.Contains(vprFile, "gobe") {
 		vprFile = filepath.Dir(vprFile)
 	}
-	configPath = GetEnvOrDefault("GOBE_CONFIG_PATH", vprFile)
-	if configPath != "" {
-		if _, err = os.Stat(configPath); os.IsNotExist(err) {
-			gl.Log("warn", fmt.Sprintf("Config path %s does not exist, falling back to default", configPath))
-		}
-	} else {
+
+	configPath := GetEnvOrDefault("GOBE_CONFIG_PATH", vprFile)
+	if strings.TrimSpace(configPath) == "" || configPath == "." {
 		configPath, err = os.UserHomeDir()
 		if err != nil {
 			gl.Log("error", fmt.Sprintf("Failed to get user home directory: %v", err))
 			return fallbackTempDir()
 		}
-		if _, err = os.Stat(configPath); os.IsNotExist(err) {
-			gl.Log("warn", fmt.Sprintf("Directory %s does not exist, asking user to create it...", configPath))
-			writer := os.Stderr
-			fmt.Fprintf(writer, "Directory %s does not exist. Do you want to create it? (y/n): ", configPath)
-			var response string
-			_, err = fmt.Scanln(&response)
-			if err != nil {
-				gl.Log("error", fmt.Sprintf("Failed to read user input: %v", err))
-				return fallbackTempDir()
-			}
-			response = strings.ToLower(strings.TrimSpace(response))
-			if response == "y" || response == "yes" {
-				willCreateDir = true
-			} else {
-				gl.Log("info", "User declined to create the directory. Falling back to temporary directory.")
-				return fallbackTempDir()
-			}
-		}
+		configPath = filepath.Join(configPath, ".kubex")
 	}
 
-	realPath := filepath.Join(configPath, "gobe")
-
-	if willCreateDir {
-		err = os.MkdirAll(realPath, 0755)
-		if err != nil {
-			gl.Log("error", fmt.Sprintf("Failed to create directory %s: %v", realPath, err))
-			return fallbackTempDir()
-		}
-		gl.Log("info", fmt.Sprintf("Successfully created directory: %s", realPath))
+	realPath := configPath
+	if filepath.Base(realPath) != "gobe" {
+		realPath = filepath.Join(realPath, "gobe")
 	}
 
-	if _, err = os.Stat(realPath); os.IsNotExist(err) {
-		gl.Log("error", fmt.Sprintf("Config path %s does not exist and could not be created: %v", realPath, err))
+	if err = os.MkdirAll(realPath, 0o755); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to create directory %s: %v", realPath, err))
 		return fallbackTempDir()
 	}
 
@@ -205,13 +177,12 @@ func GetDefaultConfigPath() (string, error) {
 }
 
 func fallbackTempDir() (string, error) {
-	var configPath string
-	var err error
-	configPath = os.TempDir()
-	gl.Log("warn", fmt.Sprintf("Fallback directory %s does not exist, GoBE will use temporary directory for resilience", configPath))
-	configPath, err = os.MkdirTemp("kubex_temp", "gobe")
+	base := os.TempDir()
+	tmpDir, err := os.MkdirTemp(base, "kubex_gobe_")
 	if err != nil {
 		gl.Log("fatal", fmt.Sprintf("Failed to create temp dir for fallback: %v", err))
+		return "", err
 	}
-	return configPath, err
+	gl.Log("warn", fmt.Sprintf("Using temporary directory for config fallback: %s", tmpDir))
+	return tmpDir, nil
 }
