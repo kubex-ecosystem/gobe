@@ -22,6 +22,7 @@ func NewTasksController(db *gorm.DB) *TasksController {
 	}
 }
 
+// GetAllTasks retrieves all tasks.
 // @Summary MCP Tasks Controller
 // @Description Controller for managing tasks in the MCP
 // @Schemes http https
@@ -47,6 +48,7 @@ func (tc *TasksController) GetAllTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
+// GetTaskByID retrieves a task by its ID.
 // @Summary Get Task by ID
 // @Description Retrieves a task by its ID.
 // @Accept json
@@ -67,6 +69,7 @@ func (tc *TasksController) GetTaskByID(c *gin.Context) {
 	c.JSON(http.StatusOK, task)
 }
 
+// DeleteTask deletes a task by its ID.
 // @Summary Delete Task
 // @Description Deletes a task by its ID.
 // @Accept json
@@ -87,6 +90,7 @@ func (tc *TasksController) DeleteTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task deleted successfully"})
 }
 
+// GetTasksByProvider retrieves tasks by provider.
 // @Summary Get Tasks by Provider
 // @Description Retrieves tasks by provider.
 // @Accept json
@@ -107,6 +111,7 @@ func (tc *TasksController) GetTasksByProvider(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
+// GetTasksByTarget retrieves tasks by target.
 // @Summary Get Tasks by Target
 // @Description Retrieves tasks by target.
 // @Accept json
@@ -127,6 +132,7 @@ func (tc *TasksController) GetTasksByTarget(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
+// GetActiveTasks retrieves all active tasks.
 // @Summary Get Active Tasks
 // @Description Retrieves all active tasks.
 // @Accept json
@@ -146,6 +152,7 @@ func (tc *TasksController) GetActiveTasks(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
+// GetTasksDueForExecution retrieves tasks due for execution.
 // @Summary Get Tasks Due for Execution
 // @Description Retrieves tasks due for execution.
 // @Accept json
@@ -165,6 +172,7 @@ func (tc *TasksController) GetTasksDueForExecution(c *gin.Context) {
 	c.JSON(http.StatusOK, tasks)
 }
 
+// MarkTaskAsRunning marks a task as running.
 // @Summary Mark Task as Running
 // @Description Marks a task as running.
 // @Accept json
@@ -185,6 +193,7 @@ func (tc *TasksController) MarkTaskAsRunning(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task marked as running"})
 }
 
+// MarkTaskAsCompleted marks a task as completed.
 // @Summary Mark Task as Completed
 // @Description Marks a task as completed.
 // @Accept json
@@ -210,6 +219,7 @@ func (tc *TasksController) MarkTaskAsCompleted(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task marked as completed"})
 }
 
+// MarkTaskAsFailed marks a task as failed.
 // @Summary Mark Task as Failed
 // @Description Marks a task as failed.
 // @Accept json
@@ -235,6 +245,7 @@ func (tc *TasksController) MarkTaskAsFailed(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Task marked as failed"})
 }
 
+// GetTaskCronJob retrieves the CronJob representation of a task.
 // @Summary Get Task CronJob
 // @Description Retrieves the CronJob representation of a task.
 // @Accept json

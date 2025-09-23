@@ -117,11 +117,12 @@ type DiscordInteractionResponse struct {
 	Data map[string]interface{} `json:"data,omitempty"`
 }
 
-func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub) *DiscordController {
+func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub, config *config.Config) *DiscordController {
 	return &DiscordController{
 		discordService: fscm.NewDiscordService(fscm.NewDiscordRepo(db)),
 		APIWrapper:     t.NewAPIWrapper[fscm.DiscordModel](),
 		hub:            hub,
+		config:         config,
 	}
 }
 
@@ -654,14 +655,20 @@ func (dc *DiscordController) PingDiscord(c *gin.Context) {
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/discord/ping [post]
 func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
-	config, err := config.Load("./")
-	if err != nil {
-		gl.Log("error", "Failed to load config for Discord adapter", err)
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to load config"})
-		return
+	var cfg *config.Config
+	var err error
+	if dc.config != nil {
+		cfg = dc.config
+	} else {
+		cfg, err = config.Load[*config.Config]("./", "discord_config")
+		if err != nil {
+			gl.Log("error", "Failed to load config for Discord adapter", err)
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to load config"})
+			return
+		}
 	}
 
-	adapter, adapterErr := discord.NewAdapter(config.Discord)
+	adapter, adapterErr := discord.NewAdapter(cfg.Discord)
 	if adapterErr != nil {
 		gl.Log("error", "Failed to create Discord adapter", adapterErr)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to create Discord adapter"})

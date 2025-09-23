@@ -165,7 +165,6 @@ func (v *PropertyValBase[T]) Get(async bool) any {
 		gl.Log("debug", "Getting value for:", v.Name, "ID:", v.ID.String())
 		return v.Load()
 	}
-	return nil
 }
 
 // Set is a method that sets the value.

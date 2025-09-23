@@ -18,7 +18,7 @@ type IEnvironment interface {
 	Getenv(key string) string
 	GetenvOrDefault(key string, defaultValue any) (IPropertyValBase[any], reflect.Kind)
 	Setenv(key, value string) error
-	GetEnvCache() map[string]string
+	GetEnvCache() map[string]any
 	ParseEnvVar(s string) (string, string)
 	LoadEnvFromShell() error
 	MemAvailable() int
