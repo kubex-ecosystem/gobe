@@ -53,12 +53,14 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 		return nil
 	}
 	url := getRabbitMQURL(dbConfig)
-
+	url = "amqp://192.168.100.61:5672/" // Remover após testes
+	gl.Log("info", fmt.Sprintf("RabbitMQ URL: %s", url))
 	var rabbitMQConn *amqp.Connection
 	if url != "" {
+		gl.Log("info", fmt.Sprintf("Connecting to RabbitMQ at %s", url))
 		rabbitMQConn, err = amqp.Dial(url)
 		if err != nil {
-			gl.Log("error", "Failed to connect to RabbitMQ")
+			gl.Log("error", fmt.Sprintf("Connection failed: %v", err))
 			rabbitMQConn = nil // Continue sem RabbitMQ
 		}
 	}
@@ -87,17 +89,39 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 }
 
 func getRabbitMQURL(dbConfig *DBConfig) string {
-	if dbConfig != nil {
-		if dbConfig.Messagery != nil {
-			if dbConfig.Messagery.RabbitMQ != nil {
-				return fmt.Sprintf("amqp://%s:%s@%s:%d/",
-					dbConfig.Messagery.RabbitMQ.Username,
-					dbConfig.Messagery.RabbitMQ.Password,
-					dbConfig.Messagery.RabbitMQ.Host,
-					dbConfig.Messagery.RabbitMQ.Port,
-				)
-			}
+	var host = ""
+	var port = ""
+	var username = ""
+	var password = ""
+	if dbConfig.Messagery.RabbitMQ.Host != "" {
+		host = dbConfig.Messagery.RabbitMQ.Host
+	} else {
+		host = "localhost"
+	}
+	if dbConfig.Messagery.RabbitMQ.Port != "" {
+		strPort, ok := dbConfig.Messagery.RabbitMQ.Port.(string)
+		if ok {
+			port = strPort
+		} else {
+			gl.Log("error", "RabbitMQ port is not a string")
+			port = "5672"
 		}
+	} else {
+		port = "5672"
+	}
+	if dbConfig.Messagery.RabbitMQ.Username != "" {
+		username = dbConfig.Messagery.RabbitMQ.Username
+	} else {
+		username = "guest"
+	}
+	if dbConfig.Messagery.RabbitMQ.Password != "" {
+		password = dbConfig.Messagery.RabbitMQ.Password
+	} else {
+		password = "guest"
+	}
+
+	if host != "" && port != "" && username != "" && password != "" {
+		return fmt.Sprintf("amqp://%s:%se@%s:%s/", username, password, host, port)
 	}
 	return ""
 }
