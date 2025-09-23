@@ -2,12 +2,15 @@
 package system
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	services "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
 	"gorm.io/gorm"
@@ -16,27 +19,41 @@ import (
 )
 
 var (
-	gl      = logger.GetLogger[l.Logger](nil)
-	sysServ services.ISystemService
+	gl          = logger.GetLogger[l.Logger](nil)
+	sysServ     services.ISystemService
+	mcpRegistry mcp.Registry
 )
 
 type MetricsController struct {
 	dbConn        *gorm.DB
 	mcpState      *hooks.Bitstate[uint64, system.SystemDomain]
 	systemService services.ISystemService
+	registry      mcp.Registry
+	apiWrapper    *types.APIWrapper[interface{}]
 }
 
 func NewMetricsController(db *gorm.DB) *MetricsController {
 	if db == nil {
-		// gl.Log("error", "Database connection is nil")
 		gl.Log("warn", "Database connection is nil")
-		// return nil
 	}
 
-	// We allow the system service to be nil, as it can be set later.
+	// Initialize registry if not already done
+	if mcpRegistry == nil {
+		mcpRegistry = mcp.NewRegistry()
+		gl.Log("info", "Initialized new MCP registry")
+
+		// Register built-in tools
+		err := mcp.RegisterBuiltinTools(mcpRegistry)
+		if err != nil {
+			gl.Log("error", "Failed to register built-in tools", err)
+		}
+	}
+
 	return &MetricsController{
 		dbConn:        db,
 		systemService: sysServ,
+		registry:      mcpRegistry,
+		apiWrapper:    types.NewAPIWrapper[interface{}](),
 	}
 }
 
@@ -175,4 +192,56 @@ func (c *MetricsController) HandleAnalyzeMessage(ctx *gin.Context) {
 func (c *MetricsController) HandleCreateTask(ctx *gin.Context) {
 	// Placeholder for task creation logic
 	ctx.JSON(http.StatusOK, gin.H{"message": "HandleCreateTask endpoint not implemented"})
+}
+
+// ListTools returns all registered MCP tools
+func (c *MetricsController) ListTools(ctx *gin.Context) {
+	if c.registry == nil {
+		gl.Log("error", "MCP registry is not initialized")
+		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("registry not available"))
+		return
+	}
+
+	tools := c.registry.List()
+
+	c.apiWrapper.JSONResponseWithSuccess(ctx, "tools listed successfully", "", map[string]interface{}{
+		"tools": tools,
+		"count": len(tools),
+	})
+}
+
+// ExecTool executes an MCP tool by name
+func (c *MetricsController) ExecTool(ctx *gin.Context) {
+	if c.registry == nil {
+		gl.Log("error", "MCP registry is not initialized")
+		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("registry not available"))
+		return
+	}
+
+	var request struct {
+		Tool string                 `json:"tool" binding:"required"`
+		Args map[string]interface{} `json:"args"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		gl.Log("error", "Failed to bind exec request", err)
+		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
+		return
+	}
+
+	if request.Args == nil {
+		request.Args = make(map[string]interface{})
+	}
+
+	result, err := c.registry.Exec(ctx.Request.Context(), request.Tool, request.Args)
+	if err != nil {
+		gl.Log("error", "Tool execution failed", request.Tool, err)
+		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("tool execution failed: %w", err))
+		return
+	}
+
+	c.apiWrapper.JSONResponseWithSuccess(ctx, "tool executed successfully", "", map[string]interface{}{
+		"tool":   request.Tool,
+		"result": result,
+	})
 }

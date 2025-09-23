@@ -43,6 +43,9 @@ func NewMCPSystemRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	routesMap["GetGeneralSystemMetrics"] = proto.NewRoute(http.MethodGet, "/api/v1/mcp/system/metrics", "application/json", mcpSystemController.GetGeneralSystemMetrics /* middlewaresMap */, nil, dbService, secureProperties, nil)
 	routesMap["RegisterRoutes"] = proto.NewRoute(http.MethodGet, "/api/v1/mcp/system/routes", "application/json", mcpSystemController.RegisterResources, nil, dbService, secureProperties, nil)
 	routesMap["RegisterTools"] = proto.NewRoute(http.MethodGet, "/api/v1/mcp/system/tools", "application/json", mcpSystemController.RegisterTools, nil, dbService, secureProperties, nil)
+	// New MCP Registry endpoints
+	routesMap["ListMCPTools"] = proto.NewRoute(http.MethodGet, "/mcp/tools", "application/json", mcpSystemController.ListTools, nil, dbService, secureProperties, nil)
+	routesMap["ExecMCPTool"] = proto.NewRoute(http.MethodPost, "/mcp/exec", "application/json", mcpSystemController.ExecTool, nil, dbService, secureProperties, nil)
 	routesMap["HandleAnalyzeMessage"] = proto.NewRoute(http.MethodPost, "/api/v1/mcp/system/analyze", "application/json", mcpSystemController.HandleAnalyzeMessage, nil, dbService, secureProperties, nil)
 	routesMap["HandleSendMessage"] = proto.NewRoute(http.MethodPost, "/api/v1/mcp/system/send-message", "application/json", mcpSystemController.SendMessage, nil, dbService, secureProperties, nil)
 	routesMap["HandleCreateTask"] = proto.NewRoute(http.MethodPost, "/api/v1/mcp/system/create-task", "application/json", mcpSystemController.HandleCreateTask, nil, dbService, secureProperties, nil)
