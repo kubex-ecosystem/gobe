@@ -9,14 +9,14 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/hyperledger/fabric-contract-api-go v1.2.2
-	github.com/kubex-ecosystem/gdbase v1.2.7
+	github.com/kubex-ecosystem/gdbase v1.2.8
 	github.com/kubex-ecosystem/logz v1.5.0
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/shirou/gopsutil/v4 v4.25.8
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	github.com/streadway/amqp v1.1.0
-	github.com/subosito/gotenv v1.6.0
+	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	github.com/zalando/go-keyring v0.2.6
@@ -182,6 +182,6 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
-// replace github.com/kubex-ecosystem/gdbase => ../gdbase
+replace github.com/kubex-ecosystem/gdbase => ../gdbase
 
 // replace github.com/kubex-ecosystem/ghbex => ../ghbex

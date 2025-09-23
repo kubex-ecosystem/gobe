@@ -6,17 +6,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	whk "github.com/kubex-ecosystem/gdbase/factory/models"
-	t "github.com/kubex-ecosystem/gdbase/types"
 	"github.com/kubex-ecosystem/gobe/internal/app/controllers/webhooks"
+
+	whk "github.com/kubex-ecosystem/gdbase/factory/models"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
 	l "github.com/kubex-ecosystem/logz"
 	"github.com/streadway/amqp"
 )
-
-type DBConfig = t.DBConfig
 
 // WebhookRoutes utiliza o padrão Route para registrar endpoints do Webhook Manager.
 type WebhookRoutes struct {
@@ -52,8 +51,7 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 		gl.Log("error", "Failed to get DBConfig from dbService")
 		return nil
 	}
-	url := getRabbitMQURL(dbConfig)
-	// url = "amqp://192.168.100.61:5672/" // Remover após testes
+	url := msg.GetRabbitMQURL(dbConfig)
 	gl.Log("info", fmt.Sprintf("RabbitMQ URL: %s", url))
 	var rabbitMQConn *amqp.Connection
 	if url != "" {
@@ -86,42 +84,4 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 	routesMap["DeleteWebhookRoute"] = proto.NewRoute(http.MethodDelete, "/api/v1/webhooks/:id", "application/json", webhookController.DeleteWebhook, middlewaresMap, dbService, secureProperties, nil)
 
 	return routesMap
-}
-
-func getRabbitMQURL(dbConfig *DBConfig) string {
-	var host = ""
-	var port = ""
-	var username = ""
-	var password = ""
-	if dbConfig.Messagery.RabbitMQ.Host != "" {
-		host = dbConfig.Messagery.RabbitMQ.Host
-	} else {
-		host = "localhost"
-	}
-	if dbConfig.Messagery.RabbitMQ.Port != "" {
-		strPort, ok := dbConfig.Messagery.RabbitMQ.Port.(string)
-		if ok {
-			port = strPort
-		} else {
-			gl.Log("error", "RabbitMQ port is not a string")
-			port = "5672"
-		}
-	} else {
-		port = "5672"
-	}
-	if dbConfig.Messagery.RabbitMQ.Username != "" {
-		username = dbConfig.Messagery.RabbitMQ.Username
-	} else {
-		username = "guest"
-	}
-	if dbConfig.Messagery.RabbitMQ.Password != "" {
-		password = dbConfig.Messagery.RabbitMQ.Password
-	} else {
-		password = "guest"
-	}
-
-	if host != "" && port != "" && username != "" && password != "" {
-		return fmt.Sprintf("amqp://%s:%se@%s:%s/", username, password, host, port)
-	}
-	return ""
 }
