@@ -66,7 +66,7 @@ CMD_STR := $(strip $(firstword $(ARGUMENTS)))
 ARGS := $(filter-out $(strip $(CMD_STR)), $(ARGUMENTS))
 
 # Default target: help
-.DEFAULT_GOAL := help
+#.DEFAULT_GOAL := help
 
 # Build the binary using the install script.
 build:
@@ -92,40 +92,6 @@ clean:
 	@bash $(INSTALL_SCRIPT) clean $(ARGS)
 	$(shell exit 0)
 
-# Run tests.
-test:
-	@bash $(INSTALL_SCRIPT) test $(ARGS)
-	$(shell exit 0)
-
-optimize-images:
-	@bash $(INSTALL_SCRIPT) optimize-images $(ARGS)
-	$(shell exit 0)
-
-# Platform-specific targets (prevent wildcard capture)
-linux:
-	@echo "Process finished for platform: linux"
-
-amd64:
-	@echo "Process finished for architecture: amd64"
-
-windows:
-	@echo "Process finished for platform: windows"
-
-darwin:
-	@echo "Process finished for platform: darwin"
-
-arm64:
-	@echo "Process finished for architecture: arm64"
-
-armv6l:
-	@echo "Process finished for architecture: armv6l"
-
-386:
-	@echo "Process finished for architecture: 386"
-
-all:
-	@echo "Process finished for all platforms and architectures"
-
 build-docs:
 	@echo "Building documentation..."
 	@bash $(INSTALL_SCRIPT) build-docs $(ARGS)
@@ -134,19 +100,64 @@ build-docs:
 serve-docs:
 	@echo "Starting documentation server..."
 	@bash $(INSTALL_SCRIPT) serve-docs $(ARGS)
+	$(shell exit 0)
 
 pub-docs:
 	@echo "Publishing documentation..."
 	@bash $(INSTALL_SCRIPT) pub-docs $(ARGS)
 	$(shell exit 0)
 
+# Run tests.
+test:
+	@bash $(INSTALL_SCRIPT) test $(ARGS)
+	$(shell exit 0)
+
+validate:
+	@bash $(INSTALL_SCRIPT) validate $(ARGS)
+	$(shell exit 0)
+
+build-docker:
+	@bash $(INSTALL_SCRIPT) build-docker $(ARGS)
+	$(shell exit 0)
+
+# Platform-specific targets (prevent wildcard capture)
+linux:
+	@echo "Process finished for platform: linux"
+	$(shell exit 0)
+
+amd64:
+	@echo "Process finished for architecture: amd64"
+	$(shell exit 0)
+
+windows:
+	@echo "Process finished for platform: windows"
+	$(shell exit 0)
+
+darwin:
+	@echo "Process finished for platform: darwin"
+	$(shell exit 0)
+
+arm64:
+	@echo "Process finished for architecture: arm64"
+	$(shell exit 0)
+
+armv6l:
+	@echo "Process finished for architecture: armv6l"
+	$(shell exit 0)
+
+386:
+	@echo "Process finished for architecture: 386"
+	$(shell exit 0)
+
+all:
+	@echo "Process finished for all platforms and architectures"
+	$(shell exit 0)
+
 ## Run dynamic commands with arguments calling the install script.
 %:
 	@:
-	$(call log_info, Running command: $(CMD_STR))
-	$(call log_info, Args: $(ARGS))
 	@bash $(INSTALL_SCRIPT) $(CMD_STR) $(ARGS)
-	$(shell exit 0)
+		$(shell exit 0)
 
 # Display help message
 help:
