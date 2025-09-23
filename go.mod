@@ -182,6 +182,6 @@ require (
 	gorm.io/driver/sqlite v1.6.0 // indirect
 )
 
-replace github.com/kubex-ecosystem/gdbase => ../gdbase
+// replace github.com/kubex-ecosystem/gdbase => ../gdbase
 
 // replace github.com/kubex-ecosystem/ghbex => ../ghbex

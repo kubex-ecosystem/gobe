@@ -12,6 +12,8 @@ import (
 
 	t "github.com/kubex-ecosystem/gdbase/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+
+	crtSvc "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 )
 
 type DBConfig = t.DBConfig
@@ -139,11 +141,18 @@ func GetRabbitMQURL(dbConfig *DBConfig) string {
 	if dbConfig.Messagery.RabbitMQ.Password != "" {
 		password = dbConfig.Messagery.RabbitMQ.Password
 	} else {
-		password = "s3cret"
+		rabbitPassKey, rabbitPassErr := crtSvc.GetOrGenPasswordKeyringPass("rabbitmq")
+		if rabbitPassErr != nil {
+			gl.Log("error", "Skipping RabbitMQ setup due to error generating password")
+			gl.Log("debug", fmt.Sprintf("Error generating key: %v", rabbitPassErr))
+			goto postRabbit
+		}
+		password = string(rabbitPassKey)
 	}
 
 	if host != "" && port != "" && username != "" && password != "" {
 		return fmt.Sprintf("amqp://%s:%s@%s:%s/%s", username, password, host, port, "gobe")
 	}
+postRabbit:
 	return ""
 }
