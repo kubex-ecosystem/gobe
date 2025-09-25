@@ -2,7 +2,6 @@
 package analyzer
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"gorm.io/gorm"
 )
 
@@ -31,7 +30,7 @@ func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
 	}
 }
 
-// Repository Intelligence Analysis Types
+// RepositoryIntelligenceRequest represents a request to analyze a repository
 type RepositoryIntelligenceRequest struct {
 	RepoURL        string                 `json:"repo_url" binding:"required"`
 	AnalysisType   string                 `json:"analysis_type" binding:"required"`
@@ -229,10 +228,10 @@ func (ac *AnalyzerController) GetAnalysisStatus(c *gin.Context) {
 		Results: map[string]interface{}{
 			"scorecard_url": fmt.Sprintf("/api/v1/mcp/analyzer/results/%s/scorecard", jobID),
 			"summary": map[string]interface{}{
-				"chi_score":      85,
-				"dora_grade":     "B",
-				"bus_factor":     3,
-				"confidence":     0.92,
+				"chi_score":  85,
+				"dora_grade": "B",
+				"bus_factor": 3,
+				"confidence": 0.92,
 			},
 		},
 	}
@@ -324,8 +323,8 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":          "Invalid format",
-			"valid_formats":  []string{"scorecard", "dora", "chi", "community"},
+			"error":         "Invalid format",
+			"valid_formats": []string{"scorecard", "dora", "chi", "community"},
 		})
 	}
 }
@@ -473,11 +472,11 @@ func (ac *AnalyzerController) SendNotification(c *gin.Context) {
 		"priority", req.Priority)
 
 	response := map[string]interface{}{
-		"status":      "sent",
-		"type":        req.Type,
-		"recipients":  len(req.Recipients),
-		"message_id":  uuid.New().String(),
-		"sent_at":     time.Now(),
+		"status":     "sent",
+		"type":       req.Type,
+		"recipients": len(req.Recipients),
+		"message_id": uuid.New().String(),
+		"sent_at":    time.Now(),
 	}
 
 	c.JSON(http.StatusOK, response)
