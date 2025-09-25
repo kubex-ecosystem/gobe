@@ -14,6 +14,8 @@ import (
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
+	webhooksvc "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
+	messagery "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
 	"gorm.io/gorm"
 )
 
@@ -41,6 +43,8 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 
 	var gatewayService *gatewaysvc.Service
+	var webhookService *webhooksvc.WebhookService
+
 	if db != nil {
 		providersSvc := svc.NewProvidersService(models.NewProvidersRepo(db))
 		gw, err := gatewaysvc.NewService(providersSvc)
@@ -49,6 +53,10 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		} else {
 			gatewayService = gw
 		}
+
+		// Initialize webhook service with AMQP connection
+		amqp := messagery.NewAMQP()
+		webhookService = webhooksvc.NewWebhookService(amqp)
 	}
 
 	chatController := gatewayController.NewChatController(gatewayService)
@@ -57,7 +65,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	scorecardController := gatewayController.NewScorecardController()
 	healthController := gatewayController.NewHealthController(dbService, gatewayService)
 	lookAtniController := gatewayController.NewLookAtniController()
-	webhookController := gatewayController.NewWebhookController()
+	webhookController := gatewayController.NewWebhookController(webhookService)
 	schedulerController := gatewayController.NewSchedulerController()
 
 	webRoot := ""
@@ -100,6 +108,9 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	routes["Webhooks"] = proto.NewRoute(http.MethodPost, "/v1/webhooks", "application/json", webhookController.Handle, middlewaresMap, dbService, secure(true), nil)
 	routes["WebhooksHealth"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/health", "application/json", webhookController.Health, middlewaresMap, dbService, secure(true), nil)
+	routes["WebhooksEventsList"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/events", "application/json", webhookController.ListEvents, middlewaresMap, dbService, secure(true), nil)
+	routes["WebhooksEventsGet"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/events/:id", "application/json", webhookController.GetEvent, middlewaresMap, dbService, secure(true), nil)
+	routes["WebhooksRetry"] = proto.NewRoute(http.MethodPost, "/v1/webhooks/retry", "application/json", webhookController.RetryFailedEvents, middlewaresMap, dbService, secure(true), nil)
 
 	routes["SchedulerStats"] = proto.NewRoute(http.MethodGet, "/health/scheduler/stats", "application/json", schedulerController.Stats, middlewaresMap, dbService, secure(true), nil)
 	routes["SchedulerForce"] = proto.NewRoute(http.MethodPost, "/health/scheduler/force", "application/json", schedulerController.ForceRun, middlewaresMap, dbService, secure(true), nil)
@@ -124,6 +135,9 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 		routes["Webhooks"] = proto.NewRoute(http.MethodPost, "/v1/webhooks", "application/json", wrap(), middlewaresMap, dbService, secure(true), nil)
 		routes["WebhooksHealth"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/health", "application/json", wrap(), middlewaresMap, dbService, secure(true), nil)
+		routes["WebhooksEventsList"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/events", "application/json", wrap(), middlewaresMap, dbService, secure(true), nil)
+		routes["WebhooksEventsGet"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/events/:id", "application/json", wrap(), middlewaresMap, dbService, secure(true), nil)
+		routes["WebhooksRetry"] = proto.NewRoute(http.MethodPost, "/v1/webhooks/retry", "application/json", wrap(), middlewaresMap, dbService, secure(true), nil)
 		routes["SchedulerStats"] = proto.NewRoute(http.MethodGet, "/health/scheduler/stats", "application/json", wrap(), middlewaresMap, dbService, secure(true), nil)
 		routes["SchedulerForce"] = proto.NewRoute(http.MethodPost, "/health/scheduler/force", "application/json", wrap(), middlewaresMap, dbService, secure(true), nil)
 	}

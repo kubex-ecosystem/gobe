@@ -16,9 +16,9 @@ func New(cfg Config) (gateway.Provider, error) {
 	case "groq":
 		return newGroqProvider(cfg)
 	case "anthropic":
-		return nil, fmt.Errorf("anthropic provider not yet implemented")
+		return newAnthropicProvider(cfg)
 	case "gemini":
-		return nil, fmt.Errorf("gemini provider not yet implemented")
+		return newGeminiProvider(cfg)
 	default:
 		return nil, fmt.Errorf("unsupported provider type: %s", cfg.Type)
 	}

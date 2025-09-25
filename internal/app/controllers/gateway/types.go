@@ -144,6 +144,36 @@ type WebhookAckResponse struct {
 
 // WebhookHealthResponse descreve a resposta de health check do módulo de webhooks.
 type WebhookHealthResponse struct {
-	Status    string    `json:"status"`
-	Timestamp time.Time `json:"timestamp"`
+	Status    string                 `json:"status"`
+	Timestamp time.Time              `json:"timestamp"`
+	Stats     map[string]interface{} `json:"stats,omitempty"`
+}
+
+// WebhookEvent represents a webhook event for API responses
+type WebhookEvent struct {
+	ID        string                 `json:"id"`
+	Source    string                 `json:"source"`
+	EventType string                 `json:"event_type"`
+	Payload   map[string]interface{} `json:"payload"`
+	Headers   map[string]string      `json:"headers"`
+	Timestamp time.Time              `json:"timestamp"`
+	Processed bool                   `json:"processed"`
+	Status    string                 `json:"status"`
+	Error     string                 `json:"error,omitempty"`
+}
+
+// WebhookEventsResponse lists webhook events with pagination
+type WebhookEventsResponse struct {
+	Events []interface{} `json:"events"`
+	Total  int           `json:"total"`
+	Limit  int           `json:"limit"`
+	Offset int           `json:"offset"`
+}
+
+// WebhookRetryResponse confirms webhook retry operation
+type WebhookRetryResponse struct {
+	Status       string    `json:"status"`
+	RetriedCount int       `json:"retried_count"`
+	Timestamp    time.Time `json:"timestamp"`
+	Message      string    `json:"message"`
 }
