@@ -32,6 +32,10 @@ func startCommand() *cobra.Command {
 		Long:        longDesc,
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
+			if debug {
+				gl.SetDebug(true)
+			}
+
 			gbm, gbmErr := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, l.GetLogger("GoBE"), debug, releaseMode)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
@@ -47,7 +51,7 @@ func startCommand() *cobra.Command {
 	}
 
 	startCmd.Flags().StringVarP(&name, "name", "n", "GoBE", "Name of the process")
-	startCmd.Flags().StringVarP(&port, "port", "p", ":8666", "Port to listen on")
+	startCmd.Flags().StringVarP(&port, "port", "p", "8666", "Port to listen on")
 	startCmd.Flags().StringVarP(&bind, "bind", "b", "0.0.0.0", "Bind address")
 	startCmd.Flags().StringVarP(&logFile, "log-file", "l", "", "Log file path")
 	startCmd.Flags().StringVarP(&configFile, "config-file", "c", "", "Configuration file path")

@@ -1,28 +1,19 @@
 // Package swagger provides the Swagger documentation for the GoBE API.
-// @title           GoBE API
-// @version         1.0
-// @description     GoBE is a powerful backend, MCP, and API server with a comprehensive route system following GoBE patterns.
+// @title       GoBE API
+// @version     0.2.1
+// @description Backend modular do ecossistema Kubex.
 // @termsOfService  https://github.com/kubex-ecosystem/gobe/terms
-
 // @contact.name   GoBE API Support
 // @contact.url    https://github.com/kubex-ecosystem/gobe
 // @contact.email  support@gobe.dev
-
 // @license.name  MIT
 // @license.url   https://opensource.org/licenses/MIT
-
 // @host      localhost:8080
-// @BasePath  /swagger
-
-// @securityDefinitions.apikey ApiKeyAuth
+// @BasePath  /
+// @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-// @description Type "Bearer" followed by a space and JWT token.
-
-// @securityDefinitions.oauth2 OAuth2
-// @tokenUrl https://localhost:8080/api/v1/sign-in
-// @security OAuth2
-
+// @description Forneça "Bearer <token>"
 // @externalDocs.description  OpenAPI
 // @externalDocs.url          https://swagger.io/resources/open-api/
 // Package swagger provides the Swagger documentation for the GoBE API.

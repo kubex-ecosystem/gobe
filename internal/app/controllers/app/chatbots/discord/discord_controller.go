@@ -46,21 +46,94 @@ type DiscordController struct {
 	upgrader       websocket.Upgrader
 }
 
-func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub) *DiscordController {
+type (
+	// ErrorResponse padroniza respostas de erro para endpoints Discord.
+	ErrorResponse = t.ErrorResponse
+)
+
+// DiscordWebhookEvent descreve o payload básico recebido via webhook.
+type DiscordWebhookEvent map[string]any
+
+// DiscordInteractionEvent descreve interações enviadas pela API do Discord.
+type DiscordInteractionEvent map[string]any
+
+// DiscordOAuthTokenResponse documenta o retorno mock do fluxo OAuth2.
+type DiscordOAuthTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	Scope        string `json:"scope"`
+}
+
+// DiscordOAuthAuthorizeResponse registra payloads informativos da autorização.
+type DiscordOAuthAuthorizeResponse struct {
+	Message     string `json:"message"`
+	Code        string `json:"code,omitempty"`
+	State       string `json:"state,omitempty"`
+	ClientID    string `json:"client_id,omitempty"`
+	RedirectURI string `json:"redirect_uri,omitempty"`
+	Scope       string `json:"scope,omitempty"`
+}
+
+// DiscordApprovalList lista solicitações pendentes.
+type DiscordApprovalList struct {
+	Approvals []interface{} `json:"approvals"`
+}
+
+// DiscordActionResponse descreve respostas de aprovação/rejeição.
+type DiscordActionResponse struct {
+	Message   string `json:"message"`
+	RequestID string `json:"request_id,omitempty"`
+}
+
+// DiscordTestMessageRequest representa o payload de teste.
+type DiscordTestMessageRequest struct {
+	Content  string `json:"content"`
+	UserID   string `json:"user_id,omitempty"`
+	Username string `json:"username,omitempty"`
+}
+
+// DiscordTestResponse agrega dados retornados pelo teste.
+type DiscordTestResponse struct {
+	Message string `json:"message"`
+	Content string `json:"content"`
+	User    string `json:"user"`
+}
+
+// DiscordWebhookAck confirma recebimento de eventos.
+type DiscordWebhookAck struct {
+	Message string `json:"message"`
+}
+
+// DiscordPingResponse resume o status dos pings.
+type DiscordPingResponse struct {
+	Message string `json:"message"`
+}
+
+// DiscordInteractionResponse representa a resposta padrão do Discord.
+type DiscordInteractionResponse struct {
+	Type int                    `json:"type"`
+	Data map[string]interface{} `json:"data,omitempty"`
+}
+
+func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub, config *config.Config) *DiscordController {
 	return &DiscordController{
 		discordService: fscm.NewDiscordService(fscm.NewDiscordRepo(db)),
 		APIWrapper:     t.NewAPIWrapper[fscm.DiscordModel](),
 		hub:            hub,
+		config:         config,
 	}
 }
 
-// @Summary Discord App Handler
-// @Description Handles Discord Application/Activity requests
-// @Tags discord
-// @Accept html
-// @Produce html
-// @Success 200 {string} HTML page for Discord Application
-// @Router /discord [get]
+// HandleDiscordApp serve a página HTML da activity.
+//
+// @Summary     Servir activity Discord
+// @Description Entrega o bundle HTML da activity Discord. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     html
+// @Success     200 {string} string "HTML da activity"
+// @Router      /api/v1/discord [get]
 func (dc *DiscordController) HandleDiscordApp(c *gin.Context) {
 	gl.Log("info", "🎮 Discord App request received")
 
@@ -104,14 +177,16 @@ func (dc *DiscordController) HandleDiscordApp(c *gin.Context) {
 	// c.String(http.StatusOK, html)
 }
 
-// @Summary Discord OAuth2 Authorization
-// @Schemes http https
-// @Description Initiates the OAuth2 authorization flow for Discord
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 200 {string} Authorization URL
-// @Router /discord/authorize [get]
+// HandleDiscordOAuth2Authorize gerencia o fluxo de autorização Discord OAuth2.
+//
+// @Summary     Iniciar OAuth2 Discord
+// @Description Controla respostas HTML/JSON para autorizações OAuth2 do Discord. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     html
+// @Produce     json
+// @Success     200 {object} DiscordOAuthAuthorizeResponse
+// @Router      /api/v1/discord/oauth2/authorize [get]
+// @Router      /api/v1/discord/oauth2/authorize [post]
 func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	gl.Log("info", "🔐 Discord OAuth2 authorize request received")
 
@@ -181,10 +256,10 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 
 		// In a real app, you'd exchange this code for a token
 		// For now, we'll just return success
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Authorization successful",
-			"code":    code,
-			"state":   state,
+		c.JSON(http.StatusOK, DiscordOAuthAuthorizeResponse{
+			Message: "Authorization successful",
+			Code:    code,
+			State:   state,
 		})
 		return
 	}
@@ -202,25 +277,28 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	gl.Log("info", fmt.Sprintf("  scope: %s", scope))
 
 	// Return authorization page or redirect to Discord
-	c.JSON(http.StatusOK, gin.H{
-		"message":      "OAuth2 authorization endpoint",
-		"client_id":    clientID,
-		"redirect_uri": redirectURI,
-		"scope":        scope,
+	c.JSON(http.StatusOK, DiscordOAuthAuthorizeResponse{
+		Message:     "OAuth2 authorization endpoint",
+		ClientID:    clientID,
+		RedirectURI: redirectURI,
+		Scope:       scope,
 	})
 }
 
-// @Summary WebSocket connection
-// @Description Upgrades the HTTP connection to a WebSocket connection
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 101 {string} WebSocket connection established
-// @Router /discord/socket [get]
+// HandleWebSocket atualiza a conexão HTTP para WebSocket.
+//
+// @Summary     Abrir WebSocket Discord
+// @Description Estabelece canal WebSocket com o hub MCP para eventos Discord. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     json
+// @Success     101 {string} string "WebSocket connection established"
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/discord/websocket [get]
 func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 	conn, err := dc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("WebSocket upgrade error: %v", err))
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "websocket upgrade failed"})
 		return
 	}
 
@@ -236,76 +314,89 @@ func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 	gl.Log("info", fmt.Sprintf("WebSocket client connected: %s", client.ID))
 }
 
-// @Summary Get pending approvals
-// @Description Retrieves a list of pending approval requests
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 200 {array} string "Pending approvals"
-// @Router /discord/approvals [get]
+// GetPendingApprovals retorna solicitações aguardando aprovação manual.
+//
+// @Summary     Listar aprovações pendentes
+// @Description Retorna solicitações aguardando aprovação manual. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     json
+// @Success     200 {object} DiscordApprovalList
+// @Router      /api/v1/discord/approvals [post]
+// @Router      /api/v1/discord/interactions/pending [post]
 func (dc *DiscordController) GetPendingApprovals(c *gin.Context) {
 	// This would need to be implemented based on your approval manager interface
-	c.JSON(http.StatusOK, gin.H{
-		"approvals": []interface{}{},
-	})
+	c.JSON(http.StatusOK, DiscordApprovalList{Approvals: []interface{}{}})
 }
 
-// @Summary Approve request
-// @Description Approves a pending approval request
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Param id path string true "Request ID"
-// @Success 200 {string} Request approved
-// @Router /discord/approvals/{id}/approve [post]
+// ApproveRequest confirma manualmente uma solicitação pendente.
+//
+// @Summary     Aprovar solicitação Discord
+// @Description Confirma solicitações pendentes para liberar ações no hub. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     json
+// @Param       id query string false "ID da solicitação"
+// @Success     200 {object} DiscordActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Router      /api/v1/discord/approve [post]
 func (dc *DiscordController) ApproveRequest(c *gin.Context) {
 	requestID := c.Param("id")
+	if requestID == "" {
+		requestID = c.Query("id")
+	}
+	if requestID == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "missing request id"})
+		return
+	}
 
 	// Mock approval - implement with your approval manager
 	gl.Log("info", fmt.Sprintf("Approving request: %s", requestID))
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":    "Request approved",
-		"request_id": requestID,
-	})
+	c.JSON(http.StatusOK, DiscordActionResponse{Message: "Request approved", RequestID: requestID})
 }
 
-// @Summary Reject request
-// @Description Rejects a pending approval request
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Param id path string true "Request ID"
-// @Success 200 {string} Request rejected
-// @Router /discord/approvals/{id}/reject [post]
+// RejectRequest registra a rejeição de uma solicitação pendente.
+//
+// @Summary     Rejeitar solicitação Discord
+// @Description Marca a solicitação como rejeitada no fluxo de aprovação. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     json
+// @Param       id query string false "ID da solicitação"
+// @Success     200 {object} DiscordActionResponse
+// @Failure     400 {object} ErrorResponse
+// @Router      /api/v1/discord/reject [post]
 func (dc *DiscordController) RejectRequest(c *gin.Context) {
 	requestID := c.Param("id")
+	if requestID == "" {
+		requestID = c.Query("id")
+	}
+	if requestID == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "missing request id"})
+		return
+	}
 
 	// Mock rejection - implement with your approval manager
 	gl.Log("info", fmt.Sprintf("Rejecting request: %s", requestID))
 
-	c.JSON(http.StatusOK, gin.H{
-		"message":    "Request rejected",
-		"request_id": requestID,
-	})
+	c.JSON(http.StatusOK, DiscordActionResponse{Message: "Request rejected", RequestID: requestID})
 }
 
-// @Summary Handle test message
-// @Description Handles a test message from the user
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 200 {string} Test message processed successfully
-// @Router /discord/test [post]
+// HandleTestMessage injeta mensagens de teste no hub Discord.
+//
+// @Summary     Simular mensagem Discord
+// @Description Envia uma mensagem de teste para validar o pipeline MCP. [Em desenvolvimento]
+// @Tags        discord beta
+// @Accept      json
+// @Produce     json
+// @Param       payload body DiscordTestMessageRequest true "Conteúdo da mensagem"
+// @Success     200 {object} DiscordTestResponse
+// @Failure     400 {object} ErrorResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/discord/test [post]
 func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
-	var testMsg struct {
-		Content  string `json:"content"`
-		UserID   string `json:"user_id"`
-		Username string `json:"username"`
-	}
+	var testMsg DiscordTestMessageRequest
 
 	if err := c.ShouldBindJSON(&testMsg); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid JSON"})
 		return
 	}
 
@@ -332,34 +423,35 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 	err := dc.hub.ProcessMessageWithLLM(ctx, mockMessage)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Error processing test message: %v", err))
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "processing failed",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "processing failed"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Test message processed successfully",
-		"content": testMsg.Content,
-		"user":    testMsg.Username,
+	c.JSON(http.StatusOK, DiscordTestResponse{
+		Message: "Test message processed successfully",
+		Content: testMsg.Content,
+		User:    testMsg.Username,
 	})
 }
 
-// @Summary Handle Discord OAuth2 token
-// @Description Handles the OAuth2 token exchange for Discord
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 200 {string} Token exchanged successfully
-// @Router /discord/oauth2/token [post]
+// HandleDiscordOAuth2Token executa a troca de token OAuth2.
+//
+// @Summary     Trocar token OAuth2 Discord
+// @Description Realiza a troca do código por token em ambiente de testes. [Em desenvolvimento]
+// @Tags        discord beta
+// @Accept      x-www-form-urlencoded
+// @Produce     json
+// @Success     200 {object} DiscordOAuthTokenResponse
+// @Failure     400 {object} ErrorResponse
+// @Router      /api/v1/discord/oauth2/token [get]
+// @Router      /api/v1/discord/oauth2/token [post]
 func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
 	gl.Log("info", "🎫 Discord OAuth2 token request received")
 
 	// Parse form data
 	if err := c.Request.ParseForm(); err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Error parsing form: %v", err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_request"})
 		return
 	}
 
@@ -378,22 +470,28 @@ func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
 
 	// In a real app, you'd validate these and return a real token
 	// For now, return a mock token response
-	c.JSON(http.StatusOK, gin.H{
-		"access_token":  "mock_access_token",
-		"token_type":    "Bearer",
-		"expires_in":    3600,
-		"refresh_token": "mock_refresh_token",
-		"scope":         "bot identify",
+	c.JSON(http.StatusOK, DiscordOAuthTokenResponse{
+		AccessToken:  "mock_access_token",
+		TokenType:    "Bearer",
+		ExpiresIn:    3600,
+		RefreshToken: "mock_refresh_token",
+		Scope:        "bot identify",
 	})
 }
 
-// @Summary Handle Discord webhook
-// @Description Handles incoming webhook events from Discord
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 200 {string} Webhook processed successfully
-// @Router /discord/webhook/{webhookId}/{webhookToken} [post]
+// HandleDiscordWebhook recebe eventos do webhook Discord.
+//
+// @Summary     Receber webhook Discord
+// @Description Processa eventos recebidos do webhook oficial do Discord. [Em desenvolvimento]
+// @Tags        discord beta
+// @Accept      json
+// @Produce     json
+// @Param       webhookId    path string              true "ID do webhook"
+// @Param       webhookToken path string              true "Token do webhook"
+// @Param       payload      body DiscordWebhookEvent true "Evento do Discord"
+// @Success     200 {object} DiscordWebhookAck
+// @Failure     400 {object} ErrorResponse
+// @Router      /api/v1/discord/webhook/{webhookId}/{webhookToken} [post]
 func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	webhookID := c.Param("webhookId")
 	webhookToken := c.Param("webhookToken")
@@ -406,7 +504,7 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Error reading webhook body: %v", err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_body"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
 		return
 	}
 
@@ -414,7 +512,7 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	var webhookData map[string]interface{}
 	if err := json.Unmarshal(body, &webhookData); err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Error parsing webhook JSON: %v", err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_json"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_json"})
 		return
 	}
 
@@ -423,16 +521,20 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	// Process webhook (you can integrate this with your hub)
 	// dc.hub.ProcessWebhook(webhookData)
 
-	c.JSON(http.StatusOK, gin.H{"message": "webhook received"})
+	c.JSON(http.StatusOK, DiscordWebhookAck{Message: "webhook received"})
 }
 
-// @Summary Handle Discord interactions
-// @Description Handles interactions from Discord
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 200 {string} Interaction processed successfully
-// @Router /discord/interactions [post]
+// HandleDiscordInteractions processa interações recebidas do Discord.
+//
+// @Summary     Processar interação Discord
+// @Description Responde PINGs e interações de componentes enviados pelo Discord. [Em desenvolvimento]
+// @Tags        discord beta
+// @Accept      json
+// @Produce     json
+// @Param       payload body DiscordInteractionEvent true "Interação recebida"
+// @Success     200 {object} DiscordInteractionResponse
+// @Failure     400 {object} ErrorResponse
+// @Router      /api/v1/discord/interactions [post]
 func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	gl.Log("info", "⚡ Discord interaction received")
 
@@ -448,7 +550,7 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Error reading interaction body: %v", err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_body"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
 		return
 	}
 
@@ -456,7 +558,7 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	var interaction map[string]interface{}
 	if err := json.Unmarshal(body, &interaction); err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Error parsing interaction JSON: %v", err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_json"})
+		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_json"})
 		return
 	}
 
@@ -465,14 +567,14 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	// Handle ping interactions (Discord requires this)
 	if interactionType, ok := interaction["type"].(float64); ok && interactionType == 1 {
 		gl.Log("info", "🏓 Ping interaction - responding with pong")
-		c.JSON(http.StatusOK, gin.H{"type": 1})
+		c.JSON(http.StatusOK, DiscordInteractionResponse{Type: 1})
 		return
 	}
 
 	// Handle other interactions
-	c.JSON(http.StatusOK, gin.H{
-		"type": 4, // CHANNEL_MESSAGE_WITH_SOURCE
-		"data": gin.H{
+	c.JSON(http.StatusOK, DiscordInteractionResponse{
+		Type: 4, // CHANNEL_MESSAGE_WITH_SOURCE
+		Data: map[string]interface{}{
 			"content": "Hello from Discord MCP Hub! 🤖",
 		},
 	})
@@ -522,40 +624,61 @@ func (dc *DiscordController) InitiateBotMCP() {
 	}()
 }
 
-// @Summary Ping Discord adapter
-// @Description Pings the Discord adapter to check its status
-// @Tags discord
-// @Accept json
-// @Produce json
-// @Success 200 {string} Discord adapter pinged successfully
-// @Router /discord/ping [get]
+// PingDiscord verifica o estado do hub conectado.
+//
+// @Summary     Ping hub Discord
+// @Description Checa se o hub MCP em execução está respondendo. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     json
+// @Success     200 {object} DiscordPingResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/discord/ping [get]
 func (dc *DiscordController) PingDiscord(c *gin.Context) {
 	hd := dc.hub
 	if hd == nil {
 		gl.Log("error", "Failed to ping Discord adapter")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to ping Discord adapter"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to ping Discord adapter"})
 		return
 	}
 	gl.Log("info", "Discord adapter pinged successfully")
-	c.JSON(http.StatusOK, gin.H{"message": "Discord adapter pinged successfully"})
+	c.JSON(http.StatusOK, DiscordPingResponse{Message: "Discord adapter pinged successfully"})
 }
 
+// PingDiscordAdapter dispara ping ativo direto ao Discord.
+//
+// @Summary     Ping ativo Discord
+// @Description Realiza ping utilizando o adaptador direto do Discord. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     json
+// @Param       msg query string false "Mensagem customizada"
+// @Success     200 {object} DiscordPingResponse
+// @Failure     500 {object} ErrorResponse
+// @Router      /api/v1/discord/ping [post]
 func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
-	config, err := config.Load("./")
-	if err != nil {
-		gl.Log("error", "Failed to load config for Discord adapter", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to load config"})
-		return
+	var cfg *config.Config
+	var err error
+	if dc.config != nil {
+		cfg = dc.config
+	} else {
+		cfg, err = config.Load[*config.Config]("./", "discord_config")
+		if err != nil {
+			gl.Log("error", "Failed to load config for Discord adapter", err)
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to load config"})
+			return
+		}
 	}
 
-	adapter, adapterErr := discord.NewAdapter(config.Discord)
+	adapter, adapterErr := discord.NewAdapter(cfg.Discord)
 	if adapterErr != nil {
 		gl.Log("error", "Failed to create Discord adapter", adapterErr)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create Discord adapter"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to create Discord adapter"})
 		return
 	}
 
 	msg := c.GetString("msg")
+	if msg == "" {
+		msg = c.Query("msg")
+	}
 	if msg == "" {
 		msg = "Hello from Discord MCP Hub!"
 	}
@@ -563,9 +686,9 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 	err = adapter.PingDiscord(msg)
 	if err != nil {
 		gl.Log("error", "Failed to ping Discord", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to ping Discord"})
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to ping Discord"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Discord is reachable"})
+	c.JSON(http.StatusOK, DiscordPingResponse{Message: "Discord is reachable"})
 
 }

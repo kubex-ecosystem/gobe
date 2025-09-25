@@ -28,9 +28,12 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to get DB for TelegramRoutes", err)
 		return nil
 	}
-	cfg, err := config.Load("./")
-	if err != nil {
-		gl.Log("error", "Failed to load config for TelegramRoutes", err)
+	cfg, configErr := config.Load[*config.Config](
+		rtl.GetConfigPath(),
+		"main_config",
+	)
+	if configErr != nil {
+		gl.Log("error", "Failed to load config for TelegramRoutes", configErr)
 		return nil
 	}
 	svc := telegram.NewService(cfg.Integrations.Telegram)

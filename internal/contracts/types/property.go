@@ -92,8 +92,10 @@ func (p *Property[T]) GetLogger() l.Logger {
 
 // Serialize serializes the ProcessInput instance to the specified format.
 func (p *Property[T]) Serialize(format, filePath string) ([]byte, error) {
+	var v any
 	value := p.GetValue()
-	mapper := NewMapper[T](&value, filePath)
+	v = &value
+	mapper := NewMapper[any](&v, filePath)
 	return mapper.Serialize(format)
 }
 

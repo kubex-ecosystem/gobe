@@ -22,8 +22,10 @@ import (
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
+	cfg "github.com/kubex-ecosystem/gobe/internal/config"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	"github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
 
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
@@ -121,6 +123,10 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		requestWindow:   t.RequestWindow,
 		requestLimit:    t.RequestLimit,
 		requestsTracers: make(map[string]ci.IRequestsTracer),
+	}
+
+	if err := cfg.BootstrapMainConfig(gbm.configFile); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
 	}
 
 	var err error
@@ -292,7 +298,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	bind := bindT.GetValue()
 	if !reflect.ValueOf(port).IsValid() {
 		gl.Log("warn", "No port specified, using default port 8666")
-		port = ":8666"
+		port = "8666"
 		portT.SetValue(&port)
 	}
 	if !reflect.ValueOf(bind).IsValid() {
@@ -303,12 +309,21 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	addressT := g.Properties["address"].(*t.Property[string])
 	address := addressT.GetValue()
 	if !reflect.ValueOf(address).IsValid() {
-		gl.Log("warn", "No address specified, using default address %s", net.JoinHostPort(bind, port))
 		address = net.JoinHostPort(bind, port)
+		gl.Log("warn", "No address specified, using default address %s", address)
 		addressT.SetValue(&address)
 	}
 
-	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "yaml", bind, port)
+	if g.configFile == "" {
+		var err error
+		g.configFile, err = utils.GetDefaultConfigPath()
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("Error getting default config path: %v", err))
+			return nil, err
+		}
+	}
+
+	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "json", bind, port)
 	if _, err := os.Stat(g.configFile); err != nil {
 		if os.IsNotExist(err) {
 			if err := ut.EnsureDir(filepath.Dir(g.configFile), 0644, []string{}); err != nil {
@@ -320,7 +335,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 				return nil, err
 			}
 			mapper := t.NewMapper(gobeminConfig, g.configFile)
-			mapper.SerializeToFile("yaml")
+			mapper.SerializeToFile("json")
 		} else {
 			gl.Log("error", fmt.Sprintf("Error reading config file: %v", err))
 			return nil, err
@@ -346,15 +361,18 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	rateLimitLimit := gobeminConfig.RateLimitLimit
 	rateLimitBurst := gobeminConfig.RateLimitBurst
 	requestWindow := gobeminConfig.RequestWindow
-	if rateLimitLimit == 0 {
+	if rateLimitLimit <= 0 {
 		rateLimitLimit = cm.DefaultRateLimitLimit
 	}
-	if rateLimitBurst == 0 {
+	if rateLimitBurst <= 0 {
 		rateLimitBurst = cm.DefaultRateLimitBurst
 	}
-	if requestWindow == 0 {
-		requestWindow = cm.DefaultRequestWindow
+	if requestWindow <= 0 {
+		requestWindow = time.Duration(cm.DefaultRequestWindow) * time.Millisecond
 	}
+	gobeminConfig.SetRateLimitLimit(rateLimitLimit)
+	gobeminConfig.SetRateLimitBurst(rateLimitBurst)
+	gobeminConfig.SetRequestWindow(requestWindow)
 
 	dbServiceT := g.Properties["dbService"].(*t.Property[gdbf.DBService])
 	dbService := dbServiceT.GetValue()

@@ -18,6 +18,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type DiscordMCPHub struct {
@@ -27,6 +28,7 @@ type DiscordMCPHub struct {
 	approvalManager *approval.Manager
 	eventStream     *events.Stream
 	mcpServer       *mcp.Server
+	mcpRegistry     mcp.Registry // Registry MCP real
 	// zmqPublisher    *zmq.Publisher
 	gobeCtlClient *gobe_ctl.Client // ⚙️ K8s Integration
 	gobeClient    *gobe.Client     // 🔗 GoBE Integration
@@ -78,6 +80,15 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 		log.Printf("⚙️ gobe client initialized - Namespace: %s", cfg.GobeCtl.Namespace)
 	}
 
+	// 🔧 Initialize MCP Registry
+	mcpRegistry := mcp.NewRegistry()
+	// Register built-in tools
+	err = mcp.RegisterBuiltinTools(mcpRegistry)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register builtin MCP tools: %w", err)
+	}
+	gl.Log("info", "MCP Registry initialized for Discord Hub with builtin tools")
+
 	// 🏗️ Create Hub Instance First
 	hub := &DiscordMCPHub{
 		config:          cfg,
@@ -85,6 +96,7 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 		llmClient:       llmClient,
 		approvalManager: approvalManager,
 		eventStream:     eventStream,
+		mcpRegistry:     mcpRegistry,
 		// zmqPublisher:    zmqPublisher,
 		gobeCtlClient: gobeCtlClient,
 		gobeClient:    gobeClient,
@@ -590,10 +602,209 @@ func (h *DiscordMCPHub) processWithLLMForSystemCommand(ctx context.Context, msg 
 	return h.discordAdapter.SendMessage(msg.ChannelID, response)
 }
 
-func (h *DiscordMCPHub) executeMCPTool(ctx context.Context, toolName string, params map[string]interface{}) (string, error) {
-	// Implementação direta das automações (por enquanto)
-	// TODO: Integrar com MCP Tools quando forem públicos
+// mapDiscordToMCPTool maps Discord tool names to MCP tool names
+func (h *DiscordMCPHub) mapDiscordToMCPTool(discordTool string) string {
+	toolMappings := map[string]string{
+		"get_system_info":      "system.status",
+		"execute_shell_command": "shell.command",
+		"system_status":        "system.status",
+		"system_info":          "system.status",
+	}
 
+	if mcpTool, exists := toolMappings[discordTool]; exists {
+		return mcpTool
+	}
+
+	// If no mapping found, use the original name
+	return discordTool
+}
+
+// formatMCPResultForDiscord converts MCP tool results to Discord-friendly format
+func (h *DiscordMCPHub) formatMCPResultForDiscord(toolName string, result interface{}) (string, error) {
+	switch toolName {
+	case "system.status":
+		return h.formatSystemStatusForDiscord(result)
+	case "shell.command":
+		return h.formatShellCommandForDiscord(result)
+	default:
+		// Default JSON formatting with Discord code blocks
+		if result == nil {
+			return "✅ **Comando executado com sucesso**\n```\nResultado: vazio\n```", nil
+		}
+
+		// Try to format as JSON string
+		jsonBytes, err := json.MarshalIndent(result, "", "  ")
+		if err != nil {
+			return fmt.Sprintf("✅ **Resultado:**\n```\n%v\n```", result), nil
+		}
+
+		return fmt.Sprintf("✅ **Resultado:**\n```json\n%s\n```", string(jsonBytes)), nil
+	}
+}
+
+// formatSystemStatusForDiscord formats system status for Discord display
+func (h *DiscordMCPHub) formatSystemStatusForDiscord(result interface{}) (string, error) {
+	statusMap, ok := result.(map[string]interface{})
+	if !ok {
+		return "❌ **Erro:** Formato de resposta inválido", fmt.Errorf("invalid result format")
+	}
+
+	var response strings.Builder
+	response.WriteString("🖥️ **Status do Sistema**\n\n")
+
+	// Basic info
+	if status, ok := statusMap["status"].(string); ok {
+		emoji := "✅"
+		if status != "ok" {
+			emoji = "❌"
+		}
+		response.WriteString(fmt.Sprintf("%s **Status:** %s\n", emoji, strings.ToUpper(status)))
+	}
+
+	if version, ok := statusMap["version"].(string); ok {
+		response.WriteString(fmt.Sprintf("📦 **Versão:** %s\n", version))
+	}
+
+	if uptime, ok := statusMap["uptime"].(string); ok {
+		response.WriteString(fmt.Sprintf("⏰ **Uptime:** %s\n", uptime))
+	}
+
+	if hostname, ok := statusMap["hostname"].(string); ok {
+		response.WriteString(fmt.Sprintf("💻 **Host:** %s\n", hostname))
+	}
+
+	// Runtime info (if detailed)
+	if runtime, ok := statusMap["runtime"].(map[string]interface{}); ok {
+		response.WriteString("\n🔧 **Runtime Info:**\n")
+
+		if goVersion, ok := runtime["go_version"].(string); ok {
+			response.WriteString(fmt.Sprintf("• Go: %s\n", goVersion))
+		}
+
+		if goroutines, ok := runtime["goroutines"].(float64); ok {
+			response.WriteString(fmt.Sprintf("• Goroutines: %.0f\n", goroutines))
+		}
+
+		if memory, ok := runtime["memory"].(map[string]interface{}); ok {
+			if allocMB, ok := memory["alloc_mb"].(float64); ok {
+				response.WriteString(fmt.Sprintf("• Memória: %.1f MB\n", allocMB))
+			}
+		}
+	}
+
+	// Health checks
+	if health, ok := statusMap["health"].(map[string]interface{}); ok {
+		response.WriteString("\n🏥 **Health:**\n")
+
+		if healthStatus, ok := health["status"].(string); ok {
+			emoji := "✅"
+			if healthStatus != "healthy" {
+				emoji = "⚠️"
+			}
+			response.WriteString(fmt.Sprintf("%s Status: %s\n", emoji, healthStatus))
+		}
+
+		if checks, ok := health["checks"].(map[string]interface{}); ok {
+			for checkName, checkData := range checks {
+				if checkInfo, ok := checkData.(map[string]interface{}); ok {
+					if checkStatus, ok := checkInfo["status"].(string); ok {
+						emoji := "✅"
+						if checkStatus != "ok" {
+							emoji = "⚠️"
+						}
+						response.WriteString(fmt.Sprintf("%s %s: %s\n", emoji, strings.Title(checkName), checkStatus))
+					}
+				}
+			}
+		}
+	}
+
+	return response.String(), nil
+}
+
+// formatShellCommandForDiscord formats shell command results for Discord display
+func (h *DiscordMCPHub) formatShellCommandForDiscord(result interface{}) (string, error) {
+	commandMap, ok := result.(map[string]interface{})
+	if !ok {
+		return "❌ **Erro:** Formato de resposta inválido", fmt.Errorf("invalid result format")
+	}
+
+	var response strings.Builder
+
+	// Check status
+	status, _ := commandMap["status"].(string)
+	command, _ := commandMap["command"].(string)
+	output, _ := commandMap["output"].(string)
+
+	if status == "success" {
+		response.WriteString("✅ **Comando Executado**\n\n")
+	} else {
+		response.WriteString("❌ **Erro na Execução**\n\n")
+	}
+
+	// Command info
+	if command != "" {
+		response.WriteString(fmt.Sprintf("🔧 **Comando:** `%s", command))
+
+		if args, ok := commandMap["args"].([]interface{}); ok && len(args) > 0 {
+			for _, arg := range args {
+				if argStr, ok := arg.(string); ok {
+					response.WriteString(fmt.Sprintf(" %s", argStr))
+				}
+			}
+		}
+		response.WriteString("`\n\n")
+	}
+
+	// Output
+	if output != "" {
+		// Limit output length for Discord
+		if len(output) > 1900 {
+			output = output[:1900] + "\n... (truncated)"
+		}
+		response.WriteString("📋 **Saída:**\n```bash\n")
+		response.WriteString(output)
+		response.WriteString("```\n")
+	}
+
+	// Error info
+	if status == "error" {
+		if errMsg, ok := commandMap["error"].(string); ok {
+			response.WriteString(fmt.Sprintf("\n🚨 **Erro:** %s\n", errMsg))
+		}
+
+		if exitCode, ok := commandMap["exit_code"].(float64); ok {
+			response.WriteString(fmt.Sprintf("🔢 **Exit Code:** %.0f\n", exitCode))
+		}
+	}
+
+	// Available commands hint for errors
+	if status == "error" {
+		if allowedCommands, ok := commandMap["allowed_commands"].(string); ok {
+			response.WriteString(fmt.Sprintf("\n💡 **Comandos permitidos:**\n`%s`\n", allowedCommands))
+		}
+	}
+
+	return response.String(), nil
+}
+
+func (h *DiscordMCPHub) executeMCPTool(ctx context.Context, toolName string, params map[string]interface{}) (string, error) {
+	gl.Log("info", "Executing MCP tool via Discord Hub", toolName)
+
+	// Try to execute via MCP registry first
+	if h.mcpRegistry != nil {
+		// Map Discord tool names to MCP tool names
+		mcpToolName := h.mapDiscordToMCPTool(toolName)
+
+		result, err := h.mcpRegistry.Exec(ctx, mcpToolName, params)
+		if err == nil {
+			// Convert result to Discord-friendly string
+			return h.formatMCPResultForDiscord(mcpToolName, result)
+		}
+		gl.Log("warn", "MCP tool execution failed, falling back to legacy implementation", toolName, err)
+	}
+
+	// Fallback to legacy implementation for backward compatibility
 	switch toolName {
 	case "get_system_info":
 		return h.executeSystemInfo(params)

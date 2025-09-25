@@ -2,6 +2,7 @@
 package cbot
 
 import (
+	"fmt"
 	"net/http"
 
 	discord_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/discord"
@@ -48,20 +49,22 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	config, configErr := config.Load(
-		"./",
+	gl.Log("info", fmt.Sprintf("Reading config for DiscordRoute at %s", rtl.GetConfigPath()))
+	cfg, configErr := config.Load[*config.Config](
+		rtl.GetConfigPath(),
+		"main_config",
 	)
 	if configErr != nil {
 		gl.Log("error", "Failed to load config for DiscordRoute", configErr)
 		return nil
 	}
-	h, err := hub.NewDiscordMCPHub(config)
+	h, err := hub.NewDiscordMCPHub(cfg)
 	if err != nil {
 		gl.Log("error", "Failed to create Discord hub", err)
 		return nil
 	}
 
-	discordController := discord_controller.NewDiscordController(dbGorm, h)
+	discordController := discord_controller.NewDiscordController(dbGorm, h, cfg)
 
 	routesMap["DiscordWebSocket"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/websocket", "application/json", discordController.HandleWebSocket, middlewaresMap, dbService, secureProperties, nil)
 	routesMap["DiscordOAuth2Authorize"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/oauth2/authorize", "application/json", discordController.HandleDiscordOAuth2Authorize, middlewaresMap, dbService, secureProperties, nil)

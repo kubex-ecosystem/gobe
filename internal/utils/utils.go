@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
 	"unicode"
 
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/spf13/viper"
 )
 
 // ValidateWorkerLimit valida o limite de workers
@@ -132,4 +134,55 @@ func IsBase62String(s string) bool {
 func IsBase62ByteSlice(s []byte) bool {
 	matched, _ := regexp.Match("^[a-zA-Z0-9_]+$", s)
 	return matched
+}
+
+func GetEnvOrDefault(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	if viper.IsSet(key) {
+		return viper.GetString(key)
+	}
+	return defaultValue
+}
+
+func GetDefaultConfigPath() (string, error) {
+	var err error
+	vprFile := filepath.Dir(viper.ConfigFileUsed())
+	if strings.Contains(vprFile, "gobe") {
+		vprFile = filepath.Dir(vprFile)
+	}
+
+	configPath := GetEnvOrDefault("GOBE_CONFIG_PATH", vprFile)
+	if strings.TrimSpace(configPath) == "" || configPath == "." {
+		configPath, err = os.UserHomeDir()
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("Failed to get user home directory: %v", err))
+			return fallbackTempDir()
+		}
+		configPath = filepath.Join(configPath, ".kubex")
+	}
+
+	realPath := configPath
+	if filepath.Base(realPath) != "gobe" {
+		realPath = filepath.Join(realPath, "gobe")
+	}
+
+	if err = os.MkdirAll(realPath, 0o755); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to create directory %s: %v", realPath, err))
+		return fallbackTempDir()
+	}
+
+	return configPath, nil
+}
+
+func fallbackTempDir() (string, error) {
+	base := os.TempDir()
+	tmpDir, err := os.MkdirTemp(base, "kubex_gobe_")
+	if err != nil {
+		gl.Log("fatal", fmt.Sprintf("Failed to create temp dir for fallback: %v", err))
+		return "", err
+	}
+	gl.Log("warn", fmt.Sprintf("Using temporary directory for config fallback: %s", tmpDir))
+	return tmpDir, nil
 }

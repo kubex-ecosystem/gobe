@@ -120,7 +120,7 @@ func newRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePa
 	requestTracers.tracers[ip] = tracer
 	rTracer := ci.IRequestsTracer(tracer)
 
-	tracer.Mapper = NewMapperType(&rTracer, tracer.filePath)
+	tracer.Mapper = NewMapper(&rTracer, tracer.filePath)
 
 	//tracer.Mutexes.MuAdd(1)
 	//go func(tracer *RequestsTracer) {

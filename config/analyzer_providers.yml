@@ -1,0 +1,25 @@
+providers:
+  groq:
+    type: groq
+    base_url: https://api.groq.com
+    key_env: GROQ_API_KEY
+    default_model: llama-3.1-8b-instant
+
+  gemini:
+    type: gemini
+    base_url: https://generativelanguage.googleapis.com
+    key_env: GEMINI_API_KEY
+    default_model: gemini-2.0-pro
+
+  openai:
+    type: openai
+    base_url: https://api.openai.com
+    key_env: OPENAI_API_KEY
+    default_model: gpt-4o-mini
+
+  # anthropic:
+  #   type: anthropic
+  #   base_url: https://api.anthropic.com
+  #   key_env: ANTHROPIC_API_KEY
+  #   default_model: claude-3-5-sonnet-latest
+

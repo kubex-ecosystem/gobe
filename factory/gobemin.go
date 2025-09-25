@@ -6,12 +6,13 @@ import (
 	"log"
 	"time"
 
-	t "github.com/kubex-ecosystem/gdbase/types"
 	gb "github.com/kubex-ecosystem/gobe"
 	s "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
 	l "github.com/kubex-ecosystem/logz"
+
 	"github.com/streadway/amqp"
 )
 
@@ -19,7 +20,7 @@ type GoBE interface {
 	ci.IGoBE
 }
 
-type DBConfig = t.DBConfig
+type DBConfig = msg.DBConfig
 
 var (
 	dbConfig *DBConfig
@@ -49,7 +50,7 @@ var rabbitMQConn *amqp.Connection
 
 func initRabbitMQ() error {
 	var err error
-	url := getRabbitMQURL()
+	url := msg.GetRabbitMQURL(dbConfig)
 	if url != "" {
 		rabbitMQConn, err = amqp.Dial(url)
 		if err != nil {
@@ -64,31 +65,8 @@ func initRabbitMQ() error {
 	return nil
 }
 
-func getRabbitMQURL() string {
-	if dbConfig != nil {
-		if dbConfig.Messagery != nil {
-			if dbConfig.Messagery.RabbitMQ != nil {
-				return fmt.Sprintf("amqp://%s:%s@%s:%d/",
-					dbConfig.Messagery.RabbitMQ.Username,
-					dbConfig.Messagery.RabbitMQ.Password,
-					dbConfig.Messagery.RabbitMQ.Host,
-					dbConfig.Messagery.RabbitMQ.Port,
-				)
-			}
-		}
-	}
-	return ""
-}
-
-func closeRabbitMQ() {
-	if rabbitMQConn != nil {
-		rabbitMQConn.Close()
-		log.Println("Conexão com RabbitMQ encerrada.")
-	}
-}
-
 func ConsumeMessages(queueName string) {
-	url := getRabbitMQURL()
+	url := msg.GetRabbitMQURL(dbConfig)
 	if url == "" {
 		log.Printf("RabbitMQ URL is not configured")
 		return
@@ -153,7 +131,7 @@ func PublishMessageWithRetry(queueName string, message string) error {
 }
 
 func PublishMessage(queueName, message string) error {
-	url := getRabbitMQURL()
+	url := msg.GetRabbitMQURL(dbConfig)
 	if url == "" {
 		log.Printf("RabbitMQ URL is not configured")
 		return fmt.Errorf("RabbitMQ URL is not configured")
