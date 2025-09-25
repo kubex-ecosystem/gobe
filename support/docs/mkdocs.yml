@@ -1,10 +1,10 @@
-site_name: Kubex Ecosystem - GoBE
-site_description: Backend for the Kubex Ecosystem
-site_author: kubex-ecosystem
-site_url: https://gobe.kubex.world
+site_name: LookAtni File Markers Project
+site_description: Advanced file organization system with unique markers for code sharing and project management
+site_author: Rafa Mori
+site_url: https://lookatni.kubex.world
 
-repo_name: kubex-ecosystem/gobe
-repo_url: https://github.com/kubex-ecosystem/gobe
+repo_name: kubex-ecosystem/lookatni-file-markers
+repo_url: https://github.com/kubex-ecosystem/lookatni-file-markers
 edit_uri: edit/main/docs-site/docs/
 
 docs_dir: ../../docs
@@ -125,7 +125,7 @@ markdown_extensions:
       normalize_issue_symbols: true
       repo_url_shorthand: true
       user: kubex-ecosystem
-      repo: gobe
+      repo: lookatni-file-markers
   - pymdownx.mark
   - pymdownx.smartsymbols
   - pymdownx.snippets:
