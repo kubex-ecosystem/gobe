@@ -73,13 +73,18 @@ type ScorecardEntry struct {
 // ScorecardResponse describes the list payload served by the scorecard endpoint.
 type ScorecardResponse struct {
 	Items   []ScorecardEntry `json:"items"`
+	Total   int              `json:"total"`
 	Version string           `json:"version"`
 }
 
 // ScorecardAdviceResponse wraps advisory text for scorecard advice requests.
 type ScorecardAdviceResponse struct {
-	Advice  string `json:"advice"`
-	Version string `json:"version"`
+	Advice      string                 `json:"advice"`
+	Priority    string                 `json:"priority"`
+	Actions     []string               `json:"actions"`
+	Metrics     map[string]interface{} `json:"metrics"`
+	Version     string                 `json:"version"`
+	GeneratedAt time.Time              `json:"generated_at"`
 }
 
 // ScorecardMetricsResponse contains aggregated metrics for the scorecard subsystem.

@@ -62,7 +62,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	chatController := gatewayController.NewChatController(gatewayService)
 	providersController := gatewayController.NewProvidersController(gatewayService)
 	adviseController := gatewayController.NewAdviseController(gatewayService)
-	scorecardController := gatewayController.NewScorecardController()
+	scorecardController := gatewayController.NewScorecardController(db)
 	healthController := gatewayController.NewHealthController(dbService, gatewayService)
 	lookAtniController := gatewayController.NewLookAtniController()
 	webhookController := gatewayController.NewWebhookController(webhookService)
