@@ -12,19 +12,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/kubex-ecosystem/gobe/internal/models"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
-	"github.com/kubex-ecosystem/gobe/internal/services/analysis"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
 	"gorm.io/gorm"
+
+	m "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type AnalyzerController struct {
 	dbConn          *gorm.DB
 	APIWrapper      *t.APIWrapper[any]
 	analyzerService *analyzer.Service
-	jobService      *analysis.JobService
+	jobService      m.JobQueueService
 }
 
 func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
@@ -37,11 +37,11 @@ func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
 	analyzerAPIKey := getEnv("GEMX_ANALYZER_API_KEY", "")
 
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
-	jobService := analysis.NewJobService(db, analyzerService)
+	jobService := m.NewJobQueueService(m.NewJobQueueRepo(db))
 
 	// Auto-migrate analysis jobs table
 	if db != nil {
-		if err := db.AutoMigrate(&models.AnalysisJob{}); err != nil {
+		if err := db.AutoMigrate(m.NewJobQueueModel()); err != nil {
 			gl.Log("error", "Failed to migrate AnalysisJob table", err)
 		}
 	}
@@ -201,38 +201,40 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 	}
 
 	// Create job using the real job service
-	createReq := analysis.CreateJobRequest{
-		RepoURL:        req.RepoURL,
-		AnalysisType:   req.AnalysisType,
-		ScheduledBy:    req.ScheduledBy,
-		Configuration:  req.Configuration,
-		NotifyChannels: req.NotifyChannels,
-		AutoStart:      true, // Start job immediately
-		Metadata: map[string]interface{}{
-			"source":     "gobe_mcp",
-			"created_by": "analyzer_controller",
-		},
-	}
+	// createReq := m.NewJobQueueModel()
 
-	job, err := ac.jobService.CreateJob(c.Request.Context(), createReq)
-	if err != nil {
-		gl.Log("error", "Failed to create analysis job", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to schedule repository analysis",
-		})
-		return
-	}
+	// createReq
+	// 	RepoURL:        req.RepoURL,
+	// 	AnalysisType:   req.AnalysisType,
+	// 	ScheduledBy:    req.ScheduledBy,
+	// 	Configuration:  req.Configuration,
+	// 	NotifyChannels: req.NotifyChannels,
+	// 	AutoStart:      true, // Start job immediately
+	// 	Metadata: map[string]interface{}{
+	// 		"source":     "gobe_mcp",
+	// 		"created_by": "analyzer_controller",
+	// 	},
+	// }
 
-	// Convert model to response format
-	response := convertModelToAnalysisJob(job)
+	// job, err := ac.jobService.CreateJob(c.Request.Context(), createReq)
+	// if err != nil {
+	// 	gl.Log("error", "Failed to create analysis job", err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"error": "Failed to schedule repository analysis",
+	// 	})
+	// 	return
+	// }
 
-	gl.Log("info", "Repository analysis scheduled",
-		"job_id", job.ID,
-		"repo_url", job.RepoURL,
-		"analysis_type", job.AnalysisType,
-		"scheduled_by", job.ScheduledBy)
+	// // Convert model to response format
+	// response := convertModelToAnalysisJob(job)
 
-	c.JSON(http.StatusCreated, response)
+	// gl.Log("info", "Repository analysis scheduled",
+	// 	"job_id", job.ID,
+	// 	"repo_url", job.RepoURL,
+	// 	"analysis_type", job.AnalysisType,
+	// 	"scheduled_by", job.ScheduledBy)
+
+	// c.JSON(http.StatusCreated, response)
 }
 
 // GetAnalysisStatus retrieves the status of a specific analysis job

@@ -11,32 +11,33 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubex-ecosystem/gobe/internal/models"
-	"github.com/kubex-ecosystem/gobe/internal/services/analysis"
-	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
+	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
 	"gorm.io/gorm"
 )
 
 // ScorecardController exposes real scorecard and metrics endpoints.
 type ScorecardController struct {
-	db              *gorm.DB
-	analyzerService *analyzer.Service
-	jobService      *analysis.JobService
+	db                    *gorm.DB
+	analyzerService       *analyzer.Service
+	analysisJobService    gdbasez.AnalysisJobService
 }
 
 func NewScorecardController(db *gorm.DB) *ScorecardController {
 	// Initialize analyzer service
 	analyzerBaseURL := getEnv("GEMX_ANALYZER_URL", "http://localhost:8080")
 	analyzerAPIKey := getEnv("GEMX_ANALYZER_API_KEY", "")
-
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
-	jobService := analysis.NewJobService(db, analyzerService)
+
+	// Initialize GDBase AnalysisJob service using gdbasez bridge
+	analysisJobRepo := gdbasez.NewAnalysisJobRepo(db)
+	analysisJobService := gdbasez.NewAnalysisJobService(analysisJobRepo)
 
 	return &ScorecardController{
-		db:              db,
-		analyzerService: analyzerService,
-		jobService:      jobService,
+		db:                 db,
+		analyzerService:    analyzerService,
+		analysisJobService: analysisJobService,
 	}
 }
 
@@ -70,16 +71,8 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 		limit = parsedLimit
 	}
 
-	// Get recent completed analysis jobs
-	filter := analysis.ListJobsFilter{
-		Status:       "completed",
-		RepoURL:      repoURL,
-		AnalysisType: "scorecard",
-		Limit:        limit,
-		Offset:       0,
-	}
-
-	jobs, total, err := sc.jobService.ListJobs(c.Request.Context(), filter)
+	// Get recent completed scorecard analysis jobs
+	jobs, err := sc.analysisJobService.ListJobsByStatus(c.Request.Context(), "COMPLETED")
 	if err != nil {
 		gl.Log("error", "Failed to get scorecard jobs", "error", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -89,20 +82,49 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 		return
 	}
 
-	// Convert jobs to scorecard entries
-	entries := make([]ScorecardEntry, 0, len(jobs))
+	// Filter jobs by type "SCORECARD_ANALYSIS"
+	analysisJobs := make([]*gdbasez.AnalysisJobImpl, 0)
 	for _, job := range jobs {
-		entry := convertJobToScorecardEntry(job)
+		if job.GetJobType() == "SCORECARD_ANALYSIS" {
+			// Convert interface to concrete type
+			if analysisJob, ok := job.(*gdbasez.AnalysisJobImpl); ok {
+				analysisJobs = append(analysisJobs, analysisJob)
+			}
+		}
+	}
+
+	// Convert analysis jobs to scorecard entries
+	entries := make([]ScorecardEntry, 0, len(analysisJobs))
+	for _, job := range analysisJobs {
+		entry := convertAnalysisJobToScorecardEntry(job)
 		if entry != nil {
 			entries = append(entries, *entry)
 		}
 	}
 
-	gl.Log("info", "Scorecard data retrieved", "count", len(entries), "total_jobs", total)
+	// Apply filtering and pagination
+	filteredEntries := entries
+	if repoURL != "" {
+		filteredEntries = make([]ScorecardEntry, 0)
+		for _, entry := range entries {
+			// Filter by repo URL in title or description
+			if strings.Contains(strings.ToLower(entry.Title), strings.ToLower(repoURL)) ||
+				strings.Contains(strings.ToLower(entry.Description), strings.ToLower(repoURL)) {
+				filteredEntries = append(filteredEntries, entry)
+			}
+		}
+	}
+
+	// Apply limit
+	if len(filteredEntries) > limit {
+		filteredEntries = filteredEntries[:limit]
+	}
+
+	gl.Log("info", "Scorecard data retrieved", "count", len(filteredEntries), "total_jobs", len(analysisJobs))
 
 	c.JSON(http.StatusOK, ScorecardResponse{
-		Items:   entries,
-		Total:   int(total),
+		Items:   filteredEntries,
+		Total:   len(analysisJobs),
 		Version: "gobe-real-v1.3.5",
 	})
 }
@@ -122,16 +144,8 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 	repoURL := c.Query("repo_url")
 
-	// Get recent completed jobs for advice analysis
-	filter := analysis.ListJobsFilter{
-		Status:       "completed",
-		RepoURL:      repoURL,
-		AnalysisType: "scorecard",
-		Limit:        5, // Analyze last 5 jobs
-		Offset:       0,
-	}
-
-	jobs, _, err := sc.jobService.ListJobs(c.Request.Context(), filter)
+	// Get recent completed analysis jobs for advice analysis
+	allJobs, err := sc.analysisJobService.ListJobsByStatus(c.Request.Context(), "COMPLETED")
 	if err != nil {
 		gl.Log("error", "Failed to get jobs for advice", "error", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -141,17 +155,38 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 		return
 	}
 
-	// Generate advice based on job results
-	advice := generateAdviceFromJobs(jobs, repoURL)
+	// Filter jobs by type "SCORECARD_ANALYSIS" and by repo URL if specified
+	analysisJobs := make([]*gdbasez.AnalysisJobImpl, 0)
+	for _, job := range allJobs {
+		if job.GetJobType() == "SCORECARD_ANALYSIS" {
+			// Filter by repo URL if specified
+			if repoURL == "" ||
+				strings.Contains(job.GetSourceURL(), repoURL) ||
+				strings.Contains(string(job.GetMetadata()), repoURL) {
+				// Convert interface to concrete type
+				if analysisJob, ok := job.(*gdbasez.AnalysisJobImpl); ok {
+					analysisJobs = append(analysisJobs, analysisJob)
+				}
+			}
+		}
+	}
 
-	gl.Log("info", "Scorecard advice generated", "repo_url", repoURL, "jobs_analyzed", len(jobs))
+	// Limit to last 5 jobs
+	if len(analysisJobs) > 5 {
+		analysisJobs = analysisJobs[:5]
+	}
+
+	// Generate advice based on analysis job results
+	advice := generateAdviceFromAnalysisJobs(analysisJobs, repoURL)
+
+	gl.Log("info", "Scorecard advice generated", "repo_url", repoURL, "jobs_analyzed", len(analysisJobs))
 
 	c.JSON(http.StatusOK, ScorecardAdviceResponse{
-		Advice:     advice.Message,
-		Priority:   advice.Priority,
-		Actions:    advice.Actions,
-		Metrics:    advice.Metrics,
-		Version:    "gobe-real-v1.3.5",
+		Advice:      advice.Message,
+		Priority:    advice.Priority,
+		Actions:     advice.Actions,
+		Metrics:     advice.Metrics,
+		Version:     "gobe-real-v1.3.5",
 		GeneratedAt: time.Now().UTC(),
 	})
 }
@@ -184,13 +219,8 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 		since = time.Now().Add(-24 * time.Hour)
 	}
 
-	// Get all jobs in the period for metrics calculation
-	allFilter := analysis.ListJobsFilter{
-		Limit:  1000, // Get many jobs for accurate metrics
-		Offset: 0,
-	}
-
-	allJobs, totalJobs, err := sc.jobService.ListJobs(c.Request.Context(), allFilter)
+	// Get all analysis jobs for metrics calculation
+	allJobs, err := sc.analysisJobService.ListJobs(c.Request.Context())
 	if err != nil {
 		gl.Log("error", "Failed to get jobs for metrics", "error", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -199,10 +229,16 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 		})
 		return
 	}
+	var allAnalysisJobs []*gdbasez.AnalysisJobImpl
+	for _, job := range allJobs {
+		if analysisJob, ok := job.(*gdbasez.AnalysisJobImpl); ok {
+			allAnalysisJobs = append(allAnalysisJobs, analysisJob)
+		}
+	}
 
-	// Calculate real metrics from job data
-	metrics := calculateSystemMetrics(allJobs, since, period)
-	metrics["total_jobs"] = totalJobs
+	// Calculate real metrics from analysis job data
+	metrics := calculateAnalysisMetrics(allAnalysisJobs, since, period)
+	metrics["total_jobs"] = len(allJobs)
 	metrics["period"] = period
 	metrics["calculated_at"] = time.Now().UTC()
 
@@ -230,23 +266,22 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 	})
 }
 
-// convertJobToScorecardEntry converts an analysis job to a scorecard entry
-func convertJobToScorecardEntry(job *models.AnalysisJob) *ScorecardEntry {
-	if job == nil {
-		return nil
-	}
+// convertAnalysisJobToScorecardEntry converts an analysis job to a scorecard entry
+func convertAnalysisJobToScorecardEntry(job *gdbasez.AnalysisJobImpl) *ScorecardEntry {
 
-	// Parse results to extract score and tags if available
+	// Parse metadata and output data to extract score and tags
 	score := 0.0
-	tags := []string{job.AnalysisType}
+	tags := []string{job.GetJobType()}
 
-	if job.Results != "" {
-		var results map[string]interface{}
-		if err := json.Unmarshal([]byte(job.Results), &results); err == nil {
-			if scoreVal, ok := results["overall_score"].(float64); ok {
+	// Try to parse score from output data first, then metadata
+	outputData := job.GetOutputData()
+	if outputData != nil {
+		var outputMap map[string]interface{}
+		if err := json.Unmarshal(outputData, &outputMap); err == nil {
+			if scoreVal, ok := outputMap["overall_score"].(float64); ok {
 				score = scoreVal
 			}
-			if tagsVal, ok := results["tags"].([]interface{}); ok {
+			if tagsVal, ok := outputMap["tags"].([]interface{}); ok {
 				for _, tag := range tagsVal {
 					if tagStr, ok := tag.(string); ok {
 						tags = append(tags, tagStr)
@@ -256,35 +291,49 @@ func convertJobToScorecardEntry(job *models.AnalysisJob) *ScorecardEntry {
 		}
 	}
 
-	// Generate title based on repository URL and analysis type
-	title := fmt.Sprintf("%s Analysis", strings.Title(job.AnalysisType))
-	if job.RepoURL != "" {
-		// Extract repo name from URL
-		parts := strings.Split(strings.TrimSuffix(job.RepoURL, ".git"), "/")
-		if len(parts) > 0 {
-			repoName := parts[len(parts)-1]
+	// Fallback to metadata if no score in output
+	if score == 0.0 {
+		metadata := job.GetMetadata()
+		if metadata != nil {
+			var metaData map[string]interface{}
+			if err := json.Unmarshal(metadata, &metaData); err == nil {
+				if scoreVal, ok := metaData["overall_score"].(float64); ok {
+					score = scoreVal
+				}
+			}
+		}
+	}
+
+	// Generate title based on source URL and job type
+	title := fmt.Sprintf("%s Analysis", strings.Title(strings.ToLower(strings.ReplaceAll(job.GetJobType(), "_", " "))))
+	sourceURL := job.GetSourceURL()
+	if sourceURL != "" {
+		// Extract repo name from source URL
+		repoName := extractRepoName(sourceURL)
+		if repoName != "unknown" {
 			title = fmt.Sprintf("%s: %s", repoName, title)
 		}
 	}
 
-	description := fmt.Sprintf("Repository analysis completed with %s", job.AnalysisType)
-	if job.Error != "" {
-		description = fmt.Sprintf("Analysis failed: %s", job.Error)
+	description := fmt.Sprintf("Repository analysis completed with %s", job.GetJobType())
+	errorMsg := job.GetErrorMessage()
+	if errorMsg != "" {
+		description = fmt.Sprintf("Analysis failed: %s", errorMsg)
 		score = 0.0
 	}
 
 	return &ScorecardEntry{
-		ID:          job.ID,
+		ID:          job.GetID().String(),
 		Title:       title,
 		Description: description,
 		Score:       score,
-		UpdatedAt:   job.UpdatedAt,
+		UpdatedAt:   job.GetUpdatedAt(),
 		Tags:        tags,
 	}
 }
 
-// generateAdviceFromJobs analyzes recent jobs and generates intelligent advice
-func generateAdviceFromJobs(jobs []*models.AnalysisJob, repoURL string) *AdviceData {
+// generateAdviceFromAnalysisJobs analyzes recent analysis jobs and generates intelligent advice
+func generateAdviceFromAnalysisJobs(jobs []*gdbasez.AnalysisJobImpl, repoURL string) *AdviceData {
 	if len(jobs) == 0 {
 		return &AdviceData{
 			Message:  "No recent analysis data available for generating advice",
@@ -294,37 +343,55 @@ func generateAdviceFromJobs(jobs []*models.AnalysisJob, repoURL string) *AdviceD
 		}
 	}
 
-	// Analyze job patterns
+	// Analyze analysis job patterns
 	completedJobs := 0
 	failedJobs := 0
 	avgScore := 0.0
 	scoreCount := 0
-	var lastJob *models.AnalysisJob
+	var lastJob *gdbasez.AnalysisJobImpl
 	issues := []string{}
 	recommendations := []string{}
 
 	for _, job := range jobs {
-		if job.IsCompleted() {
+		status := job.GetStatus()
+
+		if status == "COMPLETED" {
 			completedJobs++
 
-			// Parse results for scoring
-			if job.Results != "" {
-				var results map[string]interface{}
-				if err := json.Unmarshal([]byte(job.Results), &results); err == nil {
-					if score, ok := results["overall_score"].(float64); ok {
+			// Parse output data first, then metadata for scoring
+			outputData := job.GetOutputData()
+			if outputData != nil {
+				var outputMap map[string]interface{}
+				if err := json.Unmarshal(outputData, &outputMap); err == nil {
+					if score, ok := outputMap["overall_score"].(float64); ok {
 						avgScore += score
 						scoreCount++
 					}
 				}
+			} else {
+				// Fallback to metadata
+				metadata := job.GetMetadata()
+				if metadata != nil {
+					var metaData map[string]interface{}
+					if err := json.Unmarshal(metadata, &metaData); err == nil {
+						if score, ok := metaData["overall_score"].(float64); ok {
+							avgScore += score
+							scoreCount++
+						}
+					}
+				}
 			}
 		}
-		if job.IsFailed() {
+
+		if status == "FAILED" {
 			failedJobs++
-			if job.Error != "" {
-				issues = append(issues, job.Error)
+			errorMsg := job.GetErrorMessage()
+			if errorMsg != "" {
+				issues = append(issues, errorMsg)
 			}
 		}
-		if lastJob == nil || job.UpdatedAt.After(lastJob.UpdatedAt) {
+
+		if lastJob == nil || job.GetUpdatedAt().After(lastJob.GetUpdatedAt()) {
 			lastJob = job
 		}
 	}
@@ -365,24 +432,24 @@ func generateAdviceFromJobs(jobs []*models.AnalysisJob, repoURL string) *AdviceD
 		Priority: priority,
 		Actions:  recommendations,
 		Metrics: map[string]interface{}{
-			"jobs_analyzed":    len(jobs),
-			"completed_jobs":   completedJobs,
-			"failed_jobs":      failedJobs,
-			"average_score":    avgScore,
-			"last_analysis":    lastJob.UpdatedAt,
-			"success_rate":     float64(completedJobs) / float64(len(jobs)),
+			"jobs_analyzed":  len(jobs),
+			"completed_jobs": completedJobs,
+			"failed_jobs":    failedJobs,
+			"average_score":  avgScore,
+			"last_analysis":  lastJob.GetUpdatedAt(),
+			"success_rate":   float64(completedJobs) / float64(len(jobs)),
 		},
 	}
 }
 
-// calculateSystemMetrics calculates real system metrics from job data
-func calculateSystemMetrics(jobs []*models.AnalysisJob, since time.Time, period string) map[string]interface{} {
+// calculateAnalysisMetrics calculates real system metrics from analysis job data
+func calculateAnalysisMetrics(jobs []*gdbasez.AnalysisJobImpl, since time.Time, period string) map[string]interface{} {
 	metrics := make(map[string]interface{})
 
-	// Filter jobs by time period
-	periodJobs := make([]*models.AnalysisJob, 0)
+	// Filter analysis jobs by time period
+	periodJobs := make([]*gdbasez.AnalysisJobImpl, 0)
 	for _, job := range jobs {
-		if job.CreatedAt.After(since) {
+		if job.GetCreatedAt().After(since) {
 			periodJobs = append(periodJobs, job)
 		}
 	}
@@ -401,38 +468,69 @@ func calculateSystemMetrics(jobs []*models.AnalysisJob, since time.Time, period 
 	scoreCounts := make(map[string]int)
 
 	for _, job := range periodJobs {
+		status := job.GetStatus()
+
 		// Count by status
-		switch job.Status {
-		case "completed":
+		switch status {
+		case "COMPLETED":
 			completedJobs++
 			// Calculate duration for completed jobs
-			if job.StartedAt != nil && job.CompletedAt != nil {
-				duration := job.CompletedAt.Sub(*job.StartedAt)
+			completedAt := job.GetCompletedAt()
+			startedAt := job.GetStartedAt()
+			if !completedAt.IsZero() && !startedAt.IsZero() {
+				duration := completedAt.Sub(startedAt)
 				totalDuration += duration
 			}
-		case "failed":
+		case "FAILED":
 			failedJobs++
-		case "running":
+		case "RUNNING":
 			runningJobs++
-		case "scheduled":
+		case "PENDING":
 			scheduledJobs++
 		}
 
-		// Count by analysis type
-		analysisTypes[job.AnalysisType]++
+		// Count by job type
+		jobType := job.GetJobType()
+		analysisTypes[jobType]++
 
-		// Count by repository
-		repoName := extractRepoName(job.RepoURL)
+		// Count by repository (extracted from source URL)
+		repoName := extractRepoNameFromAnalysisJob(job)
 		repositoryStats[repoName]++
 
-		// Calculate scores by type
-		if job.Results != "" && job.IsCompleted() {
-			var results map[string]interface{}
-			if err := json.Unmarshal([]byte(job.Results), &results); err == nil {
-				if score, ok := results["overall_score"].(float64); ok {
-					avgScores[job.AnalysisType] += score
-					scoreCounts[job.AnalysisType]++
+		// Calculate scores by type from output data or metadata
+		if status == "COMPLETED" {
+			var score float64
+			found := false
+
+			// Try output data first
+			outputData := job.GetOutputData()
+			if outputData != nil {
+				var outputMap map[string]interface{}
+				if err := json.Unmarshal(outputData, &outputMap); err == nil {
+					if scoreVal, ok := outputMap["overall_score"].(float64); ok {
+						score = scoreVal
+						found = true
+					}
 				}
+			}
+
+			// Fallback to metadata
+			if !found {
+				metadata := job.GetMetadata()
+				if metadata != nil {
+					var metaData map[string]interface{}
+					if err := json.Unmarshal(metadata, &metaData); err == nil {
+						if scoreVal, ok := metaData["overall_score"].(float64); ok {
+							score = scoreVal
+							found = true
+						}
+					}
+				}
+			}
+
+			if found {
+				avgScores[jobType] += score
+				scoreCounts[jobType]++
 			}
 		}
 	}
@@ -496,8 +594,32 @@ func extractRepoName(repoURL string) string {
 	return "unknown"
 }
 
-// calculateJobsPerHour calculates jobs per hour for the given period
-func calculateJobsPerHour(jobs []*models.AnalysisJob, since time.Time) float64 {
+// extractRepoNameFromAnalysisJob extracts repository name from analysis job source URL or metadata
+func extractRepoNameFromAnalysisJob(job *gdbasez.AnalysisJobImpl) string {
+	// Try to extract from source URL first
+	sourceURL := job.GetSourceURL()
+	if sourceURL != "" {
+		if repoName := extractRepoName(sourceURL); repoName != "unknown" {
+			return repoName
+		}
+	}
+
+	// Try to extract from metadata
+	metadata := job.GetMetadata()
+	if metadata != nil {
+		var metaData map[string]interface{}
+		if err := json.Unmarshal(metadata, &metaData); err == nil {
+			if repoURL, ok := metaData["repo_url"].(string); ok {
+				return extractRepoName(repoURL)
+			}
+		}
+	}
+
+	return "unknown"
+}
+
+// calculateJobsPerHour calculates analysis jobs per hour for the given period
+func calculateJobsPerHour(jobs []*gdbasez.AnalysisJobImpl, since time.Time) float64 {
 	if len(jobs) == 0 {
 		return 0.0
 	}

@@ -2,6 +2,7 @@ package gdbasez
 
 import (
 	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
+	"gorm.io/gorm"
 )
 
 // LLM aliases
@@ -42,4 +43,8 @@ type TasksRepo = models.TasksRepo
 
 func NewTasksService(repo TasksRepo) TasksService {
 	return models.NewTasksService(repo)
+}
+
+func NewTasksRepo(db *gorm.DB) TasksRepo {
+	return models.NewTasksRepo(db)
 }
