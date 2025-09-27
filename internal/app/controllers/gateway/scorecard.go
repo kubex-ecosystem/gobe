@@ -86,10 +86,30 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 	analysisJobs := make([]*gdbasez.AnalysisJobImpl, 0)
 	for _, job := range jobs {
 		if job.GetJobType() == "SCORECARD_ANALYSIS" {
-			// Convert interface to concrete type
-			if analysisJob, ok := job.(*gdbasez.AnalysisJobImpl); ok {
-				analysisJobs = append(analysisJobs, analysisJob)
+			// Create concrete type from interface
+			analysisJob := &gdbasez.AnalysisJobImpl{
+				ID:          job.GetID(),
+				ProjectID:   job.GetProjectID(),
+				JobType:     job.GetJobType(),
+				Status:      job.GetStatus(),
+				SourceURL:   job.GetSourceURL(),
+				SourceType:  job.GetSourceType(),
+				InputData:   job.GetInputData(),
+				OutputData:  job.GetOutputData(),
+				ErrorMessage: job.GetErrorMessage(),
+				Progress:    job.GetProgress(),
+				StartedAt:   job.GetStartedAt(),
+				CompletedAt: job.GetCompletedAt(),
+				RetryCount:  job.GetRetryCount(),
+				MaxRetries:  job.GetMaxRetries(),
+				Metadata:    job.GetMetadata(),
+				UserID:      job.GetUserID(),
+				CreatedBy:   job.GetCreatedBy(),
+				UpdatedBy:   job.GetUpdatedBy(),
+				CreatedAt:   job.GetCreatedAt(),
+				UpdatedAt:   job.GetUpdatedAt(),
 			}
+			analysisJobs = append(analysisJobs, analysisJob)
 		}
 	}
 
@@ -160,13 +180,39 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 	for _, job := range allJobs {
 		if job.GetJobType() == "SCORECARD_ANALYSIS" {
 			// Filter by repo URL if specified
+			metadataStr := ""
+			if metadata := job.GetMetadata(); metadata != nil {
+				if metadataBytes, err := json.Marshal(metadata); err == nil {
+					metadataStr = string(metadataBytes)
+				}
+			}
 			if repoURL == "" ||
 				strings.Contains(job.GetSourceURL(), repoURL) ||
-				strings.Contains(string(job.GetMetadata()), repoURL) {
-				// Convert interface to concrete type
-				if analysisJob, ok := job.(*gdbasez.AnalysisJobImpl); ok {
-					analysisJobs = append(analysisJobs, analysisJob)
+				strings.Contains(metadataStr, repoURL) {
+				// Create concrete type from interface
+				analysisJob := &gdbasez.AnalysisJobImpl{
+					ID:          job.GetID(),
+					ProjectID:   job.GetProjectID(),
+					JobType:     job.GetJobType(),
+					Status:      job.GetStatus(),
+					SourceURL:   job.GetSourceURL(),
+					SourceType:  job.GetSourceType(),
+					InputData:   job.GetInputData(),
+					OutputData:  job.GetOutputData(),
+					ErrorMessage: job.GetErrorMessage(),
+					Progress:    job.GetProgress(),
+					StartedAt:   job.GetStartedAt(),
+					CompletedAt: job.GetCompletedAt(),
+					RetryCount:  job.GetRetryCount(),
+					MaxRetries:  job.GetMaxRetries(),
+					Metadata:    job.GetMetadata(),
+					UserID:      job.GetUserID(),
+					CreatedBy:   job.GetCreatedBy(),
+					UpdatedBy:   job.GetUpdatedBy(),
+					CreatedAt:   job.GetCreatedAt(),
+					UpdatedAt:   job.GetUpdatedAt(),
 				}
+				analysisJobs = append(analysisJobs, analysisJob)
 			}
 		}
 	}
@@ -231,9 +277,30 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 	}
 	var allAnalysisJobs []*gdbasez.AnalysisJobImpl
 	for _, job := range allJobs {
-		if analysisJob, ok := job.(*gdbasez.AnalysisJobImpl); ok {
-			allAnalysisJobs = append(allAnalysisJobs, analysisJob)
+		// Create concrete type from interface
+		analysisJob := &gdbasez.AnalysisJobImpl{
+			ID:          job.GetID(),
+			ProjectID:   job.GetProjectID(),
+			JobType:     job.GetJobType(),
+			Status:      job.GetStatus(),
+			SourceURL:   job.GetSourceURL(),
+			SourceType:  job.GetSourceType(),
+			InputData:   job.GetInputData(),
+			OutputData:  job.GetOutputData(),
+			ErrorMessage: job.GetErrorMessage(),
+			Progress:    job.GetProgress(),
+			StartedAt:   job.GetStartedAt(),
+			CompletedAt: job.GetCompletedAt(),
+			RetryCount:  job.GetRetryCount(),
+			MaxRetries:  job.GetMaxRetries(),
+			Metadata:    job.GetMetadata(),
+			UserID:      job.GetUserID(),
+			CreatedBy:   job.GetCreatedBy(),
+			UpdatedBy:   job.GetUpdatedBy(),
+			CreatedAt:   job.GetCreatedAt(),
+			UpdatedAt:   job.GetUpdatedAt(),
 		}
+		allAnalysisJobs = append(allAnalysisJobs, analysisJob)
 	}
 
 	// Calculate real metrics from analysis job data
@@ -276,16 +343,14 @@ func convertAnalysisJobToScorecardEntry(job *gdbasez.AnalysisJobImpl) *Scorecard
 	// Try to parse score from output data first, then metadata
 	outputData := job.GetOutputData()
 	if outputData != nil {
-		var outputMap map[string]interface{}
-		if err := json.Unmarshal(outputData, &outputMap); err == nil {
-			if scoreVal, ok := outputMap["overall_score"].(float64); ok {
-				score = scoreVal
-			}
-			if tagsVal, ok := outputMap["tags"].([]interface{}); ok {
-				for _, tag := range tagsVal {
-					if tagStr, ok := tag.(string); ok {
-						tags = append(tags, tagStr)
-					}
+		// outputData is already a map[string]interface{}
+		if scoreVal, ok := outputData["overall_score"].(float64); ok {
+			score = scoreVal
+		}
+		if tagsVal, ok := outputData["tags"].([]interface{}); ok {
+			for _, tag := range tagsVal {
+				if tagStr, ok := tag.(string); ok {
+					tags = append(tags, tagStr)
 				}
 			}
 		}
@@ -295,11 +360,9 @@ func convertAnalysisJobToScorecardEntry(job *gdbasez.AnalysisJobImpl) *Scorecard
 	if score == 0.0 {
 		metadata := job.GetMetadata()
 		if metadata != nil {
-			var metaData map[string]interface{}
-			if err := json.Unmarshal(metadata, &metaData); err == nil {
-				if scoreVal, ok := metaData["overall_score"].(float64); ok {
-					score = scoreVal
-				}
+			// metadata is already a map[string]interface{}
+			if scoreVal, ok := metadata["overall_score"].(float64); ok {
+				score = scoreVal
 			}
 		}
 	}
@@ -361,23 +424,19 @@ func generateAdviceFromAnalysisJobs(jobs []*gdbasez.AnalysisJobImpl, repoURL str
 			// Parse output data first, then metadata for scoring
 			outputData := job.GetOutputData()
 			if outputData != nil {
-				var outputMap map[string]interface{}
-				if err := json.Unmarshal(outputData, &outputMap); err == nil {
-					if score, ok := outputMap["overall_score"].(float64); ok {
-						avgScore += score
-						scoreCount++
-					}
+				// outputData is already a map[string]interface{}
+				if score, ok := outputData["overall_score"].(float64); ok {
+					avgScore += score
+					scoreCount++
 				}
 			} else {
 				// Fallback to metadata
 				metadata := job.GetMetadata()
 				if metadata != nil {
-					var metaData map[string]interface{}
-					if err := json.Unmarshal(metadata, &metaData); err == nil {
-						if score, ok := metaData["overall_score"].(float64); ok {
-							avgScore += score
-							scoreCount++
-						}
+					// metadata is already a map[string]interface{}
+					if score, ok := metadata["overall_score"].(float64); ok {
+						avgScore += score
+						scoreCount++
 					}
 				}
 			}
@@ -505,12 +564,10 @@ func calculateAnalysisMetrics(jobs []*gdbasez.AnalysisJobImpl, since time.Time, 
 			// Try output data first
 			outputData := job.GetOutputData()
 			if outputData != nil {
-				var outputMap map[string]interface{}
-				if err := json.Unmarshal(outputData, &outputMap); err == nil {
-					if scoreVal, ok := outputMap["overall_score"].(float64); ok {
-						score = scoreVal
-						found = true
-					}
+				// outputData is already a map[string]interface{}
+				if scoreVal, ok := outputData["overall_score"].(float64); ok {
+					score = scoreVal
+					found = true
 				}
 			}
 
@@ -518,12 +575,10 @@ func calculateAnalysisMetrics(jobs []*gdbasez.AnalysisJobImpl, since time.Time, 
 			if !found {
 				metadata := job.GetMetadata()
 				if metadata != nil {
-					var metaData map[string]interface{}
-					if err := json.Unmarshal(metadata, &metaData); err == nil {
-						if scoreVal, ok := metaData["overall_score"].(float64); ok {
-							score = scoreVal
-							found = true
-						}
+					// metadata is already a map[string]interface{}
+					if scoreVal, ok := metadata["overall_score"].(float64); ok {
+						score = scoreVal
+						found = true
 					}
 				}
 			}
@@ -607,11 +662,9 @@ func extractRepoNameFromAnalysisJob(job *gdbasez.AnalysisJobImpl) string {
 	// Try to extract from metadata
 	metadata := job.GetMetadata()
 	if metadata != nil {
-		var metaData map[string]interface{}
-		if err := json.Unmarshal(metadata, &metaData); err == nil {
-			if repoURL, ok := metaData["repo_url"].(string); ok {
-				return extractRepoName(repoURL)
-			}
+		// metadata is already a map[string]interface{}
+		if repoURL, ok := metadata["repo_url"].(string); ok {
+			return extractRepoName(repoURL)
 		}
 	}
 

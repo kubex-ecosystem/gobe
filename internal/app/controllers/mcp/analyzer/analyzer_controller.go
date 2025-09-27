@@ -4,14 +4,17 @@ package analyzer
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	gdbtypes "github.com/kubex-ecosystem/gdbase/types"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
 	"gorm.io/gorm"
 
@@ -24,7 +27,7 @@ type AnalyzerController struct {
 	dbConn          *gorm.DB
 	APIWrapper      *t.APIWrapper[any]
 	analyzerService *analyzer.Service
-	jobService      m.JobQueueService
+	analysisService m.AnalysisJobService
 }
 
 func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
@@ -37,11 +40,18 @@ func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
 	analyzerAPIKey := getEnv("GEMX_ANALYZER_API_KEY", "")
 
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
-	jobService := m.NewJobQueueService(m.NewJobQueueRepo(db))
+
+	var analysisService m.AnalysisJobService
+	if db != nil {
+		analysisRepo := m.NewAnalysisJobRepo(db)
+		analysisService = m.NewAnalysisJobService(analysisRepo)
+	} else {
+		gl.Log("warn", "Analysis job service initialized without database connection")
+	}
 
 	// Auto-migrate analysis jobs table
 	if db != nil {
-		if err := db.AutoMigrate(m.NewJobQueueModel()); err != nil {
+		if err := db.AutoMigrate(m.NewAnalysisJobModel()); err != nil {
 			gl.Log("error", "Failed to migrate AnalysisJob table", err)
 		}
 	}
@@ -50,7 +60,7 @@ func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
 		dbConn:          db,
 		APIWrapper:      t.NewAPIWrapper[any](),
 		analyzerService: analyzerService,
-		jobService:      jobService,
+		analysisService: analysisService,
 	}
 }
 
@@ -122,24 +132,134 @@ func getDORAGrade(dora analyzer.DORAMetrics) string {
 type RepositoryIntelligenceRequest struct {
 	RepoURL        string                 `json:"repo_url" binding:"required"`
 	AnalysisType   string                 `json:"analysis_type" binding:"required"`
+	ProjectID      string                 `json:"project_id,omitempty"`
+	SourceType     string                 `json:"source_type,omitempty"`
 	Configuration  map[string]interface{} `json:"configuration,omitempty"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 	ScheduledBy    string                 `json:"scheduled_by,omitempty"`
 	NotifyChannels []string               `json:"notify_channels,omitempty"`
+	MaxRetries     *int                   `json:"max_retries,omitempty"`
+	UserID         string                 `json:"user_id,omitempty"`
 }
 
 type AnalysisJob struct {
 	ID           string                 `json:"id"`
-	RepoURL      string                 `json:"repo_url"`
-	AnalysisType string                 `json:"analysis_type"`
-	Status       string                 `json:"status"` // "scheduled", "running", "completed", "failed"
+	JobType      string                 `json:"job_type"`
+	Status       string                 `json:"status"`
+	RepoURL      string                 `json:"repo_url,omitempty"`
+	SourceType   string                 `json:"source_type,omitempty"`
+	AnalysisType string                 `json:"analysis_type,omitempty"`
 	Progress     float64                `json:"progress"`
 	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at,omitempty"`
 	StartedAt    *time.Time             `json:"started_at,omitempty"`
 	CompletedAt  *time.Time             `json:"completed_at,omitempty"`
 	Error        string                 `json:"error,omitempty"`
+	ErrorMessage string                 `json:"error_message,omitempty"`
+	InputData    map[string]interface{} `json:"input_data,omitempty"`
+	OutputData   map[string]interface{} `json:"output_data,omitempty"`
 	Results      map[string]interface{} `json:"results,omitempty"`
-	ScheduledBy  string                 `json:"scheduled_by,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	ScheduledBy  string                 `json:"scheduled_by,omitempty"`
+	ProjectID    string                 `json:"project_id,omitempty"`
+	UserID       string                 `json:"user_id,omitempty"`
+	RetryCount   int                    `json:"retry_count,omitempty"`
+	MaxRetries   int                    `json:"max_retries,omitempty"`
+}
+
+var (
+	analysisTypeMappings = map[string]string{
+		"SCORECARD":            "SCORECARD_ANALYSIS",
+		"SCORECARD_ANALYSIS":   "SCORECARD_ANALYSIS",
+		"FULL":                 "SCORECARD_ANALYSIS",
+		"DORA":                 "SCORECARD_ANALYSIS",
+		"CHI":                  "SCORECARD_ANALYSIS",
+		"COMMUNITY":            "SCORECARD_ANALYSIS",
+		"CODE":                 "CODE_ANALYSIS",
+		"CODE_ANALYSIS":        "CODE_ANALYSIS",
+		"SECURITY":             "SECURITY_ANALYSIS",
+		"SECURITY_ANALYSIS":    "SECURITY_ANALYSIS",
+		"PERFORMANCE":          "PERFORMANCE_ANALYSIS",
+		"PERFORMANCE_ANALYSIS": "PERFORMANCE_ANALYSIS",
+		"DEPENDENCY":           "DEPENDENCY_ANALYSIS",
+		"DEPENDENCIES":         "DEPENDENCY_ANALYSIS",
+		"DEPENDENCY_ANALYSIS":  "DEPENDENCY_ANALYSIS",
+	}
+	analysisTypeAliasList = []string{
+		"scorecard",
+		"dora",
+		"chi",
+		"community",
+		"security",
+		"full",
+		"code",
+		"performance",
+		"dependency",
+		"dependencies",
+	}
+)
+
+func supportedAnalysisAliases() []string {
+	aliases := make([]string, 0, len(analysisTypeAliasList))
+	seen := make(map[string]struct{}, len(analysisTypeAliasList))
+	for _, alias := range analysisTypeAliasList {
+		key := strings.ToLower(strings.TrimSpace(alias))
+		if key == "" {
+			continue
+		}
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		aliases = append(aliases, key)
+	}
+	return aliases
+}
+
+func resolveAnalysisJobType(requested string) (string, string, error) {
+	alias := strings.TrimSpace(requested)
+	if alias == "" {
+		return "", "", fmt.Errorf("analysis type is required")
+	}
+
+	lookupKey := strings.ToUpper(strings.ReplaceAll(strings.ReplaceAll(alias, "-", "_"), " ", "_"))
+	jobType, ok := analysisTypeMappings[lookupKey]
+	if !ok {
+		return "", "", fmt.Errorf("unsupported analysis type: %s", requested)
+	}
+
+	normalized := strings.ToLower(strings.TrimSpace(alias))
+	if normalized == "" {
+		normalized = strings.ToLower(jobType)
+	}
+
+	return jobType, normalized, nil
+}
+
+func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	if ctx == nil {
+		return uuid.Nil, false
+	}
+	if value := ctx.Value(t.CtxKey("userID")); value != nil {
+		if id, ok := value.(uuid.UUID); ok {
+			return id, true
+		}
+	}
+	return uuid.Nil, false
+}
+
+func mergeMetadata(base map[string]interface{}, extra map[string]interface{}) map[string]interface{} {
+	if len(base) == 0 && len(extra) == 0 {
+		return nil
+	}
+	merged := make(map[string]interface{}, len(base)+len(extra))
+	for key, value := range base {
+		merged[key] = value
+	}
+	for key, value := range extra {
+		merged[key] = value
+	}
+	return merged
 }
 
 // Use types from analyzer package
@@ -182,59 +302,126 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 		return
 	}
 
-	// Validate analysis type
-	validTypes := []string{"scorecard", "dora", "chi", "community", "security", "full"}
-	isValid := false
-	for _, validType := range validTypes {
-		if req.AnalysisType == validType {
-			isValid = true
-			break
-		}
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
 	}
 
-	if !isValid {
+	jobType, normalizedType, err := resolveAnalysisJobType(req.AnalysisType)
+	if err != nil {
+		gl.Log("warn", "Invalid analysis type", "value", req.AnalysisType, "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":       "Invalid analysis type",
-			"valid_types": validTypes,
+			"valid_types": supportedAnalysisAliases(),
 		})
 		return
 	}
 
-	// Create job using the real job service
-	// createReq := m.NewJobQueueModel()
+	ctx, ctxErr := ac.APIWrapper.GetContext(c)
+	var userID uuid.UUID
+	if ctxErr == nil {
+		if value, ok := userIDFromContext(ctx); ok {
+			userID = value
+		}
+	}
 
-	// createReq
-	// 	RepoURL:        req.RepoURL,
-	// 	AnalysisType:   req.AnalysisType,
-	// 	ScheduledBy:    req.ScheduledBy,
-	// 	Configuration:  req.Configuration,
-	// 	NotifyChannels: req.NotifyChannels,
-	// 	AutoStart:      true, // Start job immediately
-	// 	Metadata: map[string]interface{}{
-	// 		"source":     "gobe_mcp",
-	// 		"created_by": "analyzer_controller",
-	// 	},
-	// }
+	if userID == uuid.Nil && req.UserID != "" {
+		parsed, parseErr := uuid.Parse(req.UserID)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+			return
+		}
+		userID = parsed
+		ctx = context.WithValue(c.Request.Context(), t.CtxKey("userID"), userID)
+	}
 
-	// job, err := ac.jobService.CreateJob(c.Request.Context(), createReq)
-	// if err != nil {
-	// 	gl.Log("error", "Failed to create analysis job", err)
-	// 	c.JSON(http.StatusInternalServerError, gin.H{
-	// 		"error": "Failed to schedule repository analysis",
-	// 	})
-	// 	return
-	// }
+	if userID == uuid.Nil {
+		gl.Log("warn", "Missing user identifier for analyzer schedule")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID is required"})
+		return
+	}
 
-	// // Convert model to response format
-	// response := convertModelToAnalysisJob(job)
+	projectID := uuid.Nil
+	if req.ProjectID != "" {
+		parsed, parseErr := uuid.Parse(req.ProjectID)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project_id"})
+			return
+		}
+		projectID = parsed
+	}
 
-	// gl.Log("info", "Repository analysis scheduled",
-	// 	"job_id", job.ID,
-	// 	"repo_url", job.RepoURL,
-	// 	"analysis_type", job.AnalysisType,
-	// 	"scheduled_by", job.ScheduledBy)
+	sourceType := strings.TrimSpace(req.SourceType)
+	if sourceType == "" {
+		sourceType = "repository"
+	}
 
-	// c.JSON(http.StatusCreated, response)
+	inputData := make(map[string]interface{})
+	for key, value := range req.Configuration {
+		inputData[key] = value
+	}
+	if len(req.NotifyChannels) > 0 {
+		inputData["notify_channels"] = req.NotifyChannels
+	}
+
+	metadata := map[string]interface{}{
+		"source":                  "gobe_mcp",
+		"requested_analysis_type": normalizedType,
+		"canonical_analysis_type": strings.ToLower(jobType),
+	}
+	if req.ScheduledBy != "" {
+		metadata["scheduled_by"] = req.ScheduledBy
+	}
+	if len(req.NotifyChannels) > 0 {
+		metadata["notify_channels"] = req.NotifyChannels
+	}
+	for key, value := range req.Metadata {
+		metadata[key] = value
+	}
+
+	analysisJob := &m.AnalysisJobImpl{}
+	analysisJob.SetJobType(jobType)
+	analysisJob.SetStatus("PENDING")
+	analysisJob.SetSourceURL(strings.TrimSpace(req.RepoURL))
+	analysisJob.SetSourceType(sourceType)
+	analysisJob.SetProgress(0)
+	analysisJob.SetUserID(userID)
+	analysisJob.SetCreatedBy(userID)
+	analysisJob.SetUpdatedBy(userID)
+	analysisJob.SetProjectID(projectID)
+	if len(inputData) > 0 {
+		analysisJob.SetInputData(gdbtypes.JSONB(inputData))
+	}
+	analysisJob.SetMetadata(gdbtypes.JSONB(metadata))
+
+	maxRetries := 3
+	if req.MaxRetries != nil && *req.MaxRetries >= 0 {
+		maxRetries = *req.MaxRetries
+	}
+	analysisJob.SetMaxRetries(maxRetries)
+	analysisJob.SetRetryCount(0)
+
+	createdJob, err := ac.analysisService.CreateJob(ctx, analysisJob)
+	if err != nil {
+		gl.Log("error", "Failed to create analysis job", "repo_url", req.RepoURL, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to schedule repository analysis"})
+		return
+	}
+
+	response := convertModelToAnalysisJob(createdJob)
+	if response.AnalysisType == "" {
+		response.AnalysisType = normalizedType
+	}
+	response.Metadata = mergeMetadata(response.Metadata, metadata)
+
+	gl.Log("info", "Repository analysis scheduled",
+		"job_id", response.ID,
+		"repo_url", response.RepoURL,
+		"job_type", response.JobType,
+		"analysis_type", response.AnalysisType,
+		"user_id", userID.String())
+
+	c.JSON(http.StatusCreated, response)
 }
 
 // GetAnalysisStatus retrieves the status of a specific analysis job
@@ -256,11 +443,21 @@ func (ac *AnalyzerController) GetAnalysisStatus(c *gin.Context) {
 		return
 	}
 
-	// Get job from database using real job service
-	job, err := ac.jobService.GetJob(c.Request.Context(), jobID)
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
+	}
+
+	identifier, err := uuid.Parse(jobID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid job ID"})
+		return
+	}
+
+	job, err := ac.analysisService.GetJobByID(c.Request.Context(), identifier)
 	if err != nil {
 		gl.Log("error", "Failed to get analysis job", "job_id", jobID, "error", err)
-		if err.Error() == fmt.Sprintf("job not found: %s", jobID) {
+		if isNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve job status"})
@@ -268,11 +465,8 @@ func (ac *AnalyzerController) GetAnalysisStatus(c *gin.Context) {
 		return
 	}
 
-	// Convert model to response format
 	response := convertModelToAnalysisJob(job)
-
-	gl.Log("info", "Analysis status retrieved", "job_id", jobID, "status", job.Status)
-
+	gl.Log("info", "Analysis status retrieved", "job_id", jobID, "status", response.Status)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -298,11 +492,21 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 		return
 	}
 
-	// Get job from database using real job service
-	job, err := ac.jobService.GetJob(c.Request.Context(), jobID)
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
+	}
+
+	identifier, err := uuid.Parse(jobID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid job ID"})
+		return
+	}
+
+	job, err := ac.analysisService.GetJobByID(c.Request.Context(), identifier)
 	if err != nil {
 		gl.Log("error", "Failed to get analysis job for results", "job_id", jobID, "error", err)
-		if err.Error() == fmt.Sprintf("job not found: %s", jobID) {
+		if isNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve job"})
@@ -310,84 +514,58 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 		return
 	}
 
-	// Check if job is completed
-	if !job.IsCompleted() {
+	status := strings.ToUpper(job.GetStatus())
+	if status != "COMPLETED" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":  "Job is not completed yet",
-			"status": job.Status,
+			"status": job.GetStatus(),
 		})
 		return
 	}
 
-	// Parse results from database
-	if job.Results == "" {
+	results := jsonbToMap(job.GetOutputData())
+	if len(results) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "No results available for this job"})
 		return
 	}
 
-	var results map[string]interface{}
-	if err := json.Unmarshal([]byte(job.Results), &results); err != nil {
-		gl.Log("error", "Failed to parse job results", "job_id", jobID, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse results"})
-		return
-	}
-
-	// Return results based on requested format
-	switch format {
+	switch strings.ToLower(format) {
 	case "scorecard":
-		// If the result contains a scorecard object, return it directly
 		if scorecard, ok := results["scorecard"]; ok {
 			gl.Log("info", "Scorecard results retrieved", "job_id", jobID)
 			c.JSON(http.StatusOK, scorecard)
 			return
 		}
-
-		// Otherwise, return the raw results as scorecard format
-		gl.Log("info", "Raw results retrieved as scorecard", "job_id", jobID)
+		gl.Log("info", "Returning raw results for scorecard format", "job_id", jobID)
 		c.JSON(http.StatusOK, results)
-
 	case "dora":
-		// Extract DORA metrics if available
-		if scorecard, ok := results["scorecard"].(map[string]interface{}); ok {
-			if dora, exists := scorecard["dora"]; exists {
-				gl.Log("info", "DORA metrics retrieved", "job_id", jobID)
-				c.JSON(http.StatusOK, dora)
-				return
-			}
+		if section := nestedMapValue(results, "scorecard", "dora"); section != nil {
+			gl.Log("info", "DORA metrics retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, section)
+			return
 		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "DORA metrics not available"})
-
 	case "chi":
-		// Extract CHI metrics if available
-		if scorecard, ok := results["scorecard"].(map[string]interface{}); ok {
-			if chi, exists := scorecard["chi"]; exists {
-				gl.Log("info", "CHI metrics retrieved", "job_id", jobID)
-				c.JSON(http.StatusOK, chi)
-				return
-			}
+		if section := nestedMapValue(results, "scorecard", "chi"); section != nil {
+			gl.Log("info", "CHI metrics retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, section)
+			return
 		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "CHI metrics not available"})
-
 	case "ai":
-		// Extract AI metrics if available
-		if scorecard, ok := results["scorecard"].(map[string]interface{}); ok {
-			if ai, exists := scorecard["ai"]; exists {
-				gl.Log("info", "AI metrics retrieved", "job_id", jobID)
-				c.JSON(http.StatusOK, ai)
-				return
-			}
+		if section := nestedMapValue(results, "scorecard", "ai"); section != nil {
+			gl.Log("info", "AI metrics retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, section)
+			return
 		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "AI metrics not available"})
-
 	case "summary":
-		// Return summary from results
-		if summary, exists := results["summary"]; exists {
+		if summary, ok := results["summary"]; ok {
 			gl.Log("info", "Summary results retrieved", "job_id", jobID)
 			c.JSON(http.StatusOK, summary)
 			return
 		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "Summary not available"})
-
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":         "Invalid format",
@@ -415,6 +593,8 @@ func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 	repoURL := c.Query("repo_url")
 	analysisType := c.Query("analysis_type")
 	scheduledBy := c.Query("scheduled_by")
+	projectIDValue := c.Query("project_id")
+	userIDValue := c.Query("user_id")
 	limitStr := c.DefaultQuery("limit", "50")
 	offsetStr := c.DefaultQuery("offset", "0")
 
@@ -431,40 +611,102 @@ func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 		offset = 0
 	}
 
-	// Create filter for job service
-	filter := analysis.ListJobsFilter{
-		Status:       status,
-		RepoURL:      repoURL,
-		AnalysisType: analysisType,
-		ScheduledBy:  scheduledBy,
-		Limit:        limit,
-		Offset:       offset,
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
 	}
 
-	// Get jobs from database using real job service
-	jobs, total, err := ac.jobService.ListJobs(c.Request.Context(), filter)
+	projectID := uuid.Nil
+	if projectIDValue != "" {
+		parsed, parseErr := uuid.Parse(projectIDValue)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project_id"})
+			return
+		}
+		projectID = parsed
+	}
+
+	userID := uuid.Nil
+	if userIDValue != "" {
+		parsed, parseErr := uuid.Parse(userIDValue)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+			return
+		}
+		userID = parsed
+	}
+
+	jobs, err := ac.analysisService.ListJobs(c.Request.Context())
 	if err != nil {
 		gl.Log("error", "Failed to list analysis jobs", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve jobs"})
 		return
 	}
 
-	// Convert models to response format
-	responseJobs := make([]AnalysisJob, len(jobs))
-	for i, job := range jobs {
+	filtered := make([]*m.AnalysisJobImpl, 0, len(jobs))
+	statusFilter := strings.TrimSpace(status)
+	repoFilter := strings.ToLower(strings.TrimSpace(repoURL))
+	analysisFilter := strings.ToLower(strings.TrimSpace(analysisType))
+	scheduledFilter := strings.ToLower(strings.TrimSpace(scheduledBy))
+
+	for _, job := range jobs {
+		if job == nil {
+			continue
+		}
+		if statusFilter != "" && !strings.EqualFold(job.GetStatus(), statusFilter) {
+			continue
+		}
+		if repoFilter != "" && !strings.Contains(strings.ToLower(job.GetSourceURL()), repoFilter) {
+			continue
+		}
+		if projectID != uuid.Nil && job.GetProjectID() != projectID {
+			continue
+		}
+		if userID != uuid.Nil && job.GetUserID() != userID {
+			continue
+		}
+
+		metadata := jsonbToMap(job.GetMetadata())
+		analysisLabel := determineAnalysisLabel(job, metadata)
+		if analysisFilter != "" && !strings.EqualFold(analysisLabel, analysisFilter) && !strings.EqualFold(job.GetJobType(), analysisFilter) {
+			continue
+		}
+		if scheduledFilter != "" {
+			scheduledMeta := ""
+			if val, ok := metadata["scheduled_by"].(string); ok {
+				scheduledMeta = strings.ToLower(strings.TrimSpace(val))
+			}
+			if scheduledMeta == "" || scheduledMeta != scheduledFilter {
+				continue
+			}
+		}
+
+		filtered = append(filtered, job)
+	}
+
+	total := len(filtered)
+	if offset > total {
+		offset = total
+	}
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+	paged := filtered[offset:end]
+
+	responseJobs := make([]AnalysisJob, len(paged))
+	for i, job := range paged {
 		responseJobs[i] = convertModelToAnalysisJob(job)
 	}
 
 	gl.Log("info", "Analysis jobs listed", "total", total, "returned", len(responseJobs))
 
-	response := map[string]interface{}{
+	c.JSON(http.StatusOK, gin.H{
 		"jobs":   responseJobs,
 		"total":  total,
 		"limit":  limit,
 		"offset": offset,
-	}
-
-	c.JSON(http.StatusOK, response)
+	})
 }
 
 // SendNotification sends notifications through the GoBE notification system
@@ -736,35 +978,142 @@ func (ac *AnalyzerController) GetSystemHealth(c *gin.Context) {
 }
 
 // convertModelToAnalysisJob converts database model to API response format
-func convertModelToAnalysisJob(job *models.AnalysisJob) AnalysisJob {
+func convertModelToAnalysisJob(job *m.AnalysisJobImpl) AnalysisJob {
+	if job == nil {
+		return AnalysisJob{}
+	}
+
 	response := AnalysisJob{
-		ID:           job.ID,
-		RepoURL:      job.RepoURL,
-		AnalysisType: job.AnalysisType,
-		Status:       job.Status,
-		Progress:     job.Progress,
-		CreatedAt:    job.CreatedAt,
-		StartedAt:    job.StartedAt,
-		CompletedAt:  job.CompletedAt,
-		ScheduledBy:  job.ScheduledBy,
-		Error:        job.Error,
+		ID:         job.GetID().String(),
+		JobType:    job.GetJobType(),
+		Status:     job.GetStatus(),
+		RepoURL:    job.GetSourceURL(),
+		SourceType: job.GetSourceType(),
+		Progress:   job.GetProgress(),
+		CreatedAt:  job.GetCreatedAt(),
+		RetryCount: job.GetRetryCount(),
+		MaxRetries: job.GetMaxRetries(),
 	}
 
-	// Parse Results from JSON string to map
-	if job.Results != "" {
-		var results map[string]interface{}
-		if err := json.Unmarshal([]byte(job.Results), &results); err == nil {
-			response.Results = results
+	if startedAt := job.GetStartedAt(); !startedAt.IsZero() {
+		value := startedAt
+		response.StartedAt = &value
+	}
+
+	if completedAt := job.GetCompletedAt(); !completedAt.IsZero() {
+		value := completedAt
+		response.CompletedAt = &value
+	}
+
+	if updatedAt := job.GetUpdatedAt(); !updatedAt.IsZero() {
+		response.UpdatedAt = updatedAt
+	}
+
+	if projectID := job.GetProjectID(); projectID != uuid.Nil {
+		response.ProjectID = projectID.String()
+	}
+
+	if userID := job.GetUserID(); userID != uuid.Nil {
+		response.UserID = userID.String()
+	}
+
+	inputData := jsonbToMap(job.GetInputData())
+	if len(inputData) > 0 {
+		response.InputData = inputData
+	}
+
+	outputData := jsonbToMap(job.GetOutputData())
+	if len(outputData) > 0 {
+		response.OutputData = outputData
+		response.Results = outputData
+	}
+
+	metadata := jsonbToMap(job.GetMetadata())
+	if len(metadata) > 0 {
+		response.Metadata = metadata
+		if scheduledBy, ok := metadata["scheduled_by"].(string); ok {
+			response.ScheduledBy = scheduledBy
+		}
+		if requested, ok := metadata["requested_analysis_type"].(string); ok && requested != "" {
+			response.AnalysisType = strings.ToLower(requested)
 		}
 	}
 
-	// Parse Metadata from JSON string to map
-	if job.Metadata != "" {
-		var metadata map[string]interface{}
-		if err := json.Unmarshal([]byte(job.Metadata), &metadata); err == nil {
-			response.Metadata = metadata
-		}
+	if response.AnalysisType == "" {
+		response.AnalysisType = determineAnalysisLabel(job, metadata)
 	}
+
+	response.Error = job.GetErrorMessage()
+	response.ErrorMessage = job.GetErrorMessage()
 
 	return response
+}
+
+func jsonbToMap(data gdbtypes.JSONB) map[string]interface{} {
+	if data == nil {
+		return nil
+	}
+	result := make(map[string]interface{}, len(data))
+	for key, value := range data {
+		result[key] = value
+	}
+	return result
+}
+
+func nestedMapValue(root map[string]interface{}, keys ...string) interface{} {
+	if len(keys) == 0 || len(root) == 0 {
+		return nil
+	}
+	current := root
+	for idx, key := range keys {
+		value, ok := current[key]
+		if !ok {
+			return nil
+		}
+		if idx == len(keys)-1 {
+			return value
+		}
+		next, ok := value.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		current = next
+	}
+	return nil
+}
+
+func determineAnalysisLabel(job *m.AnalysisJobImpl, metadata map[string]interface{}) string {
+	if metadata != nil {
+		if value, ok := metadata["requested_analysis_type"].(string); ok && strings.TrimSpace(value) != "" {
+			return strings.ToLower(strings.TrimSpace(value))
+		}
+		if value, ok := metadata["analysis_type"].(string); ok && strings.TrimSpace(value) != "" {
+			return strings.ToLower(strings.TrimSpace(value))
+		}
+	}
+
+	switch strings.ToUpper(job.GetJobType()) {
+	case "SCORECARD_ANALYSIS":
+		return "scorecard"
+	case "CODE_ANALYSIS":
+		return "code"
+	case "SECURITY_ANALYSIS":
+		return "security"
+	case "PERFORMANCE_ANALYSIS":
+		return "performance"
+	case "DEPENDENCY_ANALYSIS":
+		return "dependency"
+	default:
+		return strings.ToLower(job.GetJobType())
+	}
+}
+
+func isNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return true
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "not found")
 }
