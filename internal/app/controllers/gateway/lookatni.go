@@ -68,23 +68,23 @@ func (lc *LookAtniController) Extract(c *gin.Context) {
 
 	// Create new analysis job for extraction
 	job := &gdbasez.AnalysisJobImpl{
-		ID:        uuid.New(),
-		JobType:   "CODE_ANALYSIS",
-		Status:    "PENDING",
-		SourceURL: sourceURL,
+		ID:         uuid.New(),
+		JobType:    "CODE_ANALYSIS",
+		Status:     "PENDING",
+		SourceURL:  sourceURL,
 		SourceType: "extraction",
-		InputData: payload,
+		InputData:  payload,
 		Metadata: map[string]interface{}{
-			"operation": "extract",
+			"operation":    "extract",
 			"requested_at": time.Now().UTC(),
-			"client_ip": c.ClientIP(),
+			"client_ip":    c.ClientIP(),
 		},
 		MaxRetries: 3,
-		UserID:    uuid.New(), // TODO: Get from auth context
-		CreatedBy: uuid.New(), // TODO: Get from auth context
-		UpdatedBy: uuid.New(), // TODO: Get from auth context
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		UserID:     uuid.New(), // TODO: Get from auth context
+		CreatedBy:  uuid.New(), // TODO: Get from auth context
+		UpdatedBy:  nil,        // TODO: Get from auth context
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
 	// Save job to database
@@ -138,24 +138,24 @@ func (lc *LookAtniController) Archive(c *gin.Context) {
 
 	// Create new analysis job for archiving
 	job := &gdbasez.AnalysisJobImpl{
-		ID:        uuid.New(),
-		JobType:   "DEPENDENCY_ANALYSIS",
-		Status:    "PENDING",
-		SourceURL: fmt.Sprintf("lookatni://archive/%s", projectID),
+		ID:         uuid.New(),
+		JobType:    "DEPENDENCY_ANALYSIS",
+		Status:     "PENDING",
+		SourceURL:  fmt.Sprintf("lookatni://archive/%s", projectID),
 		SourceType: "archive",
-		InputData: payload,
+		InputData:  payload,
 		Metadata: map[string]interface{}{
-			"operation": "archive",
-			"project_id": projectID,
+			"operation":    "archive",
+			"project_id":   projectID,
 			"requested_at": time.Now().UTC(),
-			"client_ip": c.ClientIP(),
+			"client_ip":    c.ClientIP(),
 		},
 		MaxRetries: 3,
-		UserID:    uuid.New(), // TODO: Get from auth context
-		CreatedBy: uuid.New(), // TODO: Get from auth context
-		UpdatedBy: uuid.New(), // TODO: Get from auth context
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		UserID:     uuid.New(), // TODO: Get from auth context
+		CreatedBy:  uuid.New(), // TODO: Get from auth context
+		UpdatedBy:  nil,        // TODO: Get from auth context
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
 	// Save job to database
@@ -261,11 +261,11 @@ func (lc *LookAtniController) Projects(c *gin.Context) {
 				if projectID, ok := metadata["project_id"].(string); ok && projectID != "" {
 					if _, exists := projectMap[projectID]; !exists {
 						projectMap[projectID] = map[string]interface{}{
-							"id":          projectID,
-							"name":        extractProjectName(job.GetSourceURL()),
-							"description": fmt.Sprintf("LookAtni project with %s operations", job.GetJobType()),
+							"id":            projectID,
+							"name":          extractProjectName(job.GetSourceURL()),
+							"description":   fmt.Sprintf("LookAtni project with %s operations", job.GetJobType()),
 							"last_activity": job.GetUpdatedAt(),
-							"status": job.GetStatus(),
+							"status":        job.GetStatus(),
 						}
 					}
 				}
@@ -352,14 +352,14 @@ func (lc *LookAtniController) processArchiveJob(ctx context.Context, job gdbasez
 
 	// For now, create mock output data
 	outputData := map[string]interface{}{
-		"archive_type":    "dependency_analysis",
-		"project_id":      job.GetInputData()["project_id"],
-		"archived_size":   "2.5MB",
-		"files_archived":  42,
-		"archive_url":     fmt.Sprintf("https://storage.lookatni.local/archives/%s.tar.gz", job.GetID()),
-		"retention_days":  90,
-		"overall_score":   0.92,
-		"completed_at":    time.Now().UTC(),
+		"archive_type":   "dependency_analysis",
+		"project_id":     job.GetInputData()["project_id"],
+		"archived_size":  "2.5MB",
+		"files_archived": 42,
+		"archive_url":    fmt.Sprintf("https://storage.lookatni.local/archives/%s.tar.gz", job.GetID()),
+		"retention_days": 90,
+		"overall_score":  0.92,
+		"completed_at":   time.Now().UTC(),
 	}
 
 	// Complete the job with output data

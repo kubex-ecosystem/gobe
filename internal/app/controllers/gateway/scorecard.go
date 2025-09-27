@@ -19,9 +19,9 @@ import (
 
 // ScorecardController exposes real scorecard and metrics endpoints.
 type ScorecardController struct {
-	db                    *gorm.DB
-	analyzerService       *analyzer.Service
-	analysisJobService    gdbasez.AnalysisJobService
+	db                 *gorm.DB
+	analyzerService    *analyzer.Service
+	analysisJobService gdbasez.AnalysisJobService
 }
 
 func NewScorecardController(db *gorm.DB) *ScorecardController {
@@ -86,28 +86,31 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 	analysisJobs := make([]*gdbasez.AnalysisJobImpl, 0)
 	for _, job := range jobs {
 		if job.GetJobType() == "SCORECARD_ANALYSIS" {
+			errorMsg := job.GetErrorMessage()
+			completedAt := job.GetCompletedAt()
+			updatedBy := job.GetUpdatedBy()
 			// Create concrete type from interface
 			analysisJob := &gdbasez.AnalysisJobImpl{
-				ID:          job.GetID(),
-				ProjectID:   job.GetProjectID(),
-				JobType:     job.GetJobType(),
-				Status:      job.GetStatus(),
-				SourceURL:   job.GetSourceURL(),
-				SourceType:  job.GetSourceType(),
-				InputData:   job.GetInputData(),
-				OutputData:  job.GetOutputData(),
-				ErrorMessage: job.GetErrorMessage(),
-				Progress:    job.GetProgress(),
-				StartedAt:   job.GetStartedAt(),
-				CompletedAt: job.GetCompletedAt(),
-				RetryCount:  job.GetRetryCount(),
-				MaxRetries:  job.GetMaxRetries(),
-				Metadata:    job.GetMetadata(),
-				UserID:      job.GetUserID(),
-				CreatedBy:   job.GetCreatedBy(),
-				UpdatedBy:   job.GetUpdatedBy(),
-				CreatedAt:   job.GetCreatedAt(),
-				UpdatedAt:   job.GetUpdatedAt(),
+				ID:           job.GetID(),
+				ProjectID:    job.GetProjectID(),
+				JobType:      job.GetJobType(),
+				Status:       job.GetStatus(),
+				SourceURL:    job.GetSourceURL(),
+				SourceType:   job.GetSourceType(),
+				InputData:    job.GetInputData(),
+				OutputData:   job.GetOutputData(),
+				ErrorMessage: &errorMsg,
+				Progress:     job.GetProgress(),
+				StartedAt:    job.GetStartedAt(),
+				CompletedAt:  &completedAt,
+				RetryCount:   job.GetRetryCount(),
+				MaxRetries:   job.GetMaxRetries(),
+				Metadata:     job.GetMetadata(),
+				UserID:       job.GetUserID(),
+				CreatedBy:    job.GetCreatedBy(),
+				UpdatedBy:    &updatedBy,
+				CreatedAt:    job.GetCreatedAt(),
+				UpdatedAt:    job.GetUpdatedAt(),
 			}
 			analysisJobs = append(analysisJobs, analysisJob)
 		}
@@ -189,28 +192,31 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 			if repoURL == "" ||
 				strings.Contains(job.GetSourceURL(), repoURL) ||
 				strings.Contains(metadataStr, repoURL) {
+				errorMsg := job.GetErrorMessage()
+				completedAt := job.GetCompletedAt()
+				updatedBy := job.GetUpdatedBy()
 				// Create concrete type from interface
 				analysisJob := &gdbasez.AnalysisJobImpl{
-					ID:          job.GetID(),
-					ProjectID:   job.GetProjectID(),
-					JobType:     job.GetJobType(),
-					Status:      job.GetStatus(),
-					SourceURL:   job.GetSourceURL(),
-					SourceType:  job.GetSourceType(),
-					InputData:   job.GetInputData(),
-					OutputData:  job.GetOutputData(),
-					ErrorMessage: job.GetErrorMessage(),
-					Progress:    job.GetProgress(),
-					StartedAt:   job.GetStartedAt(),
-					CompletedAt: job.GetCompletedAt(),
-					RetryCount:  job.GetRetryCount(),
-					MaxRetries:  job.GetMaxRetries(),
-					Metadata:    job.GetMetadata(),
-					UserID:      job.GetUserID(),
-					CreatedBy:   job.GetCreatedBy(),
-					UpdatedBy:   job.GetUpdatedBy(),
-					CreatedAt:   job.GetCreatedAt(),
-					UpdatedAt:   job.GetUpdatedAt(),
+					ID:           job.GetID(),
+					ProjectID:    job.GetProjectID(),
+					JobType:      job.GetJobType(),
+					Status:       job.GetStatus(),
+					SourceURL:    job.GetSourceURL(),
+					SourceType:   job.GetSourceType(),
+					InputData:    job.GetInputData(),
+					OutputData:   job.GetOutputData(),
+					ErrorMessage: &errorMsg,
+					Progress:     job.GetProgress(),
+					StartedAt:    job.GetStartedAt(),
+					CompletedAt:  &completedAt,
+					RetryCount:   job.GetRetryCount(),
+					MaxRetries:   job.GetMaxRetries(),
+					Metadata:     job.GetMetadata(),
+					UserID:       job.GetUserID(),
+					CreatedBy:    job.GetCreatedBy(),
+					UpdatedBy:    &updatedBy,
+					CreatedAt:    job.GetCreatedAt(),
+					UpdatedAt:    job.GetUpdatedAt(),
 				}
 				analysisJobs = append(analysisJobs, analysisJob)
 			}
@@ -277,28 +283,31 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 	}
 	var allAnalysisJobs []*gdbasez.AnalysisJobImpl
 	for _, job := range allJobs {
+		errorMsg := job.GetErrorMessage()
+		completedAt := job.GetCompletedAt()
+		updatedBy := job.GetUpdatedBy()
 		// Create concrete type from interface
 		analysisJob := &gdbasez.AnalysisJobImpl{
-			ID:          job.GetID(),
-			ProjectID:   job.GetProjectID(),
-			JobType:     job.GetJobType(),
-			Status:      job.GetStatus(),
-			SourceURL:   job.GetSourceURL(),
-			SourceType:  job.GetSourceType(),
-			InputData:   job.GetInputData(),
-			OutputData:  job.GetOutputData(),
-			ErrorMessage: job.GetErrorMessage(),
-			Progress:    job.GetProgress(),
-			StartedAt:   job.GetStartedAt(),
-			CompletedAt: job.GetCompletedAt(),
-			RetryCount:  job.GetRetryCount(),
-			MaxRetries:  job.GetMaxRetries(),
-			Metadata:    job.GetMetadata(),
-			UserID:      job.GetUserID(),
-			CreatedBy:   job.GetCreatedBy(),
-			UpdatedBy:   job.GetUpdatedBy(),
-			CreatedAt:   job.GetCreatedAt(),
-			UpdatedAt:   job.GetUpdatedAt(),
+			ID:           job.GetID(),
+			ProjectID:    job.GetProjectID(),
+			JobType:      job.GetJobType(),
+			Status:       job.GetStatus(),
+			SourceURL:    job.GetSourceURL(),
+			SourceType:   job.GetSourceType(),
+			InputData:    job.GetInputData(),
+			OutputData:   job.GetOutputData(),
+			ErrorMessage: &errorMsg,
+			Progress:     job.GetProgress(),
+			StartedAt:    job.GetStartedAt(),
+			CompletedAt:  &completedAt,
+			RetryCount:   job.GetRetryCount(),
+			MaxRetries:   job.GetMaxRetries(),
+			Metadata:     job.GetMetadata(),
+			UserID:       job.GetUserID(),
+			CreatedBy:    job.GetCreatedBy(),
+			UpdatedBy:    &updatedBy,
+			CreatedAt:    job.GetCreatedAt(),
+			UpdatedAt:    job.GetUpdatedAt(),
 		}
 		allAnalysisJobs = append(allAnalysisJobs, analysisJob)
 	}
