@@ -1,3 +1,4 @@
+// Package gateway implements controllers for gateway-related endpoints.
 package gateway
 
 import (

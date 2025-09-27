@@ -421,7 +421,7 @@ func generateAdviceFromAnalysisJobs(jobs []*gdbasez.AnalysisJobImpl, repoURL str
 	avgScore := 0.0
 	scoreCount := 0
 	var lastJob *gdbasez.AnalysisJobImpl
-	issues := []string{}
+	// issues := []string{}
 	recommendations := []string{}
 
 	for _, job := range jobs {
@@ -451,13 +451,13 @@ func generateAdviceFromAnalysisJobs(jobs []*gdbasez.AnalysisJobImpl, repoURL str
 			}
 		}
 
-		if status == "FAILED" {
-			failedJobs++
-			errorMsg := job.GetErrorMessage()
-			if errorMsg != "" {
-				issues = append(issues, errorMsg)
-			}
-		}
+		// if status == "FAILED" {
+		// 	failedJobs++
+		// 	errorMsg := job.GetErrorMessage()
+		// 	if errorMsg != "" {
+		// 		issues = append(issues, errorMsg)
+		// 	}
+		// }
 
 		if lastJob == nil || job.GetUpdatedAt().After(lastJob.GetUpdatedAt()) {
 			lastJob = job
