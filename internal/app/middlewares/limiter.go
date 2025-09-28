@@ -57,8 +57,7 @@ func (cl *ClientLimiter) cleanupOldEntries() {
 	defer ticker.Stop()
 
 	for {
-		select {
-		case <-ticker.C:
+		for range ticker.C {
 			cl.mu.Lock()
 			now := time.Now()
 			for ip, lastSeen := range cl.lastSeen {
