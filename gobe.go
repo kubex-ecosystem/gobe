@@ -16,7 +16,6 @@ import (
 	gdbf "github.com/kubex-ecosystem/gdbase/factory"
 	"github.com/kubex-ecosystem/gdbase/services"
 	"github.com/kubex-ecosystem/gdbase/types"
-	ut "github.com/kubex-ecosystem/gdbase/utils"
 	crp "github.com/kubex-ecosystem/gobe/factory/security"
 	rts "github.com/kubex-ecosystem/gobe/internal/app/router"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
@@ -356,11 +355,19 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "json", bind, port)
 	if _, err := os.Stat(g.configFile); err != nil {
 		if os.IsNotExist(err) {
-			if err := ut.EnsureDir(filepath.Dir(g.configFile), 0644, []string{}); err != nil {
+			// if err := ut.EnsureDir(filepath.Dir(g.configFile), 0644, []string{}); err != nil {
+			// 	gl.Log("error", fmt.Sprintf("Error creating directory: %v", err))
+			// 	return nil, err
+			// }
+			if err := os.MkdirAll(filepath.Dir(g.configFile), 0755); err != nil {
 				gl.Log("error", fmt.Sprintf("Error creating directory: %v", err))
 				return nil, err
 			}
-			if err := ut.EnsureFile(g.configFile, 0644, []string{}); err != nil {
+			// if err := ut.EnsureFile(g.configFile, 0644, []string{}); err != nil {
+			// 	gl.Log("error", fmt.Sprintf("Error creating config file: %v", err))
+			// 	return nil, err
+			// }
+			if err := os.WriteFile(g.configFile, []byte(""), 0644); err != nil {
 				gl.Log("error", fmt.Sprintf("Error creating config file: %v", err))
 				return nil, err
 			}

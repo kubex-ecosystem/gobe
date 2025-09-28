@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 
+	common "github.com/kubex-ecosystem/gobe/internal/commons"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 )
 
@@ -16,18 +17,26 @@ import (
 // com um payload padrão compatível com as structs atuais. Se o arquivo já
 // tiver conteúdo, nada é alterado.
 func BootstrapMainConfig(path string, initArgs *t.InitArgs) error {
-	if path == "" {
-		return errors.New("config path is empty")
-	}
-
-	var args = t.InitArgs{
-		ConfigFile:     path,
-		IsConfidential: false,
-		Port:           "8088",
-		Bind:           "0.0.0.0",
-	}
+	var args t.InitArgs
 	if initArgs != nil {
 		args = *initArgs
+	} else {
+		args = t.InitArgs{
+			ConfigFile:     path,
+			IsConfidential: false,
+			Port:           "8088",
+			Bind:           "0.0.0.0",
+		}
+	}
+	if args.ConfigFile == "" {
+		configFile := os.Getenv("GDBASE_CONFIG_FILE")
+		if configFile == "" {
+			configFile = os.ExpandEnv(common.DefaultGoBEConfigPath)
+			if configFile == "" {
+				gl.Log("fatal", "No config file path provided via args or GDBASE_CONFIG_FILE env var, and default path is empty")
+			}
+		}
+		args.ConfigFile = configFile
 	}
 
 	if err := os.MkdirAll(filepath.Dir(args.ConfigFile), 0755); err != nil {
@@ -90,7 +99,7 @@ func defaultConfig(initArgs t.InitArgs) Config {
 			}{
 				ClientID:     "",
 				ClientSecret: "",
-				RedirectURI:  "http://localhost:8088/api/v1/discord/oauth2/callback",
+				RedirectURI:  "http://" + net.JoinHostPort(initArgs.Bind, initArgs.Port) + "/api/v1/discord/oauth2/callback",
 				Scopes:       []string{"bot", "applications.commands"},
 			},
 			Webhook: struct {

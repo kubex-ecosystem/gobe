@@ -1,3 +1,4 @@
+// Package common has default configuration values
 package common
 
 const (
