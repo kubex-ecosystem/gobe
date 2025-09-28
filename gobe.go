@@ -115,7 +115,20 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		}
 	}
 
+	initArgs := ci.InitArgs{
+		ConfigFile:     configFile,
+		IsConfidential: isConfidential,
+		Port:           port,
+		Bind:           bind,
+		Address:        net.JoinHostPort(bind, port),
+		PubCertKeyPath: os.ExpandEnv(cm.DefaultGoBECertPath),
+		PubKeyPath:     os.ExpandEnv(cm.DefaultGoBEKeyPath),
+		Pwd:            "",
+	}
+
 	gbm := &GoBE{
+		InitArgs: initArgs,
+
 		Logger:    logger,
 		Mutexes:   t.NewMutexesType(),
 		Reference: t.NewReference(name).GetReference(),
@@ -137,9 +150,9 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		requestsTracers: make(map[string]ci.IRequestsTracer),
 	}
 
-	// if err := cfg.BootstrapMainConfig(gbm.configFile); err != nil {
-	// 	gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
-	// }
+	if err := cfg.BootstrapMainConfig(gbm.InitArgs.ConfigFile, &gbm.InitArgs); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
+	}
 
 	var err error
 	gbm.environment, err = t.NewEnvironment(configFile, isConfidential, logger)
@@ -179,22 +192,7 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		}
 	}
 
-	initArgs := ci.InitArgs{
-		ConfigFile:     gbm.configFile,
-		IsConfidential: isConfidential,
-		Port:           port,
-		Bind:           bind,
-		Address:        address,
-		PubCertKeyPath: pubCertKeyPath,
-		PubKeyPath:     pubKeyPath,
-		Pwd:            pwd,
-	}
-
 	gbm.Properties["initArgs"] = t.NewProperty("initArgs", &initArgs, false, nil)
-
-	if err := cfg.BootstrapMainConfig(gbm.configFile, &initArgs); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
-	}
 
 	crptService := crp.NewCryptoService()
 	crtService := crt.NewCertService(pubKeyPath, pubCertKeyPath)
