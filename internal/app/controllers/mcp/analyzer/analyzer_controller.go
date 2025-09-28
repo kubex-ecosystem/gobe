@@ -2,11 +2,14 @@
 package analyzer
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -263,6 +266,7 @@ func mergeMetadata(base map[string]interface{}, extra map[string]interface{}) ma
 }
 
 // Use types from analyzer package
+
 type ScorecardResponse = analyzer.ScorecardResponse
 type RepositoryInfo = analyzer.RepositoryInfo
 type DORAMetrics = analyzer.DORAMetrics
@@ -833,6 +837,23 @@ func (ac *AnalyzerController) sendDiscordNotification(ctx context.Context, req N
 	for _, recipient := range req.Recipients {
 		// Here you would actually send to Discord webhook
 		// For now, just log it
+		req := &http.Request{
+			Method: http.MethodPost,
+			URL:    &url.URL{Scheme: "https", Host: "discord.com", Path: "/api/webhooks/" + recipient},
+			Header: http.Header{
+				"Content-Type": []string{"application/json"},
+			},
+			Body: io.NopCloser(bytes.NewBuffer([]byte(discordMessage))),
+		}
+		requestID := uuid.New().String()
+		req.Header.Set("X-Request-ID", requestID)
+		_, err := http.DefaultClient.Do(req)
+		if err != nil {
+			gl.Log("error", "Failed to send Discord notification", "webhook", recipient, "error", err)
+			continue
+		}
+
+		// Log the sending action
 		gl.Log("info", "Discord notification sent", "webhook", recipient, "message_id", messageID)
 	}
 
@@ -1050,10 +1071,10 @@ func convertModelToAnalysisJob(job *m.AnalysisJobImpl) AnalysisJob {
 }
 
 func jsonbToMap(data gdbtypes.JSONB) map[string]interface{} {
-	if data == nil {
+	if data.IsNil() {
 		return nil
 	}
-	result := make(map[string]interface{}, len(data))
+	result := make(map[string]interface{}, data.Len())
 	for key, value := range data {
 		result[key] = value
 	}
