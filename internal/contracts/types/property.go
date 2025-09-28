@@ -1,8 +1,6 @@
 package types
 
 import (
-	"database/sql/driver"
-	"encoding/json"
 	"os"
 	"reflect"
 
@@ -12,19 +10,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-type JSONB map[string]any
-
-// Value manual para o GORM
-func (m JSONB) Value() (driver.Value, error) { return json.Marshal(m) }
-
-func (m *JSONB) Scan(vl any) error {
-	if vl == nil {
-		*m = JSONB{}
-		return nil
-	}
-	return json.Unmarshal(vl.([]byte), m)
-}
 
 // Property is a struct that holds the properties of the GoLife instance.
 type Property[T any] struct {
