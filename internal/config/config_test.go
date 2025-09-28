@@ -285,7 +285,7 @@ func TestLoad_InvalidConfigType(t *testing.T) {
 	err = os.WriteFile(configFile, []byte("{}"), 0644)
 	require.NoError(t, err)
 
-	_, err = Load[*Config](tempDir, "invalid_config")
+	_, err = Load[*Config](tempDir, "invalid_config", nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "no constructor found for config type")
 }
@@ -339,7 +339,7 @@ func TestLoad_WithEnvironmentVariables(t *testing.T) {
 	// Reset viper to avoid state pollution
 	viper.Reset()
 
-	config, err := Load[*Config](configFile, "gobe_config")
+	config, err := Load[*Config](configFile, "gobe_config", nil)
 	require.NoError(t, err)
 	assert.NotNil(t, config)
 }
@@ -388,7 +388,7 @@ func TestLoad_LLMConfigWithEnvironmentVariables(t *testing.T) {
 	// Reset viper to avoid state pollution
 	viper.Reset()
 
-	config, err := Load[*LLMConfig](configFile, "llm_config")
+	config, err := Load[*LLMConfig](configFile, "llm_config", nil)
 	require.NoError(t, err)
 	assert.NotNil(t, config)
 }
@@ -437,7 +437,7 @@ func TestLoad_IntegrationConfigWithEnvironmentVariables(t *testing.T) {
 	// Reset viper to avoid state pollution
 	viper.Reset()
 
-	config, err := Load[*IntegrationConfig](configFile, "integration_config")
+	config, err := Load[*IntegrationConfig](configFile, "integration_config", nil)
 	require.NoError(t, err)
 	assert.NotNil(t, config)
 }
@@ -449,7 +449,7 @@ func TestLoad_NoConfigFile(t *testing.T) {
 	// Reset viper to avoid state pollution
 	viper.Reset()
 
-	config, err := Load[*Config](tempDir, "gobe_config")
+	config, err := Load[*Config](tempDir, "gobe_config", nil)
 	// Should still succeed with default values
 	require.NoError(t, err)
 	assert.NotNil(t, config)
@@ -469,7 +469,7 @@ func TestLoad_PermissionDenied(t *testing.T) {
 	// Reset viper to avoid state pollution
 	viper.Reset()
 
-	_, err = Load[*Config](configFile, "gobe_config")
+	_, err = Load[*Config](configFile, "gobe_config", nil)
 	// Should handle permission errors gracefully
 	// Note: This test might behave differently on different systems
 	if err != nil {

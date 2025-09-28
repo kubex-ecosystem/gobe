@@ -5,58 +5,71 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
+
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 )
 
 // BootstrapMainConfig garante que o arquivo principal de configuração exista
 // com um payload padrão compatível com as structs atuais. Se o arquivo já
 // tiver conteúdo, nada é alterado.
-func BootstrapMainConfig(path string) error {
+func BootstrapMainConfig(path string, initArgs *t.InitArgs) error {
 	if path == "" {
 		return errors.New("config path is empty")
 	}
 
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+	var args = t.InitArgs{
+		ConfigFile:     path,
+		IsConfidential: false,
+		Port:           "8088",
+		Bind:           "0.0.0.0",
+	}
+	if initArgs != nil {
+		args = *initArgs
+	}
+
+	if err := os.MkdirAll(filepath.Dir(args.ConfigFile), 0755); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(args.ConfigFile)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			gl.Log("info", fmt.Sprintf("No config found at %s. Generating defaults.", path))
-			return writeDefaultConfig(path)
+			gl.Log("info", fmt.Sprintf("No config found at %s. Generating defaults.", args.ConfigFile))
+			return writeDefaultConfig(args)
 		}
 		return fmt.Errorf("failed to read config file: %w", err)
 	}
 
 	if len(bytes.TrimSpace(data)) == 0 {
-		gl.Log("warn", fmt.Sprintf("Config file at %s is empty. Hydrating defaults.", path))
-		return writeDefaultConfig(path)
+		gl.Log("warn", fmt.Sprintf("Config file at %s is empty. Hydrating defaults.", args.ConfigFile))
+		return writeDefaultConfig(args)
 	}
 
 	return nil
 }
 
-func writeDefaultConfig(path string) error {
-	cfg := defaultConfig(path)
+func writeDefaultConfig(initArgs t.InitArgs) error {
+	cfg := defaultConfig(initArgs)
 
 	payload, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal default config: %w", err)
 	}
 
-	if err := os.WriteFile(path, payload, 0o644); err != nil {
+	if err := os.WriteFile(initArgs.ConfigFile, payload, 0644); err != nil {
 		return fmt.Errorf("failed to write default config: %w", err)
 	}
 
-	gl.Log("info", fmt.Sprintf("Default config stored at %s", path))
+	gl.Log("info", fmt.Sprintf("Default config stored at %s", initArgs.ConfigFile))
 	return nil
 }
 
-func defaultConfig(path string) Config {
+func defaultConfig(initArgs t.InitArgs) Config {
 	return Config{
-		ConfigFilePath: path,
+		ConfigFilePath: initArgs.ConfigFile,
 		Discord: DiscordConfig{
 			Bot: struct {
 				Token       string   `json:"token"`
@@ -119,18 +132,13 @@ func defaultConfig(path string) Config {
 			DevMode:                     true,
 		},
 		Server: ServerConfig{
-			Port:       8088,
-			Host:       "0.0.0.0",
+			Port:       initArgs.Port,
+			Host:       initArgs.Bind,
 			EnableCORS: true,
 			DevMode:    true,
 		},
-		ZMQ: ZMQConfig{
-			Address: "tcp://127.0.0.1",
-			Port:    5555,
-			DevMode: true,
-		},
 		GoBE: GoBeConfig{
-			BaseURL: "http://localhost:8088",
+			BaseURL: "http://" + net.JoinHostPort(initArgs.Bind, initArgs.Port),
 			APIKey:  "",
 			Timeout: 30,
 			Enabled: true,

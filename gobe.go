@@ -37,6 +37,7 @@ type GoBECertData struct {
 }
 
 type GoBE struct {
+	InitArgs    ci.InitArgs
 	Logger      l.Logger
 	environment ci.IEnvironment
 
@@ -48,6 +49,8 @@ type GoBE struct {
 	requestWindow   time.Duration
 	requestLimit    int
 	requestsTracers map[string]ci.IRequestsTracer
+
+	// Configuration paths
 
 	configDir  string
 	configFile string
@@ -80,8 +83,8 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 	defaultDir := filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath))
 	if _, err := os.Stat(defaultDir); err != nil {
 		if os.IsNotExist(err) {
-			if err := ut.EnsureDir(defaultDir, 0644, []string{}); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
+			if err := os.MkdirAll(defaultDir, 0755); err != nil {
+				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
 			}
 		}
 	}
@@ -90,10 +93,10 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		configFile = os.ExpandEnv(cm.DefaultGoBEConfigPath)
 		if _, err := os.Stat(configFile); err != nil {
 			if os.IsNotExist(err) {
-				if err := ut.EnsureDir(filepath.Dir(configFile), 0644, []string{}); err != nil {
+				if err := os.MkdirAll(filepath.Dir(configFile), 0755); err != nil {
 					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
 				}
-				if err := ut.EnsureFile(configFile, 0644, []string{}); err != nil {
+				if err := os.WriteFile(configFile, []byte(""), 0644); err != nil {
 					gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
 				}
 			}
@@ -101,6 +104,16 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 	}
 	if logFile == "" {
 		logFile = filepath.Join(defaultDir, "request_tracer.json")
+		if _, err := os.Stat(logFile); err != nil {
+			if os.IsNotExist(err) {
+				if err := os.MkdirAll(filepath.Dir(logFile), 0755); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
+				}
+				if err := os.WriteFile(logFile, []byte(""), 0644); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating log file: %v", err))
+				}
+			}
+		}
 	}
 
 	gbm := &GoBE{
@@ -125,9 +138,9 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		requestsTracers: make(map[string]ci.IRequestsTracer),
 	}
 
-	if err := cfg.BootstrapMainConfig(gbm.configFile); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
-	}
+	// if err := cfg.BootstrapMainConfig(gbm.configFile); err != nil {
+	// 	gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
+	// }
 
 	var err error
 	gbm.environment, err = t.NewEnvironment(configFile, isConfidential, logger)
@@ -165,6 +178,23 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		if pwdErr != nil {
 			gl.Log("fatal", fmt.Sprintf("Error reading keyring password: %v", pwdErr))
 		}
+	}
+
+	initArgs := ci.InitArgs{
+		ConfigFile:     gbm.configFile,
+		IsConfidential: isConfidential,
+		Port:           port,
+		Bind:           bind,
+		Address:        address,
+		PubCertKeyPath: pubCertKeyPath,
+		PubKeyPath:     pubKeyPath,
+		Pwd:            pwd,
+	}
+
+	gbm.Properties["initArgs"] = t.NewProperty("initArgs", &initArgs, false, nil)
+
+	if err := cfg.BootstrapMainConfig(gbm.configFile, &initArgs); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
 	}
 
 	crptService := crp.NewCryptoService()
@@ -426,9 +456,24 @@ func (g *GoBE) StartGoBE() {
 	gl.Log("debug", "Loading request tracers...")
 	g.Mutexes.MuAdd(1)
 	go func(g *GoBE) {
+		if g == nil {
+			gl.Log("fatal", "GoBE instance is nil")
+			// g.Mutexes.MuDone()
+			return
+		}
 		defer g.Mutexes.MuDone()
 		var err error
-		g.requestsTracers, err = t.LoadRequestsTracerFromFile(g)
+		//initArgs := g.Properties["initArgs"].(*t.Property[interfaces.InitArgs]).GetValue()
+		// requestsTracers := t.NewRequestTracers(g)
+		var requestsTracers ci.IRequestTracers
+
+		requestsTracers, err = t.LoadRequestsTracerFromFile(g)
+		if requestsTracers == nil {
+			gl.Log("warn", "No persisted request tracers found, creating a new one")
+			requestsTracers = t.NewRequestTracers(g)
+		}
+		g.requestsTracers = requestsTracers.GetRequestTracers()
+
 		if err != nil {
 			gl.Log("error", "Error loading request tracers: %v", err.Error())
 		}

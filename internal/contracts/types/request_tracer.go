@@ -15,8 +15,8 @@ import (
 	l "github.com/kubex-ecosystem/logz"
 )
 
-const RequestLimit = 5
-const RequestWindow = 60 * time.Second
+const RequestLimit = 100
+const RequestWindow = time.Minute * 1
 
 var requestTracers *RequestTracers
 
@@ -50,7 +50,7 @@ func newRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePa
 	var exists bool
 
 	if requestTracers == nil {
-		requestTracers = NewRequestTracers(g)
+		requestTracers = newRequestTracers(g)
 	}
 	var tracerT ci.IRequestsTracer
 	var ok bool
@@ -200,9 +200,9 @@ func (r *RequestsTracer) SetRequestLimit(limit int) {
 	r.requestLimit = limit
 }
 
-func LoadRequestsTracerFromFile(g ci.IGoBE) (map[string]ci.IRequestsTracer, error) {
+func LoadRequestsTracerFromFile(g ci.IGoBE) (ci.IRequestTracers, error) {
 	if requestTracers == nil {
-		requestTracers = NewRequestTracers(g)
+		requestTracers = newRequestTracers(g)
 	}
 	if len(requestTracers.tracers) == 0 {
 		requestTracers.tracers = make(map[string]ci.IRequestsTracer)
@@ -265,7 +265,7 @@ func LoadRequestsTracerFromFile(g ci.IGoBE) (map[string]ci.IRequestsTracer, erro
 		gl.Log("warn", "No request tracers loaded from file")
 	}
 
-	return requestTracers.tracers, nil
+	return requestTracers, nil
 }
 func updateRequestTracer(g ci.IGoBE, updatedTracer ci.IRequestsTracer) error {
 	var decoder *json.Decoder
@@ -404,11 +404,15 @@ func updateRequestTracerInMemory(updatedTracer ci.IRequestsTracer) error {
 	}
 }
 
-func NewRequestTracers(g ci.IGoBE) *RequestTracers {
+func newRequestTracers(g ci.IGoBE) *RequestTracers {
 	return &RequestTracers{
 		gobe:    g,
 		tracers: make(map[string]ci.IRequestsTracer),
 	}
+}
+
+func NewRequestTracers(g ci.IGoBE) ci.IRequestTracers {
+	return newRequestTracers(g)
 }
 
 func (r RequestTracers) RequestsTracerMiddleware() gin.HandlerFunc {

@@ -1,6 +1,10 @@
 package interfaces
 
-import "time"
+import (
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
 
 type IRequestsTracer interface {
 	GetIP() string
@@ -25,4 +29,13 @@ type IRequestsTracer interface {
 	GetRequestLimit() int
 	SetRequestLimit(limit int)
 	Mu() IMutexes
+}
+
+type IRequestTracers interface {
+	RequestsTracerMiddleware() gin.HandlerFunc
+	GetRequestTracers() map[string]IRequestsTracer
+	SetRequestTracers(tracers map[string]IRequestsTracer)
+	AddRequestTracer(name string, tracer IRequestsTracer)
+	GetRequestTracer(name string) (IRequestsTracer, bool)
+	RemoveRequestTracer(name string)
 }

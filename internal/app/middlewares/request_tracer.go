@@ -11,8 +11,14 @@ type RequestTracerMiddleware struct {
 }
 
 func NewRequestTracerMiddlewareType(g ci.IGoBE) *RequestTracerMiddleware {
+	requestTracers, ok := t.NewRequestTracers(g).(*t.RequestTracers)
+	if !ok {
+		gl.Log("error", "Failed to create RequestTracers instance")
+		return nil
+	}
+
 	return &RequestTracerMiddleware{
-		RequestTracers: t.NewRequestTracers(g),
+		RequestTracers: requestTracers,
 	}
 }
 

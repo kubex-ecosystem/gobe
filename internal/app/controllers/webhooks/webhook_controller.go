@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	whk "github.com/kubex-ecosystem/gdbase/factory/models"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type WebhookController struct {

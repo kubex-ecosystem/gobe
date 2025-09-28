@@ -11,6 +11,7 @@ import (
 	gdbf "github.com/kubex-ecosystem/gdbase/factory"
 	"github.com/kubex-ecosystem/gdbase/types"
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
@@ -30,6 +31,7 @@ import (
 type Router struct {
 	*gin.Engine
 	*t.Mutexes
+	InitArgs        interfaces.InitArgs
 	Logger          l.Logger
 	settings        map[string]string
 	databaseService gdbf.DBService
@@ -510,6 +512,14 @@ func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, gin.H{"message": "Dummy Placeholder"})
 	}
+}
+
+func (rtr *Router) GetInitArgs() *interfaces.InitArgs {
+	if err := rtr.ValidateRouter(); err != nil {
+		gl.Log("error", err.Error())
+		return &interfaces.InitArgs{}
+	}
+	return &rtr.InitArgs
 }
 
 func SecureServerInit(r *gin.Engine, fullBindAddress string) error {

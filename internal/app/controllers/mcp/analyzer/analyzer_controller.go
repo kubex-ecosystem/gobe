@@ -267,13 +267,6 @@ func mergeMetadata(base map[string]interface{}, extra map[string]interface{}) ma
 
 // Use types from analyzer package
 
-type ScorecardResponse = analyzer.ScorecardResponse
-type RepositoryInfo = analyzer.RepositoryInfo
-type DORAMetrics = analyzer.DORAMetrics
-type CHIMetrics = analyzer.CHIMetrics
-type AIMetrics = analyzer.AIMetrics
-type ConfidenceMetrics = analyzer.ConfidenceMetrics
-
 type NotificationRequest struct {
 	Type        string                 `json:"type"` // "discord", "email", "webhook"
 	Recipients  []string               `json:"recipients"`

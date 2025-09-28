@@ -660,7 +660,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 	if dc.config != nil {
 		cfg = dc.config
 	} else {
-		cfg, err = config.Load[*config.Config]("./", "discord_config")
+		cfg, err = config.Load[*config.Config]("./", "discord_config", nil)
 		if err != nil {
 			gl.Log("error", "Failed to load config for Discord adapter", err)
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to load config"})
