@@ -31,7 +31,7 @@
 
 ### ✅ 2. Database Schema Atualizado
 
-**Arquivo**: `/projects/kubex/gdbase/internal/services/assets/init-db.sql`
+**Arquivo**: `/projects/kubex/gdbase/internal/services/assets/001_init.sql`
 
 **Adições**:
 
@@ -138,7 +138,7 @@ lookAtniController := gatewayController.NewLookAtniController(db)
 
 ## 🏗️ Arquitetura Final
 
-```
+```plaintext
 📦 MCP Analysis Jobs System
 ├── 🗃️ Database Layer (GDBase)
 │   ├── analysis_jobs.go          # Model + Interface
