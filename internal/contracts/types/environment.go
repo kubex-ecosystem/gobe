@@ -127,8 +127,15 @@ func newEnvironment(envFile string, isConfidential bool, logger l.Logger) (*Envi
 		}
 		key := strings.TrimSpace(parts[0])
 		value := strings.TrimSpace(parts[1])
+		if key == "" {
+			continue
+		}
 
 		envEnvCacheM[key] = value
+		if value == "" {
+			gl.Log("info", fmt.Sprintf("Environment variable '%s' is empty, skipping setenv", key))
+			continue
+		}
 		if setEnvErr := os.Setenv(key, value); setEnvErr != nil {
 			gl.Log("error", fmt.Sprintf("Error setting environment variable '%s': %v", key, setEnvErr))
 			continue
