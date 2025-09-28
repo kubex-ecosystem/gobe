@@ -52,10 +52,11 @@ func TestDiscordConfig(t *testing.T) {
 	t.Run("GetSettings", func(t *testing.T) {
 		config := &DiscordConfig{
 			Bot: struct {
-				Token       string   `json:"token"`
-				Permissions []string `json:"permissions"`
-				Intents     []string `json:"intents"`
-				Channels    []string `json:"channels"`
+				ApplicationID string   `json:"application_id"`
+				Token         string   `json:"token"`
+				Permissions   []string `json:"permissions"`
+				Intents       []string `json:"intents"`
+				Channels      []string `json:"channels"`
 			}{
 				Intents: []string{"GUILD_MESSAGES"},
 			},

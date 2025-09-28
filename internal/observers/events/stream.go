@@ -2,11 +2,12 @@
 package events
 
 import (
-	"log"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type Stream struct {
@@ -119,7 +120,7 @@ func (s *Stream) handleClient(client *Client) {
 	for event := range client.Send {
 		client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		if err := client.Conn.WriteJSON(event); err != nil {
-			log.Printf("WebSocket write error: %v", err)
+			gl.Log("error", "WebSocket write error: "+err.Error())
 			return
 		}
 	}

@@ -1,11 +1,29 @@
-
 {
   "platform": "discord",
   "api_version": "v1",
   "bot": {
+    "application_id": "${DISCORD_APPLICATION_ID}",
     "token": "${DISCORD_BOT_TOKEN}",
-    "permissions": ["READ_MESSAGES", "SEND_MESSAGES", "MANAGE_MESSAGES"],
-    "intents": ["GUILD_MESSAGES", "DIRECT_MESSAGES", "MESSAGE_CONTENT"]
+    "permissions": [
+      "READ_MESSAGES",
+      "SEND_MESSAGES",
+      "MANAGE_MESSAGES"
+    ],
+    "intents": [
+      "GUILD_MESSAGES",
+      "DIRECT_MESSAGES",
+      "MESSAGE_CONTENT"
+    ]
+  },
+  "oauth2": {
+    "client_id": "${DISCORD_CLIENT_ID}",
+    "client_secret": "${DISCORD_CLIENT_SECRET}",
+    "redirect_uri": "http://localhost:8088/oauth2/callback",
+    "scopes": [
+      "identify",
+      "email",
+      "guilds"
+    ]
   },
   "rate_limits": {
     "requests_per_minute": 50,
@@ -38,7 +56,10 @@
       "enabled": false,
       "bot_token": "",
       "webhook_url": "",
-      "allowed_updates": ["message", "callback_query"]
+      "allowed_updates": [
+        "message",
+        "callback_query"
+      ]
     }
   }
 }

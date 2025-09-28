@@ -3,7 +3,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -90,12 +89,14 @@ func (c *Config) GetSettings() map[string]interface{} {
 
 type DiscordConfig struct {
 	Bot struct {
-		Token       string   `json:"token"`
-		Permissions []string `json:"permissions"`
-		Intents     []string `json:"intents"`
-		Channels    []string `json:"channels"`
+		ApplicationID string   `json:"application_id"`
+		Token         string   `json:"token"`
+		Permissions   []string `json:"permissions"`
+		Intents       []string `json:"intents"`
+		Channels      []string `json:"channels"`
 	} `json:"bot"`
 	OAuth2 struct {
+		PublicKey    string   `json:"public_key"`
 		ClientID     string   `json:"client_id"`
 		ClientSecret string   `json:"client_secret"`
 		RedirectURI  string   `json:"redirect_uri"`
@@ -132,12 +133,16 @@ func (c *DiscordConfig) GetSettings() map[string]interface{} {
 }
 
 type LLMConfig struct {
-	Provider    string  `json:"provider" mapstructure:"provider"`
-	Model       string  `json:"model" mapstructure:"model"`
-	MaxTokens   int     `json:"max_tokens" mapstructure:"max_tokens"`
-	Temperature float64 `json:"temperature" mapstructure:"temperature"`
-	APIKey      string  `json:"api_key" mapstructure:"api_key"`
-	DevMode     bool    `json:"dev_mode"`
+	Provider         string   `json:"provider" mapstructure:"provider"`
+	Model            string   `json:"model" mapstructure:"model"`
+	MaxTokens        int      `json:"max_tokens" mapstructure:"max_tokens"`
+	Temperature      float64  `json:"temperature" mapstructure:"temperature"`
+	APIKey           string   `json:"api_key" mapstructure:"api_key"`
+	DevMode          bool     `json:"dev_mode"`
+	TopP             float64  `json:"top_p" mapstructure:"top_p"`
+	FrequencyPenalty float64  `json:"frequency_penalty" mapstructure:"frequency_penalty"`
+	PresencePenalty  float64  `json:"presence_penalty" mapstructure:"presence_penalty"`
+	StopSequences    []string `json:"stop_sequences" mapstructure:"stop_sequences"`
 }
 
 func newLLMConfig() *LLMConfig           { return &LLMConfig{} }
@@ -421,6 +426,13 @@ postEnvLoad:
 		viper.Set("discord.bot.token", "dev_token")
 	}
 
+	// Discord Bot configuration
+	if appID := os.Getenv("DISCORD_APPLICATION_ID"); appID != "" {
+		viper.Set("discord.bot.application_id", appID)
+	} else if devMode {
+		viper.Set("discord.bot.application_id", "dev_application_id")
+	}
+
 	// Discord OAuth2 configuration
 	if clientID := os.Getenv("DISCORD_CLIENT_ID"); clientID != "" {
 		viper.Set("discord.oauth2.client_id", clientID)
@@ -490,15 +502,16 @@ postEnvLoad:
 	if geminiKey != "" && geminiKey != "dev_api_key" {
 		viper.Set("llm.api_key", geminiKey)
 		viper.Set("llm.provider", "gemini")
-		log.Printf("   ✅ Using Gemini with key: %s...", geminiKey[:10])
+		// log.Printf("   ✅ Using Gemini with key: %s...", geminiKey[:10])
+		gl.Log("info", fmt.Sprintf("LLM Config - Using Gemini with key: %s...", geminiKey[:10]))
 	} else if openaiKey != "" && openaiKey != "dev_api_key" {
 		viper.Set("llm.api_key", openaiKey)
 		viper.Set("llm.provider", "openai")
-		log.Printf("   ✅ Using OpenAI with key: %s...", openaiKey[:10])
+		gl.Log("info", fmt.Sprintf("LLM Config - Using OpenAI with key: %s...", openaiKey[:10]))
 	} else {
 		viper.Set("llm.api_key", "dev_api_key")
 		viper.Set("llm.provider", "dev")
-		log.Printf("   ⚠️ Using DEV mode (no valid API keys found)")
+		gl.Log("warn", "LLM Config - Using DEV mode (no valid API keys found)")
 	}
 
 	viper.SetConfigName(fmt.Sprintf("config/%s.json", configType))
@@ -539,6 +552,9 @@ postEnvLoad:
 		case "discord_config":
 			if inter.(*DiscordConfig).Bot.Token == "" || inter.(*DiscordConfig).Bot.Token == "dev_token" {
 				inter.(*DiscordConfig).Bot.Token = "dev_token"
+			}
+			if inter.(*DiscordConfig).Bot.ApplicationID == "" || inter.(*DiscordConfig).Bot.ApplicationID == "dev_application_id" {
+				inter.(*DiscordConfig).Bot.ApplicationID = "dev_application_id"
 			}
 			gl.Log("info", "Discord Config - Bot Token set for Dev Mode")
 		case "gobe_config":

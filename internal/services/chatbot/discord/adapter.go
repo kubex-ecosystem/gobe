@@ -3,12 +3,13 @@ package discord
 
 import (
 	"fmt"
-	"log"
+	"strings"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 
-	"github.com/bwmarrin/discordgo"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type Adapter struct {
@@ -33,7 +34,7 @@ type Message struct {
 	Attachments []*discordgo.MessageAttachment `json:"attachments"`
 }
 
-func NewAdapter(config config.DiscordConfig) (*Adapter, error) {
+func NewAdapter(config config.DiscordConfig, purpose string) (*Adapter, error) {
 	// Dev mode - don't try to connect to Discord
 	if config.Bot.Token == "dev_token" {
 		adapter := &Adapter{
@@ -43,7 +44,15 @@ func NewAdapter(config config.DiscordConfig) (*Adapter, error) {
 		return adapter, nil
 	}
 	var err error
-	session, err := discordgo.New("Bot " + config.Bot.Token)
+	var prefix string
+	switch strings.ToLower(purpose) {
+	case "chatbot", "bot":
+		prefix = "Bot"
+	default:
+		// prefix = "Bearer"
+		prefix = "Bot"
+	}
+	session, err := discordgo.New(strings.Join([]string{prefix, config.Bot.Token}, " "))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Discord session: %w", err)
 	}
@@ -53,10 +62,21 @@ func NewAdapter(config config.DiscordConfig) (*Adapter, error) {
 		discordgo.IntentsDirectMessages |
 		discordgo.IntentsMessageContent
 
+	application := session.State.Application
+	if application == nil {
+		application, err = session.Application("@me")
+		if err != nil {
+			gl.Log("error", "Failed to fetch application info", err)
+			return nil, fmt.Errorf("failed to fetch application info: %w", err)
+		}
+	}
+
+	// Create the adapter instance
+
 	adapter := &Adapter{
 		api:         &session.Identify,
-		invite:      nil, // invite,
-		application: session.State.Application,
+		invite:      nil,
+		application: application,
 		session:     session,
 		config:      config,
 	}
@@ -74,10 +94,14 @@ func NewAdapter(config config.DiscordConfig) (*Adapter, error) {
 
 func (a *Adapter) Connect() error {
 	if a.session == nil {
-		log.Println("Discord adapter in dev mode - not connecting to Discord")
+		gl.Log("info", "Discord adapter in dev mode - not connecting to Discord")
 		return nil
 	}
-	return a.session.Open()
+	if err := a.session.Open(); err != nil {
+		return fmt.Errorf("failed to open Discord session: %w", err)
+	}
+	gl.Log("info", "Discord session opened successfully")
+	return nil
 }
 
 func (a *Adapter) Disconnect() error {
@@ -93,16 +117,16 @@ func (a *Adapter) OnMessage(handler func(Message)) {
 
 func (a *Adapter) SendMessage(channelID, content string) error {
 	if a.session == nil {
-		log.Printf("Dev mode - would send message to %s: %s", channelID, content)
+		gl.Log("info", "Dev mode - would send message to %s: %s", channelID, content)
 		return nil
 	}
-	log.Printf("📤 Enviando mensagem para canal %s: %s", channelID, content)
+	gl.Log("info", "📤 Enviando mensagem para canal %s: %s", channelID, content)
 	_, err := a.session.ChannelMessageSend(channelID, content)
 	if err != nil {
-		log.Printf("❌ Erro ao enviar mensagem: %v", err)
+		gl.Log("error", "❌ Erro ao enviar mensagem: %v", err)
 		return err
 	}
-	log.Printf("✅ Mensagem enviada com sucesso!")
+	gl.Log("info", "✅ Mensagem enviada com sucesso!")
 	return nil
 }
 
@@ -118,10 +142,10 @@ func (a *Adapter) GetChannels(guildID string) ([]*discordgo.Channel, error) {
 }
 
 func (a *Adapter) readyHandler(s *discordgo.Session, event *discordgo.Ready) {
-	log.Printf("Discord bot logged in as: %v#%v", event.User.Username, event.User.Discriminator)
-	log.Printf("Bot is connected to %d guilds", len(event.Guilds))
+	gl.Log("info", "Discord bot logged in as: %v#%v", event.User.Username, event.User.Discriminator)
+	gl.Log("info", "Bot is connected to %d guilds", len(event.Guilds))
 	for _, guild := range event.Guilds {
-		log.Printf("  - Guild: %s (ID: %s)", guild.Name, guild.ID)
+		gl.Log("info", "  - Guild: %s (ID: %s)", guild.Name, guild.ID)
 	}
 }
 
@@ -136,10 +160,10 @@ func (a *Adapter) messageCreateHandler(s *discordgo.Session, m *discordgo.Messag
 		return
 	}
 
-	log.Printf("📨 Nova mensagem recebida:")
-	log.Printf("  - Autor: %s#%s", m.Author.Username, m.Author.Discriminator)
-	log.Printf("  - Canal: %s", m.ChannelID)
-	log.Printf("  - Conteúdo: %s", m.Content)
+	gl.Log("info", "📨 Nova mensagem recebida:")
+	gl.Log("info", "  - Autor: %s#%s", m.Author.Username, m.Author.Discriminator)
+	gl.Log("info", "  - Canal: %s", m.ChannelID)
+	gl.Log("info", "  - Conteúdo: %s", m.Content)
 
 	// Parse timestamp
 	timestamp, _ := time.Parse(time.RFC3339, m.Timestamp.String())
@@ -161,16 +185,16 @@ func (a *Adapter) messageCreateHandler(s *discordgo.Session, m *discordgo.Messag
 
 func (a *Adapter) PingDiscord(msg string) error {
 	if a.session == nil {
-		log.Println("Discord adapter in dev mode - not pinging Discord")
+		gl.Log("info", "Discord adapter in dev mode - not pinging Discord")
 		return nil
 	}
 	if a.session.State.User == nil {
 		_, err := a.session.ChannelMessageSend(a.invite.Channel.ID, msg)
 		if err != nil {
-			log.Printf("❌ Erro ao enviar mensagem: %v", err)
+			gl.Log("error", "❌ Erro ao enviar mensagem: %v", err)
 			return err
 		}
-		log.Printf("✅ Mensagem de ping enviada com sucesso!")
+		gl.Log("info", "✅ Mensagem de ping enviada com sucesso!")
 	}
 	return nil
 }

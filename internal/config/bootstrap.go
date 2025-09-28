@@ -81,17 +81,20 @@ func defaultConfig(initArgs t.InitArgs) Config {
 		ConfigFilePath: initArgs.ConfigFile,
 		Discord: DiscordConfig{
 			Bot: struct {
-				Token       string   `json:"token"`
-				Permissions []string `json:"permissions"`
-				Intents     []string `json:"intents"`
-				Channels    []string `json:"channels"`
+				ApplicationID string   `json:"application_id"`
+				Token         string   `json:"token"`
+				Permissions   []string `json:"permissions"`
+				Intents       []string `json:"intents"`
+				Channels      []string `json:"channels"`
 			}{
-				Token:       "",
-				Permissions: []string{"READ_MESSAGES", "SEND_MESSAGES", "MANAGE_MESSAGES"},
-				Intents:     []string{"GUILD_MESSAGES", "DIRECT_MESSAGES", "MESSAGE_CONTENT"},
-				Channels:    []string{},
+				ApplicationID: "",
+				Token:         "",
+				Permissions:   []string{"READ_MESSAGES", "SEND_MESSAGES", "MANAGE_MESSAGES"},
+				Intents:       []string{"GUILD_MESSAGES", "DIRECT_MESSAGES", "MESSAGE_CONTENT"},
+				Channels:      []string{},
 			},
 			OAuth2: struct {
+				PublicKey    string   `json:"public_key"`
 				ClientID     string   `json:"client_id"`
 				ClientSecret string   `json:"client_secret"`
 				RedirectURI  string   `json:"redirect_uri"`

@@ -5,16 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/kubex-ecosystem/gobe/internal/config"
-
 	"github.com/patrickmn/go-cache"
 	"github.com/sashabaranov/go-openai"
 	"google.golang.org/genai"
+
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type Client struct {
@@ -50,14 +50,20 @@ type AnalysisResponse struct {
 func NewClient(config config.LLMConfig) (*Client, error) {
 	devMode := config.APIKey == "dev_api_key" || config.APIKey == ""
 
-	log.Printf("🔍 LLM Config Debug:")
+	gl.Log("info", "Initializing LLM Client with configuration:")
 	if len(config.APIKey) > 10 {
-		log.Printf("   APIKey: %s...", config.APIKey[:10])
+		gl.Log("info", fmt.Sprintf("   APIKey: %s...", config.APIKey[:10]))
 	} else {
-		log.Printf("   APIKey: '%s' (len=%d)", config.APIKey, len(config.APIKey))
+		gl.Log("info", fmt.Sprintf("   APIKey: '%s' (len=%d)", config.APIKey, len(config.APIKey)))
 	}
-	log.Printf("   Provider: %s", config.Provider)
-	log.Printf("   DevMode: %v", devMode)
+	gl.Log("info", fmt.Sprintf("   Model: %s", config.Model))
+	gl.Log("info", fmt.Sprintf("   Temperature: %.2f", config.Temperature))
+	gl.Log("info", fmt.Sprintf("   MaxTokens: %d", config.MaxTokens))
+	gl.Log("info", fmt.Sprintf("   TopP: %.2f", config.TopP))
+	gl.Log("info", fmt.Sprintf("   FrequencyPenalty: %.2f", config.FrequencyPenalty))
+	gl.Log("info", fmt.Sprintf("   PresencePenalty: %.2f", config.PresencePenalty))
+	gl.Log("info", fmt.Sprintf("   StopSequences: %v", config.StopSequences))
+	gl.Log("info", fmt.Sprintf("   DevMode: %v", devMode))
 
 	// Determine provider
 	provider := "dev"
@@ -79,7 +85,7 @@ func NewClient(config config.LLMConfig) (*Client, error) {
 		}
 	}
 
-	log.Printf("   Final Provider: %s", provider)
+	gl.Log("info", fmt.Sprintf("   Final Provider: %s", provider))
 
 	var openaiClient *openai.Client
 	httpClient := &http.Client{Timeout: 30 * time.Second}
@@ -261,6 +267,7 @@ func (c *Client) analyzeWithOpenAI(ctx context.Context, req AnalysisRequest) (*A
 }
 
 // Gemini API structures
+
 type GeminiRequest struct {
 	Contents []GeminiContent `json:"contents"`
 }
@@ -324,7 +331,7 @@ Responda sempre em JSON com a seguinte estrutura:
   "confidence": 0.0-1.0,
   "should_create_task": boolean,
   "task_title": "string",
-  "task_description": "string", 
+  "task_description": "string",
   "task_priority": "low|medium|high|urgent",
   "task_tags": ["tag1", "tag2"],
   "requires_approval": boolean,
