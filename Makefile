@@ -64,9 +64,10 @@ ARGUMENTS := $(MAKECMDGOALS)
 INSTALL_SCRIPT = $(ROOT_DIR)support/main.sh
 CMD_STR := $(strip $(firstword $(ARGUMENTS)))
 ARGS := $(filter-out $(strip $(CMD_STR)), $(ARGUMENTS))
+I18N_SRC ?= ./frontend/src
 
 # Default target: help
-#.DEFAULT_GOAL := help
+.DEFAULT_GOAL := help
 
 # Build the binary using the install script.
 build:
@@ -92,21 +93,6 @@ clean:
 	@bash $(INSTALL_SCRIPT) clean $(ARGS)
 	$(shell exit 0)
 
-build-docs:
-	@echo "Building documentation..."
-	@bash $(INSTALL_SCRIPT) build-docs $(ARGS)
-	$(shell exit 0)
-
-serve-docs:
-	@echo "Starting documentation server..."
-	@bash $(INSTALL_SCRIPT) serve-docs $(ARGS)
-	$(shell exit 0)
-
-pub-docs:
-	@echo "Publishing documentation..."
-	@bash $(INSTALL_SCRIPT) pub-docs $(ARGS)
-	$(shell exit 0)
-
 # Run tests.
 test:
 	@bash $(INSTALL_SCRIPT) test $(ARGS)
@@ -120,44 +106,87 @@ build-docker:
 	@bash $(INSTALL_SCRIPT) build-docker $(ARGS)
 	$(shell exit 0)
 
+run:
+	@bash $(INSTALL_SCRIPT) run $(ARGS)
+	$(shell exit 0)
+
+build-docs:
+	@bash $(INSTALL_SCRIPT) build-docs $(ARGS)
+	$(shell exit 0)
+
+serve-docs:
+	@bash $(INSTALL_SCRIPT) serve-docs $(ARGS)
+	$(shell exit 0)
+
+pub-docs:
+	@bash $(INSTALL_SCRIPT) pub-docs $(ARGS)
+	$(shell exit 0)
+
+optimize-media:
+	@bash $(INSTALL_SCRIPT) optimize-media $(ARGS)
+	$(shell exit 0)
+
+# i18n.used:
+# 	rg -no --pcre2 "t\\(\\s*['\"\`]([A-Za-z][\\w-]+)\\.([A-Za-z0-9_.-]+)['\"\`]\\s*(?:,|\\))" $(I18N_SRC) \
+# 	| awk -F: '{print $$3}' \
+# 	| sed -E "s/^t\\(['\"\`]//; s/['\"\`].*$$//" \
+# 	| sort -u > i18n_used_keys.txt
+
+# i18n.avail:
+# 	@> i18n_avail_en.txt; for f in locales/en/*.json; do ns=$$(basename $$f .json); \
+# 		jq -r 'paths(scalars) | join(".")' $$f | sed "s/^/$$ns./" >> i18n_avail_en.txt; done; \
+# 	sort -u -o i18n_avail_en.txt i18n_avail_en.txt
+# 	@> i18n_avail_ptBR.txt; for f in locales/pt-BR/*.json; do ns=$$(basename $$f .json); \
+# 		jq -r 'paths(scalars) | join(".")' $$f | sed "s/^/$$ns./" >> i18n_avail_ptBR.txt; done; \
+# 	sort -u -o i18n_avail_ptBR.txt i18n_avail_ptBR.txt
+
+# i18n.diff: i18n.used i18n.avail
+# 	comm -23 i18n_used_keys.txt i18n_avail_en.txt    > i18n_missing_en.txt || true
+# 	comm -13 i18n_used_keys.txt i18n_avail_en.txt    > i18n_unused_en.txt  || true
+# 	comm -23 i18n_used_keys.txt i18n_avail_ptBR.txt  > i18n_missing_ptBR.txt || true
+# 	comm -13 i18n_used_keys.txt i18n_avail_ptBR.txt  > i18n_unused_ptBR.txt  || true
+# 	@echo "EN missing:    $$(wc -l < i18n_missing_en.txt)"
+# 	@echo "PT-BR missing: $$(wc -l < i18n_missing_ptBR.txt)"
+# 	@echo "EN unused:     $$(wc -l < i18n_unused_en.txt)"
+# 	@echo "PT-BR unused:  $$(wc -l < i18n_unused_ptBR.txt)"
+
+# i18n.check: i18n.diff
+# 	@[ ! -s i18n_missing_en.txt ]    || { echo "❌ Missing EN i18n";    exit 2; }
+# 	@[ ! -s i18n_missing_ptBR.txt ]  || { echo "❌ Missing PT-BR i18n"; exit 2; }
+# 	@echo "✅ i18n OK"
+
 # Platform-specific targets (prevent wildcard capture)
 linux:
 	@echo "Process finished for platform: linux"
-	$(shell exit 0)
 
 amd64:
 	@echo "Process finished for architecture: amd64"
-	$(shell exit 0)
 
 windows:
 	@echo "Process finished for platform: windows"
-	$(shell exit 0)
 
 darwin:
 	@echo "Process finished for platform: darwin"
-	$(shell exit 0)
 
 arm64:
 	@echo "Process finished for architecture: arm64"
-	$(shell exit 0)
 
 armv6l:
 	@echo "Process finished for architecture: armv6l"
-	$(shell exit 0)
 
 386:
 	@echo "Process finished for architecture: 386"
-	$(shell exit 0)
 
 all:
 	@echo "Process finished for all platforms and architectures"
-	$(shell exit 0)
 
 ## Run dynamic commands with arguments calling the install script.
 %:
 	@:
+	$(call log_info, Running command: $(CMD_STR))
+	$(call log_info, Args: $(ARGS))
 	@bash $(INSTALL_SCRIPT) $(CMD_STR) $(ARGS)
-		$(shell exit 0)
+	$(shell exit 0)
 
 # Display help message
 help:

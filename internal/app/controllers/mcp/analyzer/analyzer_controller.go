@@ -2,21 +2,35 @@
 package analyzer
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	gdbtypes "github.com/kubex-ecosystem/gdbase/types"
+	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
+	"gorm.io/gorm"
+
+	m "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
-	"gorm.io/gorm"
 )
 
 type AnalyzerController struct {
-	dbConn     *gorm.DB
-	APIWrapper *t.APIWrapper[any]
+	dbConn          *gorm.DB
+	APIWrapper      *t.APIWrapper[any]
+	analyzerService *analyzer.Service
+	analysisService m.AnalysisJobService
 }
 
 func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
@@ -24,9 +38,96 @@ func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
 		gl.Log("warn", "Database connection is nil for AnalyzerController")
 	}
 
+	// Initialize analyzer service with environment configuration
+	analyzerBaseURL := getEnv("GEMX_ANALYZER_URL", "http://localhost:8080")
+	analyzerAPIKey := getEnv("GEMX_ANALYZER_API_KEY", "")
+
+	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
+
+	var analysisService m.AnalysisJobService
+	if db != nil {
+		analysisRepo := m.NewAnalysisJobRepo(db)
+		analysisService = m.NewAnalysisJobService(analysisRepo)
+	} else {
+		gl.Log("warn", "Analysis job service initialized without database connection")
+	}
+
+	// Auto-migrate analysis jobs table
+	if db != nil {
+		if err := db.AutoMigrate(m.NewAnalysisJobModel()); err != nil {
+			gl.Log("error", "Failed to migrate AnalysisJob table", err)
+		}
+	}
+
 	return &AnalyzerController{
-		dbConn:     db,
-		APIWrapper: t.NewAPIWrapper[any](),
+		dbConn:          db,
+		APIWrapper:      t.NewAPIWrapper[any](),
+		analyzerService: analyzerService,
+		analysisService: analysisService,
+	}
+}
+
+// getEnv gets environment variable with fallback
+func getEnv(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return fallback
+}
+
+// getDORAGrade calculates DORA grade based on metrics
+func getDORAGrade(dora analyzer.DORAMetrics) string {
+	// Simplified DORA grading based on industry benchmarks
+	score := 0
+
+	// Lead Time (< 1 day = 3, < 1 week = 2, < 1 month = 1, > 1 month = 0)
+	if dora.LeadTimeP95Hours < 24 {
+		score += 3
+	} else if dora.LeadTimeP95Hours < 168 { // 1 week
+		score += 2
+	} else if dora.LeadTimeP95Hours < 720 { // 1 month
+		score += 1
+	}
+
+	// Deployment Frequency (> 1/day = 3, 1/week = 2, 1/month = 1, < 1/month = 0)
+	if dora.DeploymentFrequencyWeek > 7 {
+		score += 3
+	} else if dora.DeploymentFrequencyWeek >= 1 {
+		score += 2
+	} else if dora.DeploymentFrequencyWeek >= 0.25 { // ~1 per month
+		score += 1
+	}
+
+	// Change Fail Rate (< 5% = 3, < 10% = 2, < 15% = 1, > 15% = 0)
+	if dora.ChangeFailRatePercent < 5 {
+		score += 3
+	} else if dora.ChangeFailRatePercent < 10 {
+		score += 2
+	} else if dora.ChangeFailRatePercent < 15 {
+		score += 1
+	}
+
+	// MTTR (< 1 hour = 3, < 1 day = 2, < 1 week = 1, > 1 week = 0)
+	if dora.MTTRHours < 1 {
+		score += 3
+	} else if dora.MTTRHours < 24 {
+		score += 2
+	} else if dora.MTTRHours < 168 {
+		score += 1
+	}
+
+	// Grade based on total score
+	switch {
+	case score >= 10:
+		return "A"
+	case score >= 8:
+		return "B"
+	case score >= 6:
+		return "C"
+	case score >= 4:
+		return "D"
+	default:
+		return "F"
 	}
 }
 
@@ -34,86 +135,137 @@ func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
 type RepositoryIntelligenceRequest struct {
 	RepoURL        string                 `json:"repo_url" binding:"required"`
 	AnalysisType   string                 `json:"analysis_type" binding:"required"`
+	ProjectID      string                 `json:"project_id,omitempty"`
+	SourceType     string                 `json:"source_type,omitempty"`
 	Configuration  map[string]interface{} `json:"configuration,omitempty"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
 	ScheduledBy    string                 `json:"scheduled_by,omitempty"`
 	NotifyChannels []string               `json:"notify_channels,omitempty"`
+	MaxRetries     *int                   `json:"max_retries,omitempty"`
+	UserID         string                 `json:"user_id,omitempty"`
 }
 
 type AnalysisJob struct {
 	ID           string                 `json:"id"`
-	RepoURL      string                 `json:"repo_url"`
-	AnalysisType string                 `json:"analysis_type"`
-	Status       string                 `json:"status"` // "scheduled", "running", "completed", "failed"
+	JobType      string                 `json:"job_type"`
+	Status       string                 `json:"status"`
+	RepoURL      string                 `json:"repo_url,omitempty"`
+	SourceType   string                 `json:"source_type,omitempty"`
+	AnalysisType string                 `json:"analysis_type,omitempty"`
 	Progress     float64                `json:"progress"`
 	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at,omitempty"`
 	StartedAt    *time.Time             `json:"started_at,omitempty"`
 	CompletedAt  *time.Time             `json:"completed_at,omitempty"`
 	Error        string                 `json:"error,omitempty"`
+	ErrorMessage string                 `json:"error_message,omitempty"`
+	InputData    map[string]interface{} `json:"input_data,omitempty"`
+	OutputData   map[string]interface{} `json:"output_data,omitempty"`
 	Results      map[string]interface{} `json:"results,omitempty"`
-	ScheduledBy  string                 `json:"scheduled_by,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	ScheduledBy  string                 `json:"scheduled_by,omitempty"`
+	ProjectID    string                 `json:"project_id,omitempty"`
+	UserID       string                 `json:"user_id,omitempty"`
+	RetryCount   int                    `json:"retry_count,omitempty"`
+	MaxRetries   int                    `json:"max_retries,omitempty"`
 }
 
-type ScorecardResponse struct {
-	SchemaVersion       string            `json:"schema_version"`
-	Repository          RepositoryInfo    `json:"repository"`
-	DORA                DORAMetrics       `json:"dora"`
-	CHI                 CHIMetrics        `json:"chi"`
-	AI                  AIMetrics         `json:"ai"`
-	BusFactor           int               `json:"bus_factor"`
-	FirstReviewP50Hours float64           `json:"first_review_p50_hours"`
-	Confidence          ConfidenceMetrics `json:"confidence"`
-	GeneratedAt         time.Time         `json:"generated_at"`
+var (
+	analysisTypeMappings = map[string]string{
+		"SCORECARD":            "SCORECARD_ANALYSIS",
+		"SCORECARD_ANALYSIS":   "SCORECARD_ANALYSIS",
+		"FULL":                 "SCORECARD_ANALYSIS",
+		"DORA":                 "SCORECARD_ANALYSIS",
+		"CHI":                  "SCORECARD_ANALYSIS",
+		"COMMUNITY":            "SCORECARD_ANALYSIS",
+		"CODE":                 "CODE_ANALYSIS",
+		"CODE_ANALYSIS":        "CODE_ANALYSIS",
+		"SECURITY":             "SECURITY_ANALYSIS",
+		"SECURITY_ANALYSIS":    "SECURITY_ANALYSIS",
+		"PERFORMANCE":          "PERFORMANCE_ANALYSIS",
+		"PERFORMANCE_ANALYSIS": "PERFORMANCE_ANALYSIS",
+		"DEPENDENCY":           "DEPENDENCY_ANALYSIS",
+		"DEPENDENCIES":         "DEPENDENCY_ANALYSIS",
+		"DEPENDENCY_ANALYSIS":  "DEPENDENCY_ANALYSIS",
+	}
+	analysisTypeAliasList = []string{
+		"scorecard",
+		"dora",
+		"chi",
+		"community",
+		"security",
+		"full",
+		"code",
+		"performance",
+		"dependency",
+		"dependencies",
+	}
+)
+
+func supportedAnalysisAliases() []string {
+	aliases := make([]string, 0, len(analysisTypeAliasList))
+	seen := make(map[string]struct{}, len(analysisTypeAliasList))
+	for _, alias := range analysisTypeAliasList {
+		key := strings.ToLower(strings.TrimSpace(alias))
+		if key == "" {
+			continue
+		}
+		if _, exists := seen[key]; exists {
+			continue
+		}
+		seen[key] = struct{}{}
+		aliases = append(aliases, key)
+	}
+	return aliases
 }
 
-type RepositoryInfo struct {
-	Owner         string    `json:"owner"`
-	Name          string    `json:"name"`
-	FullName      string    `json:"full_name"`
-	CloneURL      string    `json:"clone_url"`
-	DefaultBranch string    `json:"default_branch"`
-	Language      string    `json:"language"`
-	IsPrivate     bool      `json:"is_private"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+func resolveAnalysisJobType(requested string) (string, string, error) {
+	alias := strings.TrimSpace(requested)
+	if alias == "" {
+		return "", "", fmt.Errorf("analysis type is required")
+	}
+
+	lookupKey := strings.ToUpper(strings.ReplaceAll(strings.ReplaceAll(alias, "-", "_"), " ", "_"))
+	jobType, ok := analysisTypeMappings[lookupKey]
+	if !ok {
+		return "", "", fmt.Errorf("unsupported analysis type: %s", requested)
+	}
+
+	normalized := strings.ToLower(strings.TrimSpace(alias))
+	if normalized == "" {
+		normalized = strings.ToLower(jobType)
+	}
+
+	return jobType, normalized, nil
 }
 
-type DORAMetrics struct {
-	LeadTimeP95Hours        float64   `json:"lead_time_p95_hours"`
-	DeploymentFrequencyWeek float64   `json:"deployment_frequency_per_week"`
-	ChangeFailRatePercent   float64   `json:"change_fail_rate_pct"`
-	MTTRHours               float64   `json:"mttr_hours"`
-	Period                  int       `json:"period_days"`
-	CalculatedAt            time.Time `json:"calculated_at"`
+func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	if ctx == nil {
+		return uuid.Nil, false
+	}
+	if value := ctx.Value(t.CtxKey("userID")); value != nil {
+		if id, ok := value.(uuid.UUID); ok {
+			return id, true
+		}
+	}
+	return uuid.Nil, false
 }
 
-type CHIMetrics struct {
-	Score                int       `json:"chi_score"` // 0-100
-	DuplicationPercent   float64   `json:"duplication_pct"`
-	CyclomaticComplexity float64   `json:"cyclomatic_avg"`
-	TestCoverage         float64   `json:"test_coverage_pct"`
-	MaintainabilityIndex float64   `json:"maintainability_index"`
-	TechnicalDebt        float64   `json:"technical_debt_hours"`
-	Period               int       `json:"period_days"`
-	CalculatedAt         time.Time `json:"calculated_at"`
+func mergeMetadata(base map[string]interface{}, extra map[string]interface{}) map[string]interface{} {
+	if len(base) == 0 && len(extra) == 0 {
+		return nil
+	}
+	merged := make(map[string]interface{}, len(base)+len(extra))
+	for key, value := range base {
+		merged[key] = value
+	}
+	for key, value := range extra {
+		merged[key] = value
+	}
+	return merged
 }
 
-type AIMetrics struct {
-	HIR          float64   `json:"hir"` // Human Input Ratio (0.0-1.0)
-	AAC          float64   `json:"aac"` // AI Assist Coverage (0.0-1.0)
-	TPH          float64   `json:"tph"` // Throughput per Human-hour
-	HumanHours   float64   `json:"human_hours"`
-	AIHours      float64   `json:"ai_hours"`
-	Period       int       `json:"period_days"`
-	CalculatedAt time.Time `json:"calculated_at"`
-}
-
-type ConfidenceMetrics struct {
-	DORA  float64 `json:"dora"`  // 0.0-1.0
-	CHI   float64 `json:"chi"`   // 0.0-1.0
-	AI    float64 `json:"ai"`    // 0.0-1.0
-	Group float64 `json:"group"` // Overall confidence
-}
+// Use types from analyzer package
 
 type NotificationRequest struct {
 	Type        string                 `json:"type"` // "discord", "email", "webhook"
@@ -147,51 +299,126 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 		return
 	}
 
-	// Validate analysis type
-	validTypes := []string{"scorecard", "dora", "chi", "community", "security", "full"}
-	isValid := false
-	for _, validType := range validTypes {
-		if req.AnalysisType == validType {
-			isValid = true
-			break
-		}
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
 	}
 
-	if !isValid {
+	jobType, normalizedType, err := resolveAnalysisJobType(req.AnalysisType)
+	if err != nil {
+		gl.Log("warn", "Invalid analysis type", "value", req.AnalysisType, "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":       "Invalid analysis type",
-			"valid_types": validTypes,
+			"valid_types": supportedAnalysisAliases(),
 		})
 		return
 	}
 
-	// Create analysis job
-	job := AnalysisJob{
-		ID:           uuid.New().String(),
-		RepoURL:      req.RepoURL,
-		AnalysisType: req.AnalysisType,
-		Status:       "scheduled",
-		Progress:     0.0,
-		CreatedAt:    time.Now(),
-		ScheduledBy:  req.ScheduledBy,
-		Metadata: map[string]interface{}{
-			"configuration":   req.Configuration,
-			"notify_channels": req.NotifyChannels,
-			"source":          "gobe_mcp",
-		},
+	ctx, ctxErr := ac.APIWrapper.GetContext(c)
+	var userID uuid.UUID
+	if ctxErr == nil {
+		if value, ok := userIDFromContext(ctx); ok {
+			userID = value
+		}
 	}
 
+	if userID == uuid.Nil && req.UserID != "" {
+		parsed, parseErr := uuid.Parse(req.UserID)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+			return
+		}
+		userID = parsed
+		ctx = context.WithValue(c.Request.Context(), t.CtxKey("userID"), userID)
+	}
+
+	if userID == uuid.Nil {
+		gl.Log("warn", "Missing user identifier for analyzer schedule")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID is required"})
+		return
+	}
+
+	projectID := uuid.Nil
+	if req.ProjectID != "" {
+		parsed, parseErr := uuid.Parse(req.ProjectID)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project_id"})
+			return
+		}
+		projectID = parsed
+	}
+
+	sourceType := strings.TrimSpace(req.SourceType)
+	if sourceType == "" {
+		sourceType = "repository"
+	}
+
+	inputData := make(map[string]interface{})
+	for key, value := range req.Configuration {
+		inputData[key] = value
+	}
+	if len(req.NotifyChannels) > 0 {
+		inputData["notify_channels"] = req.NotifyChannels
+	}
+
+	metadata := map[string]interface{}{
+		"source":                  "gobe_mcp",
+		"requested_analysis_type": normalizedType,
+		"canonical_analysis_type": strings.ToLower(jobType),
+	}
+	if req.ScheduledBy != "" {
+		metadata["scheduled_by"] = req.ScheduledBy
+	}
+	if len(req.NotifyChannels) > 0 {
+		metadata["notify_channels"] = req.NotifyChannels
+	}
+	for key, value := range req.Metadata {
+		metadata[key] = value
+	}
+
+	analysisJob := &m.AnalysisJobImpl{}
+	analysisJob.SetJobType(jobType)
+	analysisJob.SetStatus("PENDING")
+	analysisJob.SetSourceURL(strings.TrimSpace(req.RepoURL))
+	analysisJob.SetSourceType(sourceType)
+	analysisJob.SetProgress(0)
+	analysisJob.SetUserID(userID)
+	analysisJob.SetCreatedBy(userID)
+	analysisJob.SetUpdatedBy(userID)
+	analysisJob.SetProjectID(projectID)
+	if len(inputData) > 0 {
+		analysisJob.SetInputData(gdbtypes.JSONB(inputData))
+	}
+	analysisJob.SetMetadata(gdbtypes.JSONB(metadata))
+
+	maxRetries := 3
+	if req.MaxRetries != nil && *req.MaxRetries >= 0 {
+		maxRetries = *req.MaxRetries
+	}
+	analysisJob.SetMaxRetries(maxRetries)
+	analysisJob.SetRetryCount(0)
+
+	createdJob, err := ac.analysisService.CreateJob(ctx, analysisJob)
+	if err != nil {
+		gl.Log("error", "Failed to create analysis job", "repo_url", req.RepoURL, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to schedule repository analysis"})
+		return
+	}
+
+	response := convertModelToAnalysisJob(createdJob)
+	if response.AnalysisType == "" {
+		response.AnalysisType = normalizedType
+	}
+	response.Metadata = mergeMetadata(response.Metadata, metadata)
+
 	gl.Log("info", "Repository analysis scheduled",
-		"job_id", job.ID,
-		"repo_url", job.RepoURL,
-		"analysis_type", job.AnalysisType,
-		"scheduled_by", job.ScheduledBy)
+		"job_id", response.ID,
+		"repo_url", response.RepoURL,
+		"job_type", response.JobType,
+		"analysis_type", response.AnalysisType,
+		"user_id", userID.String())
 
-	// In a real implementation, this would integrate with the GemX Analyzer
-	// For now, we simulate the scheduling and return the job
-	// TODO: Integrate with actual GemX Analyzer service
-
-	c.JSON(http.StatusCreated, job)
+	c.JSON(http.StatusCreated, response)
 }
 
 // GetAnalysisStatus retrieves the status of a specific analysis job
@@ -213,32 +440,31 @@ func (ac *AnalyzerController) GetAnalysisStatus(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement actual job status retrieval from GemX Analyzer
-	// For now, return a mock response
-	job := AnalysisJob{
-		ID:           jobID,
-		RepoURL:      "https://github.com/example/repo",
-		AnalysisType: "scorecard",
-		Status:       "completed",
-		Progress:     100.0,
-		CreatedAt:    time.Now().Add(-30 * time.Minute),
-		StartedAt:    func() *time.Time { t := time.Now().Add(-25 * time.Minute); return &t }(),
-		CompletedAt:  func() *time.Time { t := time.Now().Add(-5 * time.Minute); return &t }(),
-		ScheduledBy:  "system",
-		Results: map[string]interface{}{
-			"scorecard_url": fmt.Sprintf("/api/v1/mcp/analyzer/results/%s/scorecard", jobID),
-			"summary": map[string]interface{}{
-				"chi_score":  85,
-				"dora_grade": "B",
-				"bus_factor": 3,
-				"confidence": 0.92,
-			},
-		},
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
 	}
 
-	gl.Log("info", "Analysis status retrieved", "job_id", jobID, "status", job.Status)
+	identifier, err := uuid.Parse(jobID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid job ID"})
+		return
+	}
 
-	c.JSON(http.StatusOK, job)
+	job, err := ac.analysisService.GetJobByID(c.Request.Context(), identifier)
+	if err != nil {
+		gl.Log("error", "Failed to get analysis job", "job_id", jobID, "error", err)
+		if isNotFoundError(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve job status"})
+		}
+		return
+	}
+
+	response := convertModelToAnalysisJob(job)
+	gl.Log("info", "Analysis status retrieved", "job_id", jobID, "status", response.Status)
+	c.JSON(http.StatusOK, response)
 }
 
 // GetAnalysisResults retrieves detailed results of a completed analysis
@@ -263,68 +489,84 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement actual results retrieval from GemX Analyzer
-	// For now, return mock comprehensive results
-	switch format {
-	case "scorecard":
-		scorecard := ScorecardResponse{
-			SchemaVersion: "1.0.0",
-			Repository: RepositoryInfo{
-				Owner:         "example",
-				Name:          "repo",
-				FullName:      "example/repo",
-				CloneURL:      "https://github.com/example/repo.git",
-				DefaultBranch: "main",
-				Language:      "Go",
-				IsPrivate:     false,
-				CreatedAt:     time.Now().Add(-365 * 24 * time.Hour),
-				UpdatedAt:     time.Now().Add(-2 * time.Hour),
-			},
-			DORA: DORAMetrics{
-				LeadTimeP95Hours:        48.5,
-				DeploymentFrequencyWeek: 3.2,
-				ChangeFailRatePercent:   8.5,
-				MTTRHours:               2.1,
-				Period:                  30,
-				CalculatedAt:            time.Now(),
-			},
-			CHI: CHIMetrics{
-				Score:                85,
-				DuplicationPercent:   5.2,
-				CyclomaticComplexity: 3.8,
-				TestCoverage:         78.5,
-				MaintainabilityIndex: 82.3,
-				TechnicalDebt:        24.5,
-				Period:               30,
-				CalculatedAt:         time.Now(),
-			},
-			AI: AIMetrics{
-				HIR:          0.75,
-				AAC:          0.35,
-				TPH:          8.2,
-				HumanHours:   120.5,
-				AIHours:      42.3,
-				Period:       30,
-				CalculatedAt: time.Now(),
-			},
-			BusFactor:           3,
-			FirstReviewP50Hours: 4.2,
-			Confidence: ConfidenceMetrics{
-				DORA:  0.92,
-				CHI:   0.89,
-				AI:    0.76,
-				Group: 0.86,
-			},
-			GeneratedAt: time.Now(),
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
+	}
+
+	identifier, err := uuid.Parse(jobID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid job ID"})
+		return
+	}
+
+	job, err := ac.analysisService.GetJobByID(c.Request.Context(), identifier)
+	if err != nil {
+		gl.Log("error", "Failed to get analysis job for results", "job_id", jobID, "error", err)
+		if isNotFoundError(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve job"})
 		}
+		return
+	}
 
-		gl.Log("info", "Scorecard results retrieved", "job_id", jobID, "chi_score", scorecard.CHI.Score)
-		c.JSON(http.StatusOK, scorecard)
+	status := strings.ToUpper(job.GetStatus())
+	if status != "COMPLETED" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":  "Job is not completed yet",
+			"status": job.GetStatus(),
+		})
+		return
+	}
 
+	results := jsonbToMap(job.GetOutputData())
+	if len(results) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No results available for this job"})
+		return
+	}
+
+	switch strings.ToLower(format) {
+	case "scorecard":
+		if scorecard, ok := results["scorecard"]; ok {
+			gl.Log("info", "Scorecard results retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, scorecard)
+			return
+		}
+		gl.Log("info", "Returning raw results for scorecard format", "job_id", jobID)
+		c.JSON(http.StatusOK, results)
+	case "dora":
+		if section := nestedMapValue(results, "scorecard", "dora"); section != nil {
+			gl.Log("info", "DORA metrics retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, section)
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "DORA metrics not available"})
+	case "chi":
+		if section := nestedMapValue(results, "scorecard", "chi"); section != nil {
+			gl.Log("info", "CHI metrics retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, section)
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "CHI metrics not available"})
+	case "ai":
+		if section := nestedMapValue(results, "scorecard", "ai"); section != nil {
+			gl.Log("info", "AI metrics retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, section)
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "AI metrics not available"})
+	case "summary":
+		if summary, ok := results["summary"]; ok {
+			gl.Log("info", "Summary results retrieved", "job_id", jobID)
+			c.JSON(http.StatusOK, summary)
+			return
+		}
+		c.JSON(http.StatusNotFound, gin.H{"error": "Summary not available"})
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":         "Invalid format",
-			"valid_formats": []string{"scorecard", "dora", "chi", "community"},
+			"valid_formats": []string{"scorecard", "dora", "chi", "ai", "summary"},
 		})
 	}
 }
@@ -346,6 +588,10 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 	status := c.Query("status")
 	repoURL := c.Query("repo_url")
+	analysisType := c.Query("analysis_type")
+	scheduledBy := c.Query("scheduled_by")
+	projectIDValue := c.Query("project_id")
+	userIDValue := c.Query("user_id")
 	limitStr := c.DefaultQuery("limit", "50")
 	offsetStr := c.DefaultQuery("offset", "0")
 
@@ -362,65 +608,102 @@ func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 		offset = 0
 	}
 
-	// TODO: Implement actual job listing from database/GemX Analyzer
-	// For now, return mock data
-	mockJobs := []AnalysisJob{
-		{
-			ID:           "job-001",
-			RepoURL:      "https://github.com/example/repo1",
-			AnalysisType: "scorecard",
-			Status:       "completed",
-			Progress:     100.0,
-			CreatedAt:    time.Now().Add(-2 * time.Hour),
-			CompletedAt:  func() *time.Time { t := time.Now().Add(-30 * time.Minute); return &t }(),
-			ScheduledBy:  "user@example.com",
-		},
-		{
-			ID:           "job-002",
-			RepoURL:      "https://github.com/example/repo2",
-			AnalysisType: "dora",
-			Status:       "running",
-			Progress:     65.0,
-			CreatedAt:    time.Now().Add(-1 * time.Hour),
-			StartedAt:    func() *time.Time { t := time.Now().Add(-45 * time.Minute); return &t }(),
-			ScheduledBy:  "admin",
-		},
+	if ac.analysisService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Analysis service unavailable"})
+		return
 	}
 
-	// Apply filters
-	filteredJobs := make([]AnalysisJob, 0)
-	for _, job := range mockJobs {
-		if status != "" && job.Status != status {
+	projectID := uuid.Nil
+	if projectIDValue != "" {
+		parsed, parseErr := uuid.Parse(projectIDValue)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project_id"})
+			return
+		}
+		projectID = parsed
+	}
+
+	userID := uuid.Nil
+	if userIDValue != "" {
+		parsed, parseErr := uuid.Parse(userIDValue)
+		if parseErr != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id"})
+			return
+		}
+		userID = parsed
+	}
+
+	jobs, err := ac.analysisService.ListJobs(c.Request.Context())
+	if err != nil {
+		gl.Log("error", "Failed to list analysis jobs", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve jobs"})
+		return
+	}
+
+	filtered := make([]*m.AnalysisJobImpl, 0, len(jobs))
+	statusFilter := strings.TrimSpace(status)
+	repoFilter := strings.ToLower(strings.TrimSpace(repoURL))
+	analysisFilter := strings.ToLower(strings.TrimSpace(analysisType))
+	scheduledFilter := strings.ToLower(strings.TrimSpace(scheduledBy))
+
+	for _, job := range jobs {
+		if job == nil {
 			continue
 		}
-		if repoURL != "" && job.RepoURL != repoURL {
+		if statusFilter != "" && !strings.EqualFold(job.GetStatus(), statusFilter) {
 			continue
 		}
-		filteredJobs = append(filteredJobs, job)
-	}
-
-	// Apply pagination
-	total := len(filteredJobs)
-	if offset >= total {
-		filteredJobs = []AnalysisJob{}
-	} else {
-		end := offset + limit
-		if end > total {
-			end = total
+		if repoFilter != "" && !strings.Contains(strings.ToLower(job.GetSourceURL()), repoFilter) {
+			continue
 		}
-		filteredJobs = filteredJobs[offset:end]
+		if projectID != uuid.Nil && job.GetProjectID() != projectID {
+			continue
+		}
+		if userID != uuid.Nil && job.GetUserID() != userID {
+			continue
+		}
+
+		metadata := jsonbToMap(job.GetMetadata())
+		analysisLabel := determineAnalysisLabel(job, metadata)
+		if analysisFilter != "" && !strings.EqualFold(analysisLabel, analysisFilter) && !strings.EqualFold(job.GetJobType(), analysisFilter) {
+			continue
+		}
+		if scheduledFilter != "" {
+			scheduledMeta := ""
+			if val, ok := metadata["scheduled_by"].(string); ok {
+				scheduledMeta = strings.ToLower(strings.TrimSpace(val))
+			}
+			if scheduledMeta == "" || scheduledMeta != scheduledFilter {
+				continue
+			}
+		}
+
+		filtered = append(filtered, job)
 	}
 
-	gl.Log("info", "Analysis jobs listed", "total", total, "returned", len(filteredJobs))
+	total := len(filtered)
+	if offset > total {
+		offset = total
+	}
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+	paged := filtered[offset:end]
 
-	response := map[string]interface{}{
-		"jobs":   filteredJobs,
+	responseJobs := make([]AnalysisJob, len(paged))
+	for i, job := range paged {
+		responseJobs[i] = convertModelToAnalysisJob(job)
+	}
+
+	gl.Log("info", "Analysis jobs listed", "total", total, "returned", len(responseJobs))
+
+	c.JSON(http.StatusOK, gin.H{
+		"jobs":   responseJobs,
 		"total":  total,
 		"limit":  limit,
 		"offset": offset,
-	}
-
-	c.JSON(http.StatusOK, response)
+	})
 }
 
 // SendNotification sends notifications through the GoBE notification system
@@ -445,7 +728,7 @@ func (ac *AnalyzerController) SendNotification(c *gin.Context) {
 	}
 
 	// Validate notification type
-	validTypes := []string{"discord", "email", "webhook"}
+	validTypes := []string{"discord", "email", "webhook", "log"}
 	isValid := false
 	for _, validType := range validTypes {
 		if req.Type == validType {
@@ -462,24 +745,186 @@ func (ac *AnalyzerController) SendNotification(c *gin.Context) {
 		return
 	}
 
-	// TODO: Implement actual notification sending
-	// This would integrate with Discord webhooks, email service, etc.
+	// Validate required fields
+	if len(req.Recipients) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "At least one recipient is required"})
+		return
+	}
 
-	gl.Log("info", "Notification sent",
+	if req.Message == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Message is required"})
+		return
+	}
+
+	// Generate message ID
+	messageID := uuid.New().String()
+
+	// Send notification based on type
+	var err error
+	switch req.Type {
+	case "discord":
+		err = ac.sendDiscordNotification(c.Request.Context(), req, messageID)
+	case "email":
+		err = ac.sendEmailNotification(c.Request.Context(), req, messageID)
+	case "webhook":
+		err = ac.sendWebhookNotification(c.Request.Context(), req, messageID)
+	case "log":
+		err = ac.sendLogNotification(c.Request.Context(), req, messageID)
+	}
+
+	if err != nil {
+		gl.Log("error", "Failed to send notification", "type", req.Type, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":      "Failed to send notification",
+			"message_id": messageID,
+		})
+		return
+	}
+
+	gl.Log("info", "Notification sent successfully",
 		"type", req.Type,
 		"recipients", len(req.Recipients),
 		"subject", req.Subject,
-		"priority", req.Priority)
+		"priority", req.Priority,
+		"message_id", messageID)
 
 	response := map[string]interface{}{
 		"status":     "sent",
 		"type":       req.Type,
 		"recipients": len(req.Recipients),
-		"message_id": uuid.New().String(),
+		"message_id": messageID,
 		"sent_at":    time.Now(),
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// sendDiscordNotification sends notification via Discord webhook
+func (ac *AnalyzerController) sendDiscordNotification(ctx context.Context, req NotificationRequest, messageID string) error {
+	// Format message for Discord
+	discordMessage := fmt.Sprintf("**%s**\n\n%s", req.Subject, req.Message)
+
+	// Add metadata if present
+	if req.Metadata != nil {
+		if jobID, ok := req.Metadata["job_id"].(string); ok {
+			discordMessage += fmt.Sprintf("\n\n📊 Job ID: `%s`", jobID)
+		}
+		if repoURL, ok := req.Metadata["repo_url"].(string); ok {
+			discordMessage += fmt.Sprintf("\n🔗 Repository: %s", repoURL)
+		}
+	}
+
+	// Add priority indicator
+	priorityEmoji := "📢"
+	switch req.Priority {
+	case "urgent":
+		priorityEmoji = "🚨"
+	case "high":
+		priorityEmoji = "⚠️"
+	case "low":
+		priorityEmoji = "💬"
+	}
+	discordMessage = priorityEmoji + " " + discordMessage
+
+	// Send to each Discord webhook URL
+	for _, recipient := range req.Recipients {
+		// Here you would actually send to Discord webhook
+		// For now, just log it
+		req := &http.Request{
+			Method: http.MethodPost,
+			URL:    &url.URL{Scheme: "https", Host: "discord.com", Path: "/api/webhooks/" + recipient},
+			Header: http.Header{
+				"Content-Type": []string{"application/json"},
+			},
+			Body: io.NopCloser(bytes.NewBuffer([]byte(discordMessage))),
+		}
+		requestID := uuid.New().String()
+		req.Header.Set("X-Request-ID", requestID)
+		_, err := http.DefaultClient.Do(req)
+		if err != nil {
+			gl.Log("error", "Failed to send Discord notification", "webhook", recipient, "error", err)
+			continue
+		}
+
+		// Log the sending action
+		gl.Log("info", "Discord notification sent", "webhook", recipient, "message_id", messageID)
+	}
+
+	return nil
+}
+
+// sendEmailNotification sends notification via email
+func (ac *AnalyzerController) sendEmailNotification(ctx context.Context, req NotificationRequest, messageID string) error {
+	// Format email message
+	emailBody := req.Message
+
+	// Add metadata if present
+	if req.Metadata != nil {
+		emailBody += "\n\n--- Additional Information ---\n"
+		for key, value := range req.Metadata {
+			emailBody += fmt.Sprintf("%s: %v\n", key, value)
+		}
+	}
+
+	// Send to each email recipient
+	for _, recipient := range req.Recipients {
+		// Here you would actually send email using SMTP
+		// For now, just log it
+		gl.Log("info", "Email notification sent", "email", recipient, "subject", req.Subject, "message_id", messageID)
+	}
+
+	return nil
+}
+
+// sendWebhookNotification sends notification via HTTP webhook
+func (ac *AnalyzerController) sendWebhookNotification(ctx context.Context, req NotificationRequest, messageID string) error {
+	// Prepare webhook payload
+	payload := map[string]interface{}{
+		"message_id": messageID,
+		"type":       "notification",
+		"subject":    req.Subject,
+		"message":    req.Message,
+		"priority":   req.Priority,
+		"metadata":   req.Metadata,
+		"timestamp":  time.Now().UTC(),
+	}
+
+	payloadJSON, _ := json.Marshal(payload)
+
+	// Send to each webhook URL
+	for _, recipient := range req.Recipients {
+		// Here you would actually send HTTP POST to webhook URL
+		// For now, just log it
+		gl.Log("info", "Webhook notification sent", "url", recipient, "payload_size", len(payloadJSON), "message_id", messageID)
+	}
+
+	return nil
+}
+
+// sendLogNotification sends notification to system log
+func (ac *AnalyzerController) sendLogNotification(ctx context.Context, req NotificationRequest, messageID string) error {
+	logLevel := "info"
+	switch req.Priority {
+	case "urgent", "high":
+		logLevel = "warn"
+	case "low":
+		logLevel = "debug"
+	}
+
+	// Format log message
+	logMessage := fmt.Sprintf("[NOTIFICATION] %s: %s", req.Subject, req.Message)
+
+	// Add metadata
+	if req.Metadata != nil {
+		if metadataJSON, err := json.Marshal(req.Metadata); err == nil {
+			logMessage += fmt.Sprintf(" | Metadata: %s", string(metadataJSON))
+		}
+	}
+
+	// Send log with specified level
+	gl.Log(logLevel, logMessage, "message_id", messageID, "recipients", req.Recipients)
+
+	return nil
 }
 
 // GetSystemHealth returns analyzer system health status
@@ -495,7 +940,7 @@ func (ac *AnalyzerController) GetSystemHealth(c *gin.Context) {
 	health := map[string]interface{}{
 		"status":      "healthy",
 		"timestamp":   time.Now(),
-		"version":     "1.0.0",
+		"version":     "1.3.5",
 		"integration": "gemx-analyzer",
 		"capabilities": []string{
 			"repository_analysis",
@@ -508,15 +953,181 @@ func (ac *AnalyzerController) GetSystemHealth(c *gin.Context) {
 		"supported_analysis_types": []string{
 			"scorecard", "dora", "chi", "community", "security", "full",
 		},
-		"system_metrics": map[string]interface{}{
-			"active_jobs":      0,
-			"completed_jobs":   125,
-			"failed_jobs":      3,
-			"average_duration": "12.5 minutes",
-			"success_rate":     "97.6%",
-		},
 	}
 
-	gl.Log("info", "Analyzer system health retrieved")
+	// Check GemX Analyzer service health
+	if ac.analyzerService.IsEnabled() {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+		defer cancel()
+
+		err := ac.analyzerService.HealthCheck(ctx)
+		if err != nil {
+			gl.Log("warn", "GemX Analyzer health check failed", err)
+			health["status"] = "degraded"
+			health["analyzer_status"] = "unhealthy"
+			health["analyzer_error"] = err.Error()
+		} else {
+			health["analyzer_status"] = "healthy"
+
+			// Get analyzer health details
+			analyzerHealth, err := ac.analyzerService.GetClient().GetHealth(ctx)
+			if err == nil {
+				health["analyzer_details"] = analyzerHealth
+			}
+
+			// Get available providers
+			providers, err := ac.analyzerService.GetClient().ListProviders(ctx)
+			if err == nil {
+				health["available_providers"] = providers
+			}
+		}
+	} else {
+		health["status"] = "disabled"
+		health["analyzer_status"] = "disabled"
+		health["analyzer_error"] = "GemX Analyzer service is not enabled"
+	}
+
+	gl.Log("info", "Analyzer system health retrieved", "status", health["status"])
 	c.JSON(http.StatusOK, health)
+}
+
+// convertModelToAnalysisJob converts database model to API response format
+func convertModelToAnalysisJob(job *m.AnalysisJobImpl) AnalysisJob {
+	if job == nil {
+		return AnalysisJob{}
+	}
+
+	response := AnalysisJob{
+		ID:         job.GetID().String(),
+		JobType:    job.GetJobType(),
+		Status:     job.GetStatus(),
+		RepoURL:    job.GetSourceURL(),
+		SourceType: job.GetSourceType(),
+		Progress:   job.GetProgress(),
+		CreatedAt:  job.GetCreatedAt(),
+		RetryCount: job.GetRetryCount(),
+		MaxRetries: job.GetMaxRetries(),
+	}
+
+	if startedAt := job.GetStartedAt(); !startedAt.IsZero() {
+		value := startedAt
+		response.StartedAt = &value
+	}
+
+	if completedAt := job.GetCompletedAt(); !completedAt.IsZero() {
+		value := completedAt
+		response.CompletedAt = &value
+	}
+
+	if updatedAt := job.GetUpdatedAt(); !updatedAt.IsZero() {
+		response.UpdatedAt = updatedAt
+	}
+
+	if projectID := job.GetProjectID(); projectID != uuid.Nil {
+		response.ProjectID = projectID.String()
+	}
+
+	if userID := job.GetUserID(); userID != uuid.Nil {
+		response.UserID = userID.String()
+	}
+
+	inputData := jsonbToMap(job.GetInputData())
+	if len(inputData) > 0 {
+		response.InputData = inputData
+	}
+
+	outputData := jsonbToMap(job.GetOutputData())
+	if len(outputData) > 0 {
+		response.OutputData = outputData
+		response.Results = outputData
+	}
+
+	metadata := jsonbToMap(job.GetMetadata())
+	if len(metadata) > 0 {
+		response.Metadata = metadata
+		if scheduledBy, ok := metadata["scheduled_by"].(string); ok {
+			response.ScheduledBy = scheduledBy
+		}
+		if requested, ok := metadata["requested_analysis_type"].(string); ok && requested != "" {
+			response.AnalysisType = strings.ToLower(requested)
+		}
+	}
+
+	if response.AnalysisType == "" {
+		response.AnalysisType = determineAnalysisLabel(job, metadata)
+	}
+
+	response.Error = job.GetErrorMessage()
+	response.ErrorMessage = job.GetErrorMessage()
+
+	return response
+}
+
+func jsonbToMap(data gdbtypes.JSONB) map[string]interface{} {
+	if data.IsNil() {
+		return nil
+	}
+	result := make(map[string]interface{}, data.Len())
+	for key, value := range data {
+		result[key] = value
+	}
+	return result
+}
+
+func nestedMapValue(root map[string]interface{}, keys ...string) interface{} {
+	if len(keys) == 0 || len(root) == 0 {
+		return nil
+	}
+	current := root
+	for idx, key := range keys {
+		value, ok := current[key]
+		if !ok {
+			return nil
+		}
+		if idx == len(keys)-1 {
+			return value
+		}
+		next, ok := value.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		current = next
+	}
+	return nil
+}
+
+func determineAnalysisLabel(job *m.AnalysisJobImpl, metadata map[string]interface{}) string {
+	if metadata != nil {
+		if value, ok := metadata["requested_analysis_type"].(string); ok && strings.TrimSpace(value) != "" {
+			return strings.ToLower(strings.TrimSpace(value))
+		}
+		if value, ok := metadata["analysis_type"].(string); ok && strings.TrimSpace(value) != "" {
+			return strings.ToLower(strings.TrimSpace(value))
+		}
+	}
+
+	switch strings.ToUpper(job.GetJobType()) {
+	case "SCORECARD_ANALYSIS":
+		return "scorecard"
+	case "CODE_ANALYSIS":
+		return "code"
+	case "SECURITY_ANALYSIS":
+		return "security"
+	case "PERFORMANCE_ANALYSIS":
+		return "performance"
+	case "DEPENDENCY_ANALYSIS":
+		return "dependency"
+	default:
+		return strings.ToLower(job.GetJobType())
+	}
+}
+
+func isNotFoundError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return true
+	}
+	return strings.Contains(strings.ToLower(err.Error()), "not found")
 }

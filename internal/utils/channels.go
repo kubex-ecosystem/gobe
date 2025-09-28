@@ -9,8 +9,7 @@ import (
 )
 
 func chanRoutineCtl[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
-	select {
-	case msg := <-chCtl:
+	for msg := range chCtl {
 		switch msg {
 		case "stop":
 			if ch != nil {
@@ -65,12 +64,12 @@ func chanRoutineDefer[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) 
 		if ch == nil {
 			gl.Log("debug", "Creating new channel for:", v.GetName(), "ID:", v.GetID().String())
 			// If the channel is nil, create a new channel.
-			ch = make(chan T, 3)
+			// ch = make(chan T, 3)
 		}
 		if chCtl == nil {
 			gl.Log("debug", "Creating new control channel for:", v.GetName(), "ID:", v.GetID().String())
 			// If the control channel is nil, create a new control channel.
-			chCtl = make(chan string, 2)
+			// chCtl = make(chan string, 2)
 		}
 	} else {
 		gl.Log("debug", "Exiting monitor routine for:", v.GetName(), "ID:", v.GetID().String())

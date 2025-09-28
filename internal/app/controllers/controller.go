@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	whk "github.com/kubex-ecosystem/gdbase/factory/models"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type WebhookController struct {

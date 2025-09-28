@@ -12,7 +12,6 @@ import (
 
 	f "github.com/kubex-ecosystem/gdbase/factory"
 	sc "github.com/kubex-ecosystem/gdbase/types"
-	ut "github.com/kubex-ecosystem/gdbase/utils"
 	fcs "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
@@ -47,7 +46,11 @@ func getEnvOrDefault[T string | int | bool](environment ci.IEnvironment, key str
 func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger l.Logger, debug bool) (*sc.DBConfig, error) {
 	dbName := getEnvOrDefault(environment, "DB_NAME", "kubex_db")
 	if _, err := os.Stat(dbConfigFilePath); err != nil && os.IsNotExist(err) {
-		if err := ut.EnsureDir(filepath.Dir(dbConfigFilePath), 0644, []string{}); err != nil {
+		// if err := ut.EnsureDir(filepath.Dir(dbConfigFilePath), 0644, []string{}); err != nil {
+		// 	gl.Log("error", fmt.Sprintf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err))
+		// 	return nil, fmt.Errorf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err)
+		// }
+		if err := os.MkdirAll(filepath.Dir(dbConfigFilePath), 0755); err != nil {
 			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err))
 			return nil, fmt.Errorf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err)
 		}

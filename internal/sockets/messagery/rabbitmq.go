@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 
 	t "github.com/kubex-ecosystem/gdbase/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
@@ -373,12 +373,12 @@ func (a *AMQP) ConnectionStats() map[string]interface{} {
 	defer a.mu.RUnlock()
 
 	stats := map[string]interface{}{
-		"ready":           a.ready.Load(),
-		"reconnecting":    a.reconnecting.Load(),
+		"ready":               a.ready.Load(),
+		"reconnecting":        a.reconnecting.Load(),
 		"connection_attempts": atomic.LoadInt64(&a.connAttempts),
-		"url":             a.URL,
-		"max_retries":     a.maxRetries,
-		"retry_interval": a.retryInterval.String(),
+		"url":                 a.URL,
+		"max_retries":         a.maxRetries,
+		"retry_interval":      a.retryInterval.String(),
 	}
 
 	if !a.lastErrorTime.IsZero() {

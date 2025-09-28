@@ -12,6 +12,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
+	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
 
@@ -171,7 +172,7 @@ func (c *ApprovalConfig) GetSettings() map[string]interface{} {
 }
 
 type ServerConfig struct {
-	Port       int    `json:"port"`
+	Port       string `json:"port"`
 	Host       string `json:"host"`
 	EnableCORS bool   `json:"enable_cors"`
 	DevMode    bool   `json:"dev_mode"`
@@ -311,6 +312,7 @@ func (c *TelegramConfig) GetSettings() map[string]interface{} {
 func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *IConfig](
 	configPath string,
 	configType string,
+	initArgs *interfaces.InitArgs,
 ) (C, error) {
 
 	var envFilePath string
@@ -345,7 +347,7 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 		configType = "main_config"
 	}
 
-	if err := BootstrapMainConfig(configPath); err != nil {
+	if err := BootstrapMainConfig(configPath, initArgs); err != nil {
 		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
 	}
 

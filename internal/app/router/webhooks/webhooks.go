@@ -14,7 +14,7 @@ import (
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
 	l "github.com/kubex-ecosystem/logz"
-	"github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // WebhookRoutes utiliza o padrão Route para registrar endpoints do Webhook Manager.

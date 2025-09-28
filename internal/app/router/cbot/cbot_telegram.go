@@ -31,6 +31,7 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	cfg, configErr := config.Load[*config.Config](
 		rtl.GetConfigPath(),
 		"main_config",
+		rtl.GetInitArgs(),
 	)
 	if configErr != nil {
 		gl.Log("error", "Failed to load config for TelegramRoutes", configErr)

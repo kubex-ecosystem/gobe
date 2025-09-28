@@ -36,6 +36,7 @@ type (
 
 	JobQueueService = fscm.JobQueueService
 	JobQueueRepo    = fscm.JobQueueRepo
+	JobQueueImpl    = fscm.JobQueue
 	JobQueueModel   = fscm.JobQueueModel
 
 	// Webhook definitions
@@ -43,6 +44,13 @@ type (
 	WebhookService = fscm.WebhookService
 	WebhookRepo    = fscm.WebhookRepo
 	WebhookModel   = fscm.Webhook
+
+	// AnalysisJob definitions
+
+	AnalysisJobService = fscm.AnalysisJobService
+	AnalysisJobRepo    = fscm.AnalysisJobRepo
+	AnalysisJobImpl    = fscm.AnalysisJob
+	AnalysisJobModel   = fscm.AnalysisJobModel
 
 	// OrderModel   = fscm.OrderModel
 	// OrderRepo    = fscm.OrderRepo
@@ -106,4 +114,20 @@ func NewJobQueueService(db JobQueueRepo) JobQueueService {
 
 func NewJobQueueRepo(dbConn *gorm.DB) JobQueueRepo {
 	return fscm.NewJobQueueRepo(dbConn)
+}
+
+func NewJobQueueModel() JobQueueModel {
+	return fscm.NewJobQueueModel()
+}
+
+func NewAnalysisJobService(db AnalysisJobRepo) AnalysisJobService {
+	return fscm.NewAnalysisJobService(db)
+}
+
+func NewAnalysisJobRepo(dbConn *gorm.DB) AnalysisJobRepo {
+	return fscm.NewAnalysisJobRepo(dbConn)
+}
+
+func NewAnalysisJobModel() AnalysisJobModel {
+	return fscm.NewAnalysisJobModel()
 }

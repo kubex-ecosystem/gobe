@@ -1,0 +1,59 @@
+package mcp
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	mcp_analyzer_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/analyzer"
+	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+)
+
+type MCPAnalyzerRoutes struct {
+	ar.IRouter
+}
+
+func NewMCPAnalyzerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
+	if rtr == nil {
+		gl.Log("error", "Router is nil, cannot create MCP Analyzer routes")
+		return nil
+	}
+	rtl := *rtr
+
+	dbService := rtl.GetDatabaseService()
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for MCP Analyzer routes")
+		return nil
+	}
+	dbGorm, err := dbService.GetDB()
+	if err != nil {
+		gl.Log("error", "Failed to get DB from service", err)
+		return nil
+	}
+	mcpAnalyzerController := mcp_analyzer_controller.NewAnalyzerController(dbGorm)
+
+	routesMap := make(map[string]ar.IRoute)
+	middlewaresMap := make(map[string]gin.HandlerFunc)
+
+	secureProperties := make(map[string]bool)
+	secureProperties["secure"] = false // This need to be changed to true for production
+	secureProperties["validateAndSanitize"] = false
+	secureProperties["validateAndSanitizeBody"] = false
+
+	// Repository Analysis Routes
+	routesMap["ScheduleAnalysis"] = proto.NewRoute(http.MethodPost, "/api/v1/mcp/analyzer/schedule", "application/json", mcpAnalyzerController.ScheduleAnalysis, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetAnalysisStatus"] = proto.NewRoute(http.MethodGet, "/api/v1/mcp/analyzer/status/:job_id", "application/json", mcpAnalyzerController.GetAnalysisStatus, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["GetAnalysisResults"] = proto.NewRoute(http.MethodGet, "/api/v1/mcp/analyzer/results/:job_id", "application/json", mcpAnalyzerController.GetAnalysisResults, middlewaresMap, dbService, secureProperties, nil)
+	routesMap["ListAnalysisJobs"] = proto.NewRoute(http.MethodGet, "/api/v1/mcp/analyzer/jobs", "application/json", mcpAnalyzerController.ListAnalysisJobs, middlewaresMap, dbService, secureProperties, nil)
+
+	// System and Health Routes
+	routesMap["GetSystemHealth"] = proto.NewRoute(http.MethodGet, "/api/v1/mcp/analyzer/health", "application/json", mcpAnalyzerController.GetSystemHealth, middlewaresMap, dbService, secureProperties, nil)
+
+	// Notification Routes
+	routesMap["SendNotification"] = proto.NewRoute(http.MethodPost, "/api/v1/analyzer/notifications/send", "application/json", mcpAnalyzerController.SendNotification, middlewaresMap, dbService, secureProperties, nil)
+
+	gl.Log("info", "MCP Analyzer routes initialized successfully", "routes_count", len(routesMap))
+
+	return routesMap
+}

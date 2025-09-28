@@ -1,5 +1,68 @@
 basePath: /
 definitions:
+  analyzer.ErrorResponse:
+    properties:
+      message:
+        example: detailed error message
+        type: string
+      status:
+        example: error
+        type: string
+    type: object
+  analyzer.NotificationRequest:
+    properties:
+      attach_files:
+        items:
+          type: string
+        type: array
+      message:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      priority:
+        description: '"low", "normal", "high", "urgent"'
+        type: string
+      recipients:
+        items:
+          type: string
+        type: array
+      subject:
+        type: string
+      type:
+        description: '"discord", "email", "webhook"'
+        type: string
+    type: object
+  analyzer.RepositoryIntelligenceRequest:
+    properties:
+      analysis_type:
+        type: string
+      configuration:
+        additionalProperties: true
+        type: object
+      max_retries:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      notify_channels:
+        items:
+          type: string
+        type: array
+      project_id:
+        type: string
+      repo_url:
+        type: string
+      scheduled_by:
+        type: string
+      source_type:
+        type: string
+      user_id:
+        type: string
+    required:
+    - analysis_type
+    - repo_url
+    type: object
   clients.ArchiveInfo:
     properties:
       archivedAt:
@@ -454,7 +517,18 @@ definitions:
     type: object
   gateway.ScorecardAdviceResponse:
     properties:
+      actions:
+        items:
+          type: string
+        type: array
       advice:
+        type: string
+      generated_at:
+        type: string
+      metrics:
+        additionalProperties: true
+        type: object
+      priority:
         type: string
       version:
         type: string
@@ -490,6 +564,8 @@ definitions:
         items:
           $ref: '#/definitions/gateway.ScorecardEntry'
         type: array
+      total:
+        type: integer
       version:
         type: string
     type: object
@@ -505,8 +581,58 @@ definitions:
       timestamp:
         type: string
     type: object
+  gateway.WebhookEvent:
+    properties:
+      error:
+        type: string
+      event_type:
+        type: string
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      id:
+        type: string
+      payload:
+        additionalProperties: true
+        type: object
+      processed:
+        type: boolean
+      source:
+        type: string
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  gateway.WebhookEventsResponse:
+    properties:
+      events:
+        items: {}
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
   gateway.WebhookHealthResponse:
     properties:
+      stats:
+        additionalProperties: true
+        type: object
+      status:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  gateway.WebhookRetryResponse:
+    properties:
+      message:
+        type: string
+      retried_count:
+        type: integer
       status:
         type: string
       timestamp:
@@ -533,6 +659,82 @@ definitions:
       temperature:
         type: number
     type: object
+  github_com_kubex-ecosystem_gobe_internal_app_controllers_mcp_analyzer.AnalysisJob:
+    properties:
+      analysis_type:
+        type: string
+      completed_at:
+        type: string
+      created_at:
+        type: string
+      error:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: string
+      input_data:
+        additionalProperties: true
+        type: object
+      job_type:
+        type: string
+      max_retries:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      output_data:
+        additionalProperties: true
+        type: object
+      progress:
+        type: number
+      project_id:
+        type: string
+      repo_url:
+        type: string
+      results:
+        additionalProperties: true
+        type: object
+      retry_count:
+        type: integer
+      scheduled_by:
+        type: string
+      source_type:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_app_controllers_mcp_analyzer.ScorecardResponse:
+    properties:
+      ai:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_services_analyzer.AIMetrics'
+      bus_factor:
+        type: integer
+      chi:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_services_analyzer.CHIMetrics'
+      confidence:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_services_analyzer.ConfidenceMetrics'
+      dora:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_services_analyzer.DORAMetrics'
+      first_review_p50_hours:
+        type: number
+      generated_at:
+        type: string
+      job_id:
+        type: string
+      repository:
+        $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_services_analyzer.RepositoryInfo'
+      schema_version:
+        type: string
+      status:
+        type: string
+    type: object
   github_com_kubex-ecosystem_gobe_internal_contracts_types.ContactForm:
     properties:
       email:
@@ -542,6 +744,92 @@ definitions:
       name:
         type: string
       token:
+        type: string
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_services_analyzer.AIMetrics:
+    properties:
+      aac:
+        description: AI Assist Coverage
+        type: number
+      ai_hours:
+        type: number
+      calculated_at:
+        type: string
+      hir:
+        description: Human Input Ratio
+        type: number
+      human_hours:
+        type: number
+      period_days:
+        type: integer
+      tph:
+        description: Throughput per Human-hour
+        type: number
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_services_analyzer.CHIMetrics:
+    properties:
+      calculated_at:
+        type: string
+      chi_score:
+        type: integer
+      cyclomatic_avg:
+        type: number
+      duplication_pct:
+        type: number
+      maintainability_index:
+        type: number
+      period_days:
+        type: integer
+      technical_debt_hours:
+        type: number
+      test_coverage_pct:
+        type: number
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_services_analyzer.ConfidenceMetrics:
+    properties:
+      ai:
+        type: number
+      chi:
+        type: number
+      dora:
+        type: number
+      group:
+        type: number
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_services_analyzer.DORAMetrics:
+    properties:
+      calculated_at:
+        type: string
+      change_fail_rate_pct:
+        type: number
+      deployment_frequency_per_week:
+        type: number
+      lead_time_p95_hours:
+        type: number
+      mttr_hours:
+        type: number
+      period_days:
+        type: integer
+    type: object
+  github_com_kubex-ecosystem_gobe_internal_services_analyzer.RepositoryInfo:
+    properties:
+      clone_url:
+        type: string
+      created_at:
+        type: string
+      default_branch:
+        type: string
+      full_name:
+        type: string
+      is_private:
+        type: boolean
+      language:
+        type: string
+      name:
+        type: string
+      owner:
+        type: string
+      updated_at:
         type: string
     type: object
   manage.ActionResponse:
@@ -789,9 +1077,57 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
     format: int64
     type: integer
     x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
     - minDuration
     - maxDuration
     - Nanosecond
@@ -1060,6 +1396,39 @@ paths:
       summary: Gerar aconselhamento
       tags:
       - gateway beta
+  /api/v1/analyzer/notifications/send:
+    post:
+      consumes:
+      - application/json
+      description: Send notification about analysis completion or status updates
+      parameters:
+      - description: Notification details
+        in: body
+        name: notification
+        required: true
+        schema:
+          $ref: '#/definitions/analyzer.NotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Send Analysis Notification
+      tags:
+      - analyzer
   /api/v1/check:
     post:
       consumes:
@@ -2409,9 +2778,175 @@ paths:
       summary: Listar projetos LookAtni
       tags:
       - gateway beta
+  /api/v1/mcp/analyzer/health:
+    get:
+      description: Get health status of the GemX Analyzer integration
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get Analyzer Health
+      tags:
+      - analyzer
+  /api/v1/mcp/analyzer/jobs:
+    get:
+      description: List repository analysis jobs with pagination and filtering
+      parameters:
+      - description: Filter by status
+        enum:
+        - scheduled
+        - running
+        - completed
+        - failed
+        in: query
+        name: status
+        type: string
+      - description: Filter by repository URL
+        in: query
+        name: repo_url
+        type: string
+      - description: 'Number of results to return (default: 50)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Number of results to skip (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List Analysis Jobs
+      tags:
+      - analyzer
+  /api/v1/mcp/analyzer/results/{job_id}:
+    get:
+      description: Get detailed results including scorecard, DORA metrics, and recommendations
+      parameters:
+      - description: Analysis job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      - description: Result format
+        enum:
+        - scorecard
+        - dora
+        - chi
+        - community
+        in: query
+        name: format
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_app_controllers_mcp_analyzer.ScorecardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Analysis Results
+      tags:
+      - analyzer
+  /api/v1/mcp/analyzer/schedule:
+    post:
+      consumes:
+      - application/json
+      description: Schedule intelligent analysis of a repository using GemX Analyzer
+      parameters:
+      - description: Analysis request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/analyzer.RepositoryIntelligenceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_app_controllers_mcp_analyzer.AnalysisJob'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Schedule Repository Analysis
+      tags:
+      - analyzer
+  /api/v1/mcp/analyzer/status/{job_id}:
+    get:
+      description: Get the current status and progress of a repository analysis job
+      parameters:
+      - description: Analysis job ID
+        in: path
+        name: job_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_kubex-ecosystem_gobe_internal_app_controllers_mcp_analyzer.AnalysisJob'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/analyzer.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Analysis Status
+      tags:
+      - analyzer
   /api/v1/metrics/ai:
     get:
-      description: Entrega métricas agregadas para monitoramento do gateway. [Em desenvolvimento]
+      description: Entrega métricas reais agregadas do sistema de análise e gateway
+      parameters:
+      - description: 'Período de análise (1h, 24h, 7d, 30d) - default: 24h'
+        in: query
+        name: period
+        type: string
       produces:
       - application/json
       responses:
@@ -2423,11 +2958,15 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/gateway.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Métricas de IA
       tags:
-      - gateway beta
+      - gateway
   /api/v1/products:
     get:
       description: Recupera a lista de produtos registrados na base. [Em desenvolvimento]
@@ -2595,8 +3134,16 @@ paths:
       - products beta
   /api/v1/scorecard:
     get:
-      description: Retorna os indicadores disponíveis enquanto a integração real não
-        está ativa. [Em desenvolvimento]
+      description: Retorna os scorecards mais recentes de repositórios analisados
+      parameters:
+      - description: 'Número de resultados (default: 10)'
+        in: query
+        name: limit
+        type: integer
+      - description: Filtrar por URL do repositório
+        in: query
+        name: repo_url
+        type: string
       produces:
       - application/json
       responses:
@@ -2608,15 +3155,24 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/gateway.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Listar scorecard
       tags:
-      - gateway beta
+      - gateway
   /api/v1/scorecard/advice:
     get:
-      description: Fornece sugestões de alto nível com base na métrica atual. [Em
-        desenvolvimento]
+      description: Fornece sugestões inteligentes baseadas nas métricas mais recentes
+        de análises
+      parameters:
+      - description: URL específica do repositório para análise
+        in: query
+        name: repo_url
+        type: string
       produces:
       - application/json
       responses:
@@ -2628,11 +3184,15 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/gateway.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Aconselhar scorecard
       tags:
-      - gateway beta
+      - gateway
   /api/v1/sign-in:
     post:
       consumes:
@@ -3771,8 +4331,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Aceita eventos externos, valida o JSON e agenda processamento interno.
-        [Em desenvolvimento]
+      description: Aceita eventos externos, valida o JSON e agenda processamento interno
       parameters:
       - description: Evento enviado pelo provedor
         in: body
@@ -3800,10 +4359,71 @@ paths:
       - BearerAuth: []
       summary: Receber webhook
       tags:
-      - gateway beta
+      - gateway
+  /v1/webhooks/events:
+    get:
+      description: Retorna lista paginada de eventos de webhook recebidos
+      parameters:
+      - description: 'Número máximo de eventos (default: 50)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Número de eventos a pular (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      - description: Filtrar por fonte do webhook
+        in: query
+        name: source
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.WebhookEventsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Listar webhook events
+      tags:
+      - gateway
+  /v1/webhooks/events/{id}:
+    get:
+      description: Retorna detalhes de um evento específico de webhook
+      parameters:
+      - description: ID do evento
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.WebhookEvent'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obter webhook event
+      tags:
+      - gateway
   /v1/webhooks/health:
     get:
-      description: Retorna status simplificado do receptor de webhooks. [Em desenvolvimento]
+      description: Retorna status do receptor de webhooks com estatísticas detalhadas
       produces:
       - application/json
       responses:
@@ -3819,7 +4439,26 @@ paths:
       - BearerAuth: []
       summary: Healthcheck webhooks
       tags:
-      - gateway beta
+      - gateway
+  /v1/webhooks/retry:
+    post:
+      description: Reagenda todos os eventos de webhook que falharam para reprocessamento
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gateway.WebhookRetryResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gateway.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Retry webhook events
+      tags:
+      - gateway
   /version:
     get:
       description: Informa a versão corrente da aplicação. [Em desenvolvimento]

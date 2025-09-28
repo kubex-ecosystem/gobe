@@ -16,7 +16,6 @@ import (
 	gdbf "github.com/kubex-ecosystem/gdbase/factory"
 	"github.com/kubex-ecosystem/gdbase/services"
 	"github.com/kubex-ecosystem/gdbase/types"
-	ut "github.com/kubex-ecosystem/gdbase/utils"
 	crp "github.com/kubex-ecosystem/gobe/factory/security"
 	rts "github.com/kubex-ecosystem/gobe/internal/app/router"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
@@ -37,6 +36,7 @@ type GoBECertData struct {
 }
 
 type GoBE struct {
+	InitArgs    ci.InitArgs
 	Logger      l.Logger
 	environment ci.IEnvironment
 
@@ -48,6 +48,8 @@ type GoBE struct {
 	requestWindow   time.Duration
 	requestLimit    int
 	requestsTracers map[string]ci.IRequestsTracer
+
+	// Configuration paths
 
 	configDir  string
 	configFile string
@@ -80,8 +82,8 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 	defaultDir := filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath))
 	if _, err := os.Stat(defaultDir); err != nil {
 		if os.IsNotExist(err) {
-			if err := ut.EnsureDir(defaultDir, 0644, []string{}); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
+			if err := os.MkdirAll(defaultDir, 0755); err != nil {
+				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
 			}
 		}
 	}
@@ -90,10 +92,10 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		configFile = os.ExpandEnv(cm.DefaultGoBEConfigPath)
 		if _, err := os.Stat(configFile); err != nil {
 			if os.IsNotExist(err) {
-				if err := ut.EnsureDir(filepath.Dir(configFile), 0644, []string{}); err != nil {
+				if err := os.MkdirAll(filepath.Dir(configFile), 0755); err != nil {
 					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
 				}
-				if err := ut.EnsureFile(configFile, 0644, []string{}); err != nil {
+				if err := os.WriteFile(configFile, []byte(""), 0644); err != nil {
 					gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
 				}
 			}
@@ -101,9 +103,32 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 	}
 	if logFile == "" {
 		logFile = filepath.Join(defaultDir, "request_tracer.json")
+		if _, err := os.Stat(logFile); err != nil {
+			if os.IsNotExist(err) {
+				if err := os.MkdirAll(filepath.Dir(logFile), 0755); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
+				}
+				if err := os.WriteFile(logFile, []byte(""), 0644); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating log file: %v", err))
+				}
+			}
+		}
+	}
+
+	initArgs := ci.InitArgs{
+		ConfigFile:     configFile,
+		IsConfidential: isConfidential,
+		Port:           port,
+		Bind:           bind,
+		Address:        net.JoinHostPort(bind, port),
+		PubCertKeyPath: os.ExpandEnv(cm.DefaultGoBECertPath),
+		PubKeyPath:     os.ExpandEnv(cm.DefaultGoBEKeyPath),
+		Pwd:            "",
 	}
 
 	gbm := &GoBE{
+		InitArgs: initArgs,
+
 		Logger:    logger,
 		Mutexes:   t.NewMutexesType(),
 		Reference: t.NewReference(name).GetReference(),
@@ -125,7 +150,7 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		requestsTracers: make(map[string]ci.IRequestsTracer),
 	}
 
-	if err := cfg.BootstrapMainConfig(gbm.configFile); err != nil {
+	if err := cfg.BootstrapMainConfig(gbm.InitArgs.ConfigFile, &gbm.InitArgs); err != nil {
 		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
 	}
 
@@ -166,6 +191,8 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 			gl.Log("fatal", fmt.Sprintf("Error reading keyring password: %v", pwdErr))
 		}
 	}
+
+	gbm.Properties["initArgs"] = t.NewProperty("initArgs", &initArgs, false, nil)
 
 	crptService := crp.NewCryptoService()
 	crtService := crt.NewCertService(pubKeyPath, pubCertKeyPath)
@@ -326,11 +353,19 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "json", bind, port)
 	if _, err := os.Stat(g.configFile); err != nil {
 		if os.IsNotExist(err) {
-			if err := ut.EnsureDir(filepath.Dir(g.configFile), 0644, []string{}); err != nil {
+			// if err := ut.EnsureDir(filepath.Dir(g.configFile), 0644, []string{}); err != nil {
+			// 	gl.Log("error", fmt.Sprintf("Error creating directory: %v", err))
+			// 	return nil, err
+			// }
+			if err := os.MkdirAll(filepath.Dir(g.configFile), 0755); err != nil {
 				gl.Log("error", fmt.Sprintf("Error creating directory: %v", err))
 				return nil, err
 			}
-			if err := ut.EnsureFile(g.configFile, 0644, []string{}); err != nil {
+			// if err := ut.EnsureFile(g.configFile, 0644, []string{}); err != nil {
+			// 	gl.Log("error", fmt.Sprintf("Error creating config file: %v", err))
+			// 	return nil, err
+			// }
+			if err := os.WriteFile(g.configFile, []byte(""), 0644); err != nil {
 				gl.Log("error", fmt.Sprintf("Error creating config file: %v", err))
 				return nil, err
 			}
@@ -426,9 +461,24 @@ func (g *GoBE) StartGoBE() {
 	gl.Log("debug", "Loading request tracers...")
 	g.Mutexes.MuAdd(1)
 	go func(g *GoBE) {
+		if g == nil {
+			gl.Log("fatal", "GoBE instance is nil")
+			// g.Mutexes.MuDone()
+			return
+		}
 		defer g.Mutexes.MuDone()
 		var err error
-		g.requestsTracers, err = t.LoadRequestsTracerFromFile(g)
+		//initArgs := g.Properties["initArgs"].(*t.Property[interfaces.InitArgs]).GetValue()
+		// requestsTracers := t.NewRequestTracers(g)
+		var requestsTracers ci.IRequestTracers
+
+		requestsTracers, err = t.LoadRequestsTracerFromFile(g)
+		if requestsTracers == nil {
+			gl.Log("warn", "No persisted request tracers found, creating a new one")
+			requestsTracers = t.NewRequestTracers(g)
+		}
+		g.requestsTracers = requestsTracers.GetRequestTracers()
+
 		if err != nil {
 			gl.Log("error", "Error loading request tracers: %v", err.Error())
 		}
