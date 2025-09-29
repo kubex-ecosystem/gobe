@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
 	"syscall"
@@ -20,6 +21,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
+	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
 	"gorm.io/gorm"
 
 	l "github.com/kubex-ecosystem/logz"
@@ -215,9 +217,10 @@ func (c *MetricsController) ShellCommand(ctx *gin.Context) {
 	gl.Log("info", "Executing shell command")
 
 	var request struct {
-		Command string   `json:"command" binding:"required"`
-		Args    []string `json:"args"`
-		Timeout int      `json:"timeout"` // seconds, default 30
+		Command string `json:"command" binding:"required"`
+		Text    string `json:"text"`    // raw text to parse command from
+		UserID  string `json:"user_id"` // for audit
+		Channel string `json:"channel"` // for audit
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -226,53 +229,95 @@ func (c *MetricsController) ShellCommand(ctx *gin.Context) {
 		return
 	}
 
-	// Security: Only allow safe commands (whitelist approach)
-	allowedCommands := []string{"echo", "date", "whoami", "pwd", "uname", "ps", "free", "df", "uptime"}
-	commandAllowed := false
-	for _, allowed := range allowedCommands {
-		if request.Command == allowed {
-			commandAllowed = true
-			break
+	// Initialize execsafe registry with allowed commands
+	registry := c.getExecSafeRegistry()
+
+	var parsed *execsafe.Parsed
+	var err error
+
+	// Parse command from text if provided, otherwise use direct command
+	if request.Text != "" {
+		parsed, err = execsafe.ParseUserCommand(request.Text)
+	} else {
+		// Direct command format for API calls
+		parsed = &execsafe.Parsed{
+			Name: request.Command,
+			Args: []string{}, // no args for direct command
 		}
 	}
 
-	if !commandAllowed {
-		gl.Log("warn", "Command not allowed", request.Command)
-		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("command not allowed: %s", request.Command))
+	if err != nil {
+		gl.Log("warn", "Failed to parse command", err)
+		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("command parsing failed: %w", err))
 		return
 	}
 
-	// Set default timeout
-	if request.Timeout <= 0 {
-		request.Timeout = 30
+	// Execute command using execsafe
+	start := time.Now()
+	result, err := execsafe.RunSafe(ctx.Request.Context(), registry, parsed.Name, parsed.Args)
+	duration := time.Since(start)
+
+	// Prepare audit entry
+	auditEntry := map[string]interface{}{
+		"user_id":     request.UserID,
+		"channel":     request.Channel,
+		"command":     parsed.Name,
+		"args_json":   toJSON(parsed.Args),
+		"exit_code":   0,
+		"duration_ms": duration.Milliseconds(),
+		"stdout_len":  0,
+		"stderr_len":  0,
+		"truncated":   false,
+		"created_at":  time.Now().Unix(),
 	}
 
-	// Create context with timeout
-	cmdCtx, cancel := context.WithTimeout(ctx.Request.Context(), time.Duration(request.Timeout)*time.Second)
-	defer cancel()
-
-	// Execute command
-	cmd := exec.CommandContext(cmdCtx, request.Command, request.Args...)
-	output, err := cmd.CombinedOutput()
-
-	result := map[string]interface{}{
-		"command":    request.Command,
-		"args":       request.Args,
-		"output":     string(output),
-		"timestamp":  time.Now().Unix(),
-		"timeout":    request.Timeout,
+	response := map[string]interface{}{
+		"command":   parsed.Name,
+		"args":      parsed.Args,
+		"duration":  duration.String(),
+		"timestamp": time.Now().Unix(),
 	}
 
 	if err != nil {
-		gl.Log("warn", "Command execution failed", request.Command, err)
-		result["error"] = err.Error()
-		result["exit_code"] = cmd.ProcessState.ExitCode()
-		c.apiWrapper.JSONResponseWithSuccess(ctx, "command executed with errors", "", result)
+		if result != nil {
+			auditEntry["exit_code"] = result.ExitCode
+			auditEntry["stdout_len"] = len(result.Stdout)
+			auditEntry["stderr_len"] = len(result.Stderr)
+			auditEntry["truncated"] = result.Truncated
+
+			response["exit_code"] = result.ExitCode
+			response["stdout"] = result.Stdout
+			response["stderr"] = result.Stderr
+			response["truncated"] = result.Truncated
+		}
+
+		gl.Log("warn", "Command execution failed", parsed.Name, err)
+		response["error"] = err.Error()
+		response["status"] = "failed"
+
+		// Log audit entry
+		c.logAuditEntry(auditEntry)
+
+		c.apiWrapper.JSONResponseWithSuccess(ctx, "command executed with errors", "", response)
 		return
 	}
 
-	result["exit_code"] = 0
-	c.apiWrapper.JSONResponseWithSuccess(ctx, "command executed successfully", "", result)
+	// Success case
+	auditEntry["exit_code"] = result.ExitCode
+	auditEntry["stdout_len"] = len(result.Stdout)
+	auditEntry["stderr_len"] = len(result.Stderr)
+	auditEntry["truncated"] = result.Truncated
+
+	response["exit_code"] = result.ExitCode
+	response["stdout"] = result.Stdout
+	response["stderr"] = result.Stderr
+	response["truncated"] = result.Truncated
+	response["status"] = "success"
+
+	// Log audit entry
+	c.logAuditEntry(auditEntry)
+
+	c.apiWrapper.JSONResponseWithSuccess(ctx, "command executed successfully", "", response)
 }
 
 func (c *MetricsController) GetCPUInfo(ctx *gin.Context) {
@@ -579,4 +624,98 @@ func containsSpecialChars(s string) bool {
 		}
 	}
 	return false
+}
+
+// getExecSafeRegistry initializes and returns an execsafe registry with allowed commands
+func (c *MetricsController) getExecSafeRegistry() *execsafe.Registry {
+	registry := execsafe.NewRegistry()
+
+	// Basic file operations
+	registry.Register("ls", execsafe.CommandSpec{
+		Binary:      "ls",
+		Timeout:     5 * time.Second,
+		MaxOutputKB: 256,
+		ArgsValidate: execsafe.OneOfFlags("-la", "-l", "-a", "-h", "--help"),
+	})
+
+	registry.Register("pwd", execsafe.CommandSpec{
+		Binary:      "pwd",
+		Timeout:     3 * time.Second,
+		MaxOutputKB: 64,
+	})
+
+	// System information
+	registry.Register("date", execsafe.CommandSpec{
+		Binary:      "date",
+		Timeout:     3 * time.Second,
+		MaxOutputKB: 64,
+	})
+
+	registry.Register("whoami", execsafe.CommandSpec{
+		Binary:      "whoami",
+		Timeout:     3 * time.Second,
+		MaxOutputKB: 64,
+	})
+
+	registry.Register("uname", execsafe.CommandSpec{
+		Binary:      "uname",
+		Timeout:     3 * time.Second,
+		MaxOutputKB: 256,
+		ArgsValidate: execsafe.OneOfFlags("-a", "-r", "-v", "-m", "-s"),
+	})
+
+	// Process information
+	registry.Register("ps", execsafe.CommandSpec{
+		Binary:      "ps",
+		Timeout:     5 * time.Second,
+		MaxOutputKB: 512,
+		ArgsValidate: execsafe.OneOfFlags("-aux", "-ef", "-u", "-f"),
+	})
+
+	// Memory and disk
+	registry.Register("free", execsafe.CommandSpec{
+		Binary:      "free",
+		Timeout:     3 * time.Second,
+		MaxOutputKB: 64,
+		ArgsValidate: execsafe.OneOfFlags("-h", "-m", "-g"),
+	})
+
+	registry.Register("df", execsafe.CommandSpec{
+		Binary:      "df",
+		Timeout:     5 * time.Second,
+		MaxOutputKB: 256,
+		ArgsValidate: execsafe.OneOfFlags("-h", "-k", "-m"),
+	})
+
+	// System status
+	registry.Register("uptime", execsafe.CommandSpec{
+		Binary:      "uptime",
+		Timeout:     3 * time.Second,
+		MaxOutputKB: 64,
+	})
+
+	return registry
+}
+
+// toJSON helper function to convert slice to JSON string
+func toJSON(v interface{}) string {
+	if v == nil {
+		return "[]"
+	}
+	b, err := json.Marshal(v)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
+}
+
+// logAuditEntry logs audit information to the logger (placeholder for DB)
+func (c *MetricsController) logAuditEntry(entry map[string]interface{}) {
+	// TODO: Store in database when audit table is available
+	gl.Log("info", "AUDIT: cmd=%s user=%s channel=%s exit=%v duration=%vms",
+		entry["command"],
+		entry["user_id"],
+		entry["channel"],
+		entry["exit_code"],
+		entry["duration_ms"])
 }

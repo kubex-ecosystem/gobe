@@ -6,9 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
+	"github.com/bwmarrin/discordgo"
+	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -16,8 +21,14 @@ import (
 )
 
 type Server struct {
-	mcpServer *server.MCPServer
-	hub       MCPHandler
+	mcpServer   *server.MCPServer
+	hub         MCPHandler
+	MCPRegistry execsafe.Registry
+
+	startedAt time.Time
+	userTag   string
+
+	ChatBots interfaces.IProperty[interfaces.IAdapter]
 }
 
 type IMCPServer interface {
@@ -61,6 +72,70 @@ func NewServer(hub MCPHandler) (*Server, error) {
 		mcpServer: mcpServer,
 		hub:       hub,
 	}
+
+	reg := execsafe.NewRegistry()
+
+	// ls: somente flags inofensivas e no máx. 1 path relativo
+	safeLsFlags := execsafe.OneOfFlags("-l", "-a", "-la", "-lh", "-1", "-h")
+	pathRx := regexp.MustCompile(`^[\w\-.\/]+$`) // sem espaços, sem ~, sem $VAR
+	reg.Register("ls", execsafe.CommandSpec{
+		Binary:      "ls",
+		Timeout:     2 * time.Second,
+		MaxOutputKB: 256,
+		ArgsValidate: execsafe.Chain(
+			func(args []string) error {
+				if len(args) > 2 {
+					return fmt.Errorf("ls: muitos argumentos")
+				}
+				return nil
+			},
+			safeLsFlags,
+			func(args []string) error {
+				for _, a := range args {
+					if strings.HasPrefix(a, "-") {
+						continue
+					}
+					if !pathRx.MatchString(a) {
+						return fmt.Errorf("caminho inválido: %s", a)
+					}
+					if strings.Contains(a, "..") {
+						return fmt.Errorf("path traversal proibido")
+					}
+				}
+				return nil
+			},
+		),
+	})
+
+	// ps: flags controladas
+	reg.Register("ps", execsafe.CommandSpec{
+		Binary:       "ps",
+		Timeout:      2 * time.Second,
+		MaxOutputKB:  256,
+		ArgsValidate: execsafe.OneOfFlags("aux", "-ef"),
+	})
+
+	// docker: somente "ps" com flags seguras
+	reg.Register("docker", execsafe.CommandSpec{
+		Binary:      "docker",
+		Timeout:     3 * time.Second,
+		MaxOutputKB: 512,
+		ArgsValidate: func(args []string) error {
+			if len(args) == 0 || args[0] != "ps" {
+				return fmt.Errorf("apenas 'docker ps' permitido")
+			}
+			// flags simples permitidas
+			ok := map[string]struct{}{"--all": {}, "-a": {}, "--format": {}}
+			for _, a := range args[1:] {
+				if strings.HasPrefix(a, "-") {
+					if _, found := ok[a]; !found {
+						return fmt.Errorf("docker flag bloqueada: %s", a)
+					}
+				}
+			}
+			return nil
+		},
+	})
 
 	srv.RegisterTools()
 	srv.RegisterResources()
@@ -302,6 +377,38 @@ func (s *Server) HandleSystemInfo(ctx context.Context, params map[string]interfa
 
 	var result string
 	var err error
+
+	// dentro do handler de slash command
+	health := SystemHealth{
+		Status:     "ok",
+		Version:    "v1.3.5",
+		Uptime:     time.Since(startedAt),
+		Host:       "dev",
+		Mem:        s.GetMemoryInfo(),
+		Disk:       s.GetDiskInfo(),
+		CPU:        s.GetCPUInfo(),
+		Goroutines: "ok (184)",
+		GoBE:       "🟢 **healthy** — 3 services ativos\n`api`,`scheduler`,`webhooks`",
+		MCP:        "🟡 **degraded** — 1 tool lenta (`/mcp/exec` > 2.5s)",
+		Analyzer:   "🟢 **ready** — v1.0.0",
+	}
+
+	msg, _ := s.BuildStatusEmbed(
+		userTag, "dev", health,
+		"http://localhost:8088/swagger/index.html",
+		"http://localhost:3666", // painel
+		"http://localhost:8088/api/v1/logs",
+	)
+
+	// reply
+	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds:     msg.Embeds,
+			Components: msg.Components,
+			// Flags: 1<<6  // <- descomente para **ephemeral**
+		},
+	})
 
 	switch infoType {
 	case "cpu":

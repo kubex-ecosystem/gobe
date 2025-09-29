@@ -773,7 +773,7 @@ func (dc *DiscordController) InitiateBotMCP() {
 	}()
 }
 
-// PingDiscord verifica o estado do hub conectado.
+// PingAdapter verifica o estado do hub conectado.
 //
 // @Summary     Ping hub Discord
 // @Description Checa se o hub MCP em execução está respondendo. [Em desenvolvimento]
@@ -782,7 +782,7 @@ func (dc *DiscordController) InitiateBotMCP() {
 // @Success     200 {object} DiscordPingResponse
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/discord/ping [get]
-func (dc *DiscordController) PingDiscord(c *gin.Context) {
+func (dc *DiscordController) PingAdapter(c *gin.Context) {
 	hd := dc.hub
 	if hd == nil {
 		gl.Log("error", "Failed to ping Discord adapter")
@@ -832,7 +832,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 		msg = "Hello from Discord MCP Hub!"
 	}
 
-	err = adapter.PingDiscord(msg)
+	err = adapter.PingAdapter(msg)
 	if err != nil {
 		gl.Log("error", "Failed to ping Discord", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to ping Discord"})
