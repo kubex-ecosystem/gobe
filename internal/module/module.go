@@ -62,6 +62,12 @@ func (m *GoBE) Command() *cobra.Command {
 	rtCmd.AddCommand(cc.CertificatesCmdList())
 	rtCmd.AddCommand(cc.ServiceCmdList()...)
 	rtCmd.AddCommand(vs.CliCommand())
+	rtCmd.AddCommand(cc.MCPServerCmd())
+	rtCmd.AddCommand(cc.CryptographyCommand())
+	rtCmd.AddCommand(cc.DiscordCommand())
+	rtCmd.AddCommand(cc.WebhookCommand())
+	rtCmd.AddCommand(cc.DatabaseCommand())
+	rtCmd.AddCommand(cc.ConfigCommand())
 
 	// Set usage definitions for the command and its subcommands
 	setUsageDefinition(rtCmd)
