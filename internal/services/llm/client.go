@@ -411,10 +411,10 @@ func (c *Client) analyzeWithGemini(ctx context.Context, req AnalysisRequest) (*A
 
 	// Iterate over streaming response
 	for resp, err := range iter {
-		if errors.Is(err, io.EOF) {
-			break // Normal end of stream
-		}
 		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break // Normal end of stream
+			}
 			return nil, fmt.Errorf("streaming error: %v", err)
 		}
 
