@@ -65,35 +65,37 @@ func NewClient(config config.LLMConfig) (*Client, error) {
 
 	// Auto-detect provider and API key from environment first
 	detectedProvider := ""
-	if geminiKey != "" {
-		detectedProvider = "gemini"
-		apiKey = geminiKey
-	} else if groqKey != "" {
-		detectedProvider = "groq"
-		apiKey = groqKey
-	} else if openaiKey != "" {
-		detectedProvider = "openai"
-		apiKey = openaiKey
-	}
-
-	// Use config provider if specified and no environment detection
-	if detectedProvider == "" && providerFromConfig != "" {
+	// Priority: Use config provider if specified, otherwise auto-detect from available env keys
+	if providerFromConfig != "" {
 		detectedProvider = providerFromConfig
 		switch providerFromConfig {
 		case "gemini":
-			if apiKey == "" && geminiKey != "" {
+			if geminiKey != "" {
 				apiKey = geminiKey
 			}
 		case "groq":
-			if apiKey == "" && groqKey != "" {
+			if groqKey != "" {
 				apiKey = groqKey
 			}
 		case "openai":
-			if apiKey == "" && openaiKey != "" {
+			if openaiKey != "" {
 				apiKey = openaiKey
 			}
 		}
+	} else {
+		// Auto-detect from available environment keys
+		if geminiKey != "" {
+			detectedProvider = "gemini"
+			apiKey = geminiKey
+		} else if groqKey != "" {
+			detectedProvider = "groq"
+			apiKey = groqKey
+		} else if openaiKey != "" {
+			detectedProvider = "openai"
+			apiKey = openaiKey
+		}
 	}
+
 
 	// Final fallback: auto-detect from API key format if no provider specified
 	if detectedProvider == "" && apiKey != "" {
