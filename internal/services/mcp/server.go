@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
@@ -378,37 +377,41 @@ func (s *Server) HandleSystemInfo(ctx context.Context, params map[string]interfa
 	var result string
 	var err error
 
-	// dentro do handler de slash command
-	health := SystemHealth{
-		Status:     "ok",
-		Version:    "v1.3.5",
-		Uptime:     time.Since(startedAt),
-		Host:       "dev",
-		Mem:        s.GetMemoryInfo(),
-		Disk:       s.GetDiskInfo(),
-		CPU:        s.GetCPUInfo(),
-		Goroutines: "ok (184)",
-		GoBE:       "🟢 **healthy** — 3 services ativos\n`api`,`scheduler`,`webhooks`",
-		MCP:        "🟡 **degraded** — 1 tool lenta (`/mcp/exec` > 2.5s)",
-		Analyzer:   "🟢 **ready** — v1.0.0",
-	}
+	// mem, err := s.GetMemoryInfo()
+	// disk, err := s.GetDiskInfo()
+	// cpu, err := s.GetCPUInfo()
 
-	msg, _ := s.BuildStatusEmbed(
-		userTag, "dev", health,
-		"http://localhost:8088/swagger/index.html",
-		"http://localhost:3666", // painel
-		"http://localhost:8088/api/v1/logs",
-	)
+	// dentro do handler de slash command
+	// health := types.SystemHealth{
+	// 	Status:     "ok",
+	// 	Version:    "v1.3.5",
+	// 	Uptime:     time.Since(s.startedAt),
+	// 	Host:       "dev",
+	// 	Mem:        mem,
+	// 	Disk:       disk,
+	// 	CPU:        cpu,
+	// 	Goroutines: "ok (184)",
+	// 	GoBE:       "🟢 **healthy** — 3 services ativos\n`api`,`scheduler`,`webhooks`",
+	// 	MCP:        "🟡 **degraded** — 1 tool lenta (`/mcp/exec` > 2.5s)",
+	// 	Analyzer:   "🟢 **ready** — v1.0.0",
+	// }
+
+	// msg, _ := s.BuildStatusEmbed(
+	// 	userID, "dev", health,
+	// 	"http://localhost:8088/swagger/index.html",
+	// 	"http://localhost:3666", // painel
+	// 	"http://localhost:8088/api/v1/logs",
+	// )
 
 	// reply
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds:     msg.Embeds,
-			Components: msg.Components,
-			// Flags: 1<<6  // <- descomente para **ephemeral**
-		},
-	})
+	// s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	// 	Type: discordgo.InteractionResponseChannelMessageWithSource,
+	// 	Data: &discordgo.InteractionResponseData{
+	// 		Embeds:     msg.Embeds,
+	// 		Components: msg.Components,
+	// 		// Flags: 1<<6  // <- descomente para **ephemeral**
+	// 	},
+	// })
 
 	switch infoType {
 	case "cpu":

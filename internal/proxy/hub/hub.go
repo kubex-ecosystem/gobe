@@ -9,11 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bwmarrin/discordgo"
-	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
@@ -164,7 +161,7 @@ func (h *DiscordMCPHub) StartMCPServer() {
 	}
 }
 
-func (h *DiscordMCPHub) handleDiscordMessage(msg types.Message) {
+func (h *DiscordMCPHub) handleDiscordMessage(msg interfaces.Message) {
 	// Create processing job
 	job := events.MessageProcessingJob{
 		ID:       fmt.Sprintf("discord_%s_%d", msg.ChannelID, msg.Timestamp.Unix()),
@@ -202,7 +199,7 @@ func (h *DiscordMCPHub) handleDiscordMessage(msg types.Message) {
 
 	if strings.HasPrefix(msg.Content, "!task ") {
 		title := strings.TrimPrefix(msg.Content, "!task ")
-		response := fmt.Sprintf("📋 **Nova tarefa criada:**\n\n📌 Título: %s\n👤 Criado por: %s\n⏰ Data: %s\n🏷️ Tags: discord, auto\n\n✅ Tarefa salva com sucesso!", title, msg.Author.Username, msg.Timestamp.Format("02/01/2006 15:04"))
+		response := fmt.Sprintf("📋 **Nova tarefa criada:**\n\n📌 Título: %s\n👤 Criado por: %s\n⏰ Data: %s\n🏷️ Tags: discord, auto\n\n✅ Tarefa salva com sucesso!", title, msg.User.Username, msg.Timestamp.Format("02/01/2006 15:04"))
 		h.discordAdapter.SendMessage(msg.ChannelID, response)
 		return
 	}
@@ -225,7 +222,7 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 		return fmt.Errorf("discord adapter not initialized")
 	}
 
-	msg, ok := iMsg.(types.Message)
+	msg, ok := iMsg.(interfaces.Message)
 	if !ok {
 		return fmt.Errorf("invalid message type, expected discord.Message")
 	}
@@ -263,7 +260,7 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 	}
 }
 
-func (h *DiscordMCPHub) intelligentTriage(msg types.Message) (shouldProcess bool, processType string) {
+func (h *DiscordMCPHub) intelligentTriage(msg interfaces.Message) (shouldProcess bool, processType string) {
 	content := strings.ToLower(strings.TrimSpace(msg.Content))
 
 	// Filtrar mensagens muito curtas ou vazias
@@ -349,7 +346,7 @@ func (h *DiscordMCPHub) intelligentTriage(msg types.Message) (shouldProcess bool
 	return false, ""
 }
 
-func (h *DiscordMCPHub) processCommandMessage(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) processCommandMessage(ctx context.Context, msg interfaces.Message) error {
 	if ctx == nil {
 		return errors.New("context is nil")
 	}
@@ -359,14 +356,14 @@ func (h *DiscordMCPHub) processCommandMessage(ctx context.Context, msg types.Mes
 	return nil
 }
 
-func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("notice", "❓ Processando pergunta: %s", msg.Content)
 
 	// Analyze message with LLM
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
 		Content:  msg.Content,
-		UserID:   msg.Author.ID,
+		UserID:   msg.User.ID,
 		Context: map[string]interface{}{
 			"channel_id": msg.ChannelID,
 			"guild_id":   msg.GuildID,
@@ -388,13 +385,13 @@ func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg types.Me
 	return nil
 }
 
-func (h *DiscordMCPHub) processTaskMessage(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) processTaskMessage(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("notice", "📋 Processando solicitação de tarefa: %s", msg.Content)
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
 		Content:  msg.Content,
-		UserID:   msg.Author.ID,
+		UserID:   msg.User.ID,
 		Context: map[string]interface{}{
 			"channel_id": msg.ChannelID,
 			"guild_id":   msg.GuildID,
@@ -405,27 +402,27 @@ func (h *DiscordMCPHub) processTaskMessage(ctx context.Context, msg types.Messag
 		gl.Log("error", "❌ Erro na análise LLM: %v", err)
 		// Fallback para criação simples de tarefa
 		response := fmt.Sprintf("📝 **Tarefa criada:**\n\n📌 %s\n👤 Solicitado por: %s\n⏰ %s\n\n✅ Salva no sistema!",
-			msg.Content, msg.Author.Username, msg.Timestamp.Format("02/01/2006 15:04"))
+			msg.Content, msg.User.Username, msg.Timestamp.Format("02/01/2006 15:04"))
 		return h.discordAdapter.SendMessage(msg.ChannelID, response)
 	}
 
 	if analysis.ShouldCreateTask {
 		h.createTaskFromMessage(msg, analysis)
 		response := fmt.Sprintf("📋 **Tarefa criada com sucesso!**\n\n📌 **Título:** %s\n📝 **Descrição:** %s\n🏷️ **Tags:** %v\n👤 **Criado por:** %s",
-			analysis.TaskTitle, analysis.TaskDescription, analysis.TaskTags, msg.Author.Username)
+			analysis.TaskTitle, analysis.TaskDescription, analysis.TaskTags, msg.User.Username)
 		return h.discordAdapter.SendMessage(msg.ChannelID, response)
 	}
 
 	return nil
 }
 
-func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("notice", "🔍 Processando pedido de análise: %s", msg.Content)
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
 		Content:  msg.Content,
-		UserID:   msg.Author.ID,
+		UserID:   msg.User.ID,
 		Context: map[string]interface{}{
 			"channel_id": msg.ChannelID,
 			"guild_id":   msg.GuildID,
@@ -449,13 +446,13 @@ func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg types.Me
 	return nil
 }
 
-func (h *DiscordMCPHub) processCasualMessage(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) processCasualMessage(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("notice", "💬 Processando mensagem casual: %s", msg.Content)
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
 		Content:  msg.Content,
-		UserID:   msg.Author.ID,
+		UserID:   msg.User.ID,
 		Context: map[string]interface{}{
 			"channel_id": msg.ChannelID,
 			"guild_id":   msg.GuildID,
@@ -484,14 +481,14 @@ func (h *DiscordMCPHub) processCasualMessage(ctx context.Context, msg types.Mess
 	return nil
 }
 
-func (h *DiscordMCPHub) createTaskFromMessage(msg types.Message, analysis *llm.AnalysisResponse) {
+func (h *DiscordMCPHub) createTaskFromMessage(msg interfaces.Message, analysis *llm.AnalysisResponse) {
 	task := map[string]interface{}{
 		"title":       analysis.TaskTitle,
 		"description": analysis.TaskDescription,
 		"source":      "discord",
 		"source_id":   msg.ID,
 		"channel_id":  msg.ChannelID,
-		"author_id":   msg.Author.ID,
+		"author_id":   msg.User.ID,
 		"priority":    analysis.TaskPriority,
 		"tags":        analysis.TaskTags,
 	}
@@ -506,11 +503,11 @@ func (h *DiscordMCPHub) createTaskFromMessage(msg types.Message, analysis *llm.A
 	})
 }
 
-func (h *DiscordMCPHub) processSystemCommandMessage(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) processSystemCommandMessage(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("notice", "🔧 Processando comando de sistema: %s", msg.Content)
 
 	content := strings.ToLower(msg.Content)
-	userID := msg.Author.ID
+	userID := msg.User.ID
 	channelID := msg.ChannelID
 
 	// 🔗 GoBE Commands
@@ -583,7 +580,7 @@ func (h *DiscordMCPHub) processSystemCommandMessage(ctx context.Context, msg typ
 	}
 
 	// Enviar resultado para Discord
-	response := fmt.Sprintf("🤖 **Comando executado por %s**\n\n%s", msg.Author.Username, result)
+	response := fmt.Sprintf("🤖 **Comando executado por %s**\n\n%s", msg.User.Username, result)
 	return h.discordAdapter.SendMessage(channelID, response)
 }
 
@@ -617,7 +614,7 @@ func (h *DiscordMCPHub) isRiskyCommand(command string) bool {
 	return false
 }
 
-func (h *DiscordMCPHub) processWithLLMForSystemCommand(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) processWithLLMForSystemCommand(ctx context.Context, msg interfaces.Message) error {
 	// Usar LLM para interpretar comando de sistema não reconhecido
 	// Por enquanto, resposta simples
 	response := "🤖 Comando de sistema detectado, mas não implementado ainda. Use:\n" +
@@ -879,55 +876,69 @@ func (h *DiscordMCPHub) executeShellCommand(params map[string]interface{}) (stri
 	// if !h.isUserAuthorized(userID) {
 	// 	return "", fmt.Errorf("❌ ACESSO NEGADO: Apenas administradores")
 	// }
-	parsed, err := execsafe.ParseUserCommand(userMessage)
-	if err != nil {
-		// responde "Comando inválido" (ephemeral)
-		// ...
-		return "", fmt.Errorf("❌ Comando inválido: %v", err)
-	}
+	// ctx := context.Background()
+	// userID, _ := params["user_id"].(string)
+	// // channelID := params["channel_id"].(string)
+	// reg := execsafe.NewRegistry()
+
+	// // parse command
+	// userMessage := command
+
+	// parsed, err := execsafe.ParseUserCommand(userMessage)
+	// if err != nil {
+	// 	// responde "Comando inválido" (ephemeral)
+	// 	// ...
+	// 	return "", fmt.Errorf("❌ Comando inválido: %v", err)
+	// }
+
+	// // valida se usuário pode executar comandos
+	// if !h.isUserAuthorized(userID) {
+	// 	// responde "acesso negado" (ephemeral)
+	// 	return "", fmt.Errorf("❌ ACESSO NEGADO: Apenas administradores")
+	// }
 
 	// rate limit (stub por usuário/canal)
-	if !allowExecute(userID, channelID) {
-		// responde "muitas requisições"
-		return "", fmt.Errorf("❌ Muitas requisições, tente novamente mais tarde")
-	}
+	// if !h.rateLimiter.Allow(channelID) {
+	// 	// responde "muitas requisições"
+	// 	return "", fmt.Errorf("❌ Muitas requisições, tente novamente mais tarde")
+	// }
 
-	res, runErr := execsafe.RunSafe(ctx, reg, parsed.Name, parsed.Args)
+	// res, runErr := execsafe.RunSafe(ctx, reg, parsed.Name, parsed.Args)
 
 	// monta embed com saída
-	status := "ok"
-	if runErr != nil {
-		status = "error"
-	}
-	color := statusColor(status) // usa os helpers que te passei no embed anterior
-	stdout := res.Stdout
-	if stdout == "" {
-		stdout = "(sem saída)"
-	}
+	// status := "ok"
+	// if runErr != nil {
+	// 	status = "error"
+	// }
+	// color := 0x00FF00 // verde
+	// stdout := res.Stdout
+	// if stdout == "" {
+	// 	stdout = "(sem saída)"
+	// }
 
-	value := "```bash\n" + stdout + "\n```"
-	if res.Truncated {
-		value += "\n_Conteúdo truncado._"
-	}
+	// value := "```bash\n" + stdout + "\n```"
+	// if res.Truncated {
+	// 	value += "\n_Conteúdo truncado._"
+	// }
 
-	embed := &discordgo.MessageEmbed{
-		Title: "🤖 Comando Executado",
-		Color: color,
-		Fields: []*discordgo.MessageEmbedField{
-			{Name: "✅ Status", Value: fmt.Sprintf("**%s** (exit=%d)", status, res.ExitCode), Inline: true},
-			{Name: "⏱️ Duração", Value: fmt.Sprintf("`%s`", res.Duration), Inline: true},
-			{Name: "🔧 Comando", Value: fmt.Sprintf("`%s %s`", res.Cmd, strings.Join(res.Args, " ")), Inline: false},
-			{Name: "📤 Saída", Value: value, Inline: false},
-		},
-	}
+	// embed := &discordgo.MessageEmbed{
+	// 	Title: "🤖 Comando Executado",
+	// 	Color: color,
+	// 	Fields: []*discordgo.MessageEmbedField{
+	// 		{Name: "✅ Status", Value: fmt.Sprintf("**%s** (exit=%d)", status, res.ExitCode), Inline: true},
+	// 		{Name: "⏱️ Duração", Value: fmt.Sprintf("`%s`", res.Duration), Inline: true},
+	// 		{Name: "🔧 Comando", Value: fmt.Sprintf("`%s %s`", res.Cmd, strings.Join(res.Args, " ")), Inline: false},
+	// 		{Name: "📤 Saída", Value: value, Inline: false},
+	// 	},
+	// }
 
-	_ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{embed},
-			// Flags: 1<<6, // se quiser ephemeral
-		},
-	})
+	// _ = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	// 	Type: discordgo.InteractionResponseChannelMessageWithSource,
+	// 	Data: &discordgo.InteractionResponseData{
+	// 		Embeds: []*discordgo.MessageEmbed{embed},
+	// 		// Flags: 1<<6, // se quiser ephemeral
+	// 	},
+	// })
 
 	// Lista de comandos permitidos (whitelist approach)
 	safeCommands := []string{"ls", "pwd", "whoami", "date", "uptime", "ps aux", "df -h", "free -h", "top -bn1"}
@@ -1083,7 +1094,7 @@ func (h *DiscordMCPHub) processGobeCommand(ctx context.Context, command, params 
 	}
 }
 
-func (h *DiscordMCPHub) handleCreateUserCommand(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) handleCreateUserCommand(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("info", "🔗 Handling create user command from Discord")
 
 	// Extract user info from message
@@ -1127,7 +1138,7 @@ func (h *DiscordMCPHub) handleCreateUserCommand(ctx context.Context, msg types.M
 	return nil //h.processGoBeCommand(ctx, "create_user", params)
 }
 
-func (h *DiscordMCPHub) handleDeployCommand(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) handleDeployCommand(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("info", "⚙️ Handling deploy command from Discord")
 
 	// Extract deploy info from message
@@ -1167,7 +1178,7 @@ func (h *DiscordMCPHub) handleDeployCommand(ctx context.Context, msg types.Messa
 	return h.processGobeCommand(ctx, "deploy_app", params)
 }
 
-func (h *DiscordMCPHub) handleScaleCommand(ctx context.Context, msg types.Message) error {
+func (h *DiscordMCPHub) handleScaleCommand(ctx context.Context, msg interfaces.Message) error {
 	gl.Log("info", "⚙️ Handling scale command from Discord")
 
 	// Extract scale info from message

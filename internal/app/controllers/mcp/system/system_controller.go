@@ -2,26 +2,23 @@
 package system
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
-	"os/exec"
-	"regexp"
 	"runtime"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
 	services "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
-	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
 	"gorm.io/gorm"
 
 	l "github.com/kubex-ecosystem/logz"
@@ -199,15 +196,15 @@ func (c *MetricsController) SystemInfo(ctx *gin.Context) {
 	wd, _ := os.Getwd()
 
 	systemInfo := map[string]interface{}{
-		"hostname":     hostname,
-		"working_dir":  wd,
-		"go_version":   runtime.Version(),
-		"go_os":        runtime.GOOS,
-		"go_arch":      runtime.GOARCH,
-		"num_cpu":      runtime.NumCPU(),
+		"hostname":      hostname,
+		"working_dir":   wd,
+		"go_version":    runtime.Version(),
+		"go_os":         runtime.GOOS,
+		"go_arch":       runtime.GOARCH,
+		"num_cpu":       runtime.NumCPU(),
 		"num_goroutine": runtime.NumGoroutine(),
-		"pid":          os.Getpid(),
-		"timestamp":    time.Now().Unix(),
+		"pid":           os.Getpid(),
+		"timestamp":     time.Now().Unix(),
 	}
 
 	c.apiWrapper.JSONResponseWithSuccess(ctx, "system info retrieved successfully", "", systemInfo)
@@ -324,10 +321,10 @@ func (c *MetricsController) GetCPUInfo(ctx *gin.Context) {
 	gl.Log("info", "Getting CPU information")
 
 	cpuInfo := map[string]interface{}{
-		"num_cpu":       runtime.NumCPU(),
-		"go_max_procs":  runtime.GOMAXPROCS(0),
-		"goroutines":    runtime.NumGoroutine(),
-		"architecture":  runtime.GOARCH,
+		"num_cpu":      runtime.NumCPU(),
+		"go_max_procs": runtime.GOMAXPROCS(0),
+		"goroutines":   runtime.NumGoroutine(),
+		"architecture": runtime.GOARCH,
 		"os":           runtime.GOOS,
 		"go_version":   runtime.Version(),
 		"timestamp":    time.Now().Unix(),
@@ -343,19 +340,19 @@ func (c *MetricsController) GetMemoryInfo(ctx *gin.Context) {
 	runtime.ReadMemStats(&memStats)
 
 	memoryInfo := map[string]interface{}{
-		"alloc_bytes":      memStats.Alloc,
-		"alloc_mb":         float64(memStats.Alloc) / 1024 / 1024,
+		"alloc_bytes":       memStats.Alloc,
+		"alloc_mb":          float64(memStats.Alloc) / 1024 / 1024,
 		"total_alloc_bytes": memStats.TotalAlloc,
-		"total_alloc_mb":   float64(memStats.TotalAlloc) / 1024 / 1024,
-		"sys_bytes":        memStats.Sys,
-		"sys_mb":           float64(memStats.Sys) / 1024 / 1024,
-		"num_gc":           memStats.NumGC,
-		"gc_cpu_fraction":  memStats.GCCPUFraction,
-		"heap_alloc_bytes": memStats.HeapAlloc,
-		"heap_alloc_mb":    float64(memStats.HeapAlloc) / 1024 / 1024,
-		"heap_sys_bytes":   memStats.HeapSys,
-		"heap_sys_mb":      float64(memStats.HeapSys) / 1024 / 1024,
-		"timestamp":        time.Now().Unix(),
+		"total_alloc_mb":    float64(memStats.TotalAlloc) / 1024 / 1024,
+		"sys_bytes":         memStats.Sys,
+		"sys_mb":            float64(memStats.Sys) / 1024 / 1024,
+		"num_gc":            memStats.NumGC,
+		"gc_cpu_fraction":   memStats.GCCPUFraction,
+		"heap_alloc_bytes":  memStats.HeapAlloc,
+		"heap_alloc_mb":     float64(memStats.HeapAlloc) / 1024 / 1024,
+		"heap_sys_bytes":    memStats.HeapSys,
+		"heap_sys_mb":       float64(memStats.HeapSys) / 1024 / 1024,
+		"timestamp":         time.Now().Unix(),
 	}
 
 	c.apiWrapper.JSONResponseWithSuccess(ctx, "memory info retrieved successfully", "", memoryInfo)
@@ -379,13 +376,13 @@ func (c *MetricsController) GetDiskInfo(ctx *gin.Context) {
 			usedBytes := totalBytes - freeBytes
 
 			diskInfo["working_directory"] = map[string]interface{}{
-				"path":         wd,
-				"total_bytes":  totalBytes,
-				"total_gb":     float64(totalBytes) / 1024 / 1024 / 1024,
-				"free_bytes":   freeBytes,
-				"free_gb":      float64(freeBytes) / 1024 / 1024 / 1024,
-				"used_bytes":   usedBytes,
-				"used_gb":      float64(usedBytes) / 1024 / 1024 / 1024,
+				"path":          wd,
+				"total_bytes":   totalBytes,
+				"total_gb":      float64(totalBytes) / 1024 / 1024 / 1024,
+				"free_bytes":    freeBytes,
+				"free_gb":       float64(freeBytes) / 1024 / 1024 / 1024,
+				"used_bytes":    usedBytes,
+				"used_gb":       float64(usedBytes) / 1024 / 1024 / 1024,
 				"usage_percent": float64(usedBytes) / float64(totalBytes) * 100,
 			}
 		} else {
@@ -475,20 +472,20 @@ func (c *MetricsController) HandleAnalyzeMessage(ctx *gin.Context) {
 
 	// Basic message analysis
 	analysis := map[string]interface{}{
-		"message":        request.Message,
-		"length":         len(request.Message),
-		"word_count":     len(strings.Fields(request.Message)),
+		"message":         request.Message,
+		"length":          len(request.Message),
+		"word_count":      len(strings.Fields(request.Message)),
 		"character_count": len([]rune(request.Message)),
-		"has_uppercase":  strings.ToUpper(request.Message) != request.Message && strings.ToLower(request.Message) != request.Message,
-		"has_numbers":    containsNumbers(request.Message),
-		"has_special":    containsSpecialChars(request.Message),
-		"timestamp":      time.Now().Unix(),
+		"has_uppercase":   strings.ToUpper(request.Message) != request.Message && strings.ToLower(request.Message) != request.Message,
+		"has_numbers":     containsNumbers(request.Message),
+		"has_special":     containsSpecialChars(request.Message),
+		"timestamp":       time.Now().Unix(),
 	}
 
 	// Add sentiment placeholder (would integrate with actual sentiment analysis)
 	analysis["sentiment"] = map[string]interface{}{
-		"score": 0.0,
-		"label": "neutral",
+		"score":      0.0,
+		"label":      "neutral",
 		"confidence": 0.5,
 	}
 
@@ -632,9 +629,9 @@ func (c *MetricsController) getExecSafeRegistry() *execsafe.Registry {
 
 	// Basic file operations
 	registry.Register("ls", execsafe.CommandSpec{
-		Binary:      "ls",
-		Timeout:     5 * time.Second,
-		MaxOutputKB: 256,
+		Binary:       "ls",
+		Timeout:      5 * time.Second,
+		MaxOutputKB:  256,
 		ArgsValidate: execsafe.OneOfFlags("-la", "-l", "-a", "-h", "--help"),
 	})
 
@@ -658,32 +655,32 @@ func (c *MetricsController) getExecSafeRegistry() *execsafe.Registry {
 	})
 
 	registry.Register("uname", execsafe.CommandSpec{
-		Binary:      "uname",
-		Timeout:     3 * time.Second,
-		MaxOutputKB: 256,
+		Binary:       "uname",
+		Timeout:      3 * time.Second,
+		MaxOutputKB:  256,
 		ArgsValidate: execsafe.OneOfFlags("-a", "-r", "-v", "-m", "-s"),
 	})
 
 	// Process information
 	registry.Register("ps", execsafe.CommandSpec{
-		Binary:      "ps",
-		Timeout:     5 * time.Second,
-		MaxOutputKB: 512,
+		Binary:       "ps",
+		Timeout:      5 * time.Second,
+		MaxOutputKB:  512,
 		ArgsValidate: execsafe.OneOfFlags("-aux", "-ef", "-u", "-f"),
 	})
 
 	// Memory and disk
 	registry.Register("free", execsafe.CommandSpec{
-		Binary:      "free",
-		Timeout:     3 * time.Second,
-		MaxOutputKB: 64,
+		Binary:       "free",
+		Timeout:      3 * time.Second,
+		MaxOutputKB:  64,
 		ArgsValidate: execsafe.OneOfFlags("-h", "-m", "-g"),
 	})
 
 	registry.Register("df", execsafe.CommandSpec{
-		Binary:      "df",
-		Timeout:     5 * time.Second,
-		MaxOutputKB: 256,
+		Binary:       "df",
+		Timeout:      5 * time.Second,
+		MaxOutputKB:  256,
 		ArgsValidate: execsafe.OneOfFlags("-h", "-k", "-m"),
 	})
 
