@@ -96,7 +96,6 @@ func NewClient(config config.LLMConfig) (*Client, error) {
 		}
 	}
 
-
 	// Final fallback: auto-detect from API key format if no provider specified
 	if detectedProvider == "" && apiKey != "" {
 		if strings.HasPrefix(apiKey, "sk-") {
@@ -371,7 +370,7 @@ type GeminiCandidate struct {
 
 func (c *Client) analyzeWithGemini(ctx context.Context, req AnalysisRequest) (*AnalysisResponse, error) {
 	if c.gemini == nil {
-		return nil, fmt.Errorf("Gemini client not initialized")
+		return nil, fmt.Errorf("gemini client not initialized")
 	}
 
 	prompt := c.buildAnalysisPrompt(req)
@@ -478,7 +477,7 @@ func (c *Client) analyzeWithGroq(ctx context.Context, req AnalysisRequest) (*Ana
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("Groq API error: %w", err)
+		return nil, fmt.Errorf("groq API error: %w", err)
 	}
 
 	gl.Log("debug", fmt.Sprintf("Groq response: %s", resp.Choices[0].Message.Content))
