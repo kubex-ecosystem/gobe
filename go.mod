@@ -30,6 +30,8 @@ require (
 
 replace github.com/kubex-ecosystem/gdbase => ../gdbase
 
+replace github.com/kubex-ecosystem/analyzer => ../analyzer
+
 require (
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/aiplatform v1.102.0 // indirect
