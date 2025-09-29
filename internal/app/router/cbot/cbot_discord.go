@@ -44,9 +44,9 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 
-	delete(middlewaresMap, "authentication")
-	delete(middlewaresMap, "rateLimiter")
-	delete(middlewaresMap, "timeout")
+	// delete(middlewaresMap, "authentication")
+	// delete(middlewaresMap, "rateLimiter")
+	// delete(middlewaresMap, "timeout")
 
 	secureProperties := make(map[string]bool)
 	secureProperties["secure"] = false

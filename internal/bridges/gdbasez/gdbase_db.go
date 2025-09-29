@@ -182,7 +182,7 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 		return nil, fmt.Errorf("❌ Erro ao conectar ao banco: %v", err)
 	}
 
-	fmt.Println("✅ Todos os serviços rodando corretamente!")
+	gl.Log("info", "✅ Todos os serviços rodando corretamente!")
 
 	// Retorno o DB para o BE
 	return dbService, nil

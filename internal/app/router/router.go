@@ -64,21 +64,21 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		},
 	}
 
-	// var autenticationMiddleware *mdw.AuthenticationMiddleware
-	// if databaseService != nil {
-	// 	tokenService, certService, err := mdw.NewTokenService(databaseService.GetConfig(), logger)
-	// 	if err != nil {
-	// 		gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
-	// 		return nil, err
-	// 	}
-	// 	autenticationMiddleware = &mdw.AuthenticationMiddleware{
-	// 		CertService:  certService,
-	// 		TokenService: tokenService,
-	// 	}
-	// }
+	var autenticationMiddleware *mdw.AuthenticationMiddleware
+	if databaseService != nil {
+		tokenService, certService, err := mdw.NewTokenService(databaseService.GetConfig(), logger)
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
+			return nil, err
+		}
+		autenticationMiddleware = &mdw.AuthenticationMiddleware{
+			CertService:  certService,
+			TokenService: tokenService,
+		}
+	}
 
 	defaultMiddlewares := map[string]gin.HandlerFunc{
-		//"authentication":      autenticationMiddleware.ValidateJWT(mdw.NewAuthenticationMiddleware(autenticationMiddleware.TokenService, autenticationMiddleware.CertService, nil)),
+		"authentication":      autenticationMiddleware.ValidateJWT(mdw.NewAuthenticationMiddleware(autenticationMiddleware.TokenService, autenticationMiddleware.CertService, nil)),
 		"validateAndSanitize": mdw.ValidateAndSanitize(),
 		"rateLimite":          mdw.RateLimiter(rate.Limit(serverConfig.RateLimitLimit), serverConfig.RateLimitBurst),
 		"logger":              mdw.Logger(logger),
