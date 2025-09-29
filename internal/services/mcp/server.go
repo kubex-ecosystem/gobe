@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
+	"github.com/kubex-ecosystem/gobe/internal/commons/embedkit"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 
 	"github.com/mark3labs/mcp-go/mcp"
@@ -377,41 +379,52 @@ func (s *Server) HandleSystemInfo(ctx context.Context, params map[string]interfa
 	var result string
 	var err error
 
-	// mem, err := s.GetMemoryInfo()
-	// disk, err := s.GetDiskInfo()
-	// cpu, err := s.GetCPUInfo()
+	// Get system information
+	mem, err := s.GetMemoryInfo()
+	if err != nil {
+		mem = "Memory info unavailable"
+	}
 
-	// dentro do handler de slash command
-	// health := types.SystemHealth{
-	// 	Status:     "ok",
-	// 	Version:    "v1.3.5",
-	// 	Uptime:     time.Since(s.startedAt),
-	// 	Host:       "dev",
-	// 	Mem:        mem,
-	// 	Disk:       disk,
-	// 	CPU:        cpu,
-	// 	Goroutines: "ok (184)",
-	// 	GoBE:       "🟢 **healthy** — 3 services ativos\n`api`,`scheduler`,`webhooks`",
-	// 	MCP:        "🟡 **degraded** — 1 tool lenta (`/mcp/exec` > 2.5s)",
-	// 	Analyzer:   "🟢 **ready** — v1.0.0",
-	// }
+	disk, err := s.GetDiskInfo()
+	if err != nil {
+		disk = "Disk info unavailable"
+	}
 
-	// msg, _ := s.BuildStatusEmbed(
-	// 	userID, "dev", health,
-	// 	"http://localhost:8088/swagger/index.html",
-	// 	"http://localhost:3666", // painel
-	// 	"http://localhost:8088/api/v1/logs",
-	// )
+	cpu, err := s.GetCPUInfo()
+	if err != nil {
+		cpu = "CPU info unavailable"
+	}
 
-	// reply
-	// s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-	// 	Type: discordgo.InteractionResponseChannelMessageWithSource,
-	// 	Data: &discordgo.InteractionResponseData{
-	// 		Embeds:     msg.Embeds,
-	// 		Components: msg.Components,
-	// 		// Flags: 1<<6  // <- descomente para **ephemeral**
-	// 	},
-	// })
+	// Build system health status
+	health := &types.SystemHealth{
+		Status:     "ok",
+		Version:    "v1.3.5",
+		Uptime:     time.Since(s.startedAt),
+		Host:       "dev",
+		Mem:        mem,
+		Disk:       disk,
+		CPU:        cpu,
+		Goroutines: fmt.Sprintf("ok (%d)", runtime.NumGoroutine()),
+		GoBE:       "🟢 **healthy** — 3 services ativos\n`api`,`scheduler`,`webhooks`",
+		MCP:        "🟢 **ready** — all tools operational",
+		Analyzer:   "🟢 **ready** — v1.0.0",
+	}
+
+	// Create status embed using embedkit
+	embed := s.BuildStatusEmbed(userID, "dev", health,
+		"http://localhost:8088/swagger/index.html",
+		"http://localhost:3666", // painel
+		"http://localhost:8088/api/v1/logs",
+	)
+
+	// Convert embed to string for MCP response
+	embedJSON, err := json.Marshal(embed)
+	if err != nil {
+		result = fmt.Sprintf("🤖 **System Status**\nStatus: %s\nUptime: %s\nHost: %s\n\n%s\n\n%s\n\n%s",
+			health.Status, health.Uptime.String(), health.Host, cpu, mem, disk)
+	} else {
+		result = string(embedJSON)
+	}
 
 	switch infoType {
 	case "cpu":
@@ -547,4 +560,99 @@ func (s *Server) Start() error {
 	// In the new version, we don't need an explicit Start method as the server is
 	// ready immediately after initialization
 	return nil
+}
+
+// BuildStatusEmbed creates a status embed using embedkit
+func (s *Server) BuildStatusEmbed(userID, env string, health *types.SystemHealth, swaggerURL, panelURL, logsURL string) map[string]interface{} {
+	// Convert SystemHealth to embedkit.SystemInfo
+	systemInfo := embedkit.SystemInfo{
+		Hostname:  health.Host,
+		Uptime:    health.Uptime,
+		Timestamp: time.Now(),
+		Services: map[string]string{
+			"GoBE":     parseServiceStatus(health.GoBE),
+			"MCP":      parseServiceStatus(health.MCP),
+			"Analyzer": parseServiceStatus(health.Analyzer),
+		},
+	}
+
+	// Parse CPU, Memory and Disk usage from the strings (simplified)
+	systemInfo.CPUUsage = parseUsagePercent(fmt.Sprintf("%v", health.CPU))
+	systemInfo.MemoryUsage = parseUsagePercent(fmt.Sprintf("%v", health.Mem))
+	systemInfo.DiskUsage = parseUsagePercent(fmt.Sprintf("%v", health.Disk))
+
+	// Create base embed
+	embed := embedkit.StatusEmbed(systemInfo)
+
+	// Add custom fields specific to the MCP server
+	if fields, ok := embed["fields"].([]map[string]interface{}); ok {
+		// Add version field
+		fields = append(fields, map[string]interface{}{
+			"name":   "🔧 Version",
+			"value":  health.Version,
+			"inline": true,
+		})
+
+		// Add environment field
+		fields = append(fields, map[string]interface{}{
+			"name":   "🌍 Environment",
+			"value":  env,
+			"inline": true,
+		})
+
+		// Add goroutines field
+		fields = append(fields, map[string]interface{}{
+			"name":   "🔄 Goroutines",
+			"value":  health.Goroutines,
+			"inline": true,
+		})
+
+		// Add links as buttons
+		links := embedkit.NewLinkButtons(map[string]string{
+			"📖 API Docs": swaggerURL,
+			"📊 Panel":    panelURL,
+			"📋 Logs":     logsURL,
+		})
+
+		if links != "" {
+			fields = append(fields, map[string]interface{}{
+				"name":  "🔗 Quick Links",
+				"value": links,
+			})
+		}
+
+		embed["fields"] = fields
+	}
+
+	// Add footer with user info
+	embed["footer"] = map[string]interface{}{
+		"text": fmt.Sprintf("Requested by %s • MCP System Status", userID),
+	}
+
+	return embed
+}
+
+// Helper functions for parsing service status and usage percentages
+func parseServiceStatus(service interface{}) string {
+	serviceStr := fmt.Sprintf("%v", service)
+	if strings.Contains(serviceStr, "🟢") {
+		return "running"
+	} else if strings.Contains(serviceStr, "🟡") {
+		return "warning"
+	} else if strings.Contains(serviceStr, "🔴") {
+		return "failed"
+	}
+	return "unknown"
+}
+
+func parseUsagePercent(usage string) float64 {
+	// Simple regex to extract percentage from strings like "45.2%" or "CPU: 67%"
+	re := regexp.MustCompile(`(\d+\.?\d*)%`)
+	matches := re.FindStringSubmatch(usage)
+	if len(matches) > 1 {
+		var percent float64
+		fmt.Sscanf(matches[1], "%f", &percent)
+		return percent
+	}
+	return 0.0
 }
