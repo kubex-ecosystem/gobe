@@ -68,7 +68,7 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 			APIKey:  cfg.GoBE.APIKey,
 		}
 		gobeClient = gobe.NewClient(gobeConfig)
-		gl.Log("info", "🔗 GoBE client initialized - Base URL: %s", cfg.GoBE.BaseURL)
+		gl.Log("info", fmt.Sprintf("🔗 GoBE client initialized - Base URL: %s", cfg.GoBE.BaseURL))
 	}
 
 	// ⚙️ gobe Integration
@@ -79,7 +79,7 @@ func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
 			Namespace:  cfg.GobeCtl.Namespace,
 		}
 		gobeCtlClient = gobe_ctl.NewClient(gobeConfig)
-		gl.Log("info", "⚙️ gobe client initialized - Namespace: %s", cfg.GobeCtl.Namespace)
+		gl.Log("info", fmt.Sprintf("⚙️ gobe client initialized - Namespace: %s", cfg.GobeCtl.Namespace))
 	}
 
 	// 🔧 Initialize MCP Registry
@@ -157,7 +157,7 @@ func (h *DiscordMCPHub) StartDiscordBot() error {
 
 func (h *DiscordMCPHub) StartMCPServer() {
 	if err := h.mcpServer.Start(); err != nil {
-		gl.Log("error", "MCP server error: %v", err)
+		gl.Log("error", fmt.Sprintf("MCP server error: %v", err))
 	}
 }
 
@@ -207,10 +207,10 @@ func (h *DiscordMCPHub) handleDiscordMessage(msg interfaces.Message) {
 	// For other messages, check intelligent triage first
 	shouldProcess, processType := h.intelligentTriage(msg)
 	if shouldProcess {
-		gl.Log("notice", "🎯 Triagem detectou: %s - processando com LLM", processType)
+		gl.Log("notice", fmt.Sprintf("🎯 Triagem detectou: %s - processando com LLM", processType))
 		h.ProcessMessageWithLLM(context.Background(), msg)
 	} else {
-		gl.Log("notice", "⏭️ Mensagem ignorada pela triagem inteligente: %s", msg.Content)
+		gl.Log("notice", fmt.Sprintf("⏭️ Mensagem ignorada pela triagem inteligente: %s", msg.Content))
 	}
 }
 
@@ -228,7 +228,7 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 	}
 
 	//log.Printf("🧠 Processando mensagem com LLM: %s", msg.Content)
-	gl.Log("notice", "🧠 Processando mensagem com LLM: %s", msg.Content)
+	gl.Log("notice", fmt.Sprintf("🧠 Processando mensagem com LLM: %s", msg.Content))
 
 	// Step 1: Triagem inteligente - decidir se deve responder
 	shouldProcess, processType := h.intelligentTriage(msg)
@@ -238,7 +238,7 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 		return nil
 	}
 
-	gl.Log("info", "✅ Triagem aprovada - Tipo: %s", processType)
+	gl.Log("info", fmt.Sprintf("✅ Triagem aprovada - Tipo: %s", processType))
 
 	// Step 2: Processar baseado no tipo determinado pela triagem
 	switch processType {
@@ -255,7 +255,7 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 	case "casual":
 		return h.processCasualMessage(ctx, msg)
 	default:
-		gl.Log("warn", "🤷 Tipo de processamento não reconhecido: %s", processType)
+		gl.Log("warn", fmt.Sprintf("🤷 Tipo de processamento não reconhecido: %s", processType))
 		return nil
 	}
 }
@@ -351,13 +351,13 @@ func (h *DiscordMCPHub) processCommandMessage(ctx context.Context, msg interface
 		return errors.New("context is nil")
 	}
 
-	gl.Log("notice", "⚡ Processando comando: %s", msg.Content)
+	gl.Log("notice", fmt.Sprintf("⚡ Processando comando: %s", msg.Content))
 	// Comandos já são tratados antes do processamento LLM
 	return nil
 }
 
 func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg interfaces.Message) error {
-	gl.Log("notice", "❓ Processando pergunta: %s", msg.Content)
+	gl.Log("notice", fmt.Sprintf("❓ Processando pergunta: %s", msg.Content))
 
 	// Analyze message with LLM
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
@@ -371,7 +371,7 @@ func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg interfac
 		},
 	})
 	if err != nil {
-		gl.Log("error", "❌ Erro na análise LLM: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Erro na análise LLM: %v", err))
 		// Fallback para resposta simples
 		response := fmt.Sprintf("🤔 Interessante pergunta! Vou analisar: \"%s\"\n\n💭 Preciso de mais contexto para dar uma resposta completa. Pode me dar mais detalhes?", msg.Content)
 		return h.discordAdapter.SendMessage(msg.ChannelID, response)
@@ -386,7 +386,7 @@ func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg interfac
 }
 
 func (h *DiscordMCPHub) processTaskMessage(ctx context.Context, msg interfaces.Message) error {
-	gl.Log("notice", "📋 Processando solicitação de tarefa: %s", msg.Content)
+	gl.Log("notice", fmt.Sprintf("📋 Processando solicitação de tarefa: %s", msg.Content))
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
@@ -417,7 +417,7 @@ func (h *DiscordMCPHub) processTaskMessage(ctx context.Context, msg interfaces.M
 }
 
 func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg interfaces.Message) error {
-	gl.Log("notice", "🔍 Processando pedido de análise: %s", msg.Content)
+	gl.Log("notice", fmt.Sprintf("🔍 Processando pedido de análise: %s", msg.Content))
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
@@ -430,7 +430,7 @@ func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg interfac
 		},
 	})
 	if err != nil {
-		gl.Log("error", "❌ Erro na análise LLM: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Erro na análise LLM: %v", err))
 		// Fallback para análise simples
 		response := fmt.Sprintf("🔍 **Análise rápida:**\n\n📝 Texto analisado: \"%s\"\n\n📊 **Observações:**\n• Comprimento: %d caracteres\n• Sentimento: Neutro\n• Complexidade: Média\n\n💡 Para análise mais detalhada, use !analyze <texto>",
 			msg.Content, len(msg.Content))
@@ -447,7 +447,7 @@ func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg interfac
 }
 
 func (h *DiscordMCPHub) processCasualMessage(ctx context.Context, msg interfaces.Message) error {
-	gl.Log("notice", "💬 Processando mensagem casual: %s", msg.Content)
+	gl.Log("notice", fmt.Sprintf("💬 Processando mensagem casual: %s", msg.Content))
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
@@ -460,7 +460,7 @@ func (h *DiscordMCPHub) processCasualMessage(ctx context.Context, msg interfaces
 		},
 	})
 	if err != nil {
-		gl.Log("error", "❌ Erro na análise LLM: %v", err)
+		gl.Log("error", fmt.Sprintf("❌ Erro na análise LLM: %v", err))
 		// Fallback para resposta casual
 		casualResponses := []string{
 			"😊 Entendi! Obrigado por compartilhar!",
@@ -504,7 +504,7 @@ func (h *DiscordMCPHub) createTaskFromMessage(msg interfaces.Message, analysis *
 }
 
 func (h *DiscordMCPHub) processSystemCommandMessage(ctx context.Context, msg interfaces.Message) error {
-	gl.Log("notice", "🔧 Processando comando de sistema: %s", msg.Content)
+	gl.Log("notice", fmt.Sprintf("🔧 Processando comando de sistema: %s", msg.Content))
 
 	content := strings.ToLower(msg.Content)
 	userID := msg.User.ID
@@ -817,7 +817,7 @@ func (h *DiscordMCPHub) formatShellCommandForDiscord(result interface{}) (string
 }
 
 func (h *DiscordMCPHub) executeMCPTool(ctx context.Context, toolName string, params map[string]interface{}) (string, error) {
-	gl.Log("info", "Executing MCP tool via Discord Hub", toolName)
+	gl.Log("info", fmt.Sprintf("Executing MCP tool via Discord Hub: %s", toolName))
 
 	// Try to execute via MCP registry first
 	if h.mcpRegistry != nil {
@@ -829,7 +829,7 @@ func (h *DiscordMCPHub) executeMCPTool(ctx context.Context, toolName string, par
 			// Convert result to Discord-friendly string
 			return h.formatMCPResultForDiscord(mcpToolName, result)
 		}
-		gl.Log("warn", "MCP tool execution failed, falling back to legacy implementation", toolName, err)
+		gl.Log("warn", fmt.Sprintf("MCP tool execution failed, falling back to legacy implementation: %s", toolName), err)
 	}
 
 	// Fallback to legacy implementation for backward compatibility
@@ -962,7 +962,7 @@ func (h *DiscordMCPHub) executeShellCommand(params map[string]interface{}) (stri
 func (h *DiscordMCPHub) isUserAuthorized(userID string) bool {
 	// 🔧 Modo DEV: permitir qualquer usuário para teste
 	if h.config.DevMode {
-		gl.Log("info", "🔧 Modo DEV: Autorizando usuário %s", userID)
+		gl.Log("info", fmt.Sprintf("🔧 Modo DEV: Autorizando usuário %s", userID))
 		return true
 	}
 
@@ -974,12 +974,12 @@ func (h *DiscordMCPHub) isUserAuthorized(userID string) bool {
 
 	for _, authorized := range authorizedUsers {
 		if userID == authorized {
-			gl.Log("info", "✅ Usuário autorizado: %s", userID)
+			gl.Log("info", fmt.Sprintf("✅ Usuário autorizado: %s", userID))
 			return true
 		}
 	}
 
-	gl.Log("info", "❌ Usuário não autorizado: %s", userID)
+	gl.Log("info", fmt.Sprintf("❌ Usuário não autorizado: %s", userID))
 	return false
 }
 
@@ -1017,7 +1017,7 @@ func (h *DiscordMCPHub) processGobeCommand(ctx context.Context, command, params 
 		return fmt.Errorf("gobe client not enabled")
 	}
 
-	gl.Log("info", "⚙️ Processing gobe command: %s with params: %s", command, params)
+	gl.Log("info", fmt.Sprintf("⚙️ Processing gobe command: %s with params: %s", command, params))
 
 	switch command {
 	case "deploy_app":
