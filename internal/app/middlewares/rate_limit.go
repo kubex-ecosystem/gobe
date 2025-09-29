@@ -66,7 +66,7 @@ func (rl *RateLimitMiddleware) RateLimit(c *gin.Context) bool {
 		// If we can't split, use the full RemoteAddr as IP
 		ip = c.Request.RemoteAddr
 		port = "unknown"
-		gl.Log("warning", "Error splitting host and port: %v", splitHostPortErr.Error())
+		gl.Log("warning", fmt.Sprintf("Error splitting host and port: %v", splitHostPortErr.Error()))
 	}
 
 	// Create request info
@@ -88,7 +88,7 @@ func (rl *RateLimitMiddleware) RateLimit(c *gin.Context) bool {
 		})
 		c.Abort()
 
-		gl.Log("warning", "Rate limit exceeded for IP %s:%s - %s %s", ip, port, requestInfo.Method, requestInfo.Path)
+		gl.Log("warning", fmt.Sprintf("Rate limit exceeded for IP %s:%s - %s %s", ip, port, requestInfo.Method, requestInfo.Path))
 		return false
 	}
 
@@ -192,7 +192,7 @@ func (rl *RateLimitMiddleware) cleanupExpiredRequests() {
 			}
 
 			rl.globalMutex.Unlock()
-			gl.Log("info", "Rate limit cleanup completed. Active clients: %d", len(rl.clients))
+			gl.Log("info", fmt.Sprintf("Rate limit cleanup completed. Active clients: %d", len(rl.clients)))
 		}
 	}
 }
