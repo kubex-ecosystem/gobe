@@ -10,7 +10,7 @@ import (
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -373,8 +373,8 @@ func getConfigPath() string {
 func getDefaultConfig() map[string]interface{} {
 	return map[string]interface{}{
 		"server": map[string]interface{}{
-			"port": 8080,
-			"bind": "0.0.0.0",
+			"port":  8080,
+			"bind":  "0.0.0.0",
 			"debug": false,
 		},
 		"database": map[string]interface{}{
@@ -382,12 +382,12 @@ func getDefaultConfig() map[string]interface{} {
 			"path": "gobe.db",
 		},
 		"llm": map[string]interface{}{
-			"provider": "gemini",
-			"max_tokens": 2048,
+			"provider":    "gemini",
+			"max_tokens":  2048,
 			"temperature": 0.7,
 		},
 		"discord": map[string]interface{}{
-			"enabled": false,
+			"enabled":  false,
 			"dev_mode": true,
 		},
 		"webhooks": map[string]interface{}{
@@ -402,8 +402,8 @@ func getDefaultConfig() map[string]interface{} {
 
 func validateConfiguration() map[string]interface{} {
 	results := map[string]interface{}{
-		"valid": true,
-		"errors": []string{},
+		"valid":    true,
+		"errors":   []string{},
 		"warnings": []string{},
 	}
 
