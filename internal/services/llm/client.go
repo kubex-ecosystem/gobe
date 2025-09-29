@@ -4,9 +4,13 @@ package llm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kubex-ecosystem/gobe/internal/config"
@@ -19,11 +23,13 @@ import (
 
 type Client struct {
 	openai     *openai.Client
+	gemini     *genai.Client
 	config     config.LLMConfig
 	cache      *cache.Cache
 	devMode    bool
-	provider   string // "openai", "gemini", "dev"
+	provider   string // "openai", "gemini", "groq", "dev"
 	httpClient *http.Client
+	mu         sync.Mutex
 }
 
 type AnalysisRequest struct {
@@ -48,13 +54,72 @@ type AnalysisResponse struct {
 }
 
 func NewClient(config config.LLMConfig) (*Client, error) {
-	devMode := config.APIKey == "dev_api_key" || config.APIKey == ""
+	// First check for API keys in environment
+	geminiKey := os.Getenv("GEMINI_API_KEY")
+	groqKey := os.Getenv("GROQ_API_KEY")
+	openaiKey := os.Getenv("OPENAI_API_KEY")
+
+	// Use config API key as fallback, environment takes priority
+	apiKey := config.APIKey
+	providerFromConfig := strings.ToLower(config.Provider)
+
+	// Auto-detect provider and API key from environment first
+	detectedProvider := ""
+	if geminiKey != "" {
+		detectedProvider = "gemini"
+		apiKey = geminiKey
+	} else if groqKey != "" {
+		detectedProvider = "groq"
+		apiKey = groqKey
+	} else if openaiKey != "" {
+		detectedProvider = "openai"
+		apiKey = openaiKey
+	}
+
+	// Use config provider if specified and no environment detection
+	if detectedProvider == "" && providerFromConfig != "" {
+		detectedProvider = providerFromConfig
+		switch providerFromConfig {
+		case "gemini":
+			if apiKey == "" && geminiKey != "" {
+				apiKey = geminiKey
+			}
+		case "groq":
+			if apiKey == "" && groqKey != "" {
+				apiKey = groqKey
+			}
+		case "openai":
+			if apiKey == "" && openaiKey != "" {
+				apiKey = openaiKey
+			}
+		}
+	}
+
+	// Final fallback: auto-detect from API key format if no provider specified
+	if detectedProvider == "" && apiKey != "" {
+		if strings.HasPrefix(apiKey, "sk-") {
+			detectedProvider = "openai"
+		} else if strings.HasPrefix(apiKey, "AI") && len(apiKey) > 20 {
+			detectedProvider = "gemini"
+		} else if strings.HasPrefix(apiKey, "gsk_") {
+			detectedProvider = "groq"
+		}
+	}
+
+	// Set development mode if no valid API key
+	devMode := apiKey == "dev_api_key" || apiKey == "" || detectedProvider == ""
+	if devMode {
+		detectedProvider = "dev"
+		apiKey = "dev_api_key"
+	}
 
 	gl.Log("info", "Initializing LLM Client with configuration:")
-	if len(config.APIKey) > 10 {
-		gl.Log("debug", fmt.Sprintf("   APIKey: %s...", config.APIKey[:10]))
+	gl.Log("info", fmt.Sprintf("   Config Provider: %s", config.Provider))
+	gl.Log("info", fmt.Sprintf("   Detected Provider: %s", detectedProvider))
+	if len(apiKey) > 10 && !devMode {
+		gl.Log("debug", fmt.Sprintf("   APIKey: %s... (len=%d)", apiKey[:10], len(apiKey)))
 	} else {
-		gl.Log("debug", fmt.Sprintf("   APIKey: '%s' (len=%d)", config.APIKey, len(config.APIKey)))
+		gl.Log("debug", fmt.Sprintf("   APIKey: '%s' (len=%d)", apiKey, len(apiKey)))
 	}
 	gl.Log("info", fmt.Sprintf("   Model: %s", config.Model))
 	gl.Log("info", fmt.Sprintf("   Temperature: %.2f", config.Temperature))
@@ -65,33 +130,43 @@ func NewClient(config config.LLMConfig) (*Client, error) {
 	gl.Log("info", fmt.Sprintf("   StopSequences: %v", config.StopSequences))
 	gl.Log("info", fmt.Sprintf("   DevMode: %v", devMode))
 
-	// Determine provider
-	provider := "dev"
-	if !devMode {
-		switch config.Provider {
-		case "openai":
-			provider = "openai"
-		case "gemini":
-			provider = "gemini"
-		default:
-			// Auto-detect based on API key format
-			if strings.HasPrefix(config.APIKey, "sk-") {
-				provider = "openai"
-			} else if strings.HasPrefix(config.APIKey, "AI") {
-				provider = "gemini"
-			} else {
-				return nil, fmt.Errorf("unknown LLM provider: %s (API key format not recognized)", config.Provider)
-			}
+	// Validate provider
+	validProviders := []string{"openai", "gemini", "groq", "dev"}
+	isValidProvider := false
+	for _, vp := range validProviders {
+		if detectedProvider == vp {
+			isValidProvider = true
+			break
 		}
 	}
-
-	gl.Log("info", fmt.Sprintf("   Final Provider: %s", provider))
+	if !isValidProvider {
+		return nil, fmt.Errorf("unsupported LLM provider: %s (supported: %v)", detectedProvider, validProviders)
+	}
 
 	var openaiClient *openai.Client
+	var geminiClient *genai.Client
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 
-	if provider == "openai" {
-		openaiClient = openai.NewClient(config.APIKey)
+	// Initialize clients based on provider
+	switch detectedProvider {
+	case "openai":
+		openaiClient = openai.NewClient(apiKey)
+		gl.Log("info", "Initialized OpenAI client")
+	case "gemini":
+		ctx := context.Background()
+		client, err := genai.NewClient(ctx, &genai.ClientConfig{
+			APIKey: apiKey,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Gemini client: %w", err)
+		}
+		geminiClient = client
+		gl.Log("info", "Initialized Gemini client")
+	case "groq":
+		// Groq client will be created on-demand in analyzeWithGroq
+		gl.Log("info", "Groq client will be initialized on-demand")
+	case "dev":
+		gl.Log("info", "Running in development mode - using mock responses")
 	}
 
 	// Cache for 5 minutes
@@ -99,10 +174,11 @@ func NewClient(config config.LLMConfig) (*Client, error) {
 
 	return &Client{
 		openai:     openaiClient,
+		gemini:     geminiClient,
 		config:     config,
 		cache:      cache,
 		devMode:    devMode,
-		provider:   provider,
+		provider:   detectedProvider,
 		httpClient: httpClient,
 	}, nil
 }
@@ -124,6 +200,9 @@ func (c *Client) AnalyzeMessage(ctx context.Context, req AnalysisRequest) (*Anal
 		response, err = c.analyzeWithOpenAI(ctx, req)
 	case "gemini":
 		response, err = c.analyzeWithGemini(ctx, req)
+	case "groq":
+		// Use OpenAI-compatible API for Groq
+		response, err = c.analyzeWithGroq(ctx, req)
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", c.provider)
 	}
@@ -289,29 +368,120 @@ type GeminiCandidate struct {
 }
 
 func (c *Client) analyzeWithGemini(ctx context.Context, req AnalysisRequest) (*AnalysisResponse, error) {
+	if c.gemini == nil {
+		return nil, fmt.Errorf("Gemini client not initialized")
+	}
+
 	prompt := c.buildAnalysisPrompt(req)
 	systemPrompt := c.getSystemPrompt()
 
 	// Combine system prompt and user prompt for Gemini
 	fullPrompt := fmt.Sprintf("%s\n\n%s", systemPrompt, prompt)
 
-	client, err := genai.NewClient(ctx, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Gemini client: %w", err)
+	// Use the SDK implementation from Analyzer
+	modelName := c.config.Model
+	if modelName == "" {
+		modelName = "gemini-1.5-flash"
 	}
 
-	result, err := client.Models.GenerateContent(
-		ctx,
-		"gemini-2.5-flash",
-		//"gemini-1.5-flash",
-		genai.Text(fullPrompt),
-		nil,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate content with Gemini: %w", err)
+	// Convert to Gemini SDK format
+	contents := []*genai.Content{
+		{
+			Role: "user",
+			Parts: []*genai.Part{
+				genai.NewPartFromText(fullPrompt),
+			},
+		},
 	}
 
-	return c.parseAnalysisResponse(result.Text()), nil
+	// Configuration for generation
+	temperature := float32(c.config.Temperature)
+	config := &genai.GenerateContentConfig{
+		Temperature:     &temperature,
+		MaxOutputTokens: int32(c.config.MaxTokens),
+	}
+
+	gl.Log("debug", fmt.Sprintf("Calling Gemini API with model: %s", modelName))
+
+	// Use streaming to get response (adapted from Analyzer implementation)
+	iter := c.gemini.Models.GenerateContentStream(ctx, modelName, contents, config)
+
+	var fullContent strings.Builder
+
+	// Iterate over streaming response
+	for resp, err := range iter {
+		if errors.Is(err, io.EOF) {
+			break // Normal end of stream
+		}
+		if err != nil {
+			return nil, fmt.Errorf("streaming error: %v", err)
+		}
+
+		if resp == nil {
+			continue
+		}
+
+		// Extract content from response
+		if len(resp.Candidates) > 0 && resp.Candidates[0].Content != nil {
+			for _, part := range resp.Candidates[0].Content.Parts {
+				if part != nil {
+					fullContent.WriteString(string(part.Text))
+				}
+			}
+		}
+	}
+
+	responseText := fullContent.String()
+	gl.Log("debug", fmt.Sprintf("Gemini response: %s", responseText))
+
+	return c.parseAnalysisResponse(responseText), nil
+}
+
+func (c *Client) analyzeWithGroq(ctx context.Context, req AnalysisRequest) (*AnalysisResponse, error) {
+	// Get API key from environment
+	groqAPIKey := os.Getenv("GROQ_API_KEY")
+	if groqAPIKey == "" {
+		return nil, fmt.Errorf("GROQ_API_KEY environment variable not set")
+	}
+
+	// Groq uses OpenAI-compatible API
+	groqConfig := openai.DefaultConfig(groqAPIKey)
+	groqConfig.BaseURL = "https://api.groq.com/openai/v1"
+	groqClient := openai.NewClientWithConfig(groqConfig)
+
+	prompt := c.buildAnalysisPrompt(req)
+
+	// Use appropriate Groq model if not specified
+	model := c.config.Model
+	if model == "" {
+		model = "llama3-8b-8192" // Default Groq model
+	}
+
+	gl.Log("debug", fmt.Sprintf("Calling Groq API with model: %s", model))
+
+	resp, err := groqClient.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
+		Model: model,
+		Messages: []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleSystem,
+				Content: c.getSystemPrompt(),
+			},
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: prompt,
+			},
+		},
+		Temperature: float32(c.config.Temperature),
+		MaxTokens:   c.config.MaxTokens,
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("Groq API error: %w", err)
+	}
+
+	gl.Log("debug", fmt.Sprintf("Groq response: %s", resp.Choices[0].Message.Content))
+
+	return c.parseAnalysisResponse(resp.Choices[0].Message.Content), nil
 }
 
 func (c *Client) getSystemPrompt() string {
