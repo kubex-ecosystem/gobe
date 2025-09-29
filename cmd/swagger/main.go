@@ -79,7 +79,7 @@ func SwaggerMain() {
 			"",
 			"json",
 			"0.0.0.0",
-			"8080",
+			"8088",
 		),
 		dbService,
 		l.GetLogger("GoBE Swagger"),

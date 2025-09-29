@@ -11,7 +11,6 @@ import (
 	gdbf "github.com/kubex-ecosystem/gdbase/factory"
 	"github.com/kubex-ecosystem/gdbase/types"
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
-	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
@@ -31,7 +30,7 @@ import (
 type Router struct {
 	*gin.Engine
 	*t.Mutexes
-	InitArgs        interfaces.InitArgs
+	InitArgs        ci.InitArgs
 	Logger          l.Logger
 	settings        map[string]string
 	databaseService gdbf.DBService
@@ -118,7 +117,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 		gl.Log("error", "Failed to initialize secure server: "+err.Error())
 		return nil, err
 	}
-	gl.Log("info", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
+	gl.Log("debug", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
 
 	for groupName, routeGroup := range GetDefaultRouteMap(rtr) {
 		for routeName, route := range routeGroup {
@@ -350,7 +349,7 @@ func (rtr *Router) RegisterMiddleware(name string, middleware gin.HandlerFunc, g
 			gl.Log("warn", fmt.Sprintf("Middleware %s already registered", name))
 		} else {
 			rtr.middlewares[name] = middleware
-			gl.Log("info", fmt.Sprintf("Middleware %s registered", name))
+			gl.Log("debug", fmt.Sprintf("Middleware %s registered", name))
 		}
 	}
 }
@@ -417,7 +416,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 
 	rtr.routes[groupName][routeName] = route
 
-	gl.Log("info", fmt.Sprintf("Route registered: [%s] %s", route.Method(), route.Path()))
+	gl.Log("debug", fmt.Sprintf("Route registered: [%s] %s", route.Method(), route.Path()))
 }
 
 // StartServer starts the server and logs its status.
@@ -455,7 +454,7 @@ func (rtr *Router) ShutdownServerGracefully() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	gl.Log("info", "Initiating graceful shutdown...")
+	gl.Log("debug", "Initiating graceful shutdown...")
 
 	// Perform graceful shutdown
 	if err := server.Shutdown(ctx); err != nil {
@@ -482,7 +481,7 @@ func (rtr *Router) MonitorServer() {
 	go func() {
 		for range ticker.C {
 			connections := len(rtr.engine.Routes())
-			gl.Log("info", fmt.Sprintf("Server running at %s | Active connections: %d", rtr.GetBindingAddress(), connections))
+			gl.Log("debug", fmt.Sprintf("Server running at %s | Active connections: %d", rtr.GetBindingAddress(), connections))
 		}
 	}()
 }
@@ -508,16 +507,16 @@ func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 		return nil
 	}
 	return func(c *gin.Context) {
-		gl.Log("info", "Dummy Placeholder")
+		gl.Log("debug", "Dummy Placeholder")
 
 		c.JSON(http.StatusOK, gin.H{"message": "Dummy Placeholder"})
 	}
 }
 
-func (rtr *Router) GetInitArgs() *interfaces.InitArgs {
+func (rtr *Router) GetInitArgs() *ci.InitArgs {
 	if err := rtr.ValidateRouter(); err != nil {
 		gl.Log("error", err.Error())
-		return &interfaces.InitArgs{}
+		return &ci.InitArgs{}
 	}
 	return &rtr.InitArgs
 }

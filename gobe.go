@@ -223,15 +223,15 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 
 		gl.Log("info", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
 		gl.Log("info", fmt.Sprintf("Private key generated at %s", pubKeyPath))
-		gl.Log("info", fmt.Sprintf("Certificate: %s", certString))
-		gl.Log("info", fmt.Sprintf("Private key: %s", keyString))
+		gl.Log("debug", fmt.Sprintf("Certificate: %s", certString))
+		gl.Log("debug", fmt.Sprintf("Private key: %s", keyString))
 		certObj.Cert = string(certEncodedBytes)
 		certObj.Key = string(keyEncodedBytes)
 		gbm.Properties["cert"] = t.NewProperty("cert", &certObj.Cert, true, nil)
 
 		mapper := t.NewMapper(&certObj, filepath.Join(gbm.configDir, "cert.json"))
 		mapper.SerializeToFile("json")
-		gl.Log("info", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
+		gl.Log("debug", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
 		gbm.Properties["privKey"] = t.NewProperty("privKey", &keyEncodedBytes, true, nil)
 	} else {
 		certObj := &GoBECertData{}
@@ -257,7 +257,7 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 
 	go func(chan string, ci.ISignalManager[chan string], *GoBE) {
 		signamManager.ListenForSignals()
-		gl.Log("info", "Listening for signals...")
+		gl.Log("debug", "Listening for signals...")
 		for msg := range chanCtl {
 			switch msg {
 			case "reload":

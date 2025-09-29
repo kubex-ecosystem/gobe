@@ -11,8 +11,8 @@ import (
 	"time"
 
 	manage "github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/manage"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	services "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 // RegisterBuiltinTools registers all built-in MCP tools
@@ -77,7 +77,7 @@ func RegisterBuiltinTools(registry Registry) error {
 
 // systemStatusHandler handles the system.status tool execution
 func systemStatusHandler(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-	gl.Log("info", "Executing system.status tool")
+	gl.Log("debug", "Executing system.status tool")
 
 	// Get detailed flag (default false)
 	detailed := false
@@ -96,17 +96,17 @@ func systemStatusHandler(ctx context.Context, args map[string]interface{}) (inte
 
 	// Build comprehensive status response
 	status := map[string]interface{}{
-		"status":    "ok",
-		"timestamp": time.Now().Unix(),
-		"uptime":    time.Since(bootTime).String(),
+		"status":         "ok",
+		"timestamp":      time.Now().Unix(),
+		"uptime":         time.Since(bootTime).String(),
 		"uptime_seconds": time.Since(bootTime).Seconds(),
-		"version":   "v1.3.5", // Updated to match current version
-		"hostname":  hostname,
-		"pid":       pid,
+		"version":        "v1.3.5", // Updated to match current version
+		"hostname":       hostname,
+		"pid":            pid,
 		"health": map[string]interface{}{
 			"status":  "healthy",
 			"message": "System is operational",
-			"checks": checkSystemHealth(),
+			"checks":  checkSystemHealth(),
 		},
 	}
 
@@ -116,11 +116,11 @@ func systemStatusHandler(ctx context.Context, args map[string]interface{}) (inte
 		runtime.ReadMemStats(&memStats)
 
 		status["runtime"] = map[string]interface{}{
-			"go_version":      runtime.Version(),
-			"go_os":           runtime.GOOS,
-			"go_arch":         runtime.GOARCH,
-			"num_cpu":         runtime.NumCPU(),
-			"goroutines":      runtime.NumGoroutine(),
+			"go_version": runtime.Version(),
+			"go_os":      runtime.GOOS,
+			"go_arch":    runtime.GOARCH,
+			"num_cpu":    runtime.NumCPU(),
+			"goroutines": runtime.NumGoroutine(),
 			"memory": map[string]interface{}{
 				"alloc_bytes":       memStats.Alloc,
 				"alloc_mb":          float64(memStats.Alloc) / 1024 / 1024,
@@ -174,7 +174,7 @@ func SetRegistry(registry Registry) {
 func checkSystemHealth() map[string]interface{} {
 	checks := map[string]interface{}{
 		"memory": map[string]interface{}{
-			"status": "ok",
+			"status":  "ok",
 			"message": "Memory usage within normal range",
 		},
 		"goroutines": map[string]interface{}{
@@ -195,7 +195,7 @@ func checkSystemHealth() map[string]interface{} {
 	memoryMB := float64(memStats.Alloc) / 1024 / 1024
 	if memoryMB > 500 { // More than 500MB
 		checks["memory"] = map[string]interface{}{
-			"status": "warning",
+			"status":  "warning",
 			"message": fmt.Sprintf("High memory usage: %.2f MB", memoryMB),
 		}
 	}
@@ -209,10 +209,10 @@ func checkConnectionHealth() map[string]interface{} {
 
 	// Check database connection (simplified check)
 	dbStatus := map[string]interface{}{
-		"status": "unknown",
-		"message": "Database connection check requires configuration",
+		"status":     "unknown",
+		"message":    "Database connection check requires configuration",
 		"last_check": time.Now().Unix(),
-		"note": "Real implementation would check actual DB connection with proper config",
+		"note":       "Real implementation would check actual DB connection with proper config",
 	}
 	connections["database"] = dbStatus
 
@@ -222,10 +222,10 @@ func checkConnectionHealth() map[string]interface{} {
 
 	// Check webhook service status
 	webhookStatus := map[string]interface{}{
-		"status": "active",
-		"message": "Webhook service is operational",
+		"status":     "active",
+		"message":    "Webhook service is operational",
 		"last_check": time.Now().Unix(),
-		"features": []string{"receive", "persist", "retry", "amqp_integration"},
+		"features":   []string{"receive", "persist", "retry", "amqp_integration"},
 	}
 	connections["webhooks"] = webhookStatus
 
@@ -291,8 +291,8 @@ func shellCommandHandler(ctx context.Context, args map[string]interface{}) (inte
 	if !commandAllowed {
 		gl.Log("warn", "Command not allowed in whitelist", command)
 		return map[string]interface{}{
-			"status":  "error",
-			"message": fmt.Sprintf("Command not allowed: %s", command),
+			"status":           "error",
+			"message":          fmt.Sprintf("Command not allowed: %s", command),
 			"allowed_commands": strings.Join(allowedCommands, ", "),
 		}, nil
 	}

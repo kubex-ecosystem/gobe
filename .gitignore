@@ -271,3 +271,5 @@ dist/*
 .kubex/
 .claude/
 CLAUDE.md
+.env*
+.env.example

@@ -1,10 +1,13 @@
+// Package types defines the Job structure and its interface for scheduling tasks.
 package types
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/google/uuid"
+
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 )
 
 type IJob interface {
@@ -48,17 +51,17 @@ func (j *Job) GetUserID() uuid.UUID {
 	return j.userID
 }
 func (j *Job) Run() error {
-	log.Printf("Running job: %s (ID: %d)", j.Name, j.ID)
+	gl.Log("info", fmt.Sprintf("Running job: %s (ID: %d)", j.Name, j.ID))
 	// Implement the logic to execute the command.
 	return nil
 }
 func (j *Job) Retry() error {
-	log.Printf("Retrying job: %s (ID: %d)", j.Name, j.ID)
+	gl.Log("info", fmt.Sprintf("Retrying job: %s (ID: %d)", j.Name, j.ID))
 
 	return nil
 }
 func (j *Job) Cancel() error {
-	log.Printf("Cancelling job: %s (ID: %d)", j.Name, j.ID)
+	gl.Log("info", fmt.Sprintf("Cancelling job: %s (ID: %d)", j.Name, j.ID))
 	// Implement cancel logic.
 	return nil
 }

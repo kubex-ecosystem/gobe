@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -123,6 +124,48 @@ func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub, config *config.Co
 		APIWrapper:     t.NewAPIWrapper[fscm.DiscordModel](),
 		hub:            hub,
 		config:         config,
+		upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				// Permitir origens do Discord durante desenvolvimento
+				origin := r.Header.Get("Origin")
+				gl.Log("info", fmt.Sprintf("WebSocket origin: %s", origin))
+
+				// ✅ Para desenvolvimento, ser mais permissivo
+				if config.DevMode {
+					gl.Log("info", "🔧 Dev mode: allowing all WebSocket origins")
+					return true
+				}
+
+				// Para desenvolvimento, permita origens do Discord
+				allowedOrigins := []string{
+					"https://discord.com",
+					"https://ptb.discord.com",
+					"https://canary.discord.com",
+					"null", // Para local development
+					"",     // Para requests sem Origin header
+				}
+
+				for _, allowed := range allowedOrigins {
+					if origin == allowed {
+						return true
+					}
+				}
+
+				// Para desenvolvimento local, permita localhost
+				if strings.Contains(origin, "localhost") ||
+					strings.Contains(origin, "127.0.0.1") ||
+					strings.Contains(origin, "192.168.") {
+					return true
+				}
+
+				gl.Log("warn", fmt.Sprintf("🚫 WebSocket origin rejected: %s", origin))
+				return false
+			},
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+			// ✅ Adicionar configurações extras para Discord
+			EnableCompression: true,
+		},
 	}
 }
 
@@ -283,6 +326,7 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 		RedirectURI: redirectURI,
 		Scope:       scope,
 	})
+	//https://discord.com/api/webhooks/1381317940649132162/KZro3msMCG1h_jl_eW-EGXPIldUpbRf8R0DC04bpFRcSOC4ZeW1HzMAGDvNdiO1jVcKj
 }
 
 // HandleWebSocket atualiza a conexão HTTP para WebSocket.
@@ -295,12 +339,29 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/discord/websocket [get]
 func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
-	conn, err := dc.upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil {
-		gl.Log("error", fmt.Sprintf("WebSocket upgrade error: %v", err))
-		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "websocket upgrade failed"})
+	gl.Log("info", "🔌 WebSocket upgrade attempt")
+	gl.Log("info", fmt.Sprintf("  Origin: %s", c.GetHeader("Origin")))
+	gl.Log("info", fmt.Sprintf("  User-Agent: %s", c.GetHeader("User-Agent")))
+	gl.Log("info", fmt.Sprintf("  Upgrade: %s", c.GetHeader("Upgrade")))
+	gl.Log("info", fmt.Sprintf("  Connection: %s", c.GetHeader("Connection")))
+
+	// ✅ Verificar headers WebSocket
+	if c.GetHeader("Upgrade") != "websocket" {
+		gl.Log("error", "❌ Missing or invalid Upgrade header")
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Status:  "error",
+			Message: "invalid websocket upgrade request",
+		})
 		return
 	}
+
+	conn, err := dc.upgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ WebSocket upgrade error: %v", err))
+		// ✅ Não retornar JSON após upgrade failure
+		return
+	}
+	defer conn.Close()
 
 	client := &events.Client{
 		ID:   uuid.New().String(),
@@ -308,10 +369,86 @@ func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 		Send: make(chan events.Event, 256),
 	}
 
-	eventStream := dc.hub.GetEventStream()
-	eventStream.RegisterClient(client)
+	// Verificar se o hub está disponível
+	if dc.hub == nil {
+		gl.Log("error", "❌ Discord hub is not initialized")
+		conn.WriteMessage(websocket.TextMessage, []byte(`{"error": "hub not initialized"}`))
+		return
+	}
 
-	gl.Log("info", fmt.Sprintf("WebSocket client connected: %s", client.ID))
+	eventStream := dc.hub.GetEventStream()
+	if eventStream == nil {
+		gl.Log("error", "❌ Event stream is not available")
+		conn.WriteMessage(websocket.TextMessage, []byte(`{"error": "event stream not available"}`))
+		return
+	}
+
+	eventStream.RegisterClient(client)
+	gl.Log("info", fmt.Sprintf("✅ WebSocket client connected: %s", client.ID))
+
+	// Enviar mensagem de confirmação
+	welcomeMsg := map[string]interface{}{
+		"type":      "connection",
+		"status":    "connected",
+		"client_id": client.ID,
+		"message":   "WebSocket connected successfully",
+		"timestamp": time.Now().Unix(),
+	}
+
+	if msgBytes, err := json.Marshal(welcomeMsg); err == nil {
+		conn.WriteMessage(websocket.TextMessage, msgBytes)
+	}
+
+	// ✅ Goroutine para enviar mensagens do canal
+	go func() {
+		defer eventStream.UnregisterClient(client)
+		for {
+			for event := range client.Send {
+				if msgBytes, err := json.Marshal(event); err == nil {
+					conn.WriteMessage(websocket.TextMessage, msgBytes)
+				}
+			}
+		}
+	}()
+
+	// Loop para manter a conexão viva e processar mensagens
+	for {
+		messageType, message, err := conn.ReadMessage()
+		if err != nil {
+			gl.Log("info", fmt.Sprintf("WebSocket client %s disconnected: %v", client.ID, err))
+			break
+		}
+
+		if messageType == websocket.TextMessage {
+			gl.Log("info", fmt.Sprintf("📨 WebSocket message from %s: %s", client.ID, string(message)))
+
+			// ✅ Processar mensagem recebida
+			var msgData map[string]interface{}
+			if err := json.Unmarshal(message, &msgData); err == nil {
+				if msgType, ok := msgData["type"].(string); ok {
+					switch msgType {
+					case "ping":
+						response := map[string]interface{}{
+							"type":      "pong",
+							"timestamp": time.Now().Unix(),
+						}
+						if respBytes, err := json.Marshal(response); err == nil {
+							conn.WriteMessage(websocket.TextMessage, respBytes)
+						}
+					case "test":
+						response := map[string]interface{}{
+							"type":    "test_response",
+							"message": "WebSocket is working!",
+							"echo":    msgData,
+						}
+						if respBytes, err := json.Marshal(response); err == nil {
+							conn.WriteMessage(websocket.TextMessage, respBytes)
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 // GetPendingApprovals retorna solicitações aguardando aprovação manual.
@@ -567,7 +704,11 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	// Handle ping interactions (Discord requires this)
 	if interactionType, ok := interaction["type"].(float64); ok && interactionType == 1 {
 		gl.Log("info", "🏓 Ping interaction - responding with pong")
-		c.JSON(http.StatusOK, DiscordInteractionResponse{Type: 1})
+
+		// ✅ RESPOSTA CORRETA PARA PING
+		c.JSON(http.StatusOK, DiscordInteractionResponse{
+			Type: 1, // PONG response
+		})
 		return
 	}
 
@@ -614,6 +755,14 @@ func (dc *DiscordController) InitiateBotMCP() {
 				dc.InitiateBotMCP()
 			}
 		}()
+		// Start the Discord bot connection (if applicable)
+		if h == nil {
+			gl.Log("error", "Discord hub is nil, cannot start bot")
+			return
+		}
+		// Note: Starting the bot connection is handled inside StartMCPServer now
+		// to avoid multiple connections in case of restarts.
+		// Uncomment if you want to start the bot separately.
 		if err := h.StartDiscordBot(); err != nil {
 			gl.Log("error", "Failed to start Discord hub", err)
 			return
@@ -624,7 +773,7 @@ func (dc *DiscordController) InitiateBotMCP() {
 	}()
 }
 
-// PingDiscord verifica o estado do hub conectado.
+// PingAdapter verifica o estado do hub conectado.
 //
 // @Summary     Ping hub Discord
 // @Description Checa se o hub MCP em execução está respondendo. [Em desenvolvimento]
@@ -633,7 +782,7 @@ func (dc *DiscordController) InitiateBotMCP() {
 // @Success     200 {object} DiscordPingResponse
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/discord/ping [get]
-func (dc *DiscordController) PingDiscord(c *gin.Context) {
+func (dc *DiscordController) PingAdapter(c *gin.Context) {
 	hd := dc.hub
 	if hd == nil {
 		gl.Log("error", "Failed to ping Discord adapter")
@@ -667,8 +816,8 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 			return
 		}
 	}
-
-	adapter, adapterErr := discord.NewAdapter(cfg.Discord)
+	// Create a new Discord adapter instance for oauth2/token or ping
+	adapter, adapterErr := discord.NewAdapter(cfg.Discord, "oauth2")
 	if adapterErr != nil {
 		gl.Log("error", "Failed to create Discord adapter", adapterErr)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to create Discord adapter"})
@@ -683,7 +832,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 		msg = "Hello from Discord MCP Hub!"
 	}
 
-	err = adapter.PingDiscord(msg)
+	err = adapter.PingAdapter(msg)
 	if err != nil {
 		gl.Log("error", "Failed to ping Discord", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to ping Discord"})
@@ -691,4 +840,39 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, DiscordPingResponse{Message: "Discord is reachable"})
 
+}
+
+// GetHubStatus retorna o status atual do hub Discord.
+//
+// @Summary     Status do hub Discord
+// @Description Retorna informações de debug sobre o estado do hub MCP. [Em desenvolvimento]
+// @Tags        discord beta
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Router      /api/v1/discord/hub/status [get]
+func (dc *DiscordController) GetHubStatus(c *gin.Context) {
+	status := map[string]interface{}{
+		"hub_initialized": dc.hub != nil,
+		"config_loaded":   dc.config != nil,
+		"timestamp":       time.Now().Format(time.RFC3339),
+	}
+
+	if dc.hub != nil {
+		eventStream := dc.hub.GetEventStream()
+		status["event_stream_available"] = eventStream != nil
+
+		if eventStream != nil {
+			// Adicione mais detalhes se disponível na interface
+			status["connected_clients"] = "check event stream"
+		}
+	}
+
+	if dc.config != nil {
+		status["discord_config"] = map[string]interface{}{
+			"token_set":  dc.config.Discord.Bot.Token != "",
+			"app_id_set": dc.config.Discord.Bot.ApplicationID != "",
+		}
+	}
+
+	c.JSON(http.StatusOK, status)
 }

@@ -3,7 +3,6 @@ package factory
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	gb "github.com/kubex-ecosystem/gobe"
@@ -53,13 +52,13 @@ func initRabbitMQ() error {
 	if url != "" {
 		rabbitMQConn, err = amqp.Dial(url)
 		if err != nil {
-			log.Printf("Erro ao conectar ao RabbitMQ: %s", err)
+			gl.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
 			return err
 		}
 		if rabbitMQConn == nil {
 			return fmt.Errorf("RabbitMQ connection is not initialized")
 		}
-		log.Println("Conexão com RabbitMQ estabelecida com sucesso.")
+		gl.Log("info", "Conexão com RabbitMQ estabelecida com sucesso.")
 	}
 	return nil
 }
@@ -67,19 +66,19 @@ func initRabbitMQ() error {
 func ConsumeMessages(queueName string) {
 	url := msg.GetRabbitMQURL(dbConfig)
 	if url == "" {
-		log.Printf("RabbitMQ URL is not configured")
+		gl.Log("error", "RabbitMQ URL is not configured")
 		return
 	}
 	conn, err := amqp.Dial(url)
 	if err != nil {
-		log.Printf("Erro ao conectar ao RabbitMQ: %s", err)
+		gl.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
 		return
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Printf("Erro ao abrir um canal: %s", err)
+		gl.Log("error", fmt.Sprintf("Erro ao abrir um canal: %s", err))
 		return
 	}
 	defer ch.Close()
@@ -94,7 +93,7 @@ func ConsumeMessages(queueName string) {
 		nil,
 	)
 	if err != nil {
-		log.Printf("Erro ao registrar um consumidor: %s", err)
+		gl.Log("error", fmt.Sprintf("Erro ao registrar um consumidor: %s", err))
 		return
 	}
 
@@ -102,19 +101,19 @@ func ConsumeMessages(queueName string) {
 
 	go func() {
 		for d := range msgs {
-			log.Printf("Mensagem recebida: %s", d.Body)
+			gl.Log("debug", fmt.Sprintf("Mensagem recebida: %s", d.Body))
 			// Processar a mensagem aqui
 		}
 	}()
 
-	log.Printf("Aguardando mensagens na fila %s. Para sair pressione CTRL+C", queueName)
+	gl.Log("debug", fmt.Sprintf("Aguardando mensagens na fila %s. Para sair pressione CTRL+C", queueName))
 	<-forever
 }
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {
 	for i := 0; i < attempts; i++ {
 		if err := fn(); err != nil {
-			log.Printf("Tentativa %d falhou: %s", i+1, err)
+			gl.Log("error", fmt.Sprintf("Tentativa %d falhou: %v", i+1, err))
 			time.Sleep(sleep)
 			continue
 		}
@@ -132,19 +131,19 @@ func PublishMessageWithRetry(queueName string, message string) error {
 func PublishMessage(queueName, message string) error {
 	url := msg.GetRabbitMQURL(dbConfig)
 	if url == "" {
-		log.Printf("RabbitMQ URL is not configured")
+		gl.Log("error", "RabbitMQ URL is not configured")
 		return fmt.Errorf("RabbitMQ URL is not configured")
 	}
 	conn, err := amqp.Dial(url)
 	if err != nil {
-		log.Printf("Erro ao conectar ao RabbitMQ: %s", err)
+		gl.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
 		return err
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Printf("Erro ao abrir um canal: %s", err)
+		gl.Log("error", fmt.Sprintf("Erro ao abrir um canal: %s", err))
 		return err
 	}
 	defer ch.Close()
@@ -160,11 +159,11 @@ func PublishMessage(queueName, message string) error {
 		},
 	)
 	if err != nil {
-		log.Printf("Erro ao publicar mensagem: %s", err)
+		gl.Log("error", fmt.Sprintf("Erro ao publicar mensagem: %s", err))
 		return err
 	}
 
-	log.Printf("Mensagem publicada na fila %s: %s", queueName, message)
+	gl.Log("info", fmt.Sprintf("Mensagem publicada na fila %s: %s", queueName, message))
 	return nil
 }
 

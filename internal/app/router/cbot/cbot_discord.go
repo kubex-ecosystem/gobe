@@ -44,6 +44,10 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 
+	// delete(middlewaresMap, "authentication")
+	// delete(middlewaresMap, "rateLimiter")
+	// delete(middlewaresMap, "timeout")
+
 	secureProperties := make(map[string]bool)
 	secureProperties["secure"] = false
 	secureProperties["validateAndSanitize"] = false
@@ -82,8 +86,9 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	routesMap["ApproveRequest"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/approve", "application/json", discordController.ApproveRequest, nil, dbService, nil, nil)
 	routesMap["RejectRequest"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/reject", "application/json", discordController.RejectRequest, nil, dbService, nil, nil)
 	routesMap["HandleTestMessage"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/test", "application/json", discordController.HandleTestMessage, nil, dbService, nil, nil)
-	routesMap["PingDiscord"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/ping", "application/json", discordController.PingDiscord, nil, dbService, nil, nil)
-	routesMap["PingDiscord"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/ping", "application/json", discordController.PingDiscordAdapter, nil, dbService, nil, nil)
+	routesMap["PingAdapter"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/ping", "application/json", discordController.PingAdapter, nil, dbService, nil, nil)
+	routesMap["PingAdapter"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/ping", "application/json", discordController.PingDiscordAdapter, nil, dbService, nil, nil)
+	routesMap["GetHubStatus"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/hub/status", "application/json", discordController.GetHubStatus, nil, dbService, nil, nil)
 
 	defer discordController.InitiateBotMCP()
 

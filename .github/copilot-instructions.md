@@ -421,7 +421,7 @@ gl.Log("error", "Operation failed", err)
 gl.Log("error", fmt.Sprintf("Failed to process %s", entityType), err)
 
 // Info logging
-gl.Log("info", fmt.Sprintf("Route registered: [%s] %s", method, path))
+gl.Log("debug", fmt.Sprintf("Route registered: [%s] %s", method, path))
 
 // Warning logging
 gl.Log("warn", "Middleware not found for route")

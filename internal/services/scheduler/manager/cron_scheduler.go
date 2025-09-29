@@ -2,9 +2,9 @@
 package manager
 
 import (
-	"log"
 	"time"
 
+	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	pl "github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
 )
 
@@ -30,7 +30,7 @@ func (s *CronJobScheduler) Start() {
 		for range ticker.C {
 			cronJobs, err := s.ICronService.GetScheduledCronJobs()
 			if err != nil {
-				log.Printf("Error fetching scheduled cronjobs: %v", err)
+				gl.Log("error", "Error fetching scheduled cronjobs: %v", err)
 				continue
 			}
 			for _, job := range cronJobs {

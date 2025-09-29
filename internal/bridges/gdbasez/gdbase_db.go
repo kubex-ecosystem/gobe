@@ -3,7 +3,6 @@ package gdbasez
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -68,7 +67,6 @@ func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger 
 		gl.Log("error", "❌ Erro ao inicializar DBConfig: Nenhum banco de dados encontrado")
 		return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig: Nenhum banco de dados encontrado")
 	}
-	gl.Log("success", fmt.Sprintf("Banco de dados encontrado: %v", dbConfig.Databases))
 	return dbConfig, nil
 }
 
@@ -114,7 +112,7 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 	var err error
 	if environment == nil {
 		if runtime.GOOS == "windows" {
-			log.Println("Ambiente não pode ser nulo no Windows.")
+			gl.Log("error", "ambiente não pode ser nulo no Windows")
 			return nil, fmt.Errorf("ambiente não pode ser nulo no Windows")
 		} else {
 			environment, err = t.NewEnvironment(os.ExpandEnv(cm.DefaultGoBEConfigPath), false, logger)
@@ -183,7 +181,7 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 		return nil, fmt.Errorf("❌ Erro ao conectar ao banco: %v", err)
 	}
 
-	fmt.Println("✅ Todos os serviços rodando corretamente!")
+	gl.Log("info", "✅ Todos os serviços rodando corretamente!")
 
 	// Retorno o DB para o BE
 	return dbService, nil
