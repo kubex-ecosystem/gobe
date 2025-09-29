@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
 
@@ -89,33 +89,33 @@ func (c *Config) GetSettings() map[string]interface{} {
 
 type DiscordConfig struct {
 	Bot struct {
-		ApplicationID string   `json:"application_id"`
-		Token         string   `json:"token"`
-		Permissions   []string `json:"permissions"`
-		Intents       []string `json:"intents"`
-		Channels      []string `json:"channels"`
-	} `json:"bot"`
+		ApplicationID string   `json:"application_id,omitempty"`
+		Token         string   `json:"token,omitempty"`
+		Permissions   []string `json:"permissions,omitempty"`
+		Intents       []string `json:"intents,omitempty"`
+		Channels      []string `json:"channels,omitempty"`
+	} `json:"bot,omitempty"`
 	OAuth2 struct {
-		PublicKey    string   `json:"public_key"`
-		ClientID     string   `json:"client_id"`
-		ClientSecret string   `json:"client_secret"`
-		RedirectURI  string   `json:"redirect_uri"`
-		Scopes       []string `json:"scopes"`
-	} `json:"oauth2"`
+		PublicKey    string   `json:"public_key,omitempty"`
+		ClientID     string   `json:"client_id,omitempty"`
+		ClientSecret string   `json:"client_secret,omitempty"`
+		RedirectURI  string   `json:"redirect_uri,omitempty"`
+		Scopes       []string `json:"scopes,omitempty"`
+	} `json:"oauth2,omitempty"`
 	Webhook struct {
-		URL    string `json:"url"`
-		Secret string `json:"secret"`
-	} `json:"webhook"`
+		URL    string `json:"url,omitempty"`
+		Secret string `json:"secret,omitempty"`
+	} `json:"webhook,omitempty"`
 	RateLimits struct {
-		RequestsPerMinute int `json:"requests_per_minute"`
-		BurstSize         int `json:"burst_size"`
-	} `json:"rate_limits"`
+		RequestsPerMinute int `json:"requests_per_minute,omitempty"`
+		BurstSize         int `json:"burst_size,omitempty"`
+	} `json:"rate_limits,omitempty"`
 	Features struct {
-		AutoResponse            bool `json:"auto_response"`
-		TaskCreation            bool `json:"task_creation"`
-		CrossPlatformForwarding bool `json:"cross_platform_forwarding"`
-	} `json:"features"`
-	DevMode bool `json:"dev_mode"`
+		AutoResponse            bool `json:"auto_response,omitempty"`
+		TaskCreation            bool `json:"task_creation,omitempty"`
+		CrossPlatformForwarding bool `json:"cross_platform_forwarding,omitempty"`
+	} `json:"features,omitempty"`
+	DevMode bool `json:"dev_mode,omitempty"`
 }
 
 func newDiscordConfig() *DiscordConfig       { return &DiscordConfig{} }
@@ -320,13 +320,31 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 	initArgs *interfaces.InitArgs,
 ) (C, error) {
 
-	var envFilePath string
+	envVars := make(map[string]string)
+	envFilePath := ".env"
 
-	// Check if .env file exists and load it
+	if _, err := os.Stat(envFilePath); os.IsNotExist(err) {
+		// .env file not found, skipping loading environment variables from file, reading from user/process environment
+		gl.Log("debug", ".env file not found, skipping loading environment variables from file")
+		envVarsList := os.Environ()
+		for _, envVar := range envVarsList {
+			parts := strings.SplitN(envVar, "=", 2)
+			if len(parts) == 2 {
+				envVars[parts[0]] = parts[1]
+			}
+		}
+	} else if os.IsPermission(err) {
+		gl.Log("fatal", fmt.Sprintf("permission denied to read %s file: %v", envFilePath, err))
+	} else {
+		gl.Log("debug", "Loading settings from .env file")
+		if err := godotenv.Load(envFilePath); err != nil {
+			// return nil, fmt.Errorf("error loading %s file: %w", envFilePath, err)
+			gl.Log("fatal", fmt.Sprintf("error loading %s file: %v", envFilePath, err))
+		}
+	}
 
 	if configPath == "" {
 		gl.Log("warn", "No config path provided, using default:", configPath)
-		envFilePath = ".env"
 		configPath = GetConfigFilePath()
 		configPath = filepath.Join(configPath, "gobe", "config.json")
 	}
@@ -348,236 +366,21 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 		}
 	}
 
-	if reflect.TypeFor[C]().String() == "*config.Config" && configType == "gobe_config" {
-		configType = "main_config"
+	// Map environment variables to config
+
+	for key, value := range envVars {
+		viper.Set(key, value)
 	}
 
-	if err := BootstrapMainConfig(configPath, initArgs); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
+	configInstanceMapper := types.NewMapper(new(C), configPath)
+	configInstance, err := configInstanceMapper.DeserializeFromFile("json")
+	if err != nil {
+		return nil, fmt.Errorf("error deserializing %s: %w", configType, err)
 	}
-
-	if _, err := os.Stat(envFilePath); os.IsNotExist(err) {
-		gl.Log("debug", ".env file not found, skipping loading environment variables from file")
-		goto postEnvLoad
+	if configInstance == nil {
+		return nil, fmt.Errorf("deserialized config instance is nil for type: %s", configType)
 	}
-
-	gl.Log("debug", "Loading settings from .env file")
-	if err := godotenv.Load(envFilePath); err != nil {
-		// return nil, fmt.Errorf("error loading %s file: %w", envFilePath, err)
-		gl.Log("fatal", fmt.Sprintf("error loading %s file: %v", envFilePath, err))
-	}
-	gl.Log("info", "Loaded environment variables from .env file")
-
-postEnvLoad:
-	gl.Log("debug", "Using config path:", configPath)
-	if configType == "" {
-		configType = "main_config"
-		gl.Log("debug", "No config type provided, using default: main_config")
-	}
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		gl.Log("warn", "No config.json file found, skipping environment variable loading")
-	} else if os.IsPermission(err) {
-		return nil, fmt.Errorf("permission denied to read config.json file: %w", err)
-	}
-
-	// Initialize viper
-	viper.SetConfigName(filepath.Base(configPath))
-	viper.SetConfigType("json")
-	viper.AddConfigPath(filepath.Dir(configPath))
-
-	// Set defaults
-	viper.SetDefault("server.port", 8080)
-	viper.SetDefault("server.host", "localhost")
-	viper.SetDefault("server.enable_cors", true)
-	viper.SetDefault("zmq.address", "tcp://127.0.0.1")
-	viper.SetDefault("zmq.port", 5555)
-
-	// Integrations defaults
-	viper.SetDefault("integrations.whatsapp.enabled", false)
-	viper.SetDefault("integrations.telegram.enabled", false)
-
-	// GoBE defaults
-	viper.SetDefault("gobe.base_url", "http://localhost:8080")
-	viper.SetDefault("gobe.timeout", 30)
-	viper.SetDefault("gobe.enabled", true)
-
-	// gobe defaults
-	viper.SetDefault("gobe.path", "gobeCtl")
-	viper.SetDefault("gobe.namespace", "default")
-	viper.SetDefault("gobe.enabled", true)
-
-	// Check for dev mode
-	devMode := false //os.Getenv("DEV_MODE") == "true"
-
-	// Read environment variables
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("error reading config file: %w", err)
-	}
-
-	// Set dev mode after reading config
-	viper.Set("dev_mode", devMode)
-
-	// Expand environment variables or set dev defaults
-	if token := os.Getenv("DISCORD_BOT_TOKEN"); token != "" {
-		viper.Set("discord.bot.token", token)
-	} else if devMode {
-		viper.Set("discord.bot.token", "dev_token")
-	}
-
-	// Discord Bot configuration
-	if appID := os.Getenv("DISCORD_APPLICATION_ID"); appID != "" {
-		viper.Set("discord.bot.application_id", appID)
-	} else if devMode {
-		viper.Set("discord.bot.application_id", "dev_application_id")
-	}
-
-	// Discord OAuth2 configuration
-	if clientID := os.Getenv("DISCORD_CLIENT_ID"); clientID != "" {
-		viper.Set("discord.oauth2.client_id", clientID)
-	}
-	if clientSecret := os.Getenv("DISCORD_CLIENT_SECRET"); clientSecret != "" {
-		viper.Set("discord.oauth2.client_secret", clientSecret)
-	}
-	if ngrokURL := os.Getenv("NGROK_URL"); ngrokURL != "" {
-		viper.Set("discord.oauth2.redirect_uri", ngrokURL+"/discord/oauth2/authorize")
-		gl.Log("debug", "Using ngrok URL for Discord OAuth2 redirect:", ngrokURL)
-	}
-
-	// Set default OAuth2 scopes
-	viper.SetDefault("discord.oauth2.scopes", []string{"bot", "applications.commands"})
-
-	// WhatsApp configuration
-	if waToken := os.Getenv("WHATSAPP_ACCESS_TOKEN"); waToken != "" {
-		viper.Set("integrations.whatsapp.access_token", waToken)
-	}
-	if waVerify := os.Getenv("WHATSAPP_VERIFY_TOKEN"); waVerify != "" {
-		viper.Set("integrations.whatsapp.verify_token", waVerify)
-	}
-	if waPhone := os.Getenv("WHATSAPP_PHONE_NUMBER_ID"); waPhone != "" {
-		viper.Set("integrations.whatsapp.phone_number_id", waPhone)
-	}
-	if waWebhook := os.Getenv("WHATSAPP_WEBHOOK_URL"); waWebhook != "" {
-		viper.Set("integrations.whatsapp.webhook_url", waWebhook)
-	}
-
-	// Telegram configuration
-	if tgToken := os.Getenv("TELEGRAM_BOT_TOKEN"); tgToken != "" {
-		viper.Set("integrations.telegram.bot_token", tgToken)
-	}
-	if tgWebhook := os.Getenv("TELEGRAM_WEBHOOK_URL"); tgWebhook != "" {
-		viper.Set("integrations.telegram.webhook_url", tgWebhook)
-	}
-
-	// 🔗 GoBE Backend Integration
-	if gobeURL := os.Getenv("GOBE_BASE_URL"); gobeURL != "" {
-		viper.Set("gobe.base_url", gobeURL)
-		viper.Set("gobe.enabled", true)
-	}
-	if gobeKey := os.Getenv("GOBE_API_KEY"); gobeKey != "" {
-		viper.Set("gobe.api_key", gobeKey)
-	}
-
-	// ⚙️ gobe K8s Integration
-	if gobePath := os.Getenv("KBXCTL_PATH"); gobePath != "" {
-		viper.Set("gobe.path", gobePath)
-		viper.Set("gobe.enabled", true)
-	}
-	if k8sNamespace := os.Getenv("K8S_NAMESPACE"); k8sNamespace != "" {
-		viper.Set("gobe.namespace", k8sNamespace)
-	}
-	if kubeconfig := os.Getenv("KUBECONFIG"); kubeconfig != "" {
-		viper.Set("gobe.kubeconfig", kubeconfig)
-	}
-
-	// For now, always use dev mode for LLM to focus on Discord testing
-	geminiKey := os.Getenv("GEMINI_API_KEY")
-	openaiKey := os.Getenv("OPENAI_API_KEY")
-
-	// log.Printf("🔍 Config Debug - Environment Variables:")
-	// log.Printf("   GEMINI_API_KEY: '%s' (len=%d)", geminiKey, len(geminiKey))
-	// log.Printf("   OPENAI_API_KEY: '%s' (len=%d)", openaiKey, len(openaiKey))
-
-	if geminiKey != "" && geminiKey != "dev_api_key" {
-		viper.Set("llm.api_key", geminiKey)
-		viper.Set("llm.provider", "gemini")
-		// log.Printf("   ✅ Using Gemini with key: %s...", geminiKey[:10])
-		gl.Log("debug", fmt.Sprintf("LLM Config - Using Gemini with key: %s...", geminiKey[:10]))
-	} else if openaiKey != "" && openaiKey != "dev_api_key" {
-		viper.Set("llm.api_key", openaiKey)
-		viper.Set("llm.provider", "openai")
-		gl.Log("debug", fmt.Sprintf("LLM Config - Using OpenAI with key: %s...", openaiKey[:10]))
-	} else {
-		viper.Set("llm.api_key", "dev_api_key")
-		viper.Set("llm.provider", "dev")
-		gl.Log("warn", "LLM Config - Using DEV mode (no valid API keys found)")
-	}
-
-	viper.SetConfigName(fmt.Sprintf("config/%s.json", configType))
-	configInstance, exists := getFromConfigMap[C](configType)
-	if !exists {
-		return nil, fmt.Errorf("no constructor found for config type: %s", configType)
-	}
-
-	// Unmarshal into the provided config struct
-	if err := viper.UnmarshalKey("", &configInstance); err != nil {
-		return nil, fmt.Errorf("error unmarshaling %s: %w", configType, err)
-	}
-
-	// Force dev mode values after unmarshal if in dev mode
-	if devMode {
-		inter := reflect.ValueOf(configInstance).Interface()
-		switch reflect.TypeFor[C]().String() {
-		case "*LLMConfig":
-			inter.(*LLMConfig).DevMode = true
-		case "*DiscordConfig":
-			inter.(*DiscordConfig).DevMode = true
-		case "*GoBeConfig":
-			inter.(*GoBeConfig).DevMode = true
-		case "*GobeCtlConfig":
-			inter.(*GobeCtlConfig).DevMode = true
-		}
-		// Set default values for dev models
-		switch configType {
-		case "llm_config":
-			// Set dev defaults for LLM
-			viper.Set("llm.model", "gpt-3.5-turbo")
-			viper.Set("llm.max_tokens", 500)
-			viper.Set("llm.temperature", 0.7)
-			if inter.(*LLMConfig).APIKey == "" || inter.(*LLMConfig).APIKey == "dev_api_key" {
-				inter.(*LLMConfig).APIKey = "dev_api_key"
-			}
-			gl.Log("notice", "LLM Config - Model:", inter.(*LLMConfig).Model, "MaxTokens:", inter.(*LLMConfig).MaxTokens, "Temperature:", inter.(*LLMConfig).Temperature)
-		case "discord_config":
-			if inter.(*DiscordConfig).Bot.Token == "" || inter.(*DiscordConfig).Bot.Token == "dev_token" {
-				inter.(*DiscordConfig).Bot.Token = "dev_token"
-			}
-			if inter.(*DiscordConfig).Bot.ApplicationID == "" || inter.(*DiscordConfig).Bot.ApplicationID == "dev_application_id" {
-				inter.(*DiscordConfig).Bot.ApplicationID = "dev_application_id"
-			}
-			gl.Log("info", "Discord Config - Bot Token set for Dev Mode")
-		case "gobe_config":
-			if inter.(*GoBeConfig).BaseURL == "" {
-				inter.(*GoBeConfig).BaseURL = "http://localhost:8080"
-			}
-			if inter.(*GoBeConfig).APIKey == "" || inter.(*GoBeConfig).APIKey == "dev_api_key" {
-				inter.(*GoBeConfig).APIKey = "dev_api_key"
-			}
-			gl.Log("info", "GoBE Config - BaseURL:", inter.(*GoBeConfig).BaseURL)
-		case "gobe_ctl_config":
-			if inter.(*GobeCtlConfig).Path == "" {
-				inter.(*GobeCtlConfig).Path = "gobeCtl"
-			}
-			if inter.(*GobeCtlConfig).Namespace == "" {
-				inter.(*GobeCtlConfig).Namespace = "default"
-			}
-			gl.Log("notice", "GoBE CTL Config - Path:", inter.(*GobeCtlConfig).Path, "Namespace:", inter.(*GobeCtlConfig).Namespace)
-		}
-		configInstance = inter.(C)
-	}
-
-	return configInstance, nil
+	return *configInstance, nil
 }
 
 func GetConfigFilePath() string {
@@ -588,4 +391,11 @@ func GetConfigFilePath() string {
 		gl.Log("fatal", "Failed to determine config path, using current directory:", err)
 	}
 	return cfgPath
+}
+
+func GetEnvOrDefault(key, defaultVal string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultVal
 }

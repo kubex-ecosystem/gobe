@@ -49,8 +49,7 @@ func NewAdapter(config config.DiscordConfig, purpose string) (*Adapter, error) {
 	case "chatbot", "bot":
 		prefix = "Bot"
 	default:
-		// prefix = "Bearer"
-		prefix = "Bot"
+		prefix = "Bearer"
 	}
 	session, err := discordgo.New(strings.Join([]string{prefix, config.Bot.Token}, " "))
 	if err != nil {
@@ -58,25 +57,16 @@ func NewAdapter(config config.DiscordConfig, purpose string) (*Adapter, error) {
 	}
 
 	// Set intents
-	session.Identify.Intents = discordgo.IntentsGuildMessages |
-		discordgo.IntentsDirectMessages |
-		discordgo.IntentsMessageContent
-
-	application := session.State.Application
-	if application == nil {
-		application, err = session.Application("@me")
-		if err != nil {
-			gl.Log("error", "Failed to fetch application info", err)
-			return nil, fmt.Errorf("failed to fetch application info: %w", err)
-		}
-	}
+	// session.Identify.Intents = discordgo.IntentsGuildMessages |
+	// 	discordgo.IntentsDirectMessages |
+	// 	discordgo.IntentsMessageContent
 
 	// Create the adapter instance
 
 	adapter := &Adapter{
 		api:         &session.Identify,
 		invite:      nil,
-		application: application,
+		application: session.State.Application,
 		session:     session,
 		config:      config,
 	}
@@ -84,10 +74,10 @@ func NewAdapter(config config.DiscordConfig, purpose string) (*Adapter, error) {
 	// Register event handlers
 	session.AddHandler(adapter.messageCreateHandler)
 	session.AddHandler(adapter.readyHandler)
-	session.Identify.Intents |= discordgo.IntentsGuilds
-	session.Identify.Intents |= discordgo.IntentsGuildMembers
-	session.Identify.Intents |= discordgo.IntentsGuildPresences
-	session.Identify.Intents |= discordgo.IntentsGuildVoiceStates
+	// session.Identify.Intents |= discordgo.IntentsGuilds
+	// session.Identify.Intents |= discordgo.IntentsGuildMembers
+	// session.Identify.Intents |= discordgo.IntentsGuildPresences
+	// session.Identify.Intents |= discordgo.IntentsGuildVoiceStates
 
 	return adapter, nil
 }

@@ -369,6 +369,34 @@ func GetLogger[T any](obj *T) GLog[l.Logger] {
 	}
 }
 func LogObjLogger[T any](obj *T, logType string, messages ...any) {
+	defer func() {
+		if r := recover(); r != nil {
+			if g == nil || Logger == nil {
+				_ = GetLogger[l.Logger](nil)
+			}
+			g.ErrorCtx(fmt.Sprintf("LogObjLogger panic: %v", r), map[string]any{
+				"context":  "LogObjLogger",
+				"logType":  logType,
+				"object":   obj,
+				"msg":      messages,
+				"showData": getShowTrace(),
+			})
+		}
+	}()
+	if g == nil || Logger == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	if obj == nil {
+		g.ErrorCtx("LogObjLogger: obj is nil", map[string]any{
+			"context":  "LogObjLogger",
+			"logType":  logType,
+			"object":   obj,
+			"msg":      messages,
+			"showData": getShowTrace(),
+		})
+		return
+	}
+
 	lgr := GetLogger(obj)
 	if lgr == nil {
 		g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{

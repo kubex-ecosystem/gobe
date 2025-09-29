@@ -20,6 +20,9 @@ func BootstrapMainConfig(path string, initArgs *t.InitArgs) error {
 	var args t.InitArgs
 	if initArgs != nil {
 		args = *initArgs
+		if args.ConfigFile != "" {
+			args.ConfigFile = path
+		}
 	} else {
 		args = t.InitArgs{
 			ConfigFile:     path,
@@ -81,11 +84,11 @@ func defaultConfig(initArgs t.InitArgs) Config {
 		ConfigFilePath: initArgs.ConfigFile,
 		Discord: DiscordConfig{
 			Bot: struct {
-				ApplicationID string   `json:"application_id"`
-				Token         string   `json:"token"`
-				Permissions   []string `json:"permissions"`
-				Intents       []string `json:"intents"`
-				Channels      []string `json:"channels"`
+				ApplicationID string   `json:"application_id,omitempty"`
+				Token         string   `json:"token,omitempty"`
+				Permissions   []string `json:"permissions,omitempty"`
+				Intents       []string `json:"intents,omitempty"`
+				Channels      []string `json:"channels,omitempty"`
 			}{
 				ApplicationID: "",
 				Token:         "",
@@ -94,11 +97,11 @@ func defaultConfig(initArgs t.InitArgs) Config {
 				Channels:      []string{},
 			},
 			OAuth2: struct {
-				PublicKey    string   `json:"public_key"`
-				ClientID     string   `json:"client_id"`
-				ClientSecret string   `json:"client_secret"`
-				RedirectURI  string   `json:"redirect_uri"`
-				Scopes       []string `json:"scopes"`
+				PublicKey    string   `json:"public_key,omitempty"`
+				ClientID     string   `json:"client_id,omitempty"`
+				ClientSecret string   `json:"client_secret,omitempty"`
+				RedirectURI  string   `json:"redirect_uri,omitempty"`
+				Scopes       []string `json:"scopes,omitempty"`
 			}{
 				ClientID:     "",
 				ClientSecret: "",
@@ -106,23 +109,23 @@ func defaultConfig(initArgs t.InitArgs) Config {
 				Scopes:       []string{"bot", "applications.commands"},
 			},
 			Webhook: struct {
-				URL    string `json:"url"`
-				Secret string `json:"secret"`
+				URL    string `json:"url,omitempty"`
+				Secret string `json:"secret,omitempty"`
 			}{
 				URL:    "",
 				Secret: "",
 			},
 			RateLimits: struct {
-				RequestsPerMinute int `json:"requests_per_minute"`
-				BurstSize         int `json:"burst_size"`
+				RequestsPerMinute int `json:"requests_per_minute,omitempty"`
+				BurstSize         int `json:"burst_size,omitempty"`
 			}{
 				RequestsPerMinute: 60,
 				BurstSize:         10,
 			},
 			Features: struct {
-				AutoResponse            bool `json:"auto_response"`
-				TaskCreation            bool `json:"task_creation"`
-				CrossPlatformForwarding bool `json:"cross_platform_forwarding"`
+				AutoResponse            bool `json:"auto_response,omitempty"`
+				TaskCreation            bool `json:"task_creation,omitempty"`
+				CrossPlatformForwarding bool `json:"cross_platform_forwarding,omitempty"`
 			}{
 				AutoResponse:            true,
 				TaskCreation:            true,

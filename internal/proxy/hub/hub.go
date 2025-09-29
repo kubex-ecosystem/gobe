@@ -18,6 +18,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	"github.com/spf13/viper"
 )
 
 type DiscordMCPHub struct {
@@ -122,7 +123,11 @@ func (h *DiscordMCPHub) StartDiscordBot() error {
 
 	// ✅ Verificar token antes de conectar
 	if h.config.Discord.Bot.Token == "" {
-		return fmt.Errorf("discord bot token is empty")
+		if viper.GetString("discord.bot.token") == "" {
+			gl.Log("error", "Discord bot token is empty in config")
+			return fmt.Errorf("discord bot token is empty")
+		}
+		h.config.Discord.Bot.Token = viper.GetString("discord.bot.token")
 	}
 
 	// ✅ Validar se o token tem o formato correto
