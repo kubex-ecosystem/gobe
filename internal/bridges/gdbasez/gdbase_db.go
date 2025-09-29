@@ -67,7 +67,6 @@ func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger 
 		gl.Log("error", "❌ Erro ao inicializar DBConfig: Nenhum banco de dados encontrado")
 		return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig: Nenhum banco de dados encontrado")
 	}
-	gl.Log("success", fmt.Sprintf("Banco de dados encontrado: %v", dbConfig.Databases))
 	return dbConfig, nil
 }
 

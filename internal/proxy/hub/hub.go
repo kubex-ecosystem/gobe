@@ -131,13 +131,13 @@ func (h *DiscordMCPHub) StartDiscordBot() error {
 		gl.Log("warn", "Discord token may be invalid format. Expected 'Bot [token]' or raw token starting with 'MTM'")
 	}
 
-	gl.Log("info", fmt.Sprintf("🔑 Using Discord token: %s...", h.config.Discord.Bot.Token[:10]))
+	gl.Log("debug", fmt.Sprintf("🔑 Using Discord token: %s...", h.config.Discord.Bot.Token[:10]))
 
 	h.StartMCPServer()
 
 	// 📨 Registrar handler de mensagens ANTES de conectar
 	h.discordAdapter.OnMessage(h.handleDiscordMessage)
-	gl.Log("info", "✅ Message handler registered")
+	gl.Log("notice", "✅ Message handler registered")
 
 	if err := h.discordAdapter.Connect(); err != nil {
 		gl.Log("error", fmt.Sprintf("Discord adapter connection error: %v", err))
@@ -201,10 +201,10 @@ func (h *DiscordMCPHub) handleDiscordMessage(msg discord.Message) {
 	// For other messages, check intelligent triage first
 	shouldProcess, processType := h.intelligentTriage(msg)
 	if shouldProcess {
-		gl.Log("info", "🎯 Triagem detectou: %s - processando com LLM", processType)
+		gl.Log("notice", "🎯 Triagem detectou: %s - processando com LLM", processType)
 		h.ProcessMessageWithLLM(context.Background(), msg)
 	} else {
-		gl.Log("info", "⏭️ Mensagem ignorada pela triagem inteligente: %s", msg.Content)
+		gl.Log("notice", "⏭️ Mensagem ignorada pela triagem inteligente: %s", msg.Content)
 	}
 }
 
@@ -222,13 +222,13 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 	}
 
 	//log.Printf("🧠 Processando mensagem com LLM: %s", msg.Content)
-	gl.Log("info", "🧠 Processando mensagem com LLM: %s", msg.Content)
+	gl.Log("notice", "🧠 Processando mensagem com LLM: %s", msg.Content)
 
 	// Step 1: Triagem inteligente - decidir se deve responder
 	shouldProcess, processType := h.intelligentTriage(msg)
 
 	if !shouldProcess {
-		gl.Log("info", "⏭️ Mensagem ignorada pela triagem: não requer resposta")
+		gl.Log("notice", "⏭️ Mensagem ignorada pela triagem: não requer resposta")
 		return nil
 	}
 
@@ -249,7 +249,7 @@ func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interfac
 	case "casual":
 		return h.processCasualMessage(ctx, msg)
 	default:
-		gl.Log("info", "🤷 Tipo de processamento não reconhecido: %s", processType)
+		gl.Log("warn", "🤷 Tipo de processamento não reconhecido: %s", processType)
 		return nil
 	}
 }
@@ -345,13 +345,13 @@ func (h *DiscordMCPHub) processCommandMessage(ctx context.Context, msg discord.M
 		return errors.New("context is nil")
 	}
 
-	gl.Log("info", "⚡ Processando comando: %s", msg.Content)
+	gl.Log("notice", "⚡ Processando comando: %s", msg.Content)
 	// Comandos já são tratados antes do processamento LLM
 	return nil
 }
 
 func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg discord.Message) error {
-	gl.Log("info", "❓ Processando pergunta: %s", msg.Content)
+	gl.Log("notice", "❓ Processando pergunta: %s", msg.Content)
 
 	// Analyze message with LLM
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
@@ -380,7 +380,7 @@ func (h *DiscordMCPHub) processQuestionMessage(ctx context.Context, msg discord.
 }
 
 func (h *DiscordMCPHub) processTaskMessage(ctx context.Context, msg discord.Message) error {
-	gl.Log("info", "📋 Processando solicitação de tarefa: %s", msg.Content)
+	gl.Log("notice", "📋 Processando solicitação de tarefa: %s", msg.Content)
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
@@ -411,7 +411,7 @@ func (h *DiscordMCPHub) processTaskMessage(ctx context.Context, msg discord.Mess
 }
 
 func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg discord.Message) error {
-	gl.Log("info", "🔍 Processando pedido de análise: %s", msg.Content)
+	gl.Log("notice", "🔍 Processando pedido de análise: %s", msg.Content)
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
@@ -441,7 +441,7 @@ func (h *DiscordMCPHub) processAnalysisMessage(ctx context.Context, msg discord.
 }
 
 func (h *DiscordMCPHub) processCasualMessage(ctx context.Context, msg discord.Message) error {
-	gl.Log("info", "💬 Processando mensagem casual: %s", msg.Content)
+	gl.Log("notice", "💬 Processando mensagem casual: %s", msg.Content)
 
 	analysis, err := h.llmClient.AnalyzeMessage(ctx, llm.AnalysisRequest{
 		Platform: "discord",
@@ -498,7 +498,7 @@ func (h *DiscordMCPHub) createTaskFromMessage(msg discord.Message, analysis *llm
 }
 
 func (h *DiscordMCPHub) processSystemCommandMessage(ctx context.Context, msg discord.Message) error {
-	gl.Log("info", "🔧 Processando comando de sistema: %s", msg.Content)
+	gl.Log("notice", "🔧 Processando comando de sistema: %s", msg.Content)
 
 	content := strings.ToLower(msg.Content)
 	userID := msg.Author.ID

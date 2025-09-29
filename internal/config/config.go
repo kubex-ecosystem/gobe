@@ -357,11 +357,11 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 	}
 
 	if _, err := os.Stat(envFilePath); os.IsNotExist(err) {
-		gl.Log("info", ".env file not found, skipping loading environment variables from file")
+		gl.Log("debug", ".env file not found, skipping loading environment variables from file")
 		goto postEnvLoad
 	}
 
-	gl.Log("info", "Loading settings from .env file")
+	gl.Log("debug", "Loading settings from .env file")
 	if err := godotenv.Load(envFilePath); err != nil {
 		// return nil, fmt.Errorf("error loading %s file: %w", envFilePath, err)
 		gl.Log("fatal", fmt.Sprintf("error loading %s file: %v", envFilePath, err))
@@ -369,13 +369,13 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 	gl.Log("info", "Loaded environment variables from .env file")
 
 postEnvLoad:
-	gl.Log("info", "Using config path:", configPath)
+	gl.Log("debug", "Using config path:", configPath)
 	if configType == "" {
 		configType = "main_config"
-		gl.Log("info", "No config type provided, using default: main_config")
+		gl.Log("debug", "No config type provided, using default: main_config")
 	}
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		gl.Log("info", "No config.json file found, skipping environment variable loading")
+		gl.Log("warn", "No config.json file found, skipping environment variable loading")
 	} else if os.IsPermission(err) {
 		return nil, fmt.Errorf("permission denied to read config.json file: %w", err)
 	}
@@ -442,7 +442,7 @@ postEnvLoad:
 	}
 	if ngrokURL := os.Getenv("NGROK_URL"); ngrokURL != "" {
 		viper.Set("discord.oauth2.redirect_uri", ngrokURL+"/discord/oauth2/authorize")
-		gl.Log("info", "Using ngrok URL for Discord OAuth2 redirect:", ngrokURL)
+		gl.Log("debug", "Using ngrok URL for Discord OAuth2 redirect:", ngrokURL)
 	}
 
 	// Set default OAuth2 scopes
@@ -503,11 +503,11 @@ postEnvLoad:
 		viper.Set("llm.api_key", geminiKey)
 		viper.Set("llm.provider", "gemini")
 		// log.Printf("   ✅ Using Gemini with key: %s...", geminiKey[:10])
-		gl.Log("info", fmt.Sprintf("LLM Config - Using Gemini with key: %s...", geminiKey[:10]))
+		gl.Log("debug", fmt.Sprintf("LLM Config - Using Gemini with key: %s...", geminiKey[:10]))
 	} else if openaiKey != "" && openaiKey != "dev_api_key" {
 		viper.Set("llm.api_key", openaiKey)
 		viper.Set("llm.provider", "openai")
-		gl.Log("info", fmt.Sprintf("LLM Config - Using OpenAI with key: %s...", openaiKey[:10]))
+		gl.Log("debug", fmt.Sprintf("LLM Config - Using OpenAI with key: %s...", openaiKey[:10]))
 	} else {
 		viper.Set("llm.api_key", "dev_api_key")
 		viper.Set("llm.provider", "dev")
@@ -548,7 +548,7 @@ postEnvLoad:
 			if inter.(*LLMConfig).APIKey == "" || inter.(*LLMConfig).APIKey == "dev_api_key" {
 				inter.(*LLMConfig).APIKey = "dev_api_key"
 			}
-			gl.Log("info", "LLM Config - Model:", inter.(*LLMConfig).Model, "MaxTokens:", inter.(*LLMConfig).MaxTokens, "Temperature:", inter.(*LLMConfig).Temperature)
+			gl.Log("notice", "LLM Config - Model:", inter.(*LLMConfig).Model, "MaxTokens:", inter.(*LLMConfig).MaxTokens, "Temperature:", inter.(*LLMConfig).Temperature)
 		case "discord_config":
 			if inter.(*DiscordConfig).Bot.Token == "" || inter.(*DiscordConfig).Bot.Token == "dev_token" {
 				inter.(*DiscordConfig).Bot.Token = "dev_token"
@@ -572,7 +572,7 @@ postEnvLoad:
 			if inter.(*GobeCtlConfig).Namespace == "" {
 				inter.(*GobeCtlConfig).Namespace = "default"
 			}
-			gl.Log("info", "GoBE CTL Config - Path:", inter.(*GobeCtlConfig).Path, "Namespace:", inter.(*GobeCtlConfig).Namespace)
+			gl.Log("notice", "GoBE CTL Config - Path:", inter.(*GobeCtlConfig).Path, "Namespace:", inter.(*GobeCtlConfig).Namespace)
 		}
 		configInstance = inter.(C)
 	}

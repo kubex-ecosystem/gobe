@@ -72,7 +72,7 @@ func writeDefaultConfig(initArgs t.InitArgs) error {
 		return fmt.Errorf("failed to write default config: %w", err)
 	}
 
-	gl.Log("info", fmt.Sprintf("Default config stored at %s", initArgs.ConfigFile))
+	gl.Log("notice", fmt.Sprintf("Default config stored at %s", initArgs.ConfigFile))
 	return nil
 }
 

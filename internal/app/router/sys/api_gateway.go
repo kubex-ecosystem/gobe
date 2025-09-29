@@ -76,7 +76,7 @@ func (wm *WebhookManager) TriggerWebhook(event string, payload interface{}) erro
 }
 
 func (gateway *APIGateway) HandleRegisterDocument(c *gin.Context) {
-	logger.Log("info", "HandleRegisterDocument called")
+	logger.Log("debug", "HandleRegisterDocument called")
 	// Simulate document registration logic
 	payload := map[string]string{"message": "Document registered successfully"}
 	if err := gateway.WebhookManager.TriggerWebhook("register", payload); err != nil {
@@ -86,7 +86,7 @@ func (gateway *APIGateway) HandleRegisterDocument(c *gin.Context) {
 }
 
 func (gateway *APIGateway) HandleApproveDocument(c *gin.Context) {
-	logger.Log("info", "HandleApproveDocument called")
+	logger.Log("debug", "HandleApproveDocument called")
 	// Simulate document approval logic
 	payload := map[string]string{"message": "Document approved successfully"}
 	if err := gateway.WebhookManager.TriggerWebhook("approve", payload); err != nil {
@@ -97,18 +97,18 @@ func (gateway *APIGateway) HandleApproveDocument(c *gin.Context) {
 
 func (gateway *APIGateway) HandleSignDocument(c *gin.Context) {
 	// Implementação da lógica para assinar documentos
-	logger.Log("info", "HandleSignDocument called")
+	logger.Log("debug", "HandleSignDocument called")
 	c.JSON(http.StatusOK, gin.H{"message": "Document signed successfully"})
 }
 
 func (gateway *APIGateway) HandleGetDocumentHistory(c *gin.Context) {
 	// Implementação da lógica para obter histórico de documentos
-	logger.Log("info", "HandleGetDocumentHistory called")
+	logger.Log("debug", "HandleGetDocumentHistory called")
 	c.JSON(http.StatusOK, gin.H{"message": "Document history retrieved successfully"})
 }
 
 func (gateway *APIGateway) HandleDeleteDocumentState(c *gin.Context) {
 	// Implementação da lógica para deletar estado de documentos
-	logger.Log("info", "HandleDeleteDocumentState called")
+	logger.Log("debug", "HandleDeleteDocumentState called")
 	c.JSON(http.StatusOK, gin.H{"message": "Document state deleted successfully"})
 }

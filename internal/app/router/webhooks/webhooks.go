@@ -52,10 +52,10 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 		return nil
 	}
 	url := msg.GetRabbitMQURL(dbConfig)
-	gl.Log("info", fmt.Sprintf("RabbitMQ URL: %s", url))
+	gl.Log("debug", fmt.Sprintf("RabbitMQ URL: %s", url))
 	var rabbitMQConn *amqp.Connection
 	if url != "" {
-		gl.Log("info", fmt.Sprintf("Connecting to RabbitMQ at %s", url))
+		gl.Log("debug", fmt.Sprintf("Connecting to RabbitMQ at %s", url))
 		rabbitMQConn, err = amqp.Dial(url)
 		if err != nil {
 			gl.Log("error", fmt.Sprintf("Connection failed: %v", err))

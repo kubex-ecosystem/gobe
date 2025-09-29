@@ -52,9 +52,9 @@ func NewClient(config config.LLMConfig) (*Client, error) {
 
 	gl.Log("info", "Initializing LLM Client with configuration:")
 	if len(config.APIKey) > 10 {
-		gl.Log("info", fmt.Sprintf("   APIKey: %s...", config.APIKey[:10]))
+		gl.Log("debug", fmt.Sprintf("   APIKey: %s...", config.APIKey[:10]))
 	} else {
-		gl.Log("info", fmt.Sprintf("   APIKey: '%s' (len=%d)", config.APIKey, len(config.APIKey)))
+		gl.Log("debug", fmt.Sprintf("   APIKey: '%s' (len=%d)", config.APIKey, len(config.APIKey)))
 	}
 	gl.Log("info", fmt.Sprintf("   Model: %s", config.Model))
 	gl.Log("info", fmt.Sprintf("   Temperature: %.2f", config.Temperature))
