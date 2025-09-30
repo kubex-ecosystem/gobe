@@ -10,20 +10,37 @@ import (
 	"time"
 
 	gb "github.com/kubex-ecosystem/gobe"
-	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
 	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
-func ServiceCmdList() []*cobra.Command {
-	return []*cobra.Command{
+func ServiceCmd() *cobra.Command {
+	shortDesc := "Service management commands"
+	longDesc := "Service management commands for GoBE or any other service"
+	serviceCmd := &cobra.Command{
+		Use:         "service",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"svc", "serv", "backend", "server"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := cmd.Help(); err != nil {
+				gl.Log("error", "Failed to display help: ", err.Error())
+			}
+		},
+	}
+
+	serviceCmd.AddCommand([]*cobra.Command{
 		startCommand(),
 		stopCommand(),
 		restartCommand(),
 		statusCommand(),
 		logsCommand(),
-	}
+	}...)
+
+	return serviceCmd
 }
 
 func startCommand() *cobra.Command {
@@ -184,16 +201,16 @@ func logsCommand() *cobra.Command {
 
 // ServiceStatus represents the current status of the GoBE service
 type ServiceStatus struct {
-	Name           string                 `json:"name"`
-	Status         string                 `json:"status"`
-	Uptime         string                 `json:"uptime,omitempty"`
-	Version        string                 `json:"version"`
-	Port           string                 `json:"port,omitempty"`
-	HealthChecks   map[string]string      `json:"health_checks"`
-	MCPTools       []string               `json:"mcp_tools,omitempty"`
-	SystemInfo     map[string]interface{} `json:"system_info"`
-	LastCheck      time.Time              `json:"last_check"`
-	ResponseTime   string                 `json:"response_time,omitempty"`
+	Name         string                 `json:"name"`
+	Status       string                 `json:"status"`
+	Uptime       string                 `json:"uptime,omitempty"`
+	Version      string                 `json:"version"`
+	Port         string                 `json:"port,omitempty"`
+	HealthChecks map[string]string      `json:"health_checks"`
+	MCPTools     []string               `json:"mcp_tools,omitempty"`
+	SystemInfo   map[string]interface{} `json:"system_info"`
+	LastCheck    time.Time              `json:"last_check"`
+	ResponseTime string                 `json:"response_time,omitempty"`
 }
 
 func getServiceStatus(name, format string, detailed, jsonOutput bool) {

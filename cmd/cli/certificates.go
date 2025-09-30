@@ -19,6 +19,7 @@ func CertificatesCmdList() *cobra.Command {
 		Use:         "certificates",
 		Short:       shortDesc,
 		Long:        longDesc,
+		Aliases:     []string{"cert", "certificate", "certs"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()

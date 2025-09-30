@@ -24,11 +24,25 @@ var (
 )
 
 func ConfigCommand() *cobra.Command {
+	shortDesc := "Configuration management commands"
+	longDesc := `Manage application configuration including getting, setting,
+listing, initializing, resetting, and validating configuration values.`
 	cmd := &cobra.Command{
 		Use:   "config",
-		Short: "Configuration management commands",
-		Long: `Manage GoBE configuration including reading, writing,
-and validating configuration values.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"cfg", "configuration", "conf",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := cmd.Help(); err != nil {
+				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+			}
+		},
 	}
 
 	cmd.AddCommand(configGetCmd())
@@ -42,11 +56,20 @@ and validating configuration values.`,
 }
 
 func configGetCmd() *cobra.Command {
+	shortDesc := "Get configuration value"
+	longDesc := `Get a specific configuration value by key.`
 	cmd := &cobra.Command{
 		Use:   "get [key]",
-		Short: "Get configuration value",
-		Long:  `Get a specific configuration value by key.`,
-		Args:  cobra.RangeArgs(0, 1),
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"show", "get-config", "cfg-get",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := configKey
 			if len(args) > 0 {
@@ -95,11 +118,20 @@ func configGetCmd() *cobra.Command {
 }
 
 func configSetCmd() *cobra.Command {
+	shortDesc := "Set configuration value"
+	longDesc := `Set a specific configuration value by key.`
 	cmd := &cobra.Command{
 		Use:   "set <key> <value>",
-		Short: "Set configuration value",
-		Long:  `Set a configuration value for the specified key.`,
-		Args:  cobra.ExactArgs(2),
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"update", "set-config", "cfg-set",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key := args[0]
 			value := args[1]
@@ -141,10 +173,20 @@ func configSetCmd() *cobra.Command {
 }
 
 func configListCmd() *cobra.Command {
+	shortDesc := "List all configuration values"
+	longDesc := `List all configuration values in the current configuration file.`
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all configuration values",
-		Long:  `List all configuration keys and values.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"ls", "show-all", "cfg-list",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Listing all configuration values...")
 
@@ -176,10 +218,20 @@ func configListCmd() *cobra.Command {
 }
 
 func configInitCmd() *cobra.Command {
+	shortDesc := "Initialize configuration file"
+	longDesc := `Create a new configuration file with default values.`
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Initialize configuration file",
-		Long:  `Create a new configuration file with default values.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"initialize", "create-config", "cfg-init",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Initializing configuration...")
 
@@ -232,10 +284,20 @@ func configInitCmd() *cobra.Command {
 }
 
 func configValidateCmd() *cobra.Command {
+	shortDesc := "Validate configuration file"
+	longDesc := `Validate the current configuration file for correctness and completeness.`
 	cmd := &cobra.Command{
 		Use:   "validate",
-		Short: "Validate configuration file",
-		Long:  `Validate the configuration file format and required values.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"check", "validate-config", "cfg-validate",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Validating configuration...")
 
@@ -275,10 +337,21 @@ func configValidateCmd() *cobra.Command {
 }
 
 func configResetCmd() *cobra.Command {
+	shortDesc := "Reset configuration to defaults"
+	longDesc := `Reset the configuration file to default values, overwriting existing settings.`
 	cmd := &cobra.Command{
 		Use:   "reset",
-		Short: "Reset configuration to defaults",
-		Long:  `Reset configuration file to default values.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"restore", "reset-config", "cfg-reset",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
+
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("warn", "Resetting configuration to defaults...")
 

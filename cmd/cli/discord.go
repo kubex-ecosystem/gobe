@@ -8,8 +8,8 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/spf13/cobra"
 )
 
@@ -24,11 +24,23 @@ var (
 )
 
 func DiscordCommand() *cobra.Command {
+	shortDesc := "Discord bot management commands"
+	longDesc := `Manage Discord bot operations including sending messages,
+checking status, and listing channels.`
+
 	cmd := &cobra.Command{
 		Use:   "discord",
-		Short: "Discord bot management and messaging commands",
-		Long: `Manage Discord bot operations including sending messages,
-checking status, and listing channels.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"dc", "discord-bot", "discordbot",
+		},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := cmd.Help(); err != nil {
+				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+			}
+		},
 	}
 
 	cmd.AddCommand(discordSendCmd())
@@ -40,11 +52,22 @@ checking status, and listing channels.`,
 }
 
 func discordSendCmd() *cobra.Command {
+	shortDesc := "Send a message to a Discord channel"
+	long := `Send a message to a specified Discord channel.
+Supports both text messages and file attachments.`
+
 	cmd := &cobra.Command{
 		Use:   "send",
-		Short: "Send a message to a Discord channel",
-		Long: `Send a message to a specified Discord channel.
-Supports both text messages and file attachments.`,
+		Short: shortDesc,
+		Long:  long,
+		Aliases: []string{
+			"message", "msg", "post",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			long,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Sending Discord message...")
 
@@ -89,10 +112,20 @@ Supports both text messages and file attachments.`,
 }
 
 func discordStatusCmd() *cobra.Command {
+	shortDesc := "Check Discord bot status"
+	longDesc := `Check the current status of the Discord bot including connection state.`
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Check Discord bot connection status",
-		Long:  `Check the current status of the Discord bot connection.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"state", "info", "check",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Checking Discord bot status...")
 
@@ -104,9 +137,9 @@ func discordStatusCmd() *cobra.Command {
 			// Try to connect
 			err = adapter.Connect()
 			status := map[string]interface{}{
-				"connected":  err == nil,
-				"timestamp":  time.Now(),
-				"dev_mode":   discordDevMode,
+				"connected": err == nil,
+				"timestamp": time.Now(),
+				"dev_mode":  discordDevMode,
 			}
 
 			if err != nil {
@@ -137,10 +170,21 @@ func discordStatusCmd() *cobra.Command {
 }
 
 func discordChannelsCmd() *cobra.Command {
+	shortDesc := "List Discord channels"
+	longDesc := `List available Discord channels the bot can access.`
+
 	cmd := &cobra.Command{
 		Use:   "channels",
-		Short: "List available Discord channels",
-		Long:  `List all available Discord channels that the bot can access.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"list-channels", "channel-list", "chans",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Listing Discord channels...")
 
@@ -189,10 +233,21 @@ func discordChannelsCmd() *cobra.Command {
 }
 
 func discordTestCmd() *cobra.Command {
+	shortDesc := "Test Discord bot functionality"
+	longDesc := `Run a series of tests to verify Discord bot functionality,
+including connection and basic operations.`
 	cmd := &cobra.Command{
 		Use:   "test",
-		Short: "Test Discord bot functionality",
-		Long:  `Test various Discord bot functions including connection and messaging.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"check", "verify", "diagnose",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Testing Discord bot functionality...")
 

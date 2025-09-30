@@ -12,23 +12,35 @@ import (
 )
 
 var (
-	dbPort     string
-	dbOutput   string
-	dbFormat   string
-	dbMigrate  bool
-	dbSeed     bool
-	dbReset    bool
-	dbBackup   string
-	dbRestore  string
+	dbPort    string
+	dbOutput  string
+	dbFormat  string
+	dbMigrate bool
+	dbSeed    bool
+	dbReset   bool
+	dbBackup  string
+	dbRestore string
 )
 
 func DatabaseCommand() *cobra.Command {
+	shortDesc := "Database management commands"
+	longDesc := `Manage database operations including health checks,
+migrations, seeding, backups, and restores.`
+
 	cmd := &cobra.Command{
-		Use:   "database",
-		Short: "Database management and operations",
-		Long: `Manage database operations including health checks,
-migrations, seeding, backup, and restore operations.`,
+		Use:     "database",
+		Short:   shortDesc,
+		Long:    longDesc,
 		Aliases: []string{"db"},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := cmd.Help(); err != nil {
+				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+			}
+		},
 	}
 
 	cmd.AddCommand(dbHealthCmd())
@@ -43,10 +55,17 @@ migrations, seeding, backup, and restore operations.`,
 }
 
 func dbHealthCmd() *cobra.Command {
+	shortDesc := "Check database connection health"
+	longDesc := `Check the health status of the database connection.`
 	cmd := &cobra.Command{
-		Use:   "health",
-		Short: "Check database connection health",
-		Long:  `Check the health status of the database connection.`,
+		Use:     "health",
+		Short:   shortDesc,
+		Long:    longDesc,
+		Aliases: []string{"status", "check", "ping"},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Checking database health...")
 
@@ -103,10 +122,19 @@ func dbHealthCmd() *cobra.Command {
 }
 
 func dbMigrateCmd() *cobra.Command {
+	shortDesc := "Run database migrations"
+	longDesc := `Apply any pending database migrations to update the schema to the latest version.`
 	cmd := &cobra.Command{
 		Use:   "migrate",
-		Short: "Run database migrations",
-		Long:  `Run pending database migrations to update schema.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"migrate-db", "migrations", "migrate-database",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Running database migrations...")
 
@@ -154,10 +182,19 @@ func dbMigrateCmd() *cobra.Command {
 }
 
 func dbSeedCmd() *cobra.Command {
+	shortDesc := "Seed database with initial data"
+	longDesc := `Populate database with initial/sample data.`
 	cmd := &cobra.Command{
 		Use:   "seed",
-		Short: "Seed database with initial data",
-		Long:  `Populate database with initial/sample data.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"seed-db", "seeding", "populate-db",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Seeding database...")
 
@@ -205,10 +242,20 @@ func dbSeedCmd() *cobra.Command {
 }
 
 func dbResetCmd() *cobra.Command {
+	shortDesc := "Reset the database (destructive)"
+	longDesc := `Completely reset the database, deleting all data. Use with caution!`
 	cmd := &cobra.Command{
 		Use:   "reset",
-		Short: "Reset database to initial state",
-		Long:  `Reset database by dropping all tables and running fresh migrations.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"reset-db", "clear-db", "wipe-db",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("warn", "Resetting database (this will delete all data)...")
 
@@ -256,11 +303,20 @@ func dbResetCmd() *cobra.Command {
 }
 
 func dbBackupCmd() *cobra.Command {
+	shortDesc := "Create a database backup"
+	longDesc := `Create a backup of the current database state and save it to a file.`
 	cmd := &cobra.Command{
 		Use:   "backup [output-file]",
-		Short: "Create database backup",
-		Long:  `Create a backup of the current database state.`,
-		Args:  cobra.RangeArgs(0, 1),
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"backup-db", "dump-db", "export-db",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			backupFile := dbBackup
 			if len(args) > 0 {
@@ -320,11 +376,20 @@ func dbBackupCmd() *cobra.Command {
 }
 
 func dbRestoreCmd() *cobra.Command {
+	shortDesc := "Restore database from a backup file"
+	longDesc := `Restore the database to a previous state using a specified backup file.`
 	cmd := &cobra.Command{
 		Use:   "restore [backup-file]",
-		Short: "Restore database from backup",
-		Long:  `Restore database from a previously created backup file.`,
-		Args:  cobra.RangeArgs(0, 1),
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"restore-db", "import-db", "load-db",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.RangeArgs(0, 1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			restoreFile := dbRestore
 			if len(args) > 0 {
@@ -387,10 +452,21 @@ func dbRestoreCmd() *cobra.Command {
 }
 
 func dbStatusCmd() *cobra.Command {
+	shortDesc := "Get database status and info"
+	longDesc := `Retrieve current status and information about the database.`
+
 	cmd := &cobra.Command{
 		Use:   "status",
-		Short: "Show database status and statistics",
-		Long:  `Show detailed database status including connections, tables, and statistics.`,
+		Short: shortDesc,
+		Long:  longDesc,
+		Aliases: []string{
+			"db-status", "database-info", "dbinfo",
+		},
+		Annotations: GetDescriptions([]string{
+			shortDesc,
+			longDesc,
+		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Getting database status...")
 

@@ -12,8 +12,8 @@ import (
 
 	f "github.com/kubex-ecosystem/gobe/factory"
 	"github.com/kubex-ecosystem/gobe/internal/config"
-	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +25,7 @@ var (
 		Use:         "mcp-server",
 		Short:       shortDesc,
 		Long:        longDesc,
+		Aliases:     []string{"mcp", "mcpserver", "mcp_srv", "mcp-srv"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			startMCPServer()
@@ -40,13 +41,13 @@ var (
 	mcpServerReleaseMode    bool
 
 	// LLM command flags
-	llmProvider     string
-	llmModel        string
-	llmMaxTokens    int
-	llmTemperature  float64
-	llmInteractive  bool
-	llmOutput       string
-	llmInput        string
+	llmProvider    string
+	llmModel       string
+	llmMaxTokens   int
+	llmTemperature float64
+	llmInteractive bool
+	llmOutput      string
+	llmInput       string
 )
 
 func init() {
@@ -130,11 +131,16 @@ func llmCmd() *cobra.Command {
 }
 
 func chatCmd() *cobra.Command {
+	shortDesc := "Interact with a Large Language Model (LLM) in a chat format"
+	longDesc := `Start an interactive chat session with an LLM.
+You can chat with OpenAI GPT, Google Gemini, or Groq models.`
+
 	cmd := &cobra.Command{
-		Use:   "chat",
-		Short: "Interact with a Large Language Model (LLM) in a chat format",
-		Long: `Start an interactive chat session with an LLM.
-You can chat with OpenAI GPT, Google Gemini, or Groq models.`,
+		Use:         "chat",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"conversation", "talk", "dialogue"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Starting LLM chat session...")
 
@@ -175,11 +181,16 @@ You can chat with OpenAI GPT, Google Gemini, or Groq models.`,
 }
 
 func generateTextCmd() *cobra.Command {
+	shortDesc := "Generate text using a specified LLM"
+	longDesc := `Generate text based on a prompt using an LLM.
+Supports various generation tasks like creative writing, code generation, etc.`
+
 	cmd := &cobra.Command{
-		Use:   "generate",
-		Short: "Generate text using a specified LLM",
-		Long: `Generate text based on a prompt using an LLM.
-Supports various generation tasks like creative writing, code generation, etc.`,
+		Use:         "generate",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"gen", "textgen", "create"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Starting text generation...")
 
@@ -218,11 +229,15 @@ Supports various generation tasks like creative writing, code generation, etc.`,
 }
 
 func analyzeTextCmd() *cobra.Command {
+	shortDesc := "Analyze text using a specified LLM"
+	longDesc := `Analyze text content using an LLM.
+Provides insights, sentiment analysis, classification, and other analytical tasks.`
 	cmd := &cobra.Command{
-		Use:   "analyze",
-		Short: "Analyze text using a specified LLM",
-		Long: `Analyze text content using an LLM.
-Provides insights, sentiment analysis, classification, and other analytical tasks.`,
+		Use:         "analyze",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"analysis", "text-analysis", "nlp-analyze", "nlp"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Starting text analysis...")
 
@@ -338,10 +353,10 @@ func forever() {
 // Helper functions for LLM commands
 func createLLMClient() (*llm.Client, error) {
 	cfg := config.LLMConfig{
-		Provider:     llmProvider,
-		Model:        llmModel,
-		MaxTokens:    llmMaxTokens,
-		Temperature:  llmTemperature,
+		Provider:    llmProvider,
+		Model:       llmModel,
+		MaxTokens:   llmMaxTokens,
+		Temperature: llmTemperature,
 	}
 
 	client, err := llm.NewClient(cfg)
@@ -451,7 +466,7 @@ func generateLLMResponse(client *llm.Client, input, taskType string) (string, er
 		Platform: "cli",
 		Content:  prompt,
 		UserID:   "cli-user",
-		Context:  map[string]interface{}{
+		Context: map[string]interface{}{
 			"task": taskType,
 			"cli":  true,
 		},

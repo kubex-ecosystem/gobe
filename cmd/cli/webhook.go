@@ -12,21 +12,31 @@ import (
 )
 
 var (
-	webhookURL      string
-	webhookPort     string
-	webhookEventID  string
-	webhookOutput   string
-	webhookFormat   string
-	webhookPage     int
-	webhookLimit    int
+	webhookURL     string
+	webhookPort    string
+	webhookEventID string
+	webhookOutput  string
+	webhookFormat  string
+	webhookPage    int
+	webhookLimit   int
 )
 
 func WebhookCommand() *cobra.Command {
+	shortDesc := "Webhook management and monitoring commands"
+	longDesc := `Manage webhook operations including listing events,
+checking health, and retrying failed events.`
+
 	cmd := &cobra.Command{
-		Use:   "webhook",
-		Short: "Webhook management and monitoring commands",
-		Long: `Manage webhook operations including listing events,
-checking health, and retrying failed events.`,
+		Use:         "webhook",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"hooks", "webhooks", "wh"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := cmd.Help(); err != nil {
+				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+			}
+		},
 	}
 
 	cmd.AddCommand(webhookListCmd())
@@ -38,10 +48,15 @@ checking health, and retrying failed events.`,
 }
 
 func webhookListCmd() *cobra.Command {
+	shortDesc := "List webhook events"
+	longDesc := `List webhook events with pagination support.`
+
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List webhook events",
-		Long:  `List webhook events with pagination support.`,
+		Use:         "list",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"ls", "events", "show"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Listing webhook events...")
 
@@ -88,10 +103,15 @@ func webhookListCmd() *cobra.Command {
 }
 
 func webhookHealthCmd() *cobra.Command {
+	shortDesc := "Check webhook system health"
+	longDesc := `Check the health status of the webhook system.`
+
 	cmd := &cobra.Command{
-		Use:   "health",
-		Short: "Check webhook system health",
-		Long:  `Check the health status of the webhook system including statistics.`,
+		Use:         "health",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"status", "check", "ping"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			gl.Log("info", "Checking webhook system health...")
 
@@ -136,11 +156,15 @@ func webhookHealthCmd() *cobra.Command {
 }
 
 func webhookEventCmd() *cobra.Command {
+	shortDesc := "Get details of a specific webhook event"
+	longDesc := `Retrieve detailed information about a specific webhook event by its ID.`
 	cmd := &cobra.Command{
-		Use:   "event [event-id]",
-		Short: "Get details of a specific webhook event",
-		Long:  `Get detailed information about a specific webhook event by ID.`,
-		Args:  cobra.ExactArgs(1),
+		Use:         "event [event-id]",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"get", "info", "details"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args:        cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			eventID := args[0]
 			gl.Log("info", fmt.Sprintf("Getting webhook event details: %s", eventID))
@@ -190,11 +214,16 @@ func webhookEventCmd() *cobra.Command {
 }
 
 func webhookRetryCmd() *cobra.Command {
+	shortDesc := "Retry a failed webhook event"
+	longDesc := `Retry sending a failed webhook event by its ID.`
+
 	cmd := &cobra.Command{
-		Use:   "retry [event-id]",
-		Short: "Retry a failed webhook event",
-		Long:  `Retry processing of a failed webhook event by ID.`,
-		Args:  cobra.ExactArgs(1),
+		Use:         "retry [event-id]",
+		Short:       shortDesc,
+		Long:        longDesc,
+		Aliases:     []string{"resend", "repeat", "rerun"},
+		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
+		Args:        cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			eventID := args[0]
 			gl.Log("info", fmt.Sprintf("Retrying webhook event: %s", eventID))

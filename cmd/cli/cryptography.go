@@ -23,6 +23,7 @@ func CryptographyCommand() *cobra.Command {
 		Use:         "cryptography",
 		Short:       shortDesc,
 		Long:        longDesc,
+		Aliases:     []string{"crypto", "crypt", "crp"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 	}
 
