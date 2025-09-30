@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	cron "github.com/kubex-ecosystem/gdbase/factory/models"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"gorm.io/gorm"
 )
 

@@ -12,9 +12,8 @@ import (
 
 	f "github.com/kubex-ecosystem/gobe/factory"
 	"github.com/kubex-ecosystem/gobe/internal/config"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
-	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -71,8 +70,27 @@ func MCPServerCmd() *cobra.Command {
 }
 
 func startMCPServer() {
-	logger := l.NewLogger("gobe_mcp_server")
-	goBe, err := f.NewGoBE("MCPServer", mcpServerPort, mcpServerBind, mcpServerLogFile, mcpServerConfigFile, mcpServerIsConfidential, logger, mcpServerDebug, mcpServerReleaseMode)
+	initArgs := gl.InitArgs{
+		ConfigFile:     mcpServerConfigFile,
+		ConfigType:     "yaml",
+		LogFile:        mcpServerLogFile,
+		Debug:          mcpServerDebug,
+		ReleaseMode:    mcpServerReleaseMode,
+		IsConfidential: mcpServerIsConfidential,
+	}
+
+	cfg, err := config.Load[*config.MCPServerConfig](initArgs)
+	if err != nil {
+		fmt.Printf("Error loading config: %s\n", err)
+		os.Exit(1)
+	}
+
+	gl.Log("notice", "Starting MCP Server...")
+	gl.Log("Configuration: %+v", cfg)
+
+	// Initialize GoBE backend
+
+	goBe, err := f.NewGoBE(initArgs)
 	if err != nil {
 		fmt.Printf("Error initializing GoBE: %s\n", err)
 		os.Exit(1)

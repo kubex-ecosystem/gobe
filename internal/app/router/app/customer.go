@@ -7,7 +7,7 @@ import (
 	customers_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/customers"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type CustomerRoutes struct {

@@ -11,7 +11,7 @@ import (
 	whk "github.com/kubex-ecosystem/gdbase/factory/models"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
 	l "github.com/kubex-ecosystem/logz"
 	amqp "github.com/rabbitmq/amqp091-go"

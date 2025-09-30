@@ -13,7 +13,7 @@ import (
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/viper"
 	"golang.org/x/time/rate"
@@ -30,7 +30,7 @@ import (
 type Router struct {
 	*gin.Engine
 	*t.Mutexes
-	InitArgs        ci.InitArgs
+	InitArgs        gl.InitArgs
 	Logger          l.Logger
 	settings        map[string]string
 	databaseService gdbf.DBService
@@ -513,12 +513,12 @@ func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 	}
 }
 
-func (rtr *Router) GetInitArgs() *ci.InitArgs {
+func (rtr *Router) GetInitArgs() gl.InitArgs {
 	if err := rtr.ValidateRouter(); err != nil {
 		gl.Log("error", err.Error())
-		return &ci.InitArgs{}
+		return gl.InitArgs{}
 	}
-	return &rtr.InitArgs
+	return rtr.InitArgs
 }
 
 func SecureServerInit(r *gin.Engine, fullBindAddress string) error {

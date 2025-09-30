@@ -12,7 +12,7 @@ import (
 	m "github.com/kubex-ecosystem/gdbase/factory/models"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type idTokenCustomClaims struct {

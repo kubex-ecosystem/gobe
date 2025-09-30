@@ -10,17 +10,12 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 
-	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
-
-	l "github.com/kubex-ecosystem/logz"
 )
 
-var gl = logger.GetLogger[l.Logger](nil)
-
-func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | any](configType string) (T, bool) {
+func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *MCPServerConfig | any](configType string) (T, bool) {
 	switch configType {
 	case "main_config":
 		return IConfig(newConfig()).(T), true
@@ -314,10 +309,31 @@ func (c *TelegramConfig) GetSettings() map[string]interface{} {
 	return settings
 }
 
-func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *IConfig](
-	configPath string,
-	configType string,
-	initArgs *interfaces.InitArgs,
+type MCPServerConfig struct {
+	Address string `json:"address"`
+	Port    int    `json:"port"`
+	DevMode bool   `json:"dev_mode"`
+}
+
+func newMCPServerConfig() *MCPServerConfig     { return &MCPServerConfig{} }
+func NewMCPServerConfig() *MCPServerConfig     { return newMCPServerConfig() }
+func (c *MCPServerConfig) GetType() string     { return "mcp_server_config" }
+func (c *MCPServerConfig) SetDevMode(dev bool) { c.DevMode = dev }
+func (c *MCPServerConfig) GetSettings() map[string]interface{} {
+	settings := make(map[string]interface{})
+	settings["address"] = c.Address
+	settings["port"] = c.Port
+	return settings
+}
+
+func Load[C *Config | *DiscordConfig |
+	*LLMConfig | *ApprovalConfig |
+	*ServerConfig | *ZMQConfig |
+	*GoBeConfig | *GobeCtlConfig |
+	*IntegrationConfig | *WhatsAppConfig |
+	*MCPServerConfig | *TelegramConfig |
+	*IConfig](
+	initArgs gl.InitArgs,
 ) (C, error) {
 
 	envVars := make(map[string]string)
@@ -343,26 +359,26 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 		}
 	}
 
-	if configPath == "" {
-		gl.Log("warn", "No config path provided, using default:", configPath)
-		configPath = GetConfigFilePath()
-		configPath = filepath.Join(configPath, "gobe", "config.json")
+	if initArgs.ConfigFile == "" {
+		gl.Log("warn", "No config path provided, using default:", initArgs.ConfigFile)
+		initArgs.ConfigFile = GetConfigFilePath()
+		initArgs.ConfigFile = filepath.Join(initArgs.ConfigFile, "gobe", "config.json")
 	}
 
-	if info, statErr := os.Stat(configPath); statErr == nil {
+	if info, statErr := os.Stat(initArgs.ConfigFile); statErr == nil {
 		if info.IsDir() {
-			gobeDir := configPath
+			gobeDir := initArgs.ConfigFile
 			if filepath.Base(gobeDir) != "gobe" {
 				candidate := filepath.Join(gobeDir, "gobe")
 				if _, err := os.Stat(candidate); err == nil {
 					gobeDir = candidate
 				}
 			}
-			configPath = filepath.Join(gobeDir, "config.json")
+			initArgs.ConfigFile = filepath.Join(gobeDir, "config.json")
 		}
 	} else if os.IsNotExist(statErr) {
-		if filepath.Ext(configPath) == "" && !strings.HasSuffix(configPath, ".json") {
-			configPath = filepath.Join(configPath, "gobe", "config.json")
+		if filepath.Ext(initArgs.ConfigFile) == "" && !strings.HasSuffix(initArgs.ConfigFile, ".json") {
+			initArgs.ConfigFile = filepath.Join(initArgs.ConfigFile, "gobe", "config.json")
 		}
 	}
 
@@ -372,13 +388,13 @@ func Load[C *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerCon
 		viper.Set(key, value)
 	}
 
-	configInstanceMapper := types.NewMapper(new(C), configPath)
+	configInstanceMapper := types.NewMapper(new(C), initArgs.ConfigFile)
 	configInstance, err := configInstanceMapper.DeserializeFromFile("json")
 	if err != nil {
-		return nil, fmt.Errorf("error deserializing %s: %w", configType, err)
+		return nil, fmt.Errorf("error deserializing %s: %w", initArgs.ConfigFile, err)
 	}
 	if configInstance == nil {
-		return nil, fmt.Errorf("deserialized config instance is nil for type: %s", configType)
+		return nil, fmt.Errorf("deserialized config instance is nil for type: %s", initArgs.ConfigFile)
 	}
 	return *configInstance, nil
 }

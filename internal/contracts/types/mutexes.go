@@ -1,7 +1,7 @@
 package types
 
 import (
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"sync"
 	"time"
@@ -170,12 +170,12 @@ func (m *Mutexes) MuSignalCond() {
 	if m.muSharedCtxValidate != nil {
 		isValid, err := m.muSharedCtxValidate(m.muSharedCtx)
 		if err != nil || !isValid {
-			gl.LogObjLogger(m, "warn", "Condition signal aborted due to validation failure")
+			gl.Log("warn", "Condition signal aborted due to validation failure")
 			return
 		}
 	}
 
-	gl.LogObjLogger(m, "info", "Signaling condition variable")
+	gl.Log("info", "Signaling condition variable")
 	m.MuCtxCond.Signal()
 }
 

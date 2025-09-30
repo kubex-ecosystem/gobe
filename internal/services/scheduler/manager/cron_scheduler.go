@@ -4,7 +4,7 @@ package manager
 import (
 	"time"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	pl "github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
 )
 

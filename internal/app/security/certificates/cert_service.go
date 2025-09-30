@@ -17,7 +17,7 @@ import (
 	krs "github.com/kubex-ecosystem/gobe/internal/app/security/external"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 

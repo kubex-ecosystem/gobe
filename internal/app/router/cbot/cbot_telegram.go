@@ -7,7 +7,7 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
 )
 
@@ -28,11 +28,16 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to get DB for TelegramRoutes", err)
 		return nil
 	}
-	cfg, configErr := config.Load[*config.Config](
-		rtl.GetConfigPath(),
-		"main_config",
-		rtl.GetInitArgs(),
-	)
+	initArgs := rtl.GetInitArgs()
+	if !gl.IsObjValid(initArgs) {
+		gl.Log("error", "InitArgs is nil for TelegramRoutes")
+		return nil
+	}
+	if initArgs.ConfigFile == "" {
+		initArgs.ConfigFile = "./config/social_meta.yaml"
+	}
+
+	cfg, configErr := config.Load[*config.Config](initArgs)
 	if configErr != nil {
 		gl.Log("error", "Failed to load config for TelegramRoutes", configErr)
 		return nil

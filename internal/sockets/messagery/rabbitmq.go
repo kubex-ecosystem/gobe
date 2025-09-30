@@ -12,7 +12,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 
 	t "github.com/kubex-ecosystem/gdbase/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	crtSvc "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 )

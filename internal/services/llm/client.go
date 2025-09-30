@@ -18,7 +18,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 	"google.golang.org/genai"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type Client struct {

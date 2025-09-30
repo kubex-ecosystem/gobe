@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	gatewayService "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 )

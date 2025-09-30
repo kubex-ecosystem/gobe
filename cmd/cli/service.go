@@ -10,9 +10,8 @@ import (
 	"time"
 
 	gb "github.com/kubex-ecosystem/gobe"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
-	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +43,7 @@ func ServiceCmd() *cobra.Command {
 }
 
 func startCommand() *cobra.Command {
-	var name, port, bind, logFile, configFile string
+	var name, port, bind, logFile, configFile, envFile string
 	var isConfidential, debug, releaseMode bool
 
 	shortDesc := "Start a minimal backend service"
@@ -57,10 +56,21 @@ func startCommand() *cobra.Command {
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if debug {
-				gl.SetDebug(true)
+				gl.SetDebugMode(true)
+			}
+			initArgs := gl.InitArgs{
+				Name:           name,
+				Port:           port,
+				Bind:           bind,
+				LogFile:        logFile,
+				ConfigFile:     configFile,
+				EnvFile:        envFile,
+				IsConfidential: isConfidential,
+				Debug:          debug,
+				ReleaseMode:    releaseMode,
 			}
 
-			gbm, gbmErr := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, l.GetLogger("GoBE"), debug, releaseMode)
+			gbm, gbmErr := gb.NewGoBE(initArgs, nil)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
@@ -79,6 +89,7 @@ func startCommand() *cobra.Command {
 	startCmd.Flags().StringVarP(&bind, "bind", "b", "0.0.0.0", "Bind address")
 	startCmd.Flags().StringVarP(&logFile, "log-file", "l", "", "Log file path")
 	startCmd.Flags().StringVarP(&configFile, "config-file", "c", "", "Configuration file path")
+	startCmd.Flags().StringVarP(&envFile, "env-file", "e", "", "Environment file path")
 	startCmd.Flags().BoolVarP(&isConfidential, "confidential", "C", false, "Enable confidential mode")
 	startCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	startCmd.Flags().BoolVarP(&releaseMode, "release", "r", false, "Enable release mode")
@@ -113,7 +124,10 @@ func stopCommand() *cobra.Command {
 }
 
 func restartCommand() *cobra.Command {
-	var name string
+	var name, address, pubCertKeyPath, pubKeyPath, pwd string
+	var debug, releaseMode bool
+	var port, bind, logFile, configFile, envFile string
+	var isConfidential bool
 
 	shortDesc := "Restart a running backend service"
 	longDesc := "Restart a running backend service with GoBE"
@@ -124,7 +138,22 @@ func restartCommand() *cobra.Command {
 		Long:        longDesc,
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
-			gbm, gbmErr := gb.NewGoBE(name, "", "", "", "", false, l.GetLogger("GoBE"), false, false)
+			initArgs := gl.InitArgs{
+				ConfigFile:     configFile,
+				EnvFile:        envFile,
+				LogFile:        logFile,
+				Name:           name,
+				Debug:          (os.Getenv("GOBE_DEBUG") == "true"),
+				ReleaseMode:    (os.Getenv("GOBE_RELEASE") == "true"),
+				IsConfidential: isConfidential,
+				Port:           port,
+				Bind:           bind,
+				Address:        address,
+				PubCertKeyPath: pubCertKeyPath,
+				PubKeyPath:     pubKeyPath,
+				Pwd:            pwd,
+			}
+			gbm, gbmErr := gb.NewGoBE(initArgs, nil)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
@@ -141,6 +170,14 @@ func restartCommand() *cobra.Command {
 	}
 
 	restartCmd.Flags().StringVarP(&name, "name", "n", "GoBE", "Name of the process")
+	restartCmd.Flags().StringVarP(&port, "port", "p", "8666", "Port to listen on")
+	restartCmd.Flags().StringVarP(&bind, "bind", "b", "0.0.0.0", "Bind address")
+	restartCmd.Flags().StringVarP(&logFile, "log-file", "l", "", "Log file path")
+	restartCmd.Flags().StringVarP(&configFile, "config-file", "c", "", "Configuration file path")
+	restartCmd.Flags().StringVarP(&envFile, "env-file", "e", "", "Environment file path")
+	restartCmd.Flags().BoolVarP(&isConfidential, "confidential", "C", false, "Enable confidential mode")
+	restartCmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
+	restartCmd.Flags().BoolVarP(&releaseMode, "release", "r", false, "Enable release mode")
 
 	return restartCmd
 }

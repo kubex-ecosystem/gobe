@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 )
 
@@ -97,7 +97,7 @@ func (cb *ChannelBase[T]) Close() error {
 	cb.MuLock()
 	defer cb.MuUnlock()
 	if cb.Channel != nil {
-		gl.LogObjLogger(cb, "info", "Closing channel for:", cb.Name)
+		gl.Log("info", "Closing channel for:", cb.Name)
 
 		ch := reflect.ValueOf(cb.Channel)
 		if ch.Kind() == reflect.Chan {
@@ -112,7 +112,7 @@ func (cb *ChannelBase[T]) Clear() error {
 	cb.MuLock()
 	defer cb.MuUnlock()
 	if cb.Channel != nil {
-		gl.LogObjLogger(cb, "info", "Clearing channel for:", cb.Name)
+		gl.Log("info", "Clearing channel for:", cb.Name)
 		close(cb.Channel.(chan T))
 		cb.Channel = make(chan T, cb.Buffers)
 	}
