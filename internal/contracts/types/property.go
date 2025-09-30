@@ -16,7 +16,7 @@ type Property[T any] struct {
 	// Telemetry is the telemetry for this GoLife instance.
 	metrics *Telemetry `json:"-" yaml:"-" toml:"-" xml:"-"`
 	// Prop is the property for this GoLife instance.
-	prop *PropertyValBase[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
+	prop ci.IPropertyValBase[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
 	// Cb is the callback function for this GoLife instance.
 	cb func(any) (bool, error) `json:"-" yaml:"-" toml:"-" xml:"-"`
 }
@@ -35,12 +35,12 @@ func NewProperty[T any](name string, v *T, withMetrics bool, cb func(any) (bool,
 
 // GetName returns the name of the property.
 func (p *Property[T]) GetName() string {
-	return p.prop.GetName()
+	return p.Prop().GetName()
 }
 
 // GetValue returns the value of the property.
 func (p *Property[T]) GetValue() T {
-	value := p.prop.Value()
+	value := p.Prop().Value()
 	if value == nil {
 		value = new(T)
 	}
@@ -49,7 +49,7 @@ func (p *Property[T]) GetValue() T {
 
 // SetValue sets the value of the property.
 func (p *Property[T]) SetValue(v *T) {
-	p.prop.Set(v)
+	p.Prop().Set(v)
 	if p.cb != nil {
 		if _, err := p.cb(v); err != nil {
 			gl.Log("error", "Callback function returned an error:", err.Error())
@@ -60,19 +60,20 @@ func (p *Property[T]) SetValue(v *T) {
 
 // GetReference returns the reference of the property.
 func (p *Property[T]) GetReference() (uuid.UUID, string) {
-	return p.prop.GetID(), p.prop.GetName()
+	return p.Prop().GetID(), p.Prop().GetName()
 }
 
 // Prop is a struct that holds the properties of the GoLife instance.
 func (p *Property[T]) Prop() ci.IPropertyValBase[T] {
+	if p.prop == nil {
+		p.prop = newVal(p.GetName(), new(T))
+	}
 	return p.prop
 }
 
 // GetLogger returns the logger of the property.
 func (p *Property[T]) GetLogger() l.Logger {
-
 	return p.Prop().GetLogger()
-
 }
 
 // Serialize serializes the ProcessInput instance to the specified format.
@@ -104,12 +105,13 @@ func (p *Property[T]) Deserialize(data []byte, format, filePath string) error {
 
 // SaveToFile saves the property to a file in the specified format.
 func (p *Property[T]) SaveToFile(filePath string, format string) error {
-	m := NewMapper(p.prop, filePath)
+	m := NewMapper(p.Prop().Value(), filePath)
 	m.SerializeToFile(format)
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		gl.Log("error", "File was not created:", filePath)
-		return err
-	}
+	// if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	// 	gl.Log("error", "File was not created:", filePath)
+	// 	return err
+	// }
+	// return nil
 	return nil
 }
 
@@ -120,7 +122,7 @@ func (p *Property[T]) LoadFromFile(filename, format string) error {
 		return err
 	}
 	// Create a new mapper instance
-	m := NewMapper(p.prop, filename)
+	m := NewMapper(p.Prop().Value(), filename)
 
 	// Deserialize the file content into the property (this may fail for some formats),
 	// so we check if data was filled, if not, we will try to read the file normally
@@ -142,7 +144,7 @@ func (p *Property[T]) LoadFromFile(filename, format string) error {
 				gl.Log("error", "Failed to deserialize file content:", err.Error())
 				return err
 			}
-			p.prop.Swap(data.Load())
+			p.Prop().Set((*T)(data))
 		}
 	}
 	return nil
