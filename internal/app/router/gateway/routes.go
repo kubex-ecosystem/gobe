@@ -1,3 +1,4 @@
+// Package gateway defines the routes for the gateway module.
 package gateway
 
 import (

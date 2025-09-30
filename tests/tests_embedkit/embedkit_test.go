@@ -1,10 +1,12 @@
-package tests_embedkit
+// Package testsembedkit contains unit tests for the embedkit package.
+package testsembedkit
 
 import (
 	"testing"
 	"time"
 
-	"github.com/kubex-ecosystem/gobe/internal/commons/embedkit"
+	embedkit "github.com/kubex-ecosystem/gobe/internal/commons/embedkit/components"
+	"github.com/kubex-ecosystem/gobe/internal/commons/embedkit/helpers"
 )
 
 func TestFormatDuration(t *testing.T) {
@@ -42,7 +44,7 @@ func TestFormatDuration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := embedkit.FormatDuration(tt.duration)
+			got := helpers.FormatDuration(tt.duration)
 			if got != tt.want {
 				t.Errorf("FormatDuration() = %v, want %v", got, tt.want)
 			}
@@ -61,49 +63,49 @@ func TestStatusColor(t *testing.T) {
 			name:     "success with exit 0",
 			status:   "success",
 			exitCode: 0,
-			want:     "🟢",
+			want:     "65280",
 		},
 		{
 			name:     "success with non-zero exit",
 			status:   "success",
 			exitCode: 1,
-			want:     "🟡",
+			want:     "16776960",
 		},
 		{
 			name:     "failed status",
 			status:   "failed",
 			exitCode: 1,
-			want:     "🔴",
+			want:     "16711680",
 		},
 		{
 			name:     "error status",
 			status:   "error",
 			exitCode: 2,
-			want:     "🔴",
+			want:     "16711680",
 		},
 		{
 			name:     "timeout status",
 			status:   "timeout",
 			exitCode: 124,
-			want:     "🟡",
+			want:     "16776960",
 		},
 		{
 			name:     "running status",
 			status:   "running",
 			exitCode: 0,
-			want:     "🔵",
+			want:     "39423",
 		},
 		{
 			name:     "unknown status",
 			status:   "unknown",
 			exitCode: 0,
-			want:     "⚪",
+			want:     "8421504",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := embedkit.StatusColor(tt.status, tt.exitCode)
+			got := helpers.StatusColor(tt.status, tt.exitCode)
 			if got != tt.want {
 				t.Errorf("StatusColor() = %v, want %v", got, tt.want)
 			}
@@ -158,7 +160,7 @@ func TestStatusEmoji(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := embedkit.StatusEmoji(tt.status, tt.exitCode)
+			got := helpers.StatusEmoji(tt.status, tt.exitCode)
 			if got != tt.want {
 				t.Errorf("StatusEmoji() = %v, want %v", got, tt.want)
 			}
@@ -274,7 +276,7 @@ func TestStatusEmbed(t *testing.T) {
 }
 
 func TestExecResultEmbed(t *testing.T) {
-	result := embedkit.ExecResult{
+	result := helpers.ExecResult{
 		Command:   "ls",
 		Args:      []string{"-la", "/tmp"},
 		ExitCode:  0,
@@ -287,7 +289,7 @@ func TestExecResultEmbed(t *testing.T) {
 		Channel:   "#general",
 	}
 
-	embed := embedkit.ExecResultEmbed(result)
+	embed := helpers.ExecResultEmbed(result)
 
 	// Check that required fields exist
 	if embed["title"] == nil {
@@ -328,7 +330,7 @@ func TestExecResultEmbed(t *testing.T) {
 }
 
 func TestExecResultEmbedWithError(t *testing.T) {
-	result := embedkit.ExecResult{
+	result := helpers.ExecResult{
 		Command:   "nonexistent-cmd",
 		Args:      []string{},
 		ExitCode:  127,
@@ -341,7 +343,7 @@ func TestExecResultEmbedWithError(t *testing.T) {
 		Channel:   "#test",
 	}
 
-	embed := embedkit.ExecResultEmbed(result)
+	embed := helpers.ExecResultEmbed(result)
 
 	// Check fields include stderr
 	fields, ok := embed["fields"].([]map[string]interface{})
@@ -368,7 +370,7 @@ func TestExecResultEmbedWithError(t *testing.T) {
 }
 
 func TestExecResultEmbedWithTruncation(t *testing.T) {
-	result := embedkit.ExecResult{
+	result := helpers.ExecResult{
 		Command:   "cat",
 		Args:      []string{"largefile.txt"},
 		ExitCode:  0,
@@ -381,7 +383,7 @@ func TestExecResultEmbedWithTruncation(t *testing.T) {
 		Channel:   "#ops",
 	}
 
-	embed := embedkit.ExecResultEmbed(result)
+	embed := helpers.ExecResultEmbed(result)
 
 	fields, ok := embed["fields"].([]map[string]interface{})
 	if !ok {
@@ -409,8 +411,8 @@ func TestExecResultEmbedWithTruncation(t *testing.T) {
 // Helper function for tests
 func containsString(haystack, needle string) bool {
 	return len(haystack) >= len(needle) && haystack[:len(needle)] == needle ||
-		   len(haystack) > len(needle) && haystack[len(haystack)-len(needle):] == needle ||
-		   containsSubstring(haystack, needle)
+		len(haystack) > len(needle) && haystack[len(haystack)-len(needle):] == needle ||
+		containsSubstring(haystack, needle)
 }
 
 func containsSubstring(haystack, needle string) bool {

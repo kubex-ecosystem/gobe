@@ -1,0 +1,39 @@
+# Allowlist inicial (read-only). Expanda conforme necessidade.
+commands:
+  - id: go-version
+    bin: "(^|/)(go)$|/usr/local/go/bin/go|/usr/lib/go/bin/go"
+    args: ["^version$"]
+    timeout_ms: 3000
+
+  - id: go-env
+    bin: "(^|/)(go)$|/usr/local/go/bin/go|/usr/lib/go/bin/go"
+    args: ["^env$", "^-json$"]
+    timeout_ms: 4000
+
+  - id: go-list-mod
+    bin: "(^|/)(go)$|/usr/local/go/bin/go|/usr/lib/go/bin/go"
+    args: ["^list$", "^-m$", "^-json?$", "^[A-Za-z0-9_./-]+$"]
+    cwd_must_be_git_repo: true
+    timeout_ms: 8000
+    max_output_kb: 512
+
+  - id: node-version
+    bin: "(^|/)(node)$|/usr/bin/node"
+    args: ["^-v$"]
+    timeout_ms: 3000
+
+  - id: npm-version
+    bin: "(^|/)(npm)$|/usr/bin/npm"
+    args: ["^-v$"]
+    timeout_ms: 3000
+
+  - id: npm-view
+    bin: "(^|/)(npm)$|/usr/bin/npm"
+    args: ["^view$", "^[A-Za-z0-9._/@-]+$", "^version$"]
+    timeout_ms: 8000
+    max_output_kb: 512
+
+  - id: corepack-enable
+    bin: "(^|/)(corepack)$|/usr/bin/corepack"
+    args: ["^enable$"]
+    timeout_ms: 4000

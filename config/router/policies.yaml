@@ -1,0 +1,33 @@
+version: 1
+rules:
+  - id: "status-check-without-qmark"
+    when:
+      last_bot_state: ["WORKING", "PENDING"]
+      msg_tokens_max: 6
+      msg_contains_any:
+        [
+          "e agora",
+          "sigo aguardando",
+          "conseguiu",
+          "novidade",
+          "status",
+          "e ai",
+          "e aí",
+          "andamento",
+          "segue",
+        ]
+    then:
+      intent: "STATUS_CHECK"
+      target_queue: "triage.priority"
+      reason: "heuristic-status"
+      confidence: 0.9
+  - id: "continue"
+    when:
+      msg_contains_any:
+        ["bora", "continua", "segue", "manda", "vai", "vamo", "partiu"]
+    then:
+      intent: "CONTINUE"
+      target_queue: "triage.default"
+      confidence: 0.8
+defaults:
+  target_queue: "triage.default"

@@ -35,7 +35,7 @@ func newGeminiProvider(cfg Config) (gateway.Provider, error) {
 
 	model := strings.TrimSpace(cfg.DefaultModel)
 	if model == "" {
-		model = "gemini-1.5-flash"
+		model = "gemini-2.0-flash"
 	}
 
 	return &geminiProvider{
@@ -253,15 +253,15 @@ func estimateGeminiCost(model string, inputTokens, outputTokens int) float64 {
 	var inputRate, outputRate float64
 
 	switch {
-	case strings.Contains(model, "gemini-1.5-pro"):
+	case strings.Contains(model, "gemini-2.0-pro"):
 		inputRate = 3.5 / 1_000_000   // $3.50 per million input tokens (up to 128k)
 		outputRate = 10.5 / 1_000_000 // $10.50 per million output tokens
-	case strings.Contains(model, "gemini-1.5-flash"):
-		inputRate = 0.075 / 1_000_000  // $0.075 per million input tokens (up to 128k)
-		outputRate = 0.3 / 1_000_000   // $0.30 per million output tokens
-	case strings.Contains(model, "gemini-1.0-pro"):
-		inputRate = 0.5 / 1_000_000   // $0.50 per million input tokens
-		outputRate = 1.5 / 1_000_000  // $1.50 per million output tokens
+	case strings.Contains(model, "gemini-2.0-flash"):
+		inputRate = 0.075 / 1_000_000 // $0.075 per million input tokens (up to 128k)
+		outputRate = 0.3 / 1_000_000  // $0.30 per million output tokens
+	case strings.Contains(model, "gemini-1.5-pro"):
+		inputRate = 0.5 / 1_000_000  // $0.50 per million input tokens
+		outputRate = 1.5 / 1_000_000 // $1.50 per million output tokens
 	default:
 		// Default to Gemini 1.5 Flash pricing (most common)
 		inputRate = 0.075 / 1_000_000

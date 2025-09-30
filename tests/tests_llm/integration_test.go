@@ -66,11 +66,11 @@ func TestLLMIntegration(t *testing.T) {
 			model := "test-model"
 			switch tt.provider {
 			case "gemini":
-				model = "gemini-1.5-flash"
+				model = "gemini-2.0-flash"
 			case "groq":
 				model = "llama3-8b-8192"
 			case "openai":
-				model = "gpt-3.5-turbo"
+				model = "gpt-4-turbo"
 			}
 
 			cfg := config.LLMConfig{

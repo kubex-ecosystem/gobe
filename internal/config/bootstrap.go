@@ -135,7 +135,7 @@ func defaultConfig(initArgs t.InitArgs) Config {
 		},
 		LLM: LLMConfig{
 			Provider:    "gemini",
-			Model:       "gemini-1.5-flash",
+			Model:       "gemini-2.0-flash",
 			MaxTokens:   1024,
 			Temperature: 0.3,
 			APIKey:      "",
