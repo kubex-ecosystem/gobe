@@ -20,10 +20,12 @@ func (m *GoBE) Alias() string {
 	return ""
 }
 func (m *GoBE) ShortDescription() string {
-	return "GHbex is a command-line tool for managing GitHub repositories and file markers."
+	return "GoBE is a fully-featured backend, MCP server, CLI tool, and much more."
 }
 func (m *GoBE) LongDescription() string {
-	return `GHbex is a command-line tool for managing GitHub repositories and file markers.
+	return `GoBE is a fully-featured modular, open source backend solution designed to streamline the development
+and deployment of applications. It serves as a robust backend framework, a Model Context Protocol (MCP), and a
+versatile command-line interface (CLI) tool, among other functionalities and features. One Command. All the Power.
 `
 }
 func (m *GoBE) Usage() string {
@@ -31,9 +33,9 @@ func (m *GoBE) Usage() string {
 }
 func (m *GoBE) Examples() []string {
 	return []string{
-		"gobe start",
-		"gobe stop",
-		"gobe status",
+		"gobe service start",
+		"gobe mcp-server chat",
+		"gobe cert generate",
 	}
 }
 func (m *GoBE) Active() bool {
@@ -60,8 +62,14 @@ func (m *GoBE) Command() *cobra.Command {
 	}
 
 	rtCmd.AddCommand(cc.CertificatesCmdList())
-	rtCmd.AddCommand(cc.ServiceCmdList()...)
+	rtCmd.AddCommand(cc.ServiceCmd())
 	rtCmd.AddCommand(vs.CliCommand())
+	rtCmd.AddCommand(cc.MCPServerCmd())
+	rtCmd.AddCommand(cc.CryptographyCommand())
+	rtCmd.AddCommand(cc.DiscordCommand())
+	rtCmd.AddCommand(cc.WebhookCommand())
+	rtCmd.AddCommand(cc.DatabaseCommand())
+	rtCmd.AddCommand(cc.ConfigCommand())
 
 	// Set usage definitions for the command and its subcommands
 	setUsageDefinition(rtCmd)

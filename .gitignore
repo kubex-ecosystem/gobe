@@ -273,3 +273,4 @@ dist/*
 CLAUDE.md
 .env*
 .env.example
+config/config.json
