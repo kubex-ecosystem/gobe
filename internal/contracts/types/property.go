@@ -14,11 +14,11 @@ import (
 // Property is a struct that holds the properties of the GoLife instance.
 type Property[T any] struct {
 	// Telemetry is the telemetry for this GoLife instance.
-	metrics *Telemetry
+	metrics *Telemetry `json:"-" yaml:"-" toml:"-" xml:"-"`
 	// Prop is the property for this GoLife instance.
-	prop ci.IPropertyValBase[T]
+	prop *PropertyValBase[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
 	// Cb is the callback function for this GoLife instance.
-	cb func(any) (bool, error)
+	cb func(any) (bool, error) `json:"-" yaml:"-" toml:"-" xml:"-"`
 }
 
 // NewProperty creates a new IProperty[T] with the given value and Reference.
@@ -77,16 +77,13 @@ func (p *Property[T]) GetLogger() l.Logger {
 
 // Serialize serializes the ProcessInput instance to the specified format.
 func (p *Property[T]) Serialize(format, filePath string) ([]byte, error) {
-	var v any
 	value := p.GetValue()
-	v = &value
-	mapper := NewMapper[any](&v, filePath)
+	mapper := NewMapper(&value, filePath)
 	return mapper.Serialize(format)
 }
 
 // Deserialize deserializes the data into the ProcessInput instance.
 func (p *Property[T]) Deserialize(data []byte, format, filePath string) error {
-
 	if len(data) == 0 {
 		return nil
 	}
@@ -94,7 +91,8 @@ func (p *Property[T]) Deserialize(data []byte, format, filePath string) error {
 	if !reflect.ValueOf(value).IsValid() {
 		p.SetValue(new(T))
 	}
-	mapper := NewMapper[T](&value, filePath)
+	var v T
+	mapper := NewMapper(&v, filePath)
 	if v, vErr := mapper.Deserialize(data, format); vErr != nil {
 		gl.Log("error", "Failed to deserialize data:", vErr.Error())
 		return vErr
@@ -106,23 +104,46 @@ func (p *Property[T]) Deserialize(data []byte, format, filePath string) error {
 
 // SaveToFile saves the property to a file in the specified format.
 func (p *Property[T]) SaveToFile(filePath string, format string) error {
-	if data, err := p.Serialize(format, filePath); err != nil {
-		gl.Log("error", "Failed to serialize data:", err.Error())
+	m := NewMapper(p.prop, filePath)
+	m.SerializeToFile(format)
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		gl.Log("error", "File was not created:", filePath)
 		return err
-	} else {
-		if err := os.WriteFile(filePath, data, 0644); err != nil {
-			gl.Log("error", "Failed to write to file:", err.Error())
-			return err
-		}
 	}
 	return nil
 }
 
 // LoadFromFile loads the property from a file in the specified format.
 func (p *Property[T]) LoadFromFile(filename, format string) error {
-	data, err := os.ReadFile(filename)
-	if err != nil {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		gl.Log("error", "File does not exist:", filename)
 		return err
 	}
-	return p.Deserialize(data, format, filename)
+	// Create a new mapper instance
+	m := NewMapper(p.prop, filename)
+
+	// Deserialize the file content into the property (this may fail for some formats),
+	// so we check if data was filled, if not, we will try to read the file normally
+	// and then deserialize the data into the property with the mapper.
+	data, err := m.DeserializeFromFile(format)
+	if data == nil {
+		if err != nil && os.IsPermission(err) {
+			gl.Log("error", "Permission denied to read file:", filename)
+			return err
+		}
+		// We already checked if the file exists, so let's read it
+		var v []byte
+		if v, err = os.ReadFile(filename); err != nil {
+			gl.Log("error", "Failed to read file:", err.Error())
+			return err
+		} else {
+			data, err = m.Deserialize(v, format)
+			if err != nil {
+				gl.Log("error", "Failed to deserialize file content:", err.Error())
+				return err
+			}
+			p.prop.Swap(data.Load())
+		}
+	}
+	return nil
 }

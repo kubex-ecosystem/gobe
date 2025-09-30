@@ -2,6 +2,7 @@
 package types_test
 
 import (
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -28,9 +29,9 @@ func TestProperty_GetSetSerialize(t *testing.T) {
 	var v int
 
 	if v = pt.GetValue(); v != 42 {
-		gl.Log("error", "Value from Property:", v, "Type:", reflect.TypeOf(v).Name())
+		// gl.Log("error", "Value from Property:", v, "Type:", reflect.TypeOf(v).Name())
 		if v = *pt.Prop().Get(true).(*int); v != 42 {
-			gl.Log("error", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
+			// gl.Log("error", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
 			if v = *pt.Prop().Value(); v != 42 {
 				t.Fatalf("expected 42, got %d", v)
 			} else {
@@ -62,21 +63,42 @@ successfully:
 }
 
 func TestProperty_SaveLoadFile(t *testing.T) {
-	p := types.NewProperty[string]("name", nil, false, nil)
 	name := "kubex"
-	p.SetValue(&name)
-
+	p := types.NewProperty("name", &name, false, nil)
 	dir := t.TempDir()
 	file := filepath.Join(dir, "prop.json")
-	if err := p.SaveToFile(file, "json"); err != nil {
+	if !filepath.IsAbs(file) {
+		t.Fatalf("expected absolute file path, got %q", file)
+	}
+	if err := p.SaveToFile(file, "yaml"); err != nil {
 		t.Fatalf("SaveToFile error: %v", err)
 	}
-
-	p2 := types.NewProperty[string]("name", nil, false, nil)
-	if err := p2.LoadFromFile(file, "json"); err != nil {
+	if info, err := os.Stat(file); err != nil {
+		t.Fatalf("file should exist after SaveToFile, got error: %v", err)
+	} else {
+		gl.Log("info", "File info:", info.Size(), "bytes")
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("failed to read file: %v", err)
+		}
+		gl.Log("info", "File content:", string(content))
+	}
+	v := ""
+	p2 := types.NewProperty("name", &v, false, nil)
+	if err := p2.LoadFromFile(file, "yaml"); err != nil {
 		t.Fatalf("LoadFromFile error: %v", err)
 	}
-	if got := p2.GetValue(); got != "kubex" {
-		t.Fatalf("expected 'kubex', got %q", got)
+	expected := func(expectedValue string) string { s := expectedValue; return s }("kubex")
+	got := p2.(*types.Property[string]).GetValue()
+	got2 := p2.Prop().(*types.PropertyValBase[string]).Value()
+	gl.Log("info", "Got from Prop().Get(true):", got, "Type:", reflect.TypeOf(got).Name())
+	gl.Log("info", "Got from Prop().Value():", *got2, "Type:", reflect.TypeOf(got2).Name())
+
+	if got != expected {
+		if got2 != &expected {
+			t.Fatalf("expected %q after LoadFromFile, got %q and %q", expected, got, *got2)
+		} else {
+			gl.Log("success", "Got from Prop().Value():", *got2, "Type:", reflect.TypeOf(got2).Name())
+		}
 	}
 }

@@ -15,24 +15,23 @@ import (
 // PropertyValBase is a type for the value.
 type PropertyValBase[T any] struct {
 	// Logger is the logger for this context.
-	Logger l.Logger
+	Logger l.Logger `json:"-" yaml:"-" toml:"-" xml:"-"`
 
 	// v is the value.
-	*atomic.Pointer[T]
+	*atomic.Pointer[T] `json:"value" yaml:"value" toml:"value" xml:"value"`
 
 	// Reference is the identifiers for the context.
 	// IReference
-	*Reference
+	*Reference `json:"reference" yaml:"reference" toml:"reference" xml:"reference"`
 
 	//muCtx is the mutexes for the context.
-	*Mutexes
+	*Mutexes `json:"-" yaml:"-" toml:"-" xml:"-"`
 
 	// validation is the validation for the value.
-	*Validation[T]
-
+	*Validation[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
 	// Channel is the channel for the value.
-	ci.IChannelCtl[T]
-	channelCtl *ChannelCtl[T]
+	ci.IChannelCtl[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
+	channelCtl        *ChannelCtl[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
 }
 
 // NewVal is a function that creates a new PropertyValBase instance.
