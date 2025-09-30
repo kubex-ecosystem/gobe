@@ -1,5 +1,4 @@
-// Pacote de teste externo para internal/contracts/types (ChannelCtl).
-package types_test
+package testtypes
 
 import (
 	"reflect"

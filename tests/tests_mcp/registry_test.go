@@ -1,4 +1,4 @@
-package tests_mcp
+package testsmcp
 
 import (
 	"context"
@@ -133,25 +133,25 @@ func TestRegistry_Exec(t *testing.T) {
 		errMsg     string
 	}{
 		{
-			name:     "successful execution",
-			toolName: "test.tool",
-			args:     map[string]interface{}{"input": "test"},
-			setupTool: true,
+			name:       "successful execution",
+			toolName:   "test.tool",
+			args:       map[string]interface{}{"input": "test"},
+			setupTool:  true,
 			wantResult: "test result",
 			wantErr:    false,
 		},
 		{
-			name:     "empty tool name",
-			toolName: "",
-			args:     map[string]interface{}{},
+			name:      "empty tool name",
+			toolName:  "",
+			args:      map[string]interface{}{},
 			setupTool: false,
 			wantErr:   true,
 			errMsg:    "tool name cannot be empty",
 		},
 		{
-			name:     "tool not found",
-			toolName: "nonexistent.tool",
-			args:     map[string]interface{}{},
+			name:      "tool not found",
+			toolName:  "nonexistent.tool",
+			args:      map[string]interface{}{},
 			setupTool: false,
 			wantErr:   true,
 			errMsg:    "tool not found: nonexistent.tool",

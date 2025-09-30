@@ -1,5 +1,4 @@
-// Pacote de teste externo para internal/contracts/types (Property).
-package types_test
+package testtypes
 
 import (
 	"fmt"

@@ -1,4 +1,5 @@
-package tests_mcp
+// Package testsmcp contains integration tests for the MCP module.
+package testsmcp
 
 import (
 	"bytes"

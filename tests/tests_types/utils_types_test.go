@@ -1,13 +1,16 @@
-// Pacote de teste externo para internal/contracts/types utils.
-package types_test
+package testtypes
 
 import (
 	"testing"
+
 	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 func TestIsShellSpecialVar(t *testing.T) {
-	cases := []struct{ c byte; want bool }{
+	cases := []struct {
+		c    byte
+		want bool
+	}{
 		{'*', true}, {'#', true}, {'$', true}, {'A', false}, {'z', false},
 	}
 	for _, tc := range cases {
@@ -18,7 +21,10 @@ func TestIsShellSpecialVar(t *testing.T) {
 }
 
 func TestIsAlphaNum(t *testing.T) {
-	cases := []struct{ c byte; want bool }{
+	cases := []struct {
+		c    byte
+		want bool
+	}{
 		{'_', true}, {'0', true}, {'9', true}, {'a', true}, {'Z', true}, {'-', false}, {' ', false},
 	}
 	for _, tc := range cases {

@@ -153,16 +153,16 @@ func (v *PropertyValBase[T]) Set(t *T) bool {
 	}
 	// Deixa o nil entrar na validação, pra ter a tratativa que a pessoa inseriu na validação que
 	// pode ser customizada, etc...
-	if v.Validation != nil {
-		if v.CheckIfWillValidate() {
-			gl.Log("warning", "Set: validation is disabled (", reflect.TypeFor[T]().String(), ")")
-		} else {
-			if ok := v.Validate(t); !ok.GetIsValid() {
-				gl.Log("error", fmt.Sprintf("Set: validation error (%s): %v", reflect.TypeFor[T]().String(), v.Validation.GetResults()))
-				return false
-			}
-		}
-	}
+	// if v.Validation != nil {
+	// 	if v.CheckIfWillValidate() {
+	// 		gl.Log("warning", "Set: validation is disabled (", reflect.TypeFor[T]().String(), ")")
+	// 	} else {
+	// 		if ok := v.Validate(t); !ok.GetIsValid() {
+	// 			gl.Log("error", fmt.Sprintf("Set: validation error (%s): %v", reflect.TypeFor[T]().String(), v.Validation.GetResults()))
+	// 			return false
+	// 		}
+	// 	}
+	// }
 	if t == nil {
 		gl.Log("error", "Set: value is nil (", reflect.TypeFor[T]().String(), ")")
 		return false
