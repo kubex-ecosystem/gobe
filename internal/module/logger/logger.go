@@ -315,59 +315,6 @@ func SetDebug(d bool) {
 		}
 	}
 }
-func GetLogger[T any](obj *T) GLog[l.Logger] {
-	if g == nil || Logger == nil {
-		g = &gLog[l.Logger]{
-			Logger:     l.GetLogger(info.GetBin()),
-			gLogLevel:  LogLevelInfo,
-			gShowTrace: showTrace,
-			gDebug:     debug,
-		}
-		Logger = g
-	}
-	if obj == nil {
-		return Logger
-	}
-	var lgr l.Logger
-	if objValueLogger := reflect.ValueOf(obj).Elem().MethodByName("GetLogger"); !objValueLogger.IsValid() {
-		if objValueLogger = reflect.ValueOf(obj).Elem().FieldByName("Logger"); !objValueLogger.IsValid() {
-			g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
-				"context":  "Log",
-				"logType":  "error",
-				"object":   obj,
-				"msg":      "object does not have a logger field",
-				"showData": getShowTrace(),
-			})
-			return g
-		} else {
-			lgrC := objValueLogger.Convert(reflect.TypeFor[l.Logger]())
-			if lgrC.IsNil() {
-				lgrC = reflect.ValueOf(g.Logger)
-			}
-			if lgr = lgrC.Interface().(l.Logger); lgr == nil {
-				lgr = g.Logger
-			}
-		}
-	} else {
-		lgr = g
-	}
-	if lgr == nil {
-		g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
-			"context":  "Log",
-			"logType":  "error",
-			"object":   obj,
-			"msg":      "object does not have a logger field",
-			"showData": getShowTrace(),
-		})
-		return Logger
-	}
-	return &gLog[l.Logger]{
-		Logger:     lgr,
-		gLogLevel:  g.gLogLevel,
-		gShowTrace: g.gShowTrace,
-		gDebug:     g.gDebug,
-	}
-}
 func LogObjLogger[T any](obj *T, logType string, messages ...any) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -558,5 +505,127 @@ func NewLogger[T any](prefix string) GLog[T] {
 		gLogLevel:  LogLevelError,
 		gShowTrace: false,
 		gDebug:     false,
+	}
+}
+
+func GetLogger[T any](obj *T) GLog[l.Logger] {
+	if g == nil || Logger == nil {
+		g = &gLog[l.Logger]{
+			Logger:     l.GetLogger(info.GetBin()),
+			gLogLevel:  LogLevelInfo,
+			gShowTrace: showTrace,
+			gDebug:     debug,
+		}
+		Logger = g
+	}
+	if obj == nil {
+		return Logger
+	}
+	var lgr l.Logger
+	if objValueLogger := reflect.ValueOf(obj).Elem().MethodByName("GetLogger"); !objValueLogger.IsValid() {
+		// check if is interface, if so, try another approach
+		if reflect.TypeOf(obj).Kind() == reflect.Interface {
+			if reflect.ValueOf(obj).Elem().Kind() == reflect.Ptr {
+				if objValueLogger = reflect.ValueOf(obj).Elem().Elem().MethodByName("GetLogger"); !objValueLogger.IsValid() {
+					g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
+						"context":  "Log",
+						"logType":  "error",
+						"object":   obj,
+						"msg":      "object does not have a logger field",
+						"showData": getShowTrace(),
+					})
+					return g
+				}
+			} else {
+				g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
+					"context":  "Log",
+					"logType":  "error",
+					"object":   obj,
+					"msg":      "object does not have a logger field",
+					"showData": getShowTrace(),
+				})
+				return g
+			}
+		} else {
+			g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
+				"context":  "Log",
+				"logType":  "error",
+				"object":   obj,
+				"msg":      "object does not have a logger field",
+				"showData": getShowTrace(),
+			})
+			return g
+		}
+		lgrC := objValueLogger.Call([]reflect.Value{})
+		if len(lgrC) == 0 {
+			g.ErrorCtx(fmt.Sprintf("log object (%s) GetLogger method returned no value", reflect.TypeFor[T]()), map[string]any{
+				"context":  "Log",
+				"logType":  "error",
+				"object":   obj,
+				"msg":      "object does not have a logger field",
+				"showData": getShowTrace(),
+			})
+			return g
+		}
+		if lgrC[0].IsNil() {
+			lgr = g.Logger
+		} else {
+			if lgrC[0].Type().ConvertibleTo(reflect.TypeFor[l.Logger]()) {
+				lgr = lgrC[0].Convert(reflect.TypeFor[l.Logger]()).Interface().(l.Logger)
+			} else {
+				g.ErrorCtx(fmt.Sprintf("log object (%s) GetLogger method returned invalid type", reflect.TypeFor[T]()), map[string]any{
+					"context":  "Log",
+					"logType":  "error",
+					"object":   obj,
+					"msg":      "object does not have a logger field",
+					"showData": getShowTrace(),
+				})
+				return g
+			}
+		}
+	} else {
+		lgrC := objValueLogger.Call([]reflect.Value{})
+		if len(lgrC) == 0 {
+			g.ErrorCtx(fmt.Sprintf("log object (%s) GetLogger method returned no value", reflect.TypeFor[T]()), map[string]any{
+				"context":  "Log",
+				"logType":  "error",
+				"object":   obj,
+				"msg":      "object does not have a logger field",
+				"showData": getShowTrace(),
+			})
+			return g
+		}
+		if lgrC[0].IsNil() {
+			lgr = g.Logger
+		} else {
+			if lgrC[0].Type().ConvertibleTo(reflect.TypeFor[l.Logger]()) {
+				lgr = lgrC[0].Convert(reflect.TypeFor[l.Logger]()).Interface().(l.Logger)
+			} else {
+				g.ErrorCtx(fmt.Sprintf("log object (%s) GetLogger method returned invalid type", reflect.TypeFor[T]()), map[string]any{
+					"context":  "Log",
+					"logType":  "error",
+					"object":   obj,
+					"msg":      "object does not have a logger field",
+					"showData": getShowTrace(),
+				})
+				return g
+			}
+		}
+	}
+	if lgr == nil {
+		g.ErrorCtx(fmt.Sprintf("log object (%s) does not have a logger field", reflect.TypeFor[T]()), map[string]any{
+			"context":  "Log",
+			"logType":  "error",
+			"object":   obj,
+			"msg":      "object does not have a logger field",
+			"showData": getShowTrace(),
+		})
+		return Logger
+	}
+	return &gLog[l.Logger]{
+		Logger:     lgr,
+		gLogLevel:  g.gLogLevel,
+		gShowTrace: g.gShowTrace,
+		gDebug:     g.gDebug,
 	}
 }
