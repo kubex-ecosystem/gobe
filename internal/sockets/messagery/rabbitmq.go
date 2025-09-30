@@ -63,6 +63,8 @@ func (a *AMQP) Connect(ctx context.Context, url string, logf func(string, ...any
 					_ = ch.Close()
 					_ = conn.Close()
 					last = err
+					gl.Log("error", fmt.Sprintf("Failed to declare AMQP topology: %v", last))
+					continue
 				}
 				a.ready.Store(true)
 				logf("amqp conectado e pronto")
