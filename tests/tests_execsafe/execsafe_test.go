@@ -1,4 +1,5 @@
-package tests_execsafe
+// Package testsexecsafe contains tests for the execsafe package.
+package testsexecsafe
 
 import (
 	"context"
