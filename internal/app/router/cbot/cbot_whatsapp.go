@@ -35,7 +35,7 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = gl.GetEnvOrDefault("WHATSAPP_CONFIG_FILE", os.ExpandEnv("./config/social_meta.yaml"))
+		initArgs.ConfigFile = gl.GetEnvOrDefault("WHATSAPP_CONFIG_FILE", os.ExpandEnv("./support/whatsapp_config.yaml"))
 	}
 
 	cfg, configErr := config.Load[*config.Config](initArgs)
