@@ -21,13 +21,13 @@ import (
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
-	cfg "github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/config"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type GoBECertData struct {
@@ -36,7 +36,7 @@ type GoBECertData struct {
 }
 
 type GoBE struct {
-	InitArgs    ci.InitArgs
+	InitArgs    gl.InitArgs
 	Logger      l.Logger
 	environment ci.IEnvironment
 
@@ -60,87 +60,39 @@ type GoBE struct {
 
 	Properties  map[string]any
 	Metadata    map[string]any
-	Routes      map[string]map[string]any
 	Middlewares map[string]any
+	Routes      map[string]map[string]any
 }
 
-func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug, releaseMode bool) (ci.IGoBE, error) {
+func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 	if logger == nil {
-		logger = l.GetLogger("GoBE")
-	}
-	if debug {
-		gl.SetDebug(debug)
-	}
-	if releaseMode {
-		os.Setenv("GIN_MODE", "release")
-		gin.SetMode(gin.ReleaseMode)
+		logger = gl.GetLogger("GoBE")
 	}
 
 	chanCtl := make(chan string, 3)
-	signamManager := t.NewSignalManager(chanCtl, logger)
+	signamManager := t.NewSignalManager(chanCtl, logger.GetLogger())
+	var err error
 
-	defaultDir := filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath))
-	if _, err := os.Stat(defaultDir); err != nil {
-		if os.IsNotExist(err) {
-			if err := os.MkdirAll(defaultDir, 0755); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
-			}
-		}
-	}
-
-	if configFile == "" {
-		configFile = os.ExpandEnv(cm.DefaultGoBEConfigPath)
-		if _, err := os.Stat(configFile); err != nil {
-			if os.IsNotExist(err) {
-				if err := os.MkdirAll(filepath.Dir(configFile), 0755); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
-				}
-				if err := os.WriteFile(configFile, []byte(""), 0644); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
-				}
-			}
-		}
-	}
-	if logFile == "" {
-		logFile = filepath.Join(defaultDir, "request_tracer.json")
-		if _, err := os.Stat(logFile); err != nil {
-			if os.IsNotExist(err) {
-				if err := os.MkdirAll(filepath.Dir(logFile), 0755); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
-				}
-				if err := os.WriteFile(logFile, []byte(""), 0644); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating log file: %v", err))
-				}
-			}
-		}
-	}
-
-	initArgs := ci.InitArgs{
-		ConfigFile:     configFile,
-		IsConfidential: isConfidential,
-		Port:           port,
-		Bind:           bind,
-		Address:        net.JoinHostPort(bind, port),
-		PubCertKeyPath: os.ExpandEnv(cm.DefaultGoBECertPath),
-		PubKeyPath:     os.ExpandEnv(cm.DefaultGoBEKeyPath),
-		Pwd:            "",
+	args, err = validateIniArgs(args)
+	if err != nil {
+		gl.Log("fatal", fmt.Sprintf("Error validating init args: %v", err))
+		return nil, err
 	}
 
 	gbm := &GoBE{
-		InitArgs: initArgs,
-
-		Logger:    logger,
+		InitArgs:  args,
+		Logger:    logger.GetLogger(),
 		Mutexes:   t.NewMutexesType(),
-		Reference: t.NewReference(name).GetReference(),
+		Reference: t.NewReference(args.Name).GetReference(),
 
 		SignalManager: signamManager,
 		Properties:    make(map[string]any),
 		Metadata:      make(map[string]any),
 		Middlewares:   make(map[string]any),
 
-		configFile: configFile,
-		LogFile:    logFile,
-		configDir:  filepath.Dir(configFile),
+		configFile: args.ConfigFile,
+		LogFile:    args.LogFile,
+		configDir:  filepath.Dir(args.ConfigFile),
 
 		chanCtl:    chanCtl,
 		emailQueue: make(chan ci.ContactForm, 20),
@@ -150,12 +102,7 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		requestsTracers: make(map[string]ci.IRequestsTracer),
 	}
 
-	if err := cfg.BootstrapMainConfig(gbm.InitArgs.ConfigFile, &gbm.InitArgs); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
-	}
-
-	var err error
-	gbm.environment, err = t.NewEnvironment(configFile, isConfidential, logger)
+	gbm.environment, err = t.NewEnvironment(args.ConfigFile, args.IsConfidential, gbm.Logger)
 	if err != nil {
 		gl.Log("fatal", fmt.Sprintf("Error creating environment: %v", err))
 	}
@@ -164,10 +111,10 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 	}
 
 	gbm.Properties["env"] = t.NewProperty("env", &gbm.environment, true, nil)
-	gbm.Properties["port"] = t.NewProperty("port", &port, true, nil)
-	gbm.Properties["bind"] = t.NewProperty("bind", &bind, true, nil)
-	address := net.JoinHostPort(bind, port)
-	gbm.Properties["address"] = t.NewProperty("address", &address, true, nil)
+	gbm.Properties["port"] = t.NewProperty("port", &args.Port, true, nil)
+	gbm.Properties["bind"] = t.NewProperty("bind", &args.Bind, true, nil)
+	args.Address = net.JoinHostPort(args.Bind, args.Port)
+	gbm.Properties["address"] = t.NewProperty("address", &args.Address, true, nil)
 
 	pubCertKeyPath := gbm.environment.Getenv("CERT_FILE_PATH")
 	if pubCertKeyPath == "" {
@@ -192,7 +139,7 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 		}
 	}
 
-	gbm.Properties["initArgs"] = t.NewProperty("initArgs", &initArgs, false, nil)
+	gbm.Properties["initArgs"] = t.NewProperty("initArgs", &args, false, nil)
 
 	crptService := crp.NewCryptoService()
 	crtService := crt.NewCertService(pubKeyPath, pubCertKeyPath)
@@ -254,24 +201,6 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 
 	// Start listening for signals since the beginning, so we can handle them
 	// gracefully even if the server is not started yet.
-
-	go func(chan string, ci.ISignalManager[chan string], *GoBE) {
-		signamManager.ListenForSignals()
-		gl.Log("debug", "Listening for signals...")
-		for msg := range chanCtl {
-			switch msg {
-			case "reload":
-				gl.Log("info", "Received reload signal, reloading server...")
-				gbm.StopGoBE()
-				gbm.StartGoBE()
-			default:
-				gl.Log("info", "Received stop signal, stopping server...")
-				gbm.StopGoBE()
-				gl.Log("info", "Server stopped gracefully")
-				return
-			}
-		}
-	}(chanCtl, signamManager, gbm)
 
 	return gbm, nil
 }
@@ -569,4 +498,161 @@ func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	}
 	gl.Log("error", "Logger is nil")
 	return nil, errors.New("logger is nil")
+}
+
+// Auxiliary functions for GoBE
+
+func chanRoutineCtl[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
+	select {
+	case cmd := <-chCtl:
+		switch cmd {
+		case "stop":
+			gl.Log("info", "Received stop command for:", v.GetName(), "ID:", v.GetID().String())
+			// If we receive a stop command, we need to close the channels.
+			if ch != nil {
+				close(ch)
+				ch = nil
+			}
+			if chCtl != nil {
+				close(chCtl)
+				chCtl = nil
+			}
+		case "reload":
+			gl.Log("info", "Received reload command for:", v.GetName(), "ID:", v.GetID().String())
+			// If we receive a reload command, we need to close the channels and create new ones.
+			if ch != nil {
+				close(ch)
+				ch = nil
+			}
+			if chCtl != nil {
+				close(chCtl)
+				chCtl = nil
+			}
+		default:
+			gl.Log("warn", "Received unknown command for:", v.GetName(), "ID:", v.GetID().String(), "Command:", cmd)
+		}
+	case data := <-ch:
+		gl.Log("debug", "Received data for:", v.GetName(), "ID:", v.GetID().String(), "Data:", data)
+		// Process the data received from the main channel.
+		action := func() string {
+			if reflect.ValueOf(data).Kind() == reflect.Ptr && !reflect.ValueOf(data).IsNil() {
+				return fmt.Sprintf("%v", reflect.ValueOf(data).Elem().Interface())
+			}
+			return fmt.Sprintf("%v", data)
+		}
+		v.ProcessData(action())
+	case <-time.After(5 * time.Second):
+		// Timeout after 5 seconds to check if we need to exit the routine.
+	}
+}
+
+func listenSystemSignals[T any](gbm *GoBE) {
+	chCtl := gbm.GetChanCtl()
+	if chCtl == nil {
+		gl.Log("error", "Control channel is nil, cannot listen for system signals")
+		return
+	}
+	signamManager := gbm.SignalManager
+	if signamManager == nil {
+		gl.Log("error", "Signal manager is nil, cannot listen for system signals")
+		return
+	}
+	if reflect.ValueOf(signamManager).IsNil() {
+		gl.Log("error", "Signal manager is nil, cannot listen for system signals")
+		return
+	}
+	go func(chan string, ci.ISignalManager[chan string], *GoBE) {
+		signamManager.ListenForSignals()
+		gl.Log("debug", "Listening for signals...")
+		for msg := range chCtl {
+			switch msg {
+			case "reload":
+				gl.Log("info", "Received reload signal, reloading server...")
+				gbm.StopGoBE()
+				gbm.StartGoBE()
+			default:
+				gl.Log("info", "Received stop signal, stopping server...")
+				gbm.StopGoBE()
+				gl.Log("info", "Server stopped gracefully")
+				return
+			}
+		}
+	}(chCtl, signamManager, gbm)
+}
+func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
+	if args.Debug {
+		gl.SetDebugMode(args.Debug)
+	}
+	if args.ReleaseMode {
+		os.Setenv("GIN_MODE", "release")
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	defaultDir := filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath))
+	if _, err := os.Stat(defaultDir); err != nil {
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(defaultDir, 0755); err != nil {
+				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
+			}
+		}
+	}
+
+	if args.ConfigFile == "" {
+		args.ConfigFile = os.ExpandEnv(cm.DefaultGoBEConfigPath)
+		if _, err := os.Stat(args.ConfigFile); err != nil {
+			if os.IsNotExist(err) {
+				if err := os.MkdirAll(filepath.Dir(args.ConfigFile), 0755); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
+				}
+				if err := os.WriteFile(args.ConfigFile, []byte(""), 0644); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
+				}
+			}
+		}
+	}
+	if args.LogFile == "" {
+		args.LogFile = filepath.Join(defaultDir, "request_tracer.json")
+		if _, err := os.Stat(args.LogFile); err != nil {
+			if os.IsNotExist(err) {
+				if err := os.MkdirAll(filepath.Dir(args.LogFile), 0755); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
+				}
+				if err := os.WriteFile(args.LogFile, []byte(""), 0644); err != nil {
+					gl.Log("fatal", fmt.Sprintf("Error creating log file: %v", err))
+				}
+			}
+		}
+	}
+
+	if args.PubCertKeyPath == "" {
+		args.PubCertKeyPath = os.ExpandEnv(cm.DefaultGoBECertPath)
+	}
+	if args.PubKeyPath == "" {
+		args.PubKeyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+	}
+
+	initArgs := gl.InitArgs{
+		ConfigFile:     args.ConfigFile,
+		IsConfidential: args.IsConfidential,
+		Port:           args.Port,
+		Bind:           args.Bind,
+		Address:        net.JoinHostPort(args.Bind, args.Port),
+		PubCertKeyPath: args.PubCertKeyPath,
+		EnvFile:        args.EnvFile,
+		Name:           args.Name,
+		Debug:          args.Debug,
+		ReleaseMode:    args.ReleaseMode,
+		LogFile:        args.LogFile,
+		PubKeyPath:     args.PubKeyPath,
+		Pwd:            args.Pwd,
+	}
+
+	if err := config.BootstrapMainConfig(&initArgs); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
+	}
+
+	// We don't return a pointer, this allows us to
+	// work with more than one instance of GoBE with different
+	// purposes.
+	return initArgs, nil
 }

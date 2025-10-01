@@ -4,21 +4,19 @@ package tasks
 import (
 	"net/http"
 
-	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type TasksController struct {
 	tasksService svc.TasksService
 }
 
-func NewTasksController(db *gorm.DB) *TasksController {
+func NewTasksController(bridge *svc.Bridge) *TasksController {
 	return &TasksController{
-		tasksService: svc.NewTasksService(models.NewTasksRepo(db)),
+		tasksService: bridge.TasksService(),
 	}
 }
 

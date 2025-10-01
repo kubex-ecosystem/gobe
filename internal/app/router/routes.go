@@ -9,6 +9,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/router/cbot"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/gateway"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/mcp"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/oauth"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/sys"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/user"
@@ -32,8 +33,9 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"productRoutes":  app.NewProductRoutes(&rtr),
 		"customerRoutes": app.NewCustomerRoutes(&rtr),
 
-		"authRoutes": user.NewAuthRoutes(&rtr),
-		"userRoutes": user.NewUserRoutes(&rtr),
+		"authRoutes":  user.NewAuthRoutes(&rtr),
+		"userRoutes":  user.NewUserRoutes(&rtr),
+		"oauthRoutes": oauth.NewOAuthRoutes(&rtr),
 
 		"discordRoutes":  cbot.NewDiscordRoutes(&rtr),
 		"whatsappRoutes": cbot.NewWhatsAppRoutes(&rtr),
@@ -45,6 +47,6 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"mcpPreferencesRoutes": mcp.NewMCPPreferencesRoutes(&rtr),
 		"mcpSystemRoutes":      mcp.NewMCPSystemRoutes(&rtr),
 		"mcpAnalyzerRoutes":    mcp.NewMCPAnalyzerRoutes(&rtr),
-		"mcpGDBaseRoutes": mcp.NewMCPGDBaseRoutes(&rtr),
+		"mcpGDBaseRoutes":      mcp.NewMCPGDBaseRoutes(&rtr),
 	}
 }

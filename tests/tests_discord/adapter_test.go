@@ -1,4 +1,5 @@
-package tests_discord
+// Package testsdiscord contains tests for the Discord adapter.
+package testsdiscord
 
 import (
 	"sync/atomic"

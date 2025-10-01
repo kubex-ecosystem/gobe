@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 )
 
@@ -60,5 +60,5 @@ func (sm *SignalManager[T]) ListenForSignals() (<-chan string, error) {
 func (sm *SignalManager[T]) StopListening() {
 	signal.Stop(sm.SigChan) // 🔥 Para de escutar sinais
 	close(sm.SigChan)       // 🔥 Fecha o canal para evitar vazamento de goroutines
-	gl.LogObjLogger(sm, "info", "Parando escuta de sinais")
+	gl.Log("info", "Parando escuta de sinais")
 }

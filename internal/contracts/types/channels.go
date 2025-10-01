@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	tu "github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
 
@@ -154,7 +154,7 @@ func (cCtl *ChannelCtl[T]) SetSubChannels(channels map[string]interface{}) map[s
 // GetSubChannelByName returns the sub-channel by name and its type.
 func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, bool) {
 	if cCtl.Channels == nil {
-		gl.LogObjLogger(cCtl, "info", "Creating channels map for:", cCtl.Name, "ID:", cCtl.ID.String())
+		gl.Log("info", "Creating channels map for:", cCtl.Name, "ID:", cCtl.ID.String())
 		cCtl.Channels = initChannelsMap(cCtl)
 	}
 	cCtl.MuRLock()
@@ -163,11 +163,11 @@ func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, 
 		if channel, ok := rawChannel.(ci.IChannelBase[T]); ok {
 			return channel, channel.GetType(), true
 		} else {
-			gl.LogObjLogger(cCtl, "error", fmt.Sprintf("Channel %s is not a valid channel type. Expected: %s, receive %s", name, reflect.TypeFor[ci.IChannelBase[T]]().String(), reflect.TypeOf(rawChannel)))
+			gl.Log("error", fmt.Sprintf("Channel %s is not a valid channel type. Expected: %s, receive %s", name, reflect.TypeFor[ci.IChannelBase[T]]().String(), reflect.TypeOf(rawChannel)))
 			return nil, nil, false
 		}
 	}
-	gl.LogObjLogger(cCtl, "error", "Channel not found:", name, "ID:", cCtl.ID.String())
+	gl.Log("error", "Channel not found:", name, "ID:", cCtl.ID.String())
 	return nil, nil, false
 }
 
@@ -248,7 +248,7 @@ func (cCtl *ChannelCtl[T]) SetMainChannel(channel chan T) chan T {
 		defer cCtl.MuUnlock()
 		cCtl.ch = channel
 	} else {
-		gl.LogObjLogger(cCtl, "warn", "SetMainChannel: provided channel is nil, keeping existing channel")
+		gl.Log("warn", "SetMainChannel: provided channel is nil, keeping existing channel")
 		cCtl.MuRLock()
 		defer cCtl.MuRUnlock()
 		cCtl.ch = nil
@@ -369,12 +369,60 @@ func (cCtl *ChannelCtl[T]) WithMetrics(metrics bool) ci.IChannelCtl[T] {
 	return cCtl
 }
 
+func (cCtl *ChannelCtl[T]) Open() error {
+	if cCtl.Channels == nil {
+		cCtl.Channels = initChannelsMap(cCtl)
+	}
+	cCtl.MuLock()
+	defer cCtl.MuUnlock()
+	if cCtl.ch == nil {
+		cCtl.ch = make(chan T, cCtl.Buffers)
+	}
+	return nil
+}
+
+func (cCtl *ChannelCtl[T]) ProcessData(action string) error {
+	if cCtl.Channels == nil {
+		cCtl.Channels = initChannelsMap(cCtl)
+	}
+	cCtl.MuRLock()
+	defer cCtl.MuRUnlock()
+	// Placeholder for processing data based on action
+	gl.Log("info", "ProcessData called with action:", action)
+	return nil
+}
+
+func (cCtl *ChannelCtl[T]) Monitor() {
+	if cCtl.Channels == nil {
+		cCtl.Channels = initChannelsMap(cCtl)
+	}
+	go chanRoutineWrapper[T](cCtl)
+}
+
+func (cCtl *ChannelCtl[T]) StopMonitor() {
+	if cCtl.Channels == nil {
+		cCtl.Channels = initChannelsMap(cCtl)
+	}
+	cCtl.MuLock()
+	defer cCtl.MuUnlock()
+	if rawChCtl, chCtlType, chCtlOk := cCtl.GetSubChannelByName("ctl"); chCtlOk {
+		if chCtlType != reflect.TypeOf("string") {
+			gl.Log("error", "ChannelCtl: control channel is not a string channel")
+			return
+		}
+		chCtl := reflect.ValueOf(rawChCtl).Interface().(chan string)
+		chCtl <- "stop"
+	} else {
+		gl.Log("error", "ChannelCtl: no control channel found")
+	}
+}
+
 // initChannelsMap initializes the channels map for the ChannelCtl instance.
 func initChannelsMap[T any](v *ChannelCtl[T]) map[string]interface{} {
 	if v.Channels == nil {
 		v.MuLock()
 		defer v.MuUnlock()
-		gl.LogObjLogger(v, "info", "Creating channels map for:", v.Name, "ID:", v.ID.String())
+		gl.Log("info", "Creating channels map for:", v.Name, "ID:", v.ID.String())
 		v.Channels = make(map[string]interface{})
 		// done is a channel for the done signal.
 		v.Channels["done"] = NewChannelBase[bool]("done", smBuf, v.Logger)
@@ -410,4 +458,84 @@ func getDefaultChannelsMap(withMetrics bool, logger l.Logger) map[string]any {
 	}
 
 	return mp
+}
+
+// chanRoutineCtl handles control messages for the channel routine.
+func chanRoutineCtl[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
+	select {
+	case msg := <-chCtl:
+		switch msg {
+		case "stop":
+			gl.Log("info", "Received stop signal for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
+			// When we receive a stop signal, we need to close the channels.
+			if ch != nil {
+				close(ch)
+			}
+			if chCtl != nil {
+				close(chCtl)
+			}
+			ch = nil
+			chCtl = nil
+		case "status":
+			gl.Log("info", "Received status signal for:", v.GetName(), "ID:", v.GetID().String())
+			// Placeholder for status handling
+		default:
+			gl.Log("warn", "Received unknown signal for:", v.GetName(), "ID:", v.GetID().String(), "Signal:", msg)
+		}
+	default:
+		// No control message received, continue processing
+	}
+}
+
+// chanRoutineDefer handles cleanup when the channel routine exits.
+func chanRoutineDefer[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
+	gl.Log("debug", "Defering monitor routine for:", v.GetName(), "ID:", v.GetID().String())
+	if ch != nil || chCtl != nil {
+		// If the channel is not nil, we need to close the channels.
+		// If the channel is not nil, close it.
+		gl.Log("debug", "Closing channels for:", v.GetName(), "ID:", v.GetID().String())
+		// Always check if the channels are nil or not before closing them.
+		// If it is not nil, close it.
+		// If it is nil, we need to create a new channel.
+		if ch != nil {
+			gl.Log("debug", "Closing main channel for:", v.GetName(), "ID:", v.GetID().String())
+			close(ch)
+		}
+		if chCtl != nil {
+			gl.Log("debug", "Closing control channel for:", v.GetName(), "ID:", v.GetID().String())
+			close(chCtl)
+		}
+		ch = nil
+		chCtl = nil
+	}
+}
+
+// chanRoutineWrapper wraps the channel routine for the channel control.
+func chanRoutineWrapper[T any](v ci.IChannelCtl[T]) {
+	gl.Log("debug", "Setting monitor routine for:", v.GetName(), "ID:", v.GetID().String())
+	if rawChCtl, chCtlType, chCtlOk := v.GetSubChannelByName("ctl"); !chCtlOk {
+		gl.Log("error", "ChannelCtl: no control channel found")
+		return
+	} else {
+		if chCtlType != reflect.TypeOf("string") {
+			gl.Log("error", "ChannelCtl: control channel is not a string channel")
+			return
+		}
+		chCtl := reflect.ValueOf(rawChCtl).Interface().(chan string)
+		rawCh := v.GetMainChannel()
+		ch := reflect.ValueOf(rawCh).Interface().(chan T)
+
+		defer chanRoutineDefer[T](v, chCtl, ch)
+		for {
+			chanRoutineCtl[T](v, chCtl, ch)
+			if ch == nil {
+				gl.Log("debug", "Channel is nil for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
+				break
+			}
+			if chCtl == nil {
+				gl.Log("debug", "Control channel is nil for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
+				break
+			}
+		}
+	}
 }

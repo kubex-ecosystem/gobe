@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	gateway "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	"github.com/kubex-ecosystem/gobe/internal/services/gateway/providers"
 )

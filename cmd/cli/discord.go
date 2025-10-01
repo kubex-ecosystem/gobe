@@ -8,7 +8,7 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/spf13/cobra"
 )

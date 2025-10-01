@@ -1,9 +1,10 @@
-// Pacote de teste externo para internal/contracts/types (ChannelBase).
-package types_test
+// Package testtypes contains tests for the types package.
+package testtypes
 
 import (
 	"reflect"
 	"testing"
+
 	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
@@ -29,6 +30,10 @@ func TestChannelBase_Basics(t *testing.T) {
 		t.Fatalf("expected buffers 4, got %d", buf)
 	}
 	// Clear/Close não devem panicar
-	if err := cb.Clear(); err != nil { t.Fatalf("clear error: %v", err) }
-	if err := cb.Close(); err != nil { t.Fatalf("close error: %v", err) }
+	if err := cb.Clear(); err != nil {
+		t.Fatalf("clear error: %v", err)
+	}
+	if err := cb.Close(); err != nil {
+		t.Fatalf("close error: %v", err)
+	}
 }

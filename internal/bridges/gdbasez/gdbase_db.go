@@ -15,7 +15,7 @@ import (
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

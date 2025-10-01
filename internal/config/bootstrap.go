@@ -10,23 +10,21 @@ import (
 	"path/filepath"
 
 	common "github.com/kubex-ecosystem/gobe/internal/commons"
-	t "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 // BootstrapMainConfig garante que o arquivo principal de configuração exista
 // com um payload padrão compatível com as structs atuais. Se o arquivo já
 // tiver conteúdo, nada é alterado.
-func BootstrapMainConfig(path string, initArgs *t.InitArgs) error {
-	var args t.InitArgs
-	if initArgs != nil {
-		args = *initArgs
+func BootstrapMainConfig(args *gl.InitArgs) error {
+	if gl.IsObjValid(args) {
 		if args.ConfigFile != "" {
-			args.ConfigFile = path
+			args.ConfigFile = os.ExpandEnv(args.ConfigFile)
 		}
 	} else {
-		args = t.InitArgs{
-			ConfigFile:     path,
-			IsConfidential: false,
+		args = &gl.InitArgs{
+			ConfigFile:     args.ConfigFile,
+			IsConfidential: gl.GetEnvOrDefault("IS_CONFIDENTIAL", "false") == "true",
 			Port:           "8088",
 			Bind:           "0.0.0.0",
 		}
@@ -63,25 +61,25 @@ func BootstrapMainConfig(path string, initArgs *t.InitArgs) error {
 	return nil
 }
 
-func writeDefaultConfig(initArgs t.InitArgs) error {
-	cfg := defaultConfig(initArgs)
+func writeDefaultConfig(args *gl.InitArgs) error {
+	cfg := defaultConfig(args)
 
 	payload, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal default config: %w", err)
 	}
 
-	if err := os.WriteFile(initArgs.ConfigFile, payload, 0644); err != nil {
+	if err := os.WriteFile(args.ConfigFile, payload, 0644); err != nil {
 		return fmt.Errorf("failed to write default config: %w", err)
 	}
 
-	gl.Log("notice", fmt.Sprintf("Default config stored at %s", initArgs.ConfigFile))
+	gl.Log("notice", fmt.Sprintf("Default config stored at %s", args.ConfigFile))
 	return nil
 }
 
-func defaultConfig(initArgs t.InitArgs) Config {
+func defaultConfig(args *gl.InitArgs) Config {
 	return Config{
-		ConfigFilePath: initArgs.ConfigFile,
+		ConfigFilePath: args.ConfigFile,
 		Discord: DiscordConfig{
 			Bot: struct {
 				ApplicationID string   `json:"application_id,omitempty"`
@@ -105,7 +103,7 @@ func defaultConfig(initArgs t.InitArgs) Config {
 			}{
 				ClientID:     "",
 				ClientSecret: "",
-				RedirectURI:  "http://" + net.JoinHostPort(initArgs.Bind, initArgs.Port) + "/api/v1/discord/oauth2/callback",
+				RedirectURI:  "http://" + net.JoinHostPort(args.Bind, args.Port) + "/api/v1/discord/oauth2/callback",
 				Scopes:       []string{"bot", "applications.commands"},
 			},
 			Webhook: struct {
@@ -135,7 +133,7 @@ func defaultConfig(initArgs t.InitArgs) Config {
 		},
 		LLM: LLMConfig{
 			Provider:    "gemini",
-			Model:       "gemini-1.5-flash",
+			Model:       "gemini-2.0-flash",
 			MaxTokens:   1024,
 			Temperature: 0.3,
 			APIKey:      "",
@@ -147,13 +145,13 @@ func defaultConfig(initArgs t.InitArgs) Config {
 			DevMode:                     true,
 		},
 		Server: ServerConfig{
-			Port:       initArgs.Port,
-			Host:       initArgs.Bind,
+			Port:       args.Port,
+			Host:       args.Bind,
 			EnableCORS: true,
 			DevMode:    true,
 		},
 		GoBE: GoBeConfig{
-			BaseURL: "http://" + net.JoinHostPort(initArgs.Bind, initArgs.Port),
+			BaseURL: "http://" + net.JoinHostPort(args.Bind, args.Port),
 			APIKey:  "",
 			Timeout: 30,
 			Enabled: true,

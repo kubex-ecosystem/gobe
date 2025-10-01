@@ -4,8 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	c "github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/cron"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 )
 
@@ -27,12 +28,13 @@ func NewCronRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbGorm, err := dbService.GetDB()
+	bridge := gdbasez.NewBridge(dbGorm)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
 
-	cronJobController := c.NewCronJobController(dbGorm)
+	cronJobController := c.NewCronJobController(bridge)
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)
 

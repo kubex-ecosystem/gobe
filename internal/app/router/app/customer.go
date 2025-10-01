@@ -1,13 +1,14 @@
 package app
 
 import (
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	customers_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/customers"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type CustomerRoutes struct {
@@ -38,11 +39,12 @@ func NewCustomerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbGorm, err := dbService.GetDB()
+	bridge := gdbasez.NewBridge(dbGorm)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
-	customerController := customers_controller.NewCustomerController(dbGorm)
+	customerController := customers_controller.NewCustomerController(bridge)
 
 	secureProperties := make(map[string]bool)
 	secureProperties["secure"] = true

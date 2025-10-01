@@ -12,7 +12,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 
 	t "github.com/kubex-ecosystem/gdbase/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	crtSvc "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 )
@@ -63,6 +63,8 @@ func (a *AMQP) Connect(ctx context.Context, url string, logf func(string, ...any
 					_ = ch.Close()
 					_ = conn.Close()
 					last = err
+					gl.Log("error", fmt.Sprintf("Failed to declare AMQP topology: %v", last))
+					continue
 				}
 				a.ready.Store(true)
 				logf("amqp conectado e pronto")

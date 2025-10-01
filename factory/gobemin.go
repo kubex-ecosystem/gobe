@@ -8,9 +8,8 @@ import (
 	gb "github.com/kubex-ecosystem/gobe"
 	s "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
-	l "github.com/kubex-ecosystem/logz"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -24,12 +23,12 @@ var (
 	dbConfig *DBConfig
 )
 
-func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug, releaseMode bool) (ci.IGoBE, error) {
+func NewGoBE(args gl.InitArgs) (ci.IGoBE, error) {
 	err := initRabbitMQ()
 	if err != nil {
 		return nil, err
 	}
-	goBe, err := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, logger, debug, releaseMode)
+	goBe, err := gb.NewGoBE(args, gl.GetLogger("GoBE"))
 	if err != nil {
 		return nil, err
 	}

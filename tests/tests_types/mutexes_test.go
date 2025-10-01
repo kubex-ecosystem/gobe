@@ -1,8 +1,8 @@
-// Pacote de teste externo para internal/contracts/types (Mutexes).
-package types_test
+package testtypes
 
 import (
 	"testing"
+
 	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 

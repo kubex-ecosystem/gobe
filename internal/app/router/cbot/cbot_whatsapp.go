@@ -2,12 +2,13 @@ package cbot
 
 import (
 	"net/http"
+	"os"
 
 	whatsapp_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/whatsapp"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
 )
 
@@ -28,11 +29,16 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to get DB for WhatsAppRoutes", err)
 		return nil
 	}
-	cfg, configErr := config.Load[*config.Config](
-		rtl.GetConfigPath(),
-		"main_config",
-		rtl.GetInitArgs(),
-	)
+	initArgs := rtl.GetInitArgs()
+	if !gl.IsObjValid(initArgs) {
+		gl.Log("error", "InitArgs is nil for WhatsAppRoutes")
+		return nil
+	}
+	if initArgs.ConfigFile == "" {
+		initArgs.ConfigFile = gl.GetEnvOrDefault("WHATSAPP_CONFIG_FILE", os.ExpandEnv("./support/whatsapp_config.yaml"))
+	}
+
+	cfg, configErr := config.Load[*config.Config](initArgs)
 	if configErr != nil {
 		gl.Log("error", "Failed to load config for WhatsAppRoutes", configErr)
 		return nil

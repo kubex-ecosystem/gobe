@@ -1,4 +1,5 @@
-package tests_router
+// Package testsrouter contains tests for the router package.
+package testsrouter
 
 import (
 	"bytes"

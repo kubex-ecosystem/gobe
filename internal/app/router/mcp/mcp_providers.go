@@ -1,13 +1,14 @@
 package mcp
 
 import (
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	mcp_providers_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/providers"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type MCPProvidersRoutes struct {
@@ -27,11 +28,12 @@ func NewMCPProvidersRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbGorm, err := dbService.GetDB()
+	bridge := gdbasez.NewBridge(dbGorm)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
-	mcpProvidersController := mcp_providers_controller.NewProvidersController(dbGorm)
+	mcpProvidersController := mcp_providers_controller.NewProvidersController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)

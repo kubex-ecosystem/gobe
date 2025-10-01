@@ -1,8 +1,9 @@
-// Pacote de teste externo para o pacote manifest.
-package manifest_test
+// Package testmanifest contains tests for the manifest package.
+package testmanifest
 
 import (
 	"testing"
+
 	manifest "github.com/kubex-ecosystem/gobe/internal/module/info"
 )
 

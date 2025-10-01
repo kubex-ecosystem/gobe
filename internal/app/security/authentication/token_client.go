@@ -10,7 +10,7 @@ import (
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	common "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type TokenClientImpl struct {

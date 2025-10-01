@@ -1,5 +1,5 @@
-// Pacote de teste externo para o logger.
-package logger_test
+// Package testlogger contains tests for the logger package.
+package testlogger
 
 import (
 	"testing"

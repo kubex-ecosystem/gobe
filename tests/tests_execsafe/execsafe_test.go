@@ -1,6 +1,8 @@
-package tests_execsafe
+// Package testsexecsafe contains tests for the execsafe package.
+package testsexecsafe
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -229,6 +231,49 @@ func TestParseUserCommand(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestExecSuccess(t *testing.T) {
+	ctx := context.Background()
+	res, err := execsafe.Exec(ctx, "echo", []string{"hello"}, execsafe.Options{
+		Allowlist: []string{"echo"},
+	})
+	if err != nil {
+		t.Fatalf("Exec success returned error: %v", err)
+	}
+	if strings.TrimSpace(res.Stdout) != "hello" {
+		t.Fatalf("unexpected stdout: %q", res.Stdout)
+	}
+	if res.ExitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d", res.ExitCode)
+	}
+	if res.ResolvedBin == "" {
+		t.Fatal("expected resolved binary path to be set")
+	}
+}
+
+func TestExecDisallowed(t *testing.T) {
+	ctx := context.Background()
+	_, err := execsafe.Exec(ctx, "echo", []string{"test"}, execsafe.Options{
+		Allowlist: []string{"ls"},
+	})
+	if err == nil {
+		t.Fatal("expected error for disallowed command, got nil")
+	}
+}
+
+func TestExecTimeout(t *testing.T) {
+	ctx := context.Background()
+	res, err := execsafe.Exec(ctx, "sleep", []string{"1"}, execsafe.Options{
+		Allowlist: []string{"sleep"},
+		Timeout:   50 * time.Millisecond,
+	})
+	if err == nil {
+		t.Fatal("expected timeout error, got nil")
+	}
+	if res.ExitCode != 124 {
+		t.Fatalf("expected exit code 124 for timeout, got %d", res.ExitCode)
 	}
 }
 

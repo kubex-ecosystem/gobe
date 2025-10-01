@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	webhooks "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
 )
 
@@ -236,9 +236,9 @@ func (wc *WebhookController) RetryFailedEvents(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, WebhookRetryResponse{
-		Status:         "success",
-		RetriedCount:   retried,
-		Timestamp:      time.Now().UTC(),
-		Message:        "failed events queued for retry",
+		Status:       "success",
+		RetriedCount: retried,
+		Timestamp:    time.Now().UTC(),
+		Message:      "failed events queued for retry",
 	})
 }

@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/pelletier/go-toml/v2"
 	"gopkg.in/yaml.v3"
 )

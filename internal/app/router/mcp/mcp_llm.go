@@ -1,13 +1,14 @@
 package mcp
 
 import (
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	mcp_llm_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/llm"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type MCPLLMRoutes struct {
@@ -27,11 +28,12 @@ func NewMCPLLMRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbGorm, err := dbService.GetDB()
+	bridge := gdbasez.NewBridge(dbGorm)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
-	mcpLLMController := mcp_llm_controller.NewLLMController(dbGorm)
+	mcpLLMController := mcp_llm_controller.NewLLMController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)
 

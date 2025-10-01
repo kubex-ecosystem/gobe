@@ -4,14 +4,12 @@ package preferences
 import (
 	"net/http"
 
-	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	t "github.com/kubex-ecosystem/gdbase/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"gorm.io/gorm"
 )
 
 type PreferencesController struct {
@@ -19,9 +17,9 @@ type PreferencesController struct {
 	APIWrapper         *types.APIWrapper[svc.PreferencesModel]
 }
 
-func NewPreferencesController(db *gorm.DB) *PreferencesController {
+func NewPreferencesController(bridge *svc.Bridge) *PreferencesController {
 	return &PreferencesController{
-		preferencesService: svc.NewPreferencesService(models.NewPreferencesRepo(db)),
+		preferencesService: bridge.PreferencesService(),
 		APIWrapper:         types.NewAPIWrapper[svc.PreferencesModel](),
 	}
 }

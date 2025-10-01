@@ -1,8 +1,9 @@
 package interfaces
 
 import (
-	"github.com/google/uuid"
 	"reflect"
+
+	"github.com/google/uuid"
 )
 
 type IChannelBase[T any] interface {
@@ -58,6 +59,12 @@ type IChannelCtl[T any] interface {
 	GetBufferSize() int
 	SetBufferSize(size int) int
 
+	// Operations
+
+	Open() error
+	ProcessData(action string) error
+	Monitor()
+	StopMonitor()
 	Close() error
 
 	// Chainable methods

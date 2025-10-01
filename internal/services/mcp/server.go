@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
@@ -12,7 +13,8 @@ import (
 	"time"
 
 	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
-	"github.com/kubex-ecosystem/gobe/internal/commons/embedkit"
+	"github.com/kubex-ecosystem/gobe/internal/commons/embedkit/components"
+	"github.com/kubex-ecosystem/gobe/internal/commons/embedkit/helpers"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
@@ -51,6 +53,15 @@ type MCPHandler interface {
 	GetEventStream() *events.Stream
 }
 
+var systemInfoAllowList = map[string]struct{}{
+	"1344830702780420157": {}, // Apenas você!
+	"1400577637461659759": {},
+	"880669325143461898":  {},
+	"kblom":               {},
+	"admin":               {},
+	"faelmori":            {},
+}
+
 func NewMCPServer(hub MCPHandler) (IMCPServer, error) {
 	if hub == nil {
 		return nil, fmt.Errorf("MCPHandler cannot be nil")
@@ -72,6 +83,7 @@ func NewServer(hub MCPHandler) (*Server, error) {
 	srv := &Server{
 		mcpServer: mcpServer,
 		hub:       hub,
+		startedAt: time.Now(),
 	}
 
 	reg := execsafe.NewRegistry()
@@ -351,102 +363,117 @@ func (s *Server) HandleCreateTask(ctx context.Context, params map[string]interfa
 }
 
 func (s *Server) HandleSystemInfo(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
-	infoType, _ := params["info_type"].(string)
+	rawInfoType, _ := params["info_type"].(string)
+	infoType := strings.TrimSpace(strings.ToLower(rawInfoType))
+	if infoType == "" {
+		infoType = "all"
+	}
+
 	userID, _ := params["user_id"].(string)
 
-	// 🔒 Validação de Segurança (simplificada para demo)
-	authorizedUsers := []string{
-		"1344830702780420157", // Apenas você!
-		"1400577637461659759",
-		"880669325143461898",
-		"kblom",
-		"admin",
-		"faelmori",
-	}
-
-	isAuthorized := false
-	for _, authUser := range authorizedUsers {
-		if userID == authUser {
-			isAuthorized = true
-			break
-		}
-	}
-
-	if !isAuthorized {
+	if _, ok := systemInfoAllowList[userID]; !ok {
 		return mcp.NewToolResultError(fmt.Sprintf("❌ Usuário %s não autorizado para comandos do sistema", userID)), nil
 	}
 
-	var result string
-	var err error
+	cpuInfo, cpuErr := s.GetCPUInfo()
+	memoryInfo, memoryErr := s.GetMemoryInfo()
+	diskInfo, diskErr := s.GetDiskInfo()
 
-	// Get system information
-	mem, err := s.GetMemoryInfo()
-	if err != nil {
-		mem = "Memory info unavailable"
+	metricWarnings := map[string][]string{
+		"cpu":    {},
+		"memory": {},
+		"disk":   {},
+	}
+	overallWarnings := make([]string, 0, 3)
+
+	if cpuErr != nil {
+		msg := fmt.Sprintf("CPU metrics fallback (%v)", cpuErr)
+		metricWarnings["cpu"] = append(metricWarnings["cpu"], msg)
+		overallWarnings = append(overallWarnings, msg)
+	}
+	if memoryErr != nil {
+		msg := fmt.Sprintf("Memory metrics fallback (%v)", memoryErr)
+		metricWarnings["memory"] = append(metricWarnings["memory"], msg)
+		overallWarnings = append(overallWarnings, msg)
+	}
+	if diskErr != nil {
+		msg := fmt.Sprintf("Disk metrics fallback (%v)", diskErr)
+		metricWarnings["disk"] = append(metricWarnings["disk"], msg)
+		overallWarnings = append(overallWarnings, msg)
 	}
 
-	disk, err := s.GetDiskInfo()
-	if err != nil {
-		disk = "Disk info unavailable"
+	status := "ok"
+	switch {
+	case len(overallWarnings) >= 2:
+		status = "critical"
+	case len(overallWarnings) == 1:
+		status = "warning"
 	}
 
-	cpu, err := s.GetCPUInfo()
-	if err != nil {
-		cpu = "CPU info unavailable"
+	env := s.resolveEnvironment()
+	envLabel := strings.ToUpper(env)
+	host := resolveHostname()
+
+	mcpStatus := "🟢 **ready** — all tools operational"
+	analyzerStatus := "🟢 **ready** — v1.0.0"
+	if len(overallWarnings) > 0 {
+		mcpStatus = "🟡 **degraded** — métricas parciais disponíveis"
+		analyzerStatus = "🟡 **standby** — aguardando métricas estáveis"
 	}
 
-	// Build system health status
 	health := &types.SystemHealth{
-		Status:     "ok",
+		Status:     status,
 		Version:    "v1.3.5",
 		Uptime:     time.Since(s.startedAt),
-		Host:       "dev",
-		Mem:        mem,
-		Disk:       disk,
-		CPU:        cpu,
+		Host:       host,
+		Mem:        memoryInfo,
+		Disk:       diskInfo,
+		CPU:        cpuInfo,
 		Goroutines: fmt.Sprintf("ok (%d)", runtime.NumGoroutine()),
-		GoBE:       "🟢 **healthy** — 3 services ativos\n`api`,`scheduler`,`webhooks`",
-		MCP:        "🟢 **ready** — all tools operational",
-		Analyzer:   "🟢 **ready** — v1.0.0",
+		GoBE:       fmt.Sprintf("🟢 **healthy** — %s com 3 servicos ativos\n`api`,`scheduler`,`webhooks`", envLabel),
+		MCP:        mcpStatus,
+		Analyzer:   analyzerStatus,
 	}
 
-	// Create status embed using embedkit
-	embed := s.BuildStatusEmbed(userID, "dev", health,
+	embed := s.BuildStatusEmbed(userID, env, health,
 		"http://localhost:8088/swagger/index.html",
-		"http://localhost:3666", // painel
+		"http://localhost:3666",
 		"http://localhost:8088/api/v1/logs",
+		overallWarnings...,
 	)
-
-	// Convert embed to string for MCP response
-	embedJSON, err := json.Marshal(embed)
-	if err != nil {
-		result = fmt.Sprintf("🤖 **System Status**\nStatus: %s\nUptime: %s\nHost: %s\n\n%s\n\n%s\n\n%s",
-			health.Status, health.Uptime.String(), health.Host, cpu, mem, disk)
-	} else {
-		result = string(embedJSON)
-	}
 
 	switch infoType {
 	case "cpu":
-		result, err = s.GetCPUInfo()
+		response := cpuInfo
+		if warningText := formatBulletList(metricWarnings["cpu"]); warningText != "" {
+			response = fmt.Sprintf("%s\n\n⚠️ Alertas:\n%s", response, warningText)
+		}
+		return mcp.NewToolResultText(response), nil
 	case "memory":
-		result, err = s.GetMemoryInfo()
+		response := memoryInfo
+		if warningText := formatBulletList(metricWarnings["memory"]); warningText != "" {
+			response = fmt.Sprintf("%s\n\n⚠️ Alertas:\n%s", response, warningText)
+		}
+		return mcp.NewToolResultText(response), nil
 	case "disk":
-		result, err = s.GetDiskInfo()
-	case "all":
-		cpu, _ := s.GetCPUInfo()
-		memory, _ := s.GetMemoryInfo()
-		disk, _ := s.GetDiskInfo()
-		result = fmt.Sprintf("🖥️ **System Info Complete**\n\n%s\n\n%s\n\n%s", cpu, memory, disk)
+		response := diskInfo
+		if warningText := formatBulletList(metricWarnings["disk"]); warningText != "" {
+			response = fmt.Sprintf("%s\n\n⚠️ Alertas:\n%s", response, warningText)
+		}
+		return mcp.NewToolResultText(response), nil
+	case "all", "status", "overview", "embed":
+		payload, err := embedToJSON(embed)
+		if err != nil {
+			fallback := s.buildSystemSummary(env, health)
+			if warningText := formatBulletList(overallWarnings); warningText != "" {
+				fallback = fmt.Sprintf("%s\n\n⚠️ Alertas:\n%s", fallback, warningText)
+			}
+			return mcp.NewToolResultText(fallback), nil
+		}
+		return mcp.NewToolResultText(payload), nil
 	default:
-		return mcp.NewToolResultError("Tipo inválido. Use: cpu, memory, disk, all"), nil
+		return mcp.NewToolResultError("Tipo inválido. Use: cpu, memory, disk, all, status, overview, embed"), nil
 	}
-
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("Erro ao obter info do sistema: %v", err)), nil
-	}
-
-	return mcp.NewToolResultText(result), nil
 }
 
 func (s *Server) HandleShellCommand(ctx context.Context, params map[string]interface{}) (*mcp.CallToolResult, error) {
@@ -500,27 +527,28 @@ func (s *Server) GetCPUInfo() (string, error) {
 	cmd := exec.Command("sh", "-c", "top -bn1 | grep 'Cpu(s)' || echo 'CPU: Informação não disponível'")
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Sprintf("🔥 **CPU Usage**\nArquitetura: %s\nCores: %d\nStatus: Sistema ativo", runtime.GOARCH, runtime.NumCPU()), nil
+		return fmt.Sprintf("🔥 **CPU Usage**\nArquitetura: %s\nCores: %d\nStatus: Sistema ativo", runtime.GOARCH, runtime.NumCPU()), fmt.Errorf("collecting cpu info: %w", err)
 	}
-	return fmt.Sprintf("🔥 **CPU Usage**\nArquitetura: %s\nCores: %d\n%s", runtime.GOARCH, runtime.NumCPU(), string(output)), nil
+	data := strings.TrimSpace(string(output))
+	return fmt.Sprintf("🔥 **CPU Usage**\nArquitetura: %s\nCores: %d\n%s", runtime.GOARCH, runtime.NumCPU(), data), nil
 }
 
 func (s *Server) GetMemoryInfo() (string, error) {
 	cmd := exec.Command("sh", "-c", "free -h 2>/dev/null || echo 'Memória: Sistema Linux'")
 	output, err := cmd.Output()
 	if err != nil {
-		return "💾 **Memory Info**\nSistema ativo\nRAM: Disponível", nil
+		return "💾 **Memory Info**\nSistema ativo\nRAM: Disponível", fmt.Errorf("collecting memory info: %w", err)
 	}
-	return fmt.Sprintf("💾 **Memory Info**\n%s", string(output)), nil
+	return fmt.Sprintf("💾 **Memory Info**\n%s", strings.TrimSpace(string(output))), nil
 }
 
 func (s *Server) GetDiskInfo() (string, error) {
 	cmd := exec.Command("sh", "-c", "df -h / 2>/dev/null || echo 'Disco: Sistema ativo'")
 	output, err := cmd.Output()
 	if err != nil {
-		return "💿 **Disk Usage**\nSistema de arquivos ativo", nil
+		return "💿 **Disk Usage**\nSistema de arquivos ativo", fmt.Errorf("collecting disk info: %w", err)
 	}
-	return fmt.Sprintf("💿 **Disk Usage**\n%s", string(output)), nil
+	return fmt.Sprintf("💿 **Disk Usage**\n%s", strings.TrimSpace(string(output))), nil
 }
 
 func (s *Server) executeShellCommand(command string) (string, error) {
@@ -563,9 +591,8 @@ func (s *Server) Start() error {
 }
 
 // BuildStatusEmbed creates a status embed using embedkit
-func (s *Server) BuildStatusEmbed(userID, env string, health *types.SystemHealth, swaggerURL, panelURL, logsURL string) map[string]interface{} {
-	// Convert SystemHealth to embedkit.SystemInfo
-	systemInfo := embedkit.SystemInfo{
+func (s *Server) BuildStatusEmbed(userID, env string, health *types.SystemHealth, swaggerURL, panelURL, logsURL string, warnings ...string) map[string]interface{} {
+	systemInfo := components.SystemInfo{
 		Hostname:  health.Host,
 		Uptime:    health.Uptime,
 		Timestamp: time.Now(),
@@ -575,61 +602,154 @@ func (s *Server) BuildStatusEmbed(userID, env string, health *types.SystemHealth
 			"Analyzer": parseServiceStatus(health.Analyzer),
 		},
 	}
-
-	// Parse CPU, Memory and Disk usage from the strings (simplified)
 	systemInfo.CPUUsage = parseUsagePercent(fmt.Sprintf("%v", health.CPU))
 	systemInfo.MemoryUsage = parseUsagePercent(fmt.Sprintf("%v", health.Mem))
 	systemInfo.DiskUsage = parseUsagePercent(fmt.Sprintf("%v", health.Disk))
 
-	// Create base embed
-	embed := embedkit.StatusEmbed(systemInfo)
+	builder := components.NewStatusEmbedBuilder(systemInfo)
+	builder.WithDescription(fmt.Sprintf(
+		"Env `%s` • Host `%s`\nStatus: **%s** • Versão `%s`",
+		strings.ToUpper(env),
+		health.Host,
+		formatStatusLabel(health.Status),
+		health.Version,
+	))
+	builder.WithColor(helpers.StatusColor(health.Status, 0))
+	builder.WithFooter(fmt.Sprintf("Requested by %s • MCP System Status", userID))
+	builder.WithTimestamp(time.Now())
 
-	// Add custom fields specific to the MCP server
-	if fields, ok := embed["fields"].([]map[string]interface{}); ok {
-		// Add version field
-		fields = append(fields, map[string]interface{}{
-			"name":   "🔧 Version",
-			"value":  health.Version,
-			"inline": true,
-		})
+	builder.AddInlineField("🌍 Environment", strings.ToUpper(env))
+	builder.AddInlineField("🔖 Version", health.Version)
+	builder.AddInlineField("🔄 Goroutines", health.Goroutines)
 
-		// Add environment field
-		fields = append(fields, map[string]interface{}{
-			"name":   "🌍 Environment",
-			"value":  env,
-			"inline": true,
-		})
-
-		// Add goroutines field
-		fields = append(fields, map[string]interface{}{
-			"name":   "🔄 Goroutines",
-			"value":  health.Goroutines,
-			"inline": true,
-		})
-
-		// Add links as buttons
-		links := embedkit.NewLinkButtons(map[string]string{
-			"📖 API Docs": swaggerURL,
-			"📊 Panel":    panelURL,
-			"📋 Logs":     logsURL,
-		})
-
-		if links != "" {
-			fields = append(fields, map[string]interface{}{
-				"name":  "🔗 Quick Links",
-				"value": links,
-			})
+	serviceDetails := make([]string, 0, 3)
+	for _, entry := range []struct {
+		label string
+		value any
+	}{
+		{label: "GoBE", value: health.GoBE},
+		{label: "MCP", value: health.MCP},
+		{label: "Analyzer", value: health.Analyzer},
+	} {
+		if detail := formatServiceDetail(entry.label, entry.value); detail != "" {
+			serviceDetails = append(serviceDetails, detail)
 		}
-
-		embed["fields"] = fields
+	}
+	if len(serviceDetails) > 0 {
+		builder.AddField("🛰️ Modules", strings.Join(serviceDetails, "\n\n"), false)
 	}
 
-	// Add footer with user info
-	embed["footer"] = map[string]interface{}{
-		"text": fmt.Sprintf("Requested by %s • MCP System Status", userID),
+	links := components.NewLinkButtons(map[string]string{
+		"📖 API Docs": swaggerURL,
+		"📊 Panel":    panelURL,
+		"📋 Logs":     logsURL,
+	})
+	if links != "" {
+		builder.AddField("🔗 Quick Links", links, false)
 	}
 
-	return embed
+	if warningsText := formatBulletList(warnings); warningsText != "" {
+		builder.AddField("⚠️ Alertas", warningsText, false)
+	}
+
+	return builder.Build()
+}
+
+func (s *Server) resolveEnvironment() string {
+	if env := strings.TrimSpace(os.Getenv("APP_ENV")); env != "" {
+		return env
+	}
+	if env := strings.TrimSpace(os.Getenv("ENVIRONMENT")); env != "" {
+		return env
+	}
+	if env := strings.TrimSpace(os.Getenv("GO_ENV")); env != "" {
+		return env
+	}
+	return "dev"
+}
+
+func resolveHostname() string {
+	if host, err := os.Hostname(); err == nil {
+		if trimmed := strings.TrimSpace(host); trimmed != "" {
+			return trimmed
+		}
+	}
+	return "dev"
+}
+
+func embedToJSON(embed map[string]interface{}) (string, error) {
+	data, err := json.Marshal(embed)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func formatBulletList(items []string) string {
+	if len(items) == 0 {
+		return ""
+	}
+	var builder strings.Builder
+	for _, item := range items {
+		trimmed := strings.TrimSpace(item)
+		if trimmed == "" {
+			continue
+		}
+		builder.WriteString("• ")
+		builder.WriteString(trimmed)
+		builder.WriteByte('\n')
+	}
+	return strings.TrimSpace(builder.String())
+}
+
+func formatServiceDetail(label string, value any) string {
+	if value == nil {
+		return ""
+	}
+	var body string
+	switch v := value.(type) {
+	case string:
+		body = strings.TrimSpace(v)
+	case fmt.Stringer:
+		body = strings.TrimSpace(v.String())
+	case []string:
+		body = formatBulletList(v)
+	default:
+		encoded, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			body = strings.TrimSpace(fmt.Sprintf("%v", v))
+		} else {
+			body = fmt.Sprintf("```json\n%s\n```", string(encoded))
+		}
+	}
+
+	if body == "" {
+		return ""
+	}
+	return fmt.Sprintf("**%s**\n%s", label, body)
+}
+
+func (s *Server) buildSystemSummary(env string, health *types.SystemHealth) string {
+	var builder strings.Builder
+	builder.WriteString("🤖 **System Status**\n")
+	builder.WriteString(fmt.Sprintf("Env: `%s`\n", strings.ToUpper(env)))
+	builder.WriteString(fmt.Sprintf("Host: `%s`\n", health.Host))
+	builder.WriteString(fmt.Sprintf("Status: %s\n", formatStatusLabel(health.Status)))
+	builder.WriteString(fmt.Sprintf("Uptime: %s\n\n", health.Uptime.Truncate(time.Second)))
+	builder.WriteString(strings.TrimSpace(fmt.Sprintf("%v", health.CPU)))
+	builder.WriteString("\n\n")
+	builder.WriteString(strings.TrimSpace(fmt.Sprintf("%v", health.Mem)))
+	builder.WriteString("\n\n")
+	builder.WriteString(strings.TrimSpace(fmt.Sprintf("%v", health.Disk)))
+	return strings.TrimSpace(builder.String())
+}
+
+func formatStatusLabel(status string) string {
+	status = strings.TrimSpace(status)
+	if status == "" {
+		return "UNKNOWN"
+	}
+	return strings.ToUpper(status)
 }
 
 // Helper functions for parsing service status and usage percentages

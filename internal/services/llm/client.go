@@ -18,7 +18,7 @@ import (
 	"github.com/sashabaranov/go-openai"
 	"google.golang.org/genai"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type Client struct {
@@ -382,7 +382,7 @@ func (c *Client) analyzeWithGemini(ctx context.Context, req AnalysisRequest) (*A
 	// Use the SDK implementation from Analyzer
 	modelName := c.config.Model
 	if modelName == "" {
-		modelName = "gemini-1.5-flash"
+		modelName = "gemini-2.0-flash"
 	}
 
 	// Convert to Gemini SDK format

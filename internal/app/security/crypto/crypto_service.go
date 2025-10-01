@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 

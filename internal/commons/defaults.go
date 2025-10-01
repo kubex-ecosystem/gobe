@@ -32,3 +32,20 @@ const (
 	DefaultKeepAlive             = 30 * 1000 // 30 seconds
 	DefaultMaxConnsPerHost       = 100
 )
+
+const (
+	DefaultLLMProvider    = "gemini"
+	DefaultLLMModel       = "gemini-2.0-flash"
+	DefaultLLMMaxTokens   = 1024
+	DefaultLLMTemperature = 0.3
+)
+
+const (
+	DefaultApprovalRequireForResponses = false
+	DefaultApprovalTimeoutMinutes      = 15
+)
+
+const (
+	DefaultServerPort = "8088"
+	DefaultServerHost = "0.0.0.0"
+)

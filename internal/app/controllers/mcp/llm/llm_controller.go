@@ -4,13 +4,11 @@ package llm
 import (
 	"net/http"
 
-	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"gorm.io/gorm"
 )
 
 type LLMController struct {
@@ -18,9 +16,9 @@ type LLMController struct {
 	APIWrapper *types.APIWrapper[svc.LLMModel]
 }
 
-func NewLLMController(db *gorm.DB) *LLMController {
+func NewLLMController(bridge *svc.Bridge) *LLMController {
 	return &LLMController{
-		llmService: svc.NewLLMService(models.NewLLMRepo(db)),
+		llmService: bridge.LLMService(),
 		APIWrapper: types.NewAPIWrapper[svc.LLMModel](),
 	}
 }

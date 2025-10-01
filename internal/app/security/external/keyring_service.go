@@ -8,7 +8,7 @@ import (
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/zalando/go-keyring"
 )
 

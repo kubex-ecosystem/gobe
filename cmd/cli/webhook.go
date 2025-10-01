@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/spf13/cobra"
 )
 
