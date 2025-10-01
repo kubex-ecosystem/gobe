@@ -5,15 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 
-	fscm "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"gorm.io/gorm"
 )
 
-type ClientModel = fscm.ClientModel
+type ClientModel = svc.ClientModel
 
 type CustomerController struct {
-	customerService fscm.ClientService
+	customerService svc.ClientService
 	APIWrapper      *t.APIWrapper[ClientModel]
 }
 
@@ -22,10 +21,10 @@ type (
 	ErrorResponse = t.ErrorResponse
 )
 
-func NewCustomerController(db *gorm.DB) *CustomerController {
+func NewCustomerController(bridge *svc.Bridge) *CustomerController {
 	return &CustomerController{
-		customerService: fscm.NewClientService(fscm.NewClientRepo(db)),
-		APIWrapper:      t.NewAPIWrapper[fscm.ClientModel](),
+		customerService: bridge.ClientService(),
+		APIWrapper:      t.NewAPIWrapper[svc.ClientModel](),
 	}
 }
 
@@ -86,7 +85,7 @@ func (cc *CustomerController) GetCustomerByID(w http.ResponseWriter, r *http.Req
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/customers [post]
 func (cc *CustomerController) CreateCustomer(w http.ResponseWriter, r *http.Request) {
-	var customerRequest fscm.ClientModel
+	var customerRequest svc.ClientModel
 	if err := json.NewDecoder(r.Body).Decode(&customerRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -116,7 +115,7 @@ func (cc *CustomerController) CreateCustomer(w http.ResponseWriter, r *http.Requ
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/customers/{id} [put]
 func (cc *CustomerController) UpdateCustomer(w http.ResponseWriter, r *http.Request) {
-	var customerRequest fscm.ClientModel
+	var customerRequest svc.ClientModel
 	if err := json.NewDecoder(r.Body).Decode(&customerRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

@@ -4,9 +4,11 @@ package cbot
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	discord_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/discord"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	common "github.com/kubex-ecosystem/gobe/internal/commons"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
@@ -60,7 +62,7 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = "./config/social_discord.yaml"
+		initArgs.ConfigFile = gl.GetEnvOrDefault("DISCORD_CONFIG_FILE", os.ExpandEnv(common.DefaultGoBEConfigPath)) //./config/social_discord.yaml"
 	}
 	cfg, configErr := config.Load[*config.Config](initArgs)
 	if configErr != nil {

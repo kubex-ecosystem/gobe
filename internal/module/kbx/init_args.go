@@ -2,6 +2,8 @@
 package kbx
 
 import (
+	"os"
+
 	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	l "github.com/kubex-ecosystem/logz"
 )
@@ -29,4 +31,12 @@ type Logger = gl.GLog[ILogger]
 
 func Log(level string, payload ...any) {
 	gl.Log(level, payload...)
+}
+
+func GetEnvOrDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
 }

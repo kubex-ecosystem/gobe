@@ -2,6 +2,7 @@
 package app
 
 import (
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,11 +30,12 @@ func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbGorm, err := dbService.GetDB()
+	bridge := gdbasez.NewBridge(dbGorm)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
-	productController := products_controller.NewProductController(dbGorm)
+	productController := products_controller.NewProductController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)

@@ -2,6 +2,7 @@ package cbot
 
 import (
 	"net/http"
+	"os"
 
 	whatsapp_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/whatsapp"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
@@ -34,7 +35,7 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = "./config/social_meta.yaml"
+		initArgs.ConfigFile = gl.GetEnvOrDefault("WHATSAPP_CONFIG_FILE", os.ExpandEnv("./config/social_meta.yaml"))
 	}
 
 	cfg, configErr := config.Load[*config.Config](initArgs)

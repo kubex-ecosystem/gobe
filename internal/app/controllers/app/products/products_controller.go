@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	fscm "github.com/kubex-ecosystem/gdbase/factory/models"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"gorm.io/gorm"
 )
 
 type ProductController struct {
-	productService fscm.ProductService
-	APIWrapper     *t.APIWrapper[fscm.ProductModel]
+	productService svc.ProductService
+	APIWrapper     *t.APIWrapper[svc.ProductModel]
 }
 
 type (
@@ -20,10 +19,10 @@ type (
 	ErrorResponse = t.ErrorResponse
 )
 
-func NewProductController(db *gorm.DB) *ProductController {
+func NewProductController(bridge *svc.Bridge) *ProductController {
 	return &ProductController{
-		productService: fscm.NewProductService(fscm.NewProductRepo(db)),
-		APIWrapper:     t.NewAPIWrapper[fscm.ProductModel](),
+		productService: bridge.ProductService(),
+		APIWrapper:     t.NewAPIWrapper[svc.ProductModel](),
 	}
 }
 
@@ -34,7 +33,7 @@ func NewProductController(db *gorm.DB) *ProductController {
 // @Tags        products beta
 // @Security    BearerAuth
 // @Produce     json
-// @Success     200 {array} fscm.ProductModel
+// @Success     200 {array} svc.ProductModel
 // @Failure     401 {object} ErrorResponse
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/products [get]
@@ -55,7 +54,7 @@ func (pc *ProductController) GetAllProducts(w http.ResponseWriter, r *http.Reque
 // @Security    BearerAuth
 // @Produce     json
 // @Param       id path string true "ID do produto"
-// @Success     200 {object} fscm.ProductModel
+// @Success     200 {object} svc.ProductModel
 // @Failure     401 {object} ErrorResponse
 // @Failure     404 {object} ErrorResponse
 // @Router      /api/v1/products/{id} [get]
@@ -77,14 +76,14 @@ func (pc *ProductController) GetProductByID(w http.ResponseWriter, r *http.Reque
 // @Security    BearerAuth
 // @Accept      json
 // @Produce     json
-// @Param       payload body fscm.ProductModel true "Dados do produto"
-// @Success     200 {object} fscm.ProductModel
+// @Param       payload body svc.ProductModel true "Dados do produto"
+// @Success     200 {object} svc.ProductModel
 // @Failure     400 {object} ErrorResponse
 // @Failure     401 {object} ErrorResponse
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/products [post]
 func (pc *ProductController) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var productRequest fscm.ProductModel
+	var productRequest svc.ProductModel
 	if err := json.NewDecoder(r.Body).Decode(&productRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -106,15 +105,15 @@ func (pc *ProductController) CreateProduct(w http.ResponseWriter, r *http.Reques
 // @Accept      json
 // @Produce     json
 // @Param       id      path string            true "ID do produto"
-// @Param       payload body fscm.ProductModel true "Dados atualizados"
-// @Success     200 {object} fscm.ProductModel
+// @Param       payload body svc.ProductModel true "Dados atualizados"
+// @Success     200 {object} svc.ProductModel
 // @Failure     400 {object} ErrorResponse
 // @Failure     401 {object} ErrorResponse
 // @Failure     404 {object} ErrorResponse
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/products/{id} [put]
 func (pc *ProductController) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	var productRequest fscm.ProductModel
+	var productRequest svc.ProductModel
 	if err := json.NewDecoder(r.Body).Decode(&productRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

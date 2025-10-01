@@ -2,6 +2,7 @@ package cbot
 
 import (
 	"net/http"
+	"os"
 
 	telegram_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/telegram"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
@@ -34,7 +35,7 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = "./config/social_meta.yaml"
+		initArgs.ConfigFile = gl.GetEnvOrDefault("TELEGRAM_CONFIG_FILE", os.ExpandEnv("./config/social_meta.yaml"))
 	}
 
 	cfg, configErr := config.Load[*config.Config](initArgs)

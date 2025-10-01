@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,11 +28,12 @@ func NewMCPTasksRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbGorm, err := dbService.GetDB()
+	bridge := gdbasez.NewBridge(dbGorm)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
-	mcpTasksController := mcp_tasks_controller.NewTasksController(dbGorm)
+	mcpTasksController := mcp_tasks_controller.NewTasksController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)
 	// middlewaresMap := rtl.GetMiddlewares()

@@ -11,9 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	cron "github.com/kubex-ecosystem/gdbase/factory/models"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	"gorm.io/gorm"
 )
 
 type CronController struct {
@@ -68,10 +68,10 @@ func marshalToMapSlice(value any) ([]map[string]any, error) {
 	return response, nil
 }
 
-func NewCronJobController(db *gorm.DB) *CronController {
+func NewCronJobController(bridge *svc.Bridge) *CronController {
 	return &CronController{
 
-		ICronService: cron.NewCronJobService(cron.NewCronJobRepo(context.Background(), db)),
+		ICronService: bridge.CronService(),
 		APIWrapper:   types.NewAPIWrapper[cron.CronJobModel](),
 	}
 }

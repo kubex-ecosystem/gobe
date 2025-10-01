@@ -1,8 +1,6 @@
 // Package common has default configuration values
 package common
 
-import "os"
-
 const (
 	KeyringService            = "kubex"
 	DefaultGoBEConfigPath     = "$HOME/.kubex/gobe/config/config.json"
@@ -51,11 +49,3 @@ const (
 	DefaultServerPort = "8088"
 	DefaultServerHost = "0.0.0.0"
 )
-
-func GetEnvOrDefault(key, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		return defaultValue
-	}
-	return value
-}

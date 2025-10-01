@@ -24,7 +24,7 @@ func BootstrapMainConfig(args *gl.InitArgs) error {
 	} else {
 		args = &gl.InitArgs{
 			ConfigFile:     args.ConfigFile,
-			IsConfidential: common.GetEnvOrDefault("IS_CONFIDENTIAL", "false") == "true",
+			IsConfidential: gl.GetEnvOrDefault("IS_CONFIDENTIAL", "false") == "true",
 			Port:           "8088",
 			Bind:           "0.0.0.0",
 		}

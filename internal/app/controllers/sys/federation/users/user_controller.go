@@ -9,11 +9,11 @@ import (
 	user "github.com/kubex-ecosystem/gdbase/factory/models"
 	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"gorm.io/gorm"
 )
 
 type UserController struct {
@@ -52,9 +52,9 @@ func summariesFromUsers(users []user.UserModel) []UserSummary {
 	return result
 }
 
-func NewUserController(db *gorm.DB) *UserController {
+func NewUserController(bridge *svc.Bridge) *UserController {
 	return &UserController{
-		userService: user.NewUserService(user.NewUserRepo(db)),
+		userService: bridge.UserService(),
 		APIWrapper:  types.NewAPIWrapper[user.UserModel](),
 	}
 }

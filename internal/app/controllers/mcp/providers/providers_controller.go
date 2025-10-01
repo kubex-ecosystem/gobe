@@ -10,16 +10,15 @@ import (
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type ProvidersController struct {
 	providersService svc.ProvidersService
 }
 
-func NewProvidersController(db *gorm.DB) *ProvidersController {
+func NewProvidersController(bridge *svc.Bridge) *ProvidersController {
 	return &ProvidersController{
-		providersService: svc.NewProvidersService(models.NewProvidersRepo(db)),
+		providersService: bridge.ProvidersService(),
 	}
 }
 
