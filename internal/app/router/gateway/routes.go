@@ -9,7 +9,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	analyzergateway "github.com/kubex-ecosystem/analyzer/factory/gateway"
-	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	gatewayController "github.com/kubex-ecosystem/gobe/internal/app/controllers/gateway"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
@@ -36,7 +35,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	var db *gorm.DB
 	if dbService != nil {
 		var err error
-		db, err = dbService.GetDB(context.Background())
+		db, err = dbService.GetDB(context.Background(), svc.DefaultDBName)
 		if err != nil {
 			gl.Log("warn", "Failed to fetch DB for gateway module", err)
 		}
@@ -48,7 +47,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	var webhookService *webhooksvc.WebhookService
 
 	if db != nil {
-		providersSvc := svc.NewProvidersService(models.NewProvidersRepo(db))
+		providersSvc := svc.NewProvidersService(svc.NewProvidersRepo(db))
 		gw, err := gatewaysvc.NewService(providersSvc)
 		if err != nil {
 			gl.Log("error", "failed to initialize gateway service", err)

@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"io"
+	"reflect"
 
 	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	l "github.com/kubex-ecosystem/logz"
@@ -26,6 +27,7 @@ type IGoBE interface {
 	GetChanCtl() chan string
 	GetLogFilePath() string
 	GetConfigFilePath() string
+	GetProperty(name string) (any, reflect.Type, error)
 	SetDatabaseService(dbService is.DBService)
 	GetDatabaseService() is.DBService
 	LogsGoBE() (*io.OffsetWriter, error)

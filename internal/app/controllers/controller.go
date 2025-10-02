@@ -6,18 +6,18 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	whk "github.com/kubex-ecosystem/gdbase/factory/models"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type WebhookController struct {
-	Service      whk.WebhookService
+	Service      svc.WebhookService
 	RabbitMQConn *amqp.Connection
 	APIWrapper   *types.APIWrapper[any]
 }
 
-func NewWebhookController(service whk.WebhookService, rabbitMQConn *amqp.Connection) *WebhookController {
+func NewWebhookController(service svc.WebhookService, rabbitMQConn *amqp.Connection) *WebhookController {
 	return &WebhookController{
 		Service:      service,
 		RabbitMQConn: rabbitMQConn,
@@ -26,7 +26,7 @@ func NewWebhookController(service whk.WebhookService, rabbitMQConn *amqp.Connect
 }
 
 func (wc *WebhookController) RegisterWebhook(ctx *gin.Context) {
-	var request whk.RegisterWebhookRequest
+	var request svc.RegisterWebhookRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		wc.APIWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request: %v", err))
 		return

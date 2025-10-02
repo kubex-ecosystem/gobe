@@ -35,6 +35,10 @@ func NewProvidersService(repo ProvidersRepo) ProvidersService {
 	return models.NewProvidersService(repo)
 }
 
+func NewProvidersRepo(db *gorm.DB) ProvidersRepo {
+	return models.NewProvidersRepo(db)
+}
+
 // Tasks aliases
 
 type TasksService = models.TasksService

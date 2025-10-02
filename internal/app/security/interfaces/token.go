@@ -5,8 +5,8 @@ import (
 	"crypto/rsa"
 	"time"
 
-	is "github.com/kubex-ecosystem/gdbase/factory"
-	ism "github.com/kubex-ecosystem/gdbase/factory/models"
+	m "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 )
 
 type TSConfig struct {
@@ -18,7 +18,7 @@ type TSConfig struct {
 	RefreshExpirationSecs int64
 	KeyringPass           string
 	TokenClient           TokenClient
-	DBService             *is.DBService
+	DBService             *svc.DBService
 	KeyringService        IKeyringService
 }
 type TokenPair struct {
@@ -46,9 +46,9 @@ type TokenRepo interface {
 }
 
 type TokenService interface {
-	NewPairFromUser(ctx context.Context, u ism.UserModel, prevTokenID string) (*TokenPair, error)
+	NewPairFromUser(ctx context.Context, u m.UserModel, prevTokenID string) (*TokenPair, error)
 	SignOut(ctx context.Context, uid string) error
-	ValidateIDToken(tokenString string) (ism.UserModel, error)
+	ValidateIDToken(tokenString string) (m.UserModel, error)
 	ValidateRefreshToken(refreshTokenString string) (*RefreshToken, error)
 	RenewToken(ctx context.Context, refreshToken string) (*TokenPair, error)
 }

@@ -20,8 +20,7 @@ func SetLogTrace(enable bool) {
 }
 
 func GetLogger(name string) Logger {
-	lgr := l.GetLogger(name)
-	return gl.GetLogger(&lgr)
+	return gl.Logger
 }
 
 func SetLogger(logger l.Logger) {

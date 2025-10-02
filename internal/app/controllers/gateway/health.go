@@ -139,7 +139,7 @@ func (hc *HealthController) checkDatabase() bool {
 	if hc.dbService == nil {
 		return false
 	}
-	if err := hc.dbService.CheckDatabaseHealth(context.Background()); err != nil {
+	if err := hc.dbService.CheckDatabaseHealth(context.Background(), svc.DefaultDBName); err != nil {
 		return false
 	}
 	return true

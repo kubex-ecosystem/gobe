@@ -26,7 +26,7 @@ package mcp
 // 		gl.Log("error", "Database service is nil for MCP GHbex routes")
 // 		return nil
 // 	}
-// 	dbGorm, err := dbService.GetDB(nil)
+// 	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
 // 	if err != nil {
 // 		gl.Log("error", "Failed to get DB from service", err)
 // 		return nil

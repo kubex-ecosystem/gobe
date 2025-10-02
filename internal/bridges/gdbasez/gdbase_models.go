@@ -22,9 +22,9 @@ type (
 
 	// Cron definitions
 
-	CronService = fscm.CronJobService
-	CronRepo    = fscm.CronJobRepo
-	CronModel   = fscm.CronJobModel
+	CronJobService = fscm.CronJobService
+	CronJobRepo    = fscm.CronJobRepo
+	CronJobModel   = fscm.CronJobModel
 
 	// Discord definitions
 
@@ -41,9 +41,11 @@ type (
 
 	// Webhook definitions
 
-	WebhookService = fscm.WebhookService
-	WebhookRepo    = fscm.WebhookRepo
-	WebhookModel   = fscm.Webhook
+	WebhookService         = fscm.WebhookService
+	WebhookRepo            = fscm.WebhookRepo
+	WebhookModel           = fscm.Webhook
+	Webhook                = fscm.Webhook
+	RegisterWebhookRequest = fscm.RegisterWebhookRequest
 
 	// AnalysisJob definitions
 
@@ -85,15 +87,15 @@ func NewProductRepo(dbConn *gorm.DB) ProductRepo {
 	return fscm.NewProductRepo(dbConn)
 }
 
-func NewCronService(db CronRepo) CronService {
+func NewCronJobService(db CronJobRepo) CronJobService {
 	return fscm.NewCronJobService(db)
 }
 
-func NewCronModel() *CronModel {
-	return &CronModel{}
+func NewCronModel() *CronJobModel {
+	return &CronJobModel{}
 }
 
-func NewCronRepo(ctx context.Context, dbConn *gorm.DB) CronRepo {
+func NewCronRepo(ctx context.Context, dbConn *gorm.DB) CronJobRepo {
 	return fscm.NewCronJobRepo(ctx, dbConn)
 }
 
@@ -105,8 +107,8 @@ func NewDiscordModel() *DiscordModel {
 	return &DiscordModel{}
 }
 
-func NewDiscordRepo(dbConn *gorm.DB) DiscordRepo {
-	return fscm.NewDiscordRepo(dbConn)
+func NewDiscordRepo(db *gorm.DB) DiscordRepo {
+	return fscm.NewDiscordRepo(db)
 }
 func NewJobQueueService(db JobQueueRepo) JobQueueService {
 	return fscm.NewJobQueueService(db)
@@ -130,4 +132,12 @@ func NewAnalysisJobRepo(dbConn *gorm.DB) AnalysisJobRepo {
 
 func NewAnalysisJobModel() AnalysisJobModel {
 	return fscm.NewAnalysisJobModel()
+}
+
+func NewWebhookRepo(db *gorm.DB) WebhookRepo {
+	return fscm.NewWebhookRepo(db)
+}
+
+func NewWebhookService(repo WebhookRepo) WebhookService {
+	return fscm.NewWebhookService(repo)
 }

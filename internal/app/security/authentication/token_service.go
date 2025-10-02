@@ -9,14 +9,14 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	m "github.com/kubex-ecosystem/gdbase/factory/models"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type idTokenCustomClaims struct {
-	User *m.UserModelType `json:"UserImpl"`
+	User svc.UserModelType `json:"UserImpl"`
 	jwt.RegisteredClaims
 }
 type TokenServiceImpl struct {
@@ -55,7 +55,7 @@ func NewTokenService(c *sci.TSConfig) sci.TokenService {
 	return tsrv
 }
 
-func (s *TokenServiceImpl) NewPairFromUser(ctx context.Context, u m.UserModel, prevTokenID string) (*sci.TokenPair, error) {
+func (s *TokenServiceImpl) NewPairFromUser(ctx context.Context, u svc.UserModel, prevTokenID string) (*sci.TokenPair, error) {
 	if prevTokenID != "" {
 		if err := s.TokenRepository.DeleteRefreshToken(ctx, u.GetID(), prevTokenID); err != nil {
 			return nil, fmt.Errorf("could not delete previous refresh token for uid: %v, tokenID: %v", u.GetID(), prevTokenID)
@@ -93,7 +93,7 @@ func (s *TokenServiceImpl) NewPairFromUser(ctx context.Context, u m.UserModel, p
 func (s *TokenServiceImpl) SignOut(ctx context.Context, uid string) error {
 	return s.TokenRepository.DeleteUserRefreshTokens(ctx, uid)
 }
-func (s *TokenServiceImpl) ValidateIDToken(tokenString string) (m.UserModel, error) {
+func (s *TokenServiceImpl) ValidateIDToken(tokenString string) (svc.UserModel, error) {
 	// Garantir que o segredo de atualização esteja configurado
 	if s.RefreshSecret == "" || len(s.RefreshSecret) < 32 {
 		jwtSecret, jwtSecretErr := crt.GetOrGenPasswordKeyringPass("jwt_secret")
@@ -156,7 +156,7 @@ type refreshTokenCustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-func generateIDToken(u m.UserModel, key *rsa.PrivateKey, exp int64) (string, error) {
+func generateIDToken(u svc.UserModel, key *rsa.PrivateKey, exp int64) (string, error) {
 	if key == nil {
 		gl.Log("error", "Private key is nil")
 		return "", fmt.Errorf("private key is nil")

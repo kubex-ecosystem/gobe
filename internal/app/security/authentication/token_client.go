@@ -5,10 +5,10 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	s "github.com/kubex-ecosystem/gdbase/factory"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	kri "github.com/kubex-ecosystem/gobe/internal/app/security/external"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	common "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
@@ -16,7 +16,7 @@ import (
 
 type TokenClientImpl struct {
 	mapper                ci.IMapper[sci.TSConfig]
-	dbSrv                 s.DBService
+	dbSrv                 svc.DBService
 	crtSrv                sci.ICertService
 	keyringService        sci.IKeyringService
 	TokenService          sci.TokenService
@@ -59,7 +59,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 		return nil, 0, 0, pubKeyErr
 	}
 
-	dB, dbErr := t.dbSrv.GetDB(context.Background())
+	dB, dbErr := t.dbSrv.GetDB(context.Background(), svc.DefaultDBName)
 	if dbErr != nil {
 		gl.Log("error", fmt.Sprintf("Error getting DB: %v", dbErr))
 		return nil, 0, 0, dbErr
@@ -93,7 +93,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	return tokenService, t.IDExpirationSecs, t.RefreshExpirationSecs, nil
 }
 
-func NewTokenClient(crtService sci.ICertService, dbService s.DBService) sci.TokenClient {
+func NewTokenClient(crtService sci.ICertService, dbService svc.DBService) sci.TokenClient {
 	if crtService == nil {
 		gl.Log("error", fmt.Sprintf("error reading private key file: %v", "crtService is nil"))
 		return nil

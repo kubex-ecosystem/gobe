@@ -69,7 +69,7 @@ func (b *Bridge) ProductService() ProductService {
 // Cron Jobs
 // ========================================
 
-func (b *Bridge) CronService() CronService {
+func (b *Bridge) NewCronJobService() CronJobService {
 	repo := models.NewCronJobRepo(b.ctx, b.db)
 	return models.NewCronJobService(repo)
 }
@@ -136,8 +136,8 @@ func (b *Bridge) NewProductModel() *ProductModel {
 	return &ProductModel{}
 }
 
-func (b *Bridge) NewCronModel() *CronModel {
-	return &CronModel{}
+func (b *Bridge) NewCronJobModel() *CronJobModel {
+	return &CronJobModel{}
 }
 
 func (b *Bridge) NewDiscordModel() *DiscordModel {

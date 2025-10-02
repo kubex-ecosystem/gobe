@@ -33,7 +33,7 @@ type AuthenticationMiddleware struct {
 	TokenService sci.TokenService
 }
 
-func NewTokenService(config srv.IDBConfig, logger l.Logger) (sci.TokenService, sci.ICertService, error) {
+func NewTokenService(config *srv.DBConfigImpl, logger l.Logger) (sci.TokenService, sci.ICertService, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
@@ -45,7 +45,7 @@ func NewTokenService(config srv.IDBConfig, logger l.Logger) (sci.TokenService, s
 		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBService: %v", err))
 		return nil, nil, fmt.Errorf("❌ Erro ao inicializar DBService: %v", err)
 	}
-	sqlDB, err := dbService.GetDB(context.Background())
+	sqlDB, err := dbService.GetDB(context.Background(), srv.DefaultDBName)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao conectar ao banco de dados: %v", err))
 		return nil, nil, fmt.Errorf("❌ Erro ao conectar ao banco de dados: %v", err)

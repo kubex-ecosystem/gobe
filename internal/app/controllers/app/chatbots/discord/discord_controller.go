@@ -21,7 +21,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 
-	fscm "github.com/kubex-ecosystem/gdbase/factory/models"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 
 	l "github.com/kubex-ecosystem/logz"
@@ -41,8 +41,8 @@ type HubInterface interface {
 }
 
 type DiscordController struct {
-	discordService fscm.DiscordService
-	APIWrapper     *t.APIWrapper[fscm.DiscordModel]
+	discordService svc.DiscordService
+	APIWrapper     *t.APIWrapper[svc.DiscordModel]
 	config         *config.Config
 	hub            HubInterface
 	upgrader       websocket.Upgrader
@@ -121,8 +121,8 @@ type DiscordInteractionResponse struct {
 
 func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub, config *config.Config) *DiscordController {
 	return &DiscordController{
-		discordService: fscm.NewDiscordService(fscm.NewDiscordRepo(db)),
-		APIWrapper:     t.NewAPIWrapper[fscm.DiscordModel](),
+		discordService: svc.NewDiscordService(svc.NewDiscordRepo(db)),
+		APIWrapper:     t.NewAPIWrapper[svc.DiscordModel](),
 		hub:            hub,
 		config:         config,
 		upgrader: websocket.Upgrader{

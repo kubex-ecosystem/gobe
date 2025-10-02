@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	user "github.com/kubex-ecosystem/gdbase/factory/models"
 	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
@@ -17,15 +16,15 @@ import (
 )
 
 type UserController struct {
-	userService user.UserService
-	APIWrapper  *types.APIWrapper[user.UserModel]
+	userService svc.UserService
+	APIWrapper  *types.APIWrapper[svc.UserModel]
 }
 
 func respondUserError(c *gin.Context, status int, message string) {
 	c.JSON(status, ErrorResponse{Status: "error", Message: message})
 }
 
-func summaryFromUser(u user.UserModel) (UserSummary, bool) {
+func summaryFromUser(u svc.UserModel) (UserSummary, bool) {
 	if u == nil {
 		return UserSummary{}, false
 	}
@@ -39,7 +38,7 @@ func summaryFromUser(u user.UserModel) (UserSummary, bool) {
 	}, true
 }
 
-func summariesFromUsers(users []user.UserModel) []UserSummary {
+func summariesFromUsers(users []svc.UserModel) []UserSummary {
 	if len(users) == 0 {
 		return []UserSummary{}
 	}
@@ -55,7 +54,7 @@ func summariesFromUsers(users []user.UserModel) []UserSummary {
 func NewUserController(bridge *svc.Bridge) *UserController {
 	return &UserController{
 		userService: bridge.UserService(),
-		APIWrapper:  types.NewAPIWrapper[user.UserModel](),
+		APIWrapper:  types.NewAPIWrapper[svc.UserModel](),
 	}
 }
 
@@ -163,7 +162,7 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		respondUserError(c, http.StatusBadRequest, "username, email and password are required")
 		return
 	}
-	newUser := user.NewUserModel(req.Username, req.Name, req.Email)
+	newUser := svc.NewUserModel(req.Username, req.Name, req.Email)
 	if err := newUser.SetPassword(req.Password); err != nil {
 		respondUserError(c, http.StatusBadRequest, "failed to hash password")
 		return

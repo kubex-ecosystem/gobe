@@ -1,7 +1,7 @@
 package cron
 
 import (
-	cron "github.com/kubex-ecosystem/gdbase/factory/models"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
@@ -20,12 +20,12 @@ type CronJobRequest struct {
 
 // CronJobResponse descreve o retorno dos endpoints principais.
 type CronJobResponse struct {
-	Job cron.CronJobModel `json:"job"`
+	Job svc.CronJobModel `json:"job"`
 }
 
 // CronJobListResponse encapsula listagens paginadas ou simples.
 type CronJobListResponse struct {
-	Jobs []cron.CronJobModel `json:"jobs"`
+	Jobs []svc.CronJobModel `json:"jobs"`
 }
 
 // CronActionResponse indica o resultado de ações sobre cron jobs.

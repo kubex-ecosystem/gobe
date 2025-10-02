@@ -6,6 +6,7 @@ import (
 
 	telegram_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/telegram"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
@@ -24,7 +25,7 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for TelegramRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil)
+	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
 	if err != nil {
 		gl.Log("error", "Failed to get DB for TelegramRoutes", err)
 		return nil

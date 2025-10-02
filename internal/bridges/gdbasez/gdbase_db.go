@@ -18,6 +18,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// DefaultDBName is the default database name used throughout GoBE
+const DefaultDBName = "kubex_db"
+
 //go:embed sql_migrations/*.sql
 var migrationFiles embed.FS
 
@@ -25,9 +28,13 @@ var migrationFiles embed.FS
 
 type DBService = svc.DBService
 type IDBService = svc.IDBService
+type DBServiceImpl = svc.DBServiceImpl
+
 type DBConfig = svc.DBConfig
 type IDBConfig = svc.IDBConfig
-type DatabaseType = svc.DatabaseType
+type DBConfigImpl = svc.DBConfigImpl
+
+type DatabaseImpl = svc.DatabaseImpl
 type JSONB = svc.JSONB
 type IJSONBData = svc.IJSONBData
 type JSONBData = svc.JSONBData
@@ -36,10 +43,10 @@ type JSONBImpl = svc.JSONBImpl
 // Additional type aliases from factory
 
 type Database = svc.Database
-type EnvironmentType = svc.Environment
+type EnvironmentType = svc.EnvironmentType
 type Environment = svc.Environment
 
-func NewEnvironment(configFile string, isConfidential bool, logger l.Logger) (Environment, error) {
+func NewEnvironment(configFile string, isConfidential bool, logger l.Logger) (*EnvironmentType, error) {
 	return svc.NewEnvironment(configFile, isConfidential, logger)
 }
 
@@ -80,7 +87,7 @@ func JSONBToImpl(data interface{}) JSONBImpl {
 	return JSONBImpl{}
 }
 
-func NewDBService(ctx context.Context, config DBConfig, logger l.Logger) (DBService, error) {
+func NewDBService(ctx context.Context, config *DBConfigImpl, logger l.Logger) (DBService, error) {
 	return svc.NewDatabaseService(ctx, config, logger)
 }
 
@@ -97,7 +104,7 @@ func getEnvOrDefault[T string | int | bool](environment svc.Environment, key str
 	return defaultValue
 }
 
-func SetupDatabase(ctx context.Context, environment svc.Environment, dbConfigFilePath string, logger l.Logger, debug bool) (DBConfig, error) {
+func SetupDatabase(ctx context.Context, environment svc.Environment, dbConfigFilePath string, logger l.Logger, debug bool) (*DBConfigImpl, error) {
 	dbName := getEnvOrDefault(environment, "DB_NAME", "kubex_db")
 	if _, err := os.Stat(dbConfigFilePath); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(filepath.Dir(dbConfigFilePath), 0755); err != nil {
@@ -164,16 +171,17 @@ func InitializeAllServices(ctx context.Context, environment svc.Environment, log
 	}
 
 	// 2. Initialize Docker Service (usando factory wrapper)
-	dockerService := svc.IDockerService(nil)
-	// TODO: Implementar wrapper do DockerService via factory se necessário
-	// Por enquanto, vamos aguardar o DB sem Docker setup
+	dockerService, err := svc.NewDockerService(dbConfig, logger)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DockerService: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao inicializar DockerService: %w", err)
+	}
+	if dockerService == nil {
+		gl.Log("info", "⚠️ DockerService é nil, pulando configuração do Docker")
+		return nil, fmt.Errorf("⚠️ DockerService é nil, pulando configuração do Docker")
+	}
 
 	// 3. Setup Database Services via factory
-	// if dockerService == nil {
-	// 	gl.Log("info", "⚠️ DockerService é nil, pulando configuração do Docker")
-	// 	return nil, fmt.Errorf("⚠️ DockerService é nil, pulando configuração do Docker")
-	// }
-
 	if err := svc.SetupDatabaseServices(ctx, dockerService, dbConfig); err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao configurar Docker: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao configurar Docker: %w", err)

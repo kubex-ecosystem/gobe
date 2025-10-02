@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	models "github.com/kubex-ecosystem/gdbase/factory/models"
 	"github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/oauth"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
@@ -39,7 +38,7 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 
 	// Get GORM DB connection
-	dbGorm, err := dbService.GetDB(nil)
+	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service for OAuthRoutes", err)
 		return nil
@@ -50,7 +49,7 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	authCodeService := gdbasez.NewAuthCodeService(dbGorm)
 
 	// Create UserService
-	userRepo := models.NewUserRepo(dbGorm)
+	userRepo := gdbasez.NewUserRepo(dbGorm)
 	userService := gdbasez.NewUserService(userRepo)
 
 	// Create TokenService (same pattern as user routes)

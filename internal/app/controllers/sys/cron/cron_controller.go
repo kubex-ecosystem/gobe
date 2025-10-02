@@ -10,15 +10,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	cron "github.com/kubex-ecosystem/gdbase/factory/models"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type CronController struct {
-	ICronService cron.CronJobService
-	APIWrapper   *types.APIWrapper[cron.CronJobModel]
+	ICronService svc.CronJobService
+	APIWrapper   *types.APIWrapper[svc.CronJobModel]
 }
 
 func respondCronError(c *gin.Context, status int, message string) {
@@ -43,11 +42,11 @@ func userIDFromContext(ctx context.Context) (uuid.UUID, bool) {
 	return uuid.Nil, false
 }
 
-func toCronJobSlice(models []*cron.CronJobModel) []cron.CronJobModel {
+func toCronJobSlice(models []*svc.CronJobModel) []svc.CronJobModel {
 	if len(models) == 0 {
-		return []cron.CronJobModel{}
+		return []svc.CronJobModel{}
 	}
-	result := make([]cron.CronJobModel, 0, len(models))
+	result := make([]svc.CronJobModel, 0, len(models))
 	for _, m := range models {
 		if m != nil {
 			result = append(result, *m)
@@ -70,9 +69,8 @@ func marshalToMapSlice(value any) ([]map[string]any, error) {
 
 func NewCronJobController(bridge *svc.Bridge) *CronController {
 	return &CronController{
-
-		ICronService: bridge.CronService(),
-		APIWrapper:   types.NewAPIWrapper[cron.CronJobModel](),
+		ICronService: bridge.NewCronJobService(),
+		APIWrapper:   types.NewAPIWrapper[svc.CronJobModel](),
 	}
 }
 
@@ -192,7 +190,7 @@ func (cc *CronController) CreateCronJob(c *gin.Context) {
 		respondCronError(c, http.StatusInternalServerError, "failed to create cron job")
 		return
 	}
-	job := &cron.CronJobModel{
+	job := &svc.CronJobModel{
 		ID:             identifier,
 		Name:           req.Name,
 		CronExpression: req.Expression,

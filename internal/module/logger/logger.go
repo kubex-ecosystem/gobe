@@ -241,7 +241,7 @@ func getFuncNameMessage(lgr l.Logger) (string, int, string) {
 		return "", 0, ""
 	}
 	if getShowTrace() {
-		pc, file, line, ok := runtime.Caller(3)
+		pc, file, line, ok := runtime.Caller(4)
 		if !ok {
 			lgr.ErrorCtx("Log: unable to get caller information", nil)
 			return "", 0, ""

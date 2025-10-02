@@ -6,6 +6,7 @@ import (
 
 	whatsapp_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/whatsapp"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
@@ -24,7 +25,7 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for WhatsAppRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil)
+	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
 	if err != nil {
 		gl.Log("error", "Failed to get DB for WhatsAppRoutes", err)
 		return nil

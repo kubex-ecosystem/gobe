@@ -9,8 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/controllers/webhooks"
 
-	whk "github.com/kubex-ecosystem/gdbase/factory/models"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
@@ -37,15 +37,15 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 		return nil
 	}
 
-	db, err := dbService.GetDB(context.Background())
+	db, err := dbService.GetDB(context.Background(), svc.DefaultDBName)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from dbService")
 		return nil
 	}
 
 	// Inicialize o repositório e o serviço de webhooks.
-	webhookRepo := whk.NewWebhookRepo(db)
-	webhookService := whk.NewWebhookService(webhookRepo)
+	webhookRepo := svc.NewWebhookRepo(db)
+	webhookService := svc.NewWebhookService(webhookRepo)
 
 	// Configuração do RabbitMQ
 	dbService = rtl.GetDatabaseService()

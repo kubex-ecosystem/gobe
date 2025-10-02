@@ -36,7 +36,7 @@ type GoBECertData struct {
 type GoBE struct {
 	InitArgs    gl.InitArgs
 	Logger      l.Logger
-	environment is.Environment
+	environment *is.EnvironmentType
 
 	*t.Mutexes
 	*t.Reference
@@ -100,7 +100,7 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		requestsTracers: make(map[string]ci.IRequestsTracer),
 	}
 
-	gbm.environment, err = is.NewEnvironment(args.ConfigFile, args.IsConfidential, gbm.Logger)
+	gbm.environment, err = is.NewEnvironment(args.EnvFile, args.IsConfidential, nil)
 	if err != nil {
 		gl.Log("fatal", fmt.Sprintf("Error creating environment: %v", err))
 	}
@@ -108,12 +108,7 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		gl.Log("fatal", fmt.Sprintf("Error creating environment: %v", fmt.Errorf("environment is nil")))
 	}
 
-	gbm.Properties["env"] = t.NewProperty("env", &gbm.environment, true, nil)
-	gbm.Properties["port"] = t.NewProperty("port", &args.Port, true, nil)
-	gbm.Properties["bind"] = t.NewProperty("bind", &args.Bind, true, nil)
 	args.Address = net.JoinHostPort(args.Bind, args.Port)
-	gbm.Properties["address"] = t.NewProperty("address", &args.Address, true, nil)
-
 	pubCertKeyPath := gbm.environment.Getenv("CERT_FILE_PATH")
 	if pubCertKeyPath == "" {
 		pubCertKeyPath = os.ExpandEnv(cm.DefaultGoBECertPath)
@@ -136,8 +131,6 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 			gl.Log("fatal", fmt.Sprintf("Error reading keyring password: %v", pwdErr))
 		}
 	}
-
-	gbm.Properties["initArgs"] = t.NewProperty("initArgs", &args, false, nil)
 
 	crptService := crp.NewCryptoService()
 	crtService := crt.NewCertService(pubKeyPath, pubCertKeyPath)
@@ -168,8 +161,6 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 
 		gl.Log("info", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
 		gl.Log("info", fmt.Sprintf("Private key generated at %s", pubKeyPath))
-		gl.Log("debug", fmt.Sprintf("Certificate: %s", certString))
-		gl.Log("debug", fmt.Sprintf("Private key: %s", keyString))
 		certObj.Cert = string(certEncodedBytes)
 		certObj.Key = string(keyEncodedBytes)
 		gbm.Properties["cert"] = t.NewProperty("cert", &certObj.Cert, true, nil)
@@ -216,18 +207,7 @@ func (g *GoBE) InitializeResources() error {
 	if g.Logger == nil {
 		g.Logger = l.GetLogger("GoBE")
 	}
-	envT := g.Properties["env"].(*t.Property[ci.IEnvironment])
-	env := envT.GetValue()
-	var err error
-	if env == nil {
-		env, err = t.NewEnvironment(g.configFile, false, g.Logger)
-		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error creating environment: %v", err))
-			return err
-		}
-		g.Properties["env"] = t.NewProperty("env", &env, true, nil)
-	}
-
+	// Initialize the environment
 	ctx := context.Background()
 	dbService, initResourcesErr := is.InitializeAllServices(ctx, g.environment, g.Logger, g.environment.Getenv("DEBUG") == "true")
 	if initResourcesErr != nil {
@@ -247,26 +227,17 @@ func (g *GoBE) InitializeResources() error {
 func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	gl.Log("notice", "Initializing server...")
 
-	portT := g.Properties["port"].(*t.Property[string])
-	port := portT.GetValue()
-	bindT := g.Properties["bind"].(*t.Property[string])
-	bind := bindT.GetValue()
-	if !reflect.ValueOf(port).IsValid() {
+	if !reflect.ValueOf(g.InitArgs.Port).IsValid() {
 		gl.Log("warn", "No port specified, using default port 8666")
-		port = "8666"
-		portT.SetValue(&port)
+		g.InitArgs.Port = "8666"
 	}
-	if !reflect.ValueOf(bind).IsValid() {
+	if !reflect.ValueOf(g.InitArgs.Bind).IsValid() {
 		gl.Log("warn", "Binding to all interfaces (default/IPv4)")
-		bind = "0.0.0.0"
-		bindT.SetValue(&bind)
+		g.InitArgs.Bind = "0.0.0.0"
 	}
-	addressT := g.Properties["address"].(*t.Property[string])
-	address := addressT.GetValue()
-	if !reflect.ValueOf(address).IsValid() {
-		address = net.JoinHostPort(bind, port)
-		gl.Log("warn", "No address specified, using default address %s", address)
-		addressT.SetValue(&address)
+	if !reflect.ValueOf(g.InitArgs.Address).IsValid() {
+		g.InitArgs.Address = net.JoinHostPort(g.InitArgs.Bind, g.InitArgs.Port)
+		gl.Log("warn", "No address specified, using default address %s", g.InitArgs.Address)
 	}
 
 	if g.configFile == "" {
@@ -278,21 +249,13 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 		}
 	}
 
-	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "json", bind, port)
+	gobeminConfig := t.NewGoBEConfig(g.Name, g.configFile, "json", g.InitArgs.Bind, g.InitArgs.Port)
 	if _, err := os.Stat(g.configFile); err != nil {
 		if os.IsNotExist(err) {
-			// if err := ut.EnsureDir(filepath.Dir(g.configFile), 0644, []string{}); err != nil {
-			// 	gl.Log("error", fmt.Sprintf("Error creating directory: %v", err))
-			// 	return nil, err
-			// }
 			if err := os.MkdirAll(filepath.Dir(g.configFile), 0755); err != nil {
 				gl.Log("error", fmt.Sprintf("Error creating directory: %v", err))
 				return nil, err
 			}
-			// if err := ut.EnsureFile(g.configFile, 0644, []string{}); err != nil {
-			// 	gl.Log("error", fmt.Sprintf("Error creating config file: %v", err))
-			// 	return nil, err
-			// }
 			if err := os.WriteFile(g.configFile, []byte(""), 0644); err != nil {
 				gl.Log("error", fmt.Sprintf("Error creating config file: %v", err))
 				return nil, err
@@ -396,8 +359,6 @@ func (g *GoBE) StartGoBE() {
 		}
 		defer g.Mutexes.MuDone()
 		var err error
-		//initArgs := g.Properties["initArgs"].(*t.Property[interfaces.InitArgs]).GetValue()
-		// requestsTracers := t.NewRequestTracers(g)
 		var requestsTracers ci.IRequestTracers
 
 		requestsTracers, err = t.LoadRequestsTracerFromFile(g)
@@ -414,7 +375,7 @@ func (g *GoBE) StartGoBE() {
 	gl.Log("notice", "Waiting for persisted request tracers to load...")
 	g.Mutexes.MuWait()
 
-	gl.Log("debug", fmt.Sprintf("Server started on port %s", g.Properties["port"].(*t.Property[string]).GetValue()))
+	gl.Log("debug", fmt.Sprintf("Server started on port %s", g.InitArgs.Port))
 
 	if err := router.Start(); err != nil {
 		gl.Log("fatal", "Error starting server: %v", err.Error())
@@ -472,34 +433,33 @@ func (g *GoBE) GetDatabaseService() is.DBService {
 func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	//g.Mutexes.MuRLock()
 	//defer g.Mutexes.MuRUnlock()
-	if loggerProp, ok := g.Properties["logger"].(*t.Property[l.Logger]); ok {
-		if loggerProp == nil {
-			gl.Log("error", "Logger is nil")
-			return nil, errors.New("logger is nil")
-		}
-		gl.Log("info", "Retrieving logs...")
-		logger := loggerProp.GetValue()
-		if logger == nil {
-			gl.Log("error", "Logger is nil")
-			return nil, errors.New("logger is nil")
-		}
-		logsWriterInt := logger.GetWriter()
-		if logsWriterInt == nil {
-			gl.Log("error", "Logs writer is nil")
-			return nil, errors.New("logs writer is nil")
-		}
-		logsWriter, ok := logsWriterInt.(io.Writer)
-		if !ok {
-			gl.Log("error", "Logs writer is not an io.Writer")
-			return nil, errors.New("logs writer is not an io.Writer")
-		}
-		logsWriter.Write([]byte("Retrieving logs...\n"))
-		if offsetWriter, ok := logsWriter.(*io.OffsetWriter); ok {
-			return offsetWriter, nil
-		}
+	logger := g.Logger
+	if logger == nil {
+		gl.Log("error", "Logger is nil")
+		return nil, errors.New("logger is nil")
+	}
+	logsWriterInt := logger.GetWriter()
+	if logsWriterInt == nil {
+		gl.Log("error", "Logs writer is nil")
+		return nil, errors.New("logs writer is nil")
+	}
+	logsWriter, ok := logsWriterInt.(io.Writer)
+	if !ok {
+		gl.Log("error", "Logs writer is not an io.Writer")
+		return nil, errors.New("logs writer is not an io.Writer")
+	}
+	logsWriter.Write([]byte("Retrieving logs...\n"))
+	if offsetWriter, ok := logsWriter.(*io.OffsetWriter); ok {
+		return offsetWriter, nil
 	}
 	gl.Log("error", "Logger is nil")
 	return nil, errors.New("logger is nil")
+}
+func (g *GoBE) GetProperty(name string) (any, reflect.Type, error) {
+	if prop, ok := g.Properties[name]; ok {
+		return prop, reflect.TypeOf(prop), nil
+	}
+	return nil, nil, fmt.Errorf("property %q not found", name)
 }
 
 // Auxiliary functions for GoBE
