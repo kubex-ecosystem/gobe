@@ -24,6 +24,11 @@ func GetLogger(name string) Logger {
 	return gl.GetLogger(&lgr)
 }
 
+func SetLogger(logger l.Logger) {
+	// gl.SetLogger(logger)
+	// TODO: Implement this function properly
+}
+
 func IsObjValid(obj any) bool {
 	v := reflect.ValueOf(obj)
 	if v.Kind() == reflect.Ptr && !v.IsNil() {

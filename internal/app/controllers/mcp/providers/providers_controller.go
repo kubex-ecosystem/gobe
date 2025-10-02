@@ -4,8 +4,6 @@ package providers
 import (
 	"net/http"
 
-	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
-	t "github.com/kubex-ecosystem/gdbase/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
@@ -48,9 +46,9 @@ func (pc *ProvidersController) GetProviderByID(c *gin.Context) {
 // CreateProvider creates a new provider
 func (pc *ProvidersController) CreateProvider(c *gin.Context) {
 	var providerRequest struct {
-		Provider   string  `json:"provider" binding:"required"`
-		OrgOrGroup string  `json:"org_or_group" binding:"required"`
-		Config     t.JSONB `json:"config,omitempty"`
+		Provider   string                 `json:"provider" binding:"required"`
+		OrgOrGroup string                 `json:"org_or_group" binding:"required"`
+		Config     map[string]interface{} `json:"config,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
@@ -60,10 +58,10 @@ func (pc *ProvidersController) CreateProvider(c *gin.Context) {
 	}
 
 	// Create a new provider model
-	newProvider := models.NewProvidersModel(
+	newProvider := svc.NewProvidersModel(
 		providerRequest.Provider,
 		providerRequest.OrgOrGroup,
-		providerRequest.Config,
+		svc.MapToJSONB(providerRequest.Config),
 	)
 
 	createdProvider, err := pc.providersService.CreateProvider(newProvider)
@@ -79,9 +77,9 @@ func (pc *ProvidersController) CreateProvider(c *gin.Context) {
 func (pc *ProvidersController) UpdateProvider(c *gin.Context) {
 	id := c.Param("id")
 	var providerRequest struct {
-		Provider   string  `json:"provider"`
-		OrgOrGroup string  `json:"org_or_group"`
-		Config     t.JSONB `json:"config"`
+		Provider   string                 `json:"provider"`
+		OrgOrGroup string                 `json:"org_or_group"`
+		Config     map[string]interface{} `json:"config"`
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
@@ -106,7 +104,7 @@ func (pc *ProvidersController) UpdateProvider(c *gin.Context) {
 		existingProvider.SetOrgOrGroup(providerRequest.OrgOrGroup)
 	}
 	if providerRequest.Config != nil {
-		existingProvider.SetConfig(providerRequest.Config)
+		existingProvider.SetConfig(svc.MapToJSONB(providerRequest.Config))
 	}
 
 	updatedProvider, err := pc.providersService.UpdateProvider(existingProvider)
@@ -169,9 +167,9 @@ func (pc *ProvidersController) GetActiveProviders(c *gin.Context) {
 // UpsertProviderByNameAndOrg creates or updates a provider by name and org_or_group
 func (pc *ProvidersController) UpsertProviderByNameAndOrg(c *gin.Context) {
 	var providerRequest struct {
-		Provider   string  `json:"provider" binding:"required"`
-		OrgOrGroup string  `json:"org_or_group" binding:"required"`
-		Config     t.JSONB `json:"config"`
+		Provider   string                 `json:"provider" binding:"required"`
+		OrgOrGroup string                 `json:"org_or_group" binding:"required"`
+		Config     map[string]interface{} `json:"config"`
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
@@ -184,7 +182,7 @@ func (pc *ProvidersController) UpsertProviderByNameAndOrg(c *gin.Context) {
 	result, err := pc.providersService.UpsertProviderByNameAndOrg(
 		providerRequest.Provider,
 		providerRequest.OrgOrGroup,
-		providerRequest.Config,
+		svc.MapToJSONB(providerRequest.Config),
 		"admin", // userID temporário
 	)
 	if err != nil {

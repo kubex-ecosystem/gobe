@@ -2,6 +2,7 @@
 package factory
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -17,10 +18,9 @@ type GoBE interface {
 	ci.IGoBE
 }
 
-type DBConfig = msg.DBConfig
-
 var (
-	dbConfig *DBConfig
+	dbConfig  s.DBConfig
+	dbService s.DBService
 )
 
 func NewGoBE(args gl.InitArgs) (ci.IGoBE, error) {
@@ -32,12 +32,17 @@ func NewGoBE(args gl.InitArgs) (ci.IGoBE, error) {
 	if err != nil {
 		return nil, err
 	}
-	dbService, err := GetDatabaseService(goBe)
+	dbService, err = GetDatabaseService(goBe)
 	if err != nil {
 		return nil, err
 	}
 	if dbService != nil {
-		dbConfig = dbService.GetConfig()
+		cfg := dbService.GetConfig(context.Background())
+		if cfg != nil {
+			dbConfig = cfg.GetConfig(context.Background())
+		} else {
+			return nil, fmt.Errorf("Database config is nil")
+		}
 	}
 
 	return goBe, nil
@@ -47,7 +52,7 @@ var rabbitMQConn *amqp.Connection
 
 func initRabbitMQ() error {
 	var err error
-	url := msg.GetRabbitMQURL(dbConfig)
+	url := msg.GetRabbitMQURL(dbService)
 	if url != "" {
 		rabbitMQConn, err = amqp.Dial(url)
 		if err != nil {
@@ -63,7 +68,7 @@ func initRabbitMQ() error {
 }
 
 func ConsumeMessages(queueName string) {
-	url := msg.GetRabbitMQURL(dbConfig)
+	url := msg.GetRabbitMQURL(dbService)
 	if url == "" {
 		gl.Log("error", "RabbitMQ URL is not configured")
 		return
@@ -128,7 +133,7 @@ func PublishMessageWithRetry(queueName string, message string) error {
 }
 
 func PublishMessage(queueName, message string) error {
-	url := msg.GetRabbitMQURL(dbConfig)
+	url := msg.GetRabbitMQURL(dbService)
 	if url == "" {
 		gl.Log("error", "RabbitMQ URL is not configured")
 		return fmt.Errorf("RabbitMQ URL is not configured")

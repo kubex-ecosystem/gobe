@@ -3,6 +3,7 @@ package gobe
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -13,9 +14,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	gdbf "github.com/kubex-ecosystem/gdbase/factory"
-	"github.com/kubex-ecosystem/gdbase/services"
-	"github.com/kubex-ecosystem/gdbase/types"
 	crp "github.com/kubex-ecosystem/gobe/factory/security"
 	rts "github.com/kubex-ecosystem/gobe/internal/app/router"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
@@ -38,7 +36,7 @@ type GoBECertData struct {
 type GoBE struct {
 	InitArgs    gl.InitArgs
 	Logger      l.Logger
-	environment ci.IEnvironment
+	environment is.Environment
 
 	*t.Mutexes
 	*t.Reference
@@ -102,7 +100,7 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		requestsTracers: make(map[string]ci.IRequestsTracer),
 	}
 
-	gbm.environment, err = t.NewEnvironment(args.ConfigFile, args.IsConfidential, gbm.Logger)
+	gbm.environment, err = is.NewEnvironment(args.ConfigFile, args.IsConfidential, gbm.Logger)
 	if err != nil {
 		gl.Log("fatal", fmt.Sprintf("Error creating environment: %v", err))
 	}
@@ -208,7 +206,7 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 func (g *GoBE) GetReference() ci.IReference {
 	return g.Reference
 }
-func (g *GoBE) Environment() ci.IEnvironment {
+func (g *GoBE) Environment() is.Environment {
 	return g.environment
 }
 
@@ -230,7 +228,8 @@ func (g *GoBE) InitializeResources() error {
 		g.Properties["env"] = t.NewProperty("env", &env, true, nil)
 	}
 
-	dbService, initResourcesErr := is.InitializeAllServices(g.environment, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	ctx := context.Background()
+	dbService, initResourcesErr := is.InitializeAllServices(ctx, g.environment, g.Logger, g.environment.Getenv("DEBUG") == "true")
 	if initResourcesErr != nil {
 		return initResourcesErr
 	}
@@ -239,7 +238,7 @@ func (g *GoBE) InitializeResources() error {
 		gl.Log("error", "Database service is nil")
 		return errors.New("database service is nil")
 	}
-	g.Properties["dbService"] = t.NewProperty("dbService", &dbService, true, nil)
+	g.Properties["dbService"] = t.NewProperty[is.DBService]("dbService", &dbService, true, nil)
 
 	g.SetDatabaseService(dbService)
 
@@ -338,7 +337,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	gobeminConfig.SetRateLimitBurst(rateLimitBurst)
 	gobeminConfig.SetRequestWindow(requestWindow)
 
-	dbServiceT := g.Properties["dbService"].(*t.Property[gdbf.DBService])
+	dbServiceT := g.Properties["dbService"].(*t.Property[is.DBService])
 	dbService := dbServiceT.GetValue()
 	if dbService == nil {
 		gl.Log("error", "Database service is nil")
@@ -448,20 +447,23 @@ func (g *GoBE) GetLogFilePath() string {
 func (g *GoBE) GetConfigFilePath() string {
 	return g.configFile
 }
-func (g *GoBE) SetDatabaseService(dbService gdbf.DBService) {
+func (g *GoBE) SetDatabaseService(dbService is.DBService) {
 	//g.Mutexes.MuAdd(1)
 	//defer g.Mutexes.MuDone()
-	g.Properties["dbService"] = t.NewProperty("dbService", &dbService, true, nil)
+	g.Properties["dbService"] = t.NewProperty[is.DBService]("dbService", &dbService, true, nil)
 }
-func (g *GoBE) GetDatabaseService() gdbf.DBService {
+func (g *GoBE) GetDatabaseService() is.DBService {
 	//g.Mutexes.MuRLock()
 	//defer g.Mutexes.MuRUnlock()
-	if dbT, ok := g.Properties["dbService"].(*t.Property[gdbf.DBService]); ok {
-		return dbT.GetValue()
-	} else if dbT, ok := g.Properties["dbService"].(*t.Property[services.IDBService]); ok {
-		return dbT.GetValue()
-	} else if dbT, ok := g.Properties["dbService"].(*t.Property[types.DBService]); ok {
-		return dbT.GetValue()
+	if dbT, ok := g.Properties["dbService"].(*t.Property[is.DBService]); ok {
+		db := dbT.GetValue()
+		return db
+	} else if dbT, ok := g.Properties["dbService"].(*t.Property[is.DBService]); ok {
+		dbS := dbT.GetValue()
+		return dbS
+	} else if dbT, ok := g.Properties["dbService"].(*t.Property[is.DBService]); ok {
+		dbS := dbT.GetValue()
+		return dbS
 	} else {
 		gl.Log("error", "Database service is nil")
 		return nil

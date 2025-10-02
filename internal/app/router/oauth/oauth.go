@@ -39,7 +39,7 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 
 	// Get GORM DB connection
-	dbGorm, err := dbService.GetDB()
+	dbGorm, err := dbService.GetDB(nil)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service for OAuthRoutes", err)
 		return nil

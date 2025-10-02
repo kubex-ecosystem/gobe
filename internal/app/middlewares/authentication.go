@@ -33,19 +33,38 @@ type AuthenticationMiddleware struct {
 	TokenService sci.TokenService
 }
 
-func NewTokenService(config *srv.IDBConfig, logger l.Logger) (sci.TokenService, sci.ICertService, error) {
+func NewTokenService(config srv.IDBConfig, logger l.Logger) (sci.TokenService, sci.ICertService, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
 	var err error
 	crtService := crt.NewCertService(os.ExpandEnv(cm.DefaultGoBEKeyPath), os.ExpandEnv(cm.DefaultGoBECertPath))
 
-	dbService, err := srv.NewDBService(config, logger)
+	dbService, err := srv.NewDBService(context.Background(), config, logger)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBService: %v", err))
 		return nil, nil, fmt.Errorf("❌ Erro ao inicializar DBService: %v", err)
 	}
-
+	sqlDB, err := dbService.GetDB(context.Background())
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao conectar ao banco de dados: %v", err))
+		return nil, nil, fmt.Errorf("❌ Erro ao conectar ao banco de dados: %v", err)
+	}
+	if sqlDB == nil {
+		gl.Log("error", "❌ Erro ao conectar ao banco de dados: DB is nil")
+		return nil, nil, fmt.Errorf("❌ Erro ao conectar ao banco de dados: DB is nil")
+	}
+	db, err := sqlDB.DB()
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao obter instância do banco de dados: %v", err))
+		return nil, nil, fmt.Errorf("❌ Erro ao obter instância do banco de dados: %v", err)
+	}
+	if db == nil {
+		gl.Log("error", "❌ Erro ao obter instância do banco de dados: DB is nil")
+		return nil, nil, fmt.Errorf("❌ Erro ao obter instância do banco de dados: DB is nil")
+	}
+	// Inicializa o TokenClient
+	NewTokenService(config, logger)
 	tkClient := sau.NewTokenClient(crtService, dbService)
 	if tkClient == nil {
 		gl.Log("error", "❌ Erro ao inicializar TokenClient")

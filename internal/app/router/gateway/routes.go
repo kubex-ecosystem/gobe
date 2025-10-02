@@ -2,6 +2,7 @@
 package gateway
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -35,7 +36,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	var db *gorm.DB
 	if dbService != nil {
 		var err error
-		db, err = dbService.GetDB()
+		db, err = dbService.GetDB(context.Background())
 		if err != nil {
 			gl.Log("warn", "Failed to fetch DB for gateway module", err)
 		}

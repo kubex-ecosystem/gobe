@@ -1,6 +1,7 @@
 package authentication
 
 import (
+	"context"
 	"crypto/rsa"
 	"fmt"
 
@@ -58,7 +59,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 		return nil, 0, 0, pubKeyErr
 	}
 
-	dB, dbErr := t.dbSrv.GetDB()
+	dB, dbErr := t.dbSrv.GetDB(context.Background())
 	if dbErr != nil {
 		gl.Log("error", fmt.Sprintf("Error getting DB: %v", dbErr))
 		return nil, 0, 0, dbErr

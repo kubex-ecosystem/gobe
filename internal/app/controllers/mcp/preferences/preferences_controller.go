@@ -4,7 +4,6 @@ package preferences
 import (
 	"net/http"
 
-	t "github.com/kubex-ecosystem/gdbase/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
@@ -119,8 +118,8 @@ func (pc *PreferencesController) UpsertPreferencesByScope(c *gin.Context) {
 	scope := c.Param("scope")
 
 	var requestBody struct {
-		Config t.JSONB `json:"config" binding:"required"`
-		UserID string  `json:"user_id,omitempty"`
+		Config map[string]interface{} `json:"config" binding:"required"`
+		UserID string                 `json:"user_id,omitempty"`
 	}
 
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
@@ -129,7 +128,7 @@ func (pc *PreferencesController) UpsertPreferencesByScope(c *gin.Context) {
 		return
 	}
 
-	preferences, err := pc.preferencesService.UpsertPreferencesByScope(scope, requestBody.Config, requestBody.UserID)
+	preferences, err := pc.preferencesService.UpsertPreferencesByScope(scope, svc.MapToJSONB(requestBody.Config), requestBody.UserID)
 	if err != nil {
 		gl.Log("error", "Failed to upsert preferences by scope", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upsert preferences"})

@@ -1,6 +1,7 @@
 package gateway
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -138,7 +139,7 @@ func (hc *HealthController) checkDatabase() bool {
 	if hc.dbService == nil {
 		return false
 	}
-	if err := hc.dbService.CheckDatabaseHealth(); err != nil {
+	if err := hc.dbService.CheckDatabaseHealth(context.Background()); err != nil {
 		return false
 	}
 	return true

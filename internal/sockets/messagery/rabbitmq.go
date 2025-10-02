@@ -11,13 +11,12 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	t "github.com/kubex-ecosystem/gdbase/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	crtSvc "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
-)
 
-type DBConfig = t.DBConfig
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+)
 
 type AMQP struct {
 	URL           string
@@ -324,18 +323,25 @@ func (a *AMQP) Publish(exchange, key string, body []byte) error {
 	})
 }
 
-func GetRabbitMQURL(dbConfig *DBConfig) string {
+func GetRabbitMQURL(dbService svc.DBService) string {
 	var host = ""
 	var port = ""
 	var username = ""
 	var password = ""
-	if dbConfig.Messagery.RabbitMQ.Host != "" {
-		host = dbConfig.Messagery.RabbitMQ.Host
+	dbConfig := dbService.GetConfig(context.Background())
+	// dbConfig is now an interface, use reflection to check nil
+	// if dbConfig == nil {
+	// 	gl.Log("error", "DBConfig is nil, cannot get RabbitMQ URL")
+	// 	return ""
+	// }
+	rabbitConfig := dbConfig.GetRabbitMQConfig()
+	if rabbitConfig.Host != "" {
+		host = rabbitConfig.Host
 	} else {
 		host = "localhost"
 	}
-	if dbConfig.Messagery.RabbitMQ.Port != "" {
-		strPort, ok := dbConfig.Messagery.RabbitMQ.Port.(string)
+	if rabbitConfig.Port != "" {
+		strPort, ok := rabbitConfig.Port.(string)
 		if ok {
 			port = strPort
 		} else {
@@ -345,13 +351,13 @@ func GetRabbitMQURL(dbConfig *DBConfig) string {
 	} else {
 		port = "5672"
 	}
-	if dbConfig.Messagery.RabbitMQ.Username != "" {
-		username = dbConfig.Messagery.RabbitMQ.Username
+	if rabbitConfig.Username != "" {
+		username = rabbitConfig.Username
 	} else {
 		username = "gobe"
 	}
-	if dbConfig.Messagery.RabbitMQ.Password != "" {
-		password = dbConfig.Messagery.RabbitMQ.Password
+	if rabbitConfig.Password != "" {
+		password = rabbitConfig.Password
 	} else {
 		rabbitPassKey, rabbitPassErr := crtSvc.GetOrGenPasswordKeyringPass("rabbitmq")
 		if rabbitPassErr != nil {

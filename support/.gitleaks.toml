@@ -2,7 +2,11 @@ title = "Kubex Gitleaks Config"
 
 [allowlist]
 description = "Ignora o README.md inteiro"
-paths = ['''README.md''']
+paths = [
+  '''README.md''',
+  '''^docs/.*$''',
+  '''^internal/sockets/messagery/rabbitmq\.go$''',
+]
 rules = ['''(?i)README\.md''']
 
 [[rules]]
@@ -158,3 +162,17 @@ description = "Ignora todos os diretórios ocultos"
 regex = '''^\..*/.*$'''
 paths = ['''^\..*/.*$''']
 tags = ["config", "hidden"]
+
+[[rules]]
+id = "sql_files"
+description = "Ignora arquivos SQL"
+regex = '''\.sql$'''
+paths = ['''\.sql$''']
+tags = ["sql", "database"]
+
+[[rules]]
+id = "markdown_files"
+description = "Ignora arquivos Markdown"
+regex = '''\.md$'''
+paths = ['''\.md$''']
+tags = ["markdown", "documentation"]

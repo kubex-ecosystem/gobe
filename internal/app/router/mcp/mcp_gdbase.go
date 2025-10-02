@@ -27,7 +27,7 @@ func NewMCPGDBaseRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for MCP GDBase Route")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB()
+	dbGorm, err := dbService.GetDB(nil)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil

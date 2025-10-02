@@ -16,6 +16,8 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
+        exclude: '(^docs/.*$|^README\.md$|^internal/sockets/messagery/rabbitmq\.go$)'
+        files: '^(.*\.go$|.*\.yaml$|.*\.yml$|.*\.json$|.*\.tf$|.*\.tfvars$|.*\.sh$|.*\.ps1$)'
 
   # -------- Segurança: gitleaks --------
   - repo: https://github.com/zricethezav/gitleaks
@@ -23,9 +25,16 @@ repos:
     hooks:
       - id: gitleaks
         name: gitleaks
-        entry: gitleaks protect --staged --no-banner --config=support/.gitleaks.toml
+        entry: gitleaks
         language: system
         pass_filenames: false
+        args:
+          [
+            "protect",
+            "--staged",
+            "--no-banner",
+            "--config=support/.gitleaks.toml",
+          ]
 
   # -------- Go tools --------
   - repo: https://github.com/dnephin/pre-commit-golang

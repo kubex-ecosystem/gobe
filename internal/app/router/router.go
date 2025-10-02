@@ -9,7 +9,6 @@ import (
 	"time"
 
 	gdbf "github.com/kubex-ecosystem/gdbase/factory"
-	"github.com/kubex-ecosystem/gdbase/types"
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
@@ -66,7 +65,8 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 
 	var autenticationMiddleware *mdw.AuthenticationMiddleware
 	if databaseService != nil {
-		tokenService, certService, err := mdw.NewTokenService(databaseService.GetConfig(), logger)
+		//config := databaseService.GetConfig(context.Background())
+		tokenService, certService, err := mdw.NewTokenService(nil, logger)
 		if err != nil {
 			gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
 			return nil, err
@@ -210,10 +210,9 @@ func (rtr *Router) HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes 
 }
 
 // DBConfig is a placeholder function for database configuration.
-func (rtr *Router) DBConfig() gdbf.IDBConfig {
-	return *types.NewDBConfig(
-		nil,
-	)
+func (rtr *Router) DBConfig() gdbf.DBConfig {
+	dbService := rtr.databaseService
+	return dbService.GetConfig(context.Background())
 }
 
 // Start starts the server with the configured settings.

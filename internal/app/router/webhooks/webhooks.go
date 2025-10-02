@@ -2,6 +2,7 @@
 package webhooks
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -36,7 +37,7 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 		return nil
 	}
 
-	db, err := dbService.GetDB()
+	db, err := dbService.GetDB(context.Background())
 	if err != nil {
 		gl.Log("error", "Failed to get DB from dbService")
 		return nil
@@ -46,12 +47,13 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 	webhookRepo := whk.NewWebhookRepo(db)
 	webhookService := whk.NewWebhookService(webhookRepo)
 
-	dbConfig := dbService.GetConfig()
-	if dbConfig == nil {
-		gl.Log("error", "Failed to get DBConfig from dbService")
+	// Configuração do RabbitMQ
+	dbService = rtl.GetDatabaseService()
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for RabbitMQ configuration")
 		return nil
 	}
-	url := msg.GetRabbitMQURL(dbConfig)
+	url := msg.GetRabbitMQURL(dbService)
 	gl.Log("debug", fmt.Sprintf("RabbitMQ URL: %s", url))
 	var rabbitMQConn *amqp.Connection
 	if url != "" {

@@ -17,7 +17,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gdbtypes "github.com/kubex-ecosystem/gdbase/types"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
 	"gorm.io/gorm"
 
@@ -387,9 +386,9 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 	analysisJob.SetUpdatedBy(userID)
 	analysisJob.SetProjectID(projectID)
 	if len(inputData) > 0 {
-		analysisJob.SetInputData(gdbtypes.JSONB(inputData))
+		analysisJob.SetInputData(m.MapToJSONB(inputData))
 	}
-	analysisJob.SetMetadata(gdbtypes.JSONB(metadata))
+	analysisJob.SetMetadata(m.MapToJSONB(metadata))
 
 	maxRetries := 3
 	if req.MaxRetries != nil && *req.MaxRetries >= 0 {
@@ -520,7 +519,7 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 		return
 	}
 
-	results := jsonbToMap(job.GetOutputData())
+	results := jsonbToMap(m.JSONBToImpl(job.GetOutputData()))
 	if len(results) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "No results available for this job"})
 		return
@@ -663,7 +662,7 @@ func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 			continue
 		}
 
-		metadata := jsonbToMap(job.GetMetadata())
+		metadata := jsonbToMap(m.JSONBToImpl(job.GetMetadata()))
 		analysisLabel := determineAnalysisLabel(job, metadata)
 		if analysisFilter != "" && !strings.EqualFold(analysisLabel, analysisFilter) && !strings.EqualFold(job.GetJobType(), analysisFilter) {
 			continue
@@ -1031,18 +1030,18 @@ func convertModelToAnalysisJob(job *m.AnalysisJobImpl) AnalysisJob {
 		response.UserID = userID.String()
 	}
 
-	inputData := jsonbToMap(job.GetInputData())
+	inputData := jsonbToMap(m.JSONBToImpl(job.GetInputData()))
 	if len(inputData) > 0 {
 		response.InputData = inputData
 	}
 
-	outputData := jsonbToMap(job.GetOutputData())
+	outputData := jsonbToMap(m.JSONBToImpl(job.GetOutputData()))
 	if len(outputData) > 0 {
 		response.OutputData = outputData
 		response.Results = outputData
 	}
 
-	metadata := jsonbToMap(job.GetMetadata())
+	metadata := jsonbToMap(m.JSONBToImpl(job.GetMetadata()))
 	if len(metadata) > 0 {
 		response.Metadata = metadata
 		if scheduledBy, ok := metadata["scheduled_by"].(string); ok {
@@ -1063,11 +1062,11 @@ func convertModelToAnalysisJob(job *m.AnalysisJobImpl) AnalysisJob {
 	return response
 }
 
-func jsonbToMap(data gdbtypes.JSONB) map[string]interface{} {
-	if data.IsNil() {
+func jsonbToMap(data m.JSONBImpl) map[string]interface{} {
+	if len(data) == 0 {
 		return nil
 	}
-	result := make(map[string]interface{}, data.Len())
+	result := make(map[string]interface{}, len(data))
 	for key, value := range data {
 		result[key] = value
 	}

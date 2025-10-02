@@ -24,7 +24,7 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for TelegramRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB()
+	dbGorm, err := dbService.GetDB(nil)
 	if err != nil {
 		gl.Log("error", "Failed to get DB for TelegramRoutes", err)
 		return nil
