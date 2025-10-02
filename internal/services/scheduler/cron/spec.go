@@ -1,3 +1,4 @@
+// Package cron provides a specification for cron job scheduling.
 package cron
 
 import (

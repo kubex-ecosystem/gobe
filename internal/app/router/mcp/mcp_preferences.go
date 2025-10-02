@@ -2,8 +2,10 @@
 package mcp
 
 import (
-	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	"context"
 	"net/http"
+
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
 	"github.com/gin-gonic/gin"
 	mcp_preferences_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/preferences"
@@ -28,7 +30,7 @@ func NewMCPPreferencesRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for MCPPreferencesRoute")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
+	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
 	bridge := gdbasez.NewBridge(dbGorm)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)

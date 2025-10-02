@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func NewMCPAnalyzerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for MCP Analyzer routes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
+	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil

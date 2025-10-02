@@ -126,6 +126,10 @@ optimize-media:
 	@bash $(INSTALL_SCRIPT) optimize-media $(ARGS)
 	$(shell exit 0)
 
+graph:
+	@bash $(INSTALL_SCRIPT) graph $(ARGS)
+	$(shell exit 0)
+
 # i18n.used:
 # 	rg -no --pcre2 "t\\(\\s*['\"\`]([A-Za-z][\\w-]+)\\.([A-Za-z0-9_.-]+)['\"\`]\\s*(?:,|\\))" $(I18N_SRC) \
 # 	| awk -F: '{print $$3}' \

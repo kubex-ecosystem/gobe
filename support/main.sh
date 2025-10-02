@@ -458,7 +458,40 @@ __main() {
 
       log success "Documentation published successfully."
       ;;
-
+    graph|GRAPH)
+      log info "Generating dependency graph..."
+      if [[ ! -d ./.notes/DIAGRAMS ]]; then
+        mkdir -p ./.notes/DIAGRAMS || {
+          log error "Failed to create directory ./.notes/DIAGRAMS" true
+          return 1
+        }
+      fi
+      if ! command -v goda >/dev/null 2>&1; then
+        log info "Installing 'goda' tool..."
+        if ! command -v go >/dev/null 2>&1; then
+          log error "Go is not installed. Please install Go to proceed." true
+          return 1
+        fi
+        go install github.com/loov/goda@latest || {
+          log error "Failed to install 'goda' tool. Please check your Go environment." true
+          return 1
+        }
+        log success "'goda' tool installed successfully."
+      fi
+      local _timestamp
+      _timestamp=$(date +%s)
+      go mod graph > "${_ROOT_DIR:-}/.notes/DIAGRAMS/deps_${_timestamp}.txt"
+      goda graph ./... > "${_ROOT_DIR:-}/.notes/DIAGRAMS/deps_${_timestamp}.dot"
+      # if ! command -v gographviz >/dev/null 2>&1; then
+      #   log error "The 'gographviz' tool is required to generate the dependency graph. Please install it and try again." true
+      #   return 1
+      # fi
+      # go mod graph | gographviz -asciigraph || {
+      #   log error "Failed to generate dependency graph." true
+      #   return 1
+      # }
+      log success "Dependency graph generated successfully at ./.notes/DIAGRAMS/*_${_timestamp}.{txt,dot}" true
+      ;;
     # DEFAULT
     # Default command handler
     *)

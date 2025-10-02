@@ -1,6 +1,7 @@
 package mcp
 
 import (
+	"context"
 	"net/http"
 
 	mcp_system_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/system"
@@ -26,7 +27,7 @@ func NewMCPSystemRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for MCPSystemRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
+	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
