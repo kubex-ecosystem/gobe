@@ -15,8 +15,11 @@ type Service struct {
 
 func NewService(providerSvc svc.ProvidersService) (*Service, error) {
 	reg := New(providerSvc)
+	// Try to reload, but don't fail if table doesn't exist yet (during initialization)
 	if err := reg.Reload(); err != nil {
-		return nil, err
+		// Log warning but continue - migrations may not have run yet
+		// Service will work with env-based providers only until Reload succeeds
+		fmt.Printf("Warning: failed to load providers from database (may not be initialized yet): %v\n", err)
 	}
 	return &Service{registry: reg}, nil
 }

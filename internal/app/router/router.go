@@ -25,122 +25,51 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type RouterConfigImpl struct {
+	RoutesKbx       map[string]map[string]ci.IRoute `json:"routes,omitempty" yaml:"routes,omitempty" xml:"routes,omitempty"`
+	Debug           bool                            `json:"debug,omitempty" yaml:"debug,omitempty" xml:"debug,omitempty"`
+	DatabaseService *svc.DBServiceImpl              `json:"databaseService,omitempty" yaml:"databaseService,omitempty" xml:"databaseService,omitempty"`
+	Properties      map[string]any                  `json:"properties,omitempty" yaml:"properties,omitempty" xml:"properties,omitempty"`
+	Middlewares     map[string]gin.HandlerFunc      `json:"middlewares,omitempty" yaml:"middlewares,omitempty" xml:"middlewares,omitempty"`
+	Settings        map[string]string               `json:"settings,omitempty" yaml:"settings,omitempty" xml:"settings,omitempty"`
+	RateLimitLimit  float64                         `json:"rateLimitLimit,omitempty" yaml:"rateLimitLimit,omitempty" xml:"rateLimitLimit,omitempty"`
+	RateLimitBurst  int                             `json:"rateLimitBurst,omitempty" yaml:"rateLimitBurst,omitempty" xml:"rateLimitBurst,omitempty"`
+}
+
 // Router represents the main router structure for the application.
 type Router struct {
 	*gin.Engine
 	*t.Mutexes
-	InitArgs        gl.InitArgs
-	Logger          l.Logger
-	settings        map[string]string
-	databaseService svc.DBService
-	routes          map[string]map[string]ci.IRoute
-	properties      map[string]any
-	middlewares     map[string]gin.HandlerFunc
-	engine          *gin.Engine
-	debug           bool
+	*RouterConfigImpl
+	InitArgs gl.InitArgs
+	Logger   l.Logger
 }
 
 // newRouter initializes a new Router instance with the provided configuration.
-func newRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, logger l.Logger, debug bool) (*Router, error) {
+func newRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs gl.InitArgs, logger l.Logger, debug bool) (*Router, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
 
 	rtr := &Router{
-		Logger:          logger,
-		Mutexes:         t.NewMutexesType(),
-		engine:          gin.New(),
-		routes:          make(map[string]map[string]ci.IRoute),
-		debug:           debug,
-		databaseService: databaseService,
-		properties:      make(map[string]any),
-		middlewares:     make(map[string]gin.HandlerFunc),
-		settings: map[string]string{
-			"configPath":     serverConfig.FilePath,
-			"bindingAddress": serverConfig.BindAddress,
-			"port":           serverConfig.Port,
-			"basePath":       serverConfig.BasePath,
+		Logger:  logger,
+		Mutexes: t.NewMutexesType(),
+		Engine:  gin.New(),
+		RouterConfigImpl: &RouterConfigImpl{
+			RoutesKbx:       make(map[string]map[string]ci.IRoute),
+			Debug:           debug,
+			DatabaseService: databaseService,
+			Properties:      make(map[string]any),
+			Middlewares:     make(map[string]gin.HandlerFunc),
+			Settings: map[string]string{
+				"configPath":     serverConfig.FilePath,
+				"bindingAddress": serverConfig.BindAddress,
+				"port":           serverConfig.Port,
+				"basePath":       serverConfig.BasePath,
+			},
 		},
+		InitArgs: initArgs,
 	}
-
-	var autenticationMiddleware *mdw.AuthenticationMiddleware
-	if databaseService != nil {
-		cfg := databaseService.GetConfig(context.Background())
-		config := cfg.(*svc.DBConfigImpl)
-		tokenService, certService, err := mdw.NewTokenService(config, logger)
-		if err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
-			return nil, err
-		}
-		autenticationMiddleware = &mdw.AuthenticationMiddleware{
-			CertService:  certService,
-			TokenService: tokenService,
-		}
-	}
-
-	defaultMiddlewares := map[string]gin.HandlerFunc{
-		"authentication":      autenticationMiddleware.ValidateJWT(mdw.NewAuthenticationMiddleware(autenticationMiddleware.TokenService, autenticationMiddleware.CertService, nil)),
-		"validateAndSanitize": mdw.ValidateAndSanitize(),
-		"rateLimite":          mdw.RateLimiter(rate.Limit(serverConfig.RateLimitLimit), serverConfig.RateLimitBurst),
-		"logger":              mdw.Logger(logger),
-		"backoff":             mdw.BackoffMiddleware(),
-		"cache":               mdw.CacheMiddleware(),
-		"meter":               mdw.MeterMiddleware(),
-		"timeout":             mdw.TimeoutMiddleware(30 * time.Second),
-	}
-
-	// Set up the globals for gin (middlewares, logger, etc.)
-	// They are set up once in the initialization of the router
-	// and not in the initialization of the server
-	rtr.engine.Use(gin.Recovery())
-	rtr.engine.Use(gin.Logger())
-
-	strMiddlewares := make([]string, 0)
-	rtr.engine.Use(func(middlewares map[string]gin.HandlerFunc) []gin.HandlerFunc {
-		middlewaresList := make([]gin.HandlerFunc, 0)
-		for middlewareName, middleware := range middlewares {
-			if middlewareName != "authentication" {
-				rtr.RegisterMiddleware(middlewareName, middleware, true)
-				middlewaresList = append(middlewaresList, middleware)
-			} else {
-				rtr.RegisterMiddleware(middlewareName, middleware, false)
-			}
-			strMiddlewares = append(strMiddlewares, middlewareName)
-		}
-		return middlewaresList
-	}(defaultMiddlewares)...)
-
-	rtr.middlewares = defaultMiddlewares
-
-	fullBindAddress := net.JoinHostPort(rtr.settings["bindingAddress"], rtr.settings["port"])
-
-	if err := SecureServerInit(rtr.engine, fullBindAddress); err != nil {
-		gl.Log("error", "Failed to initialize secure server: "+err.Error())
-		return nil, err
-	}
-	gl.Log("debug", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
-
-	for groupName, routeGroup := range GetDefaultRouteMap(rtr) {
-		for routeName, route := range routeGroup {
-			if route != nil {
-				rtr.RegisterRoute(groupName, routeName, route, strMiddlewares)
-			}
-		}
-	}
-
-	// rtr.RegisterRoute(
-	// 	"swagger",
-	// 	"Swagger",
-	// 	NewRoute(
-	// 		http.MethodGet,
-	// 		"/swagger/*any",
-	// 		"Application/html",
-	// 		ginSwagger.WrapHandler(swaggerfiles.Handler),
-	// 		nil,
-	// 		nil,
-	// 	),
-	// 	[]string{},
-	// )
 
 	if debug {
 		gin.SetMode(gin.DebugMode)
@@ -156,8 +85,8 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, logger
 }
 
 // NewRouter creates a new Router instance and returns it as an IRouter interface.
-func NewRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, logger l.Logger, debug bool) (ci.IRouter, error) {
-	return newRouter(serverConfig, databaseService, logger, debug)
+func NewRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs gl.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
+	return newRouter(serverConfig, databaseService, initArgs, logger, debug)
 }
 
 // NewRequest is a placeholder function for creating a new request.
@@ -167,7 +96,7 @@ func NewRequest(dBConfig svc.DBConfig, s string, i1, i2 int) (any, any) {
 
 // GetDebug returns the debug mode status of the router.
 func (rtr *Router) GetDebug() bool {
-	return rtr.debug
+	return rtr.Debug
 }
 
 // GetLogger returns the logger instance associated with the router.
@@ -177,43 +106,134 @@ func (rtr *Router) GetLogger() l.Logger {
 
 // GetConfigPath returns the configuration file path.
 func (rtr *Router) GetConfigPath() string {
-	return rtr.settings["configPath"]
+	return rtr.Settings["configPath"]
 }
 
 // GetBindingAddress returns the binding address of the server.
 func (rtr *Router) GetBindingAddress() string {
-	return rtr.settings["bindingAddress"]
+	return rtr.Settings["bindingAddress"]
 }
 
 // GetPort returns the port on which the server is running.
 func (rtr *Router) GetPort() string {
-	return rtr.settings["port"]
+	return rtr.Settings["port"]
 }
 
 // GetBasePath returns the base path of the server.
 func (rtr *Router) GetBasePath() string {
-	return rtr.settings["basePath"]
+	return rtr.Settings["basePath"]
 }
 
 // GetEngine returns the Gin engine instance.
 func (rtr *Router) GetEngine() *gin.Engine {
-	return rtr.engine
+	return rtr.Engine
 }
 
 // GetDatabaseService returns the database service instance.
 func (rtr *Router) GetDatabaseService() svc.DBService {
-	return rtr.databaseService
+	return rtr.DatabaseService
 }
 
 // HandleFunc registers a GET route with the specified path and handler.
 func (rtr *Router) HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes {
-	return rtr.engine.Handle("GET", path, handler)
+	return rtr.Engine.Handle("GET", path, handler)
 }
 
 // DBConfig is a placeholder function for database configuration.
 func (rtr *Router) DBConfig() svc.DBConfig {
-	dbService := rtr.databaseService
+	dbService := rtr.DatabaseService
 	return dbService.GetConfig(context.Background())
+}
+
+// InitializeResources initializes the router's resources, including middlewares and routes.
+func (rtr *Router) InitializeResources() error {
+	if err := rtr.ValidateRouter(); err != nil {
+		return err
+	}
+
+	var autenticationMiddleware *mdw.AuthenticationMiddleware
+	if rtr.DatabaseService != nil {
+		tokenService, certService, err := mdw.NewTokenService(rtr.DatabaseService)
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
+			return err
+		}
+		autenticationMiddleware = &mdw.AuthenticationMiddleware{
+			CertService:  certService,
+			TokenService: tokenService,
+		}
+
+	} else {
+		gl.Log("warn", "Database service not available, skipping authentication middleware setup")
+	}
+
+	defaultMiddlewares := map[string]gin.HandlerFunc{
+		"authentication":      autenticationMiddleware.ValidateJWT(mdw.NewAuthenticationMiddleware(autenticationMiddleware.TokenService, autenticationMiddleware.CertService, nil)),
+		"validateAndSanitize": mdw.ValidateAndSanitize(),
+		"rateLimite":          mdw.RateLimiter(rate.Limit(rtr.RateLimitLimit), rtr.RateLimitBurst),
+		"logger":              mdw.Logger(rtr.Logger),
+		"backoff":             mdw.BackoffMiddleware(),
+		"cache":               mdw.CacheMiddleware(),
+		"meter":               mdw.MeterMiddleware(),
+		"timeout":             mdw.TimeoutMiddleware(30 * time.Second),
+	}
+
+	// Set up the globals for gin (middlewares, logger, etc.)
+	// They are set up once in the initialization of the router
+	// and not in the initialization of the server
+	rtr.Engine.Use(gin.Recovery())
+	rtr.Engine.Use(gin.Logger())
+
+	strMiddlewares := make([]string, 0)
+	rtr.Engine.Use(func(middlewares map[string]gin.HandlerFunc) []gin.HandlerFunc {
+		middlewaresList := make([]gin.HandlerFunc, 0)
+		for middlewareName, middleware := range middlewares {
+			if middlewareName != "authentication" {
+				rtr.RegisterMiddleware(middlewareName, middleware, true)
+				middlewaresList = append(middlewaresList, middleware)
+			} else {
+				rtr.RegisterMiddleware(middlewareName, middleware, false)
+			}
+			strMiddlewares = append(strMiddlewares, middlewareName)
+		}
+		return middlewaresList
+	}(defaultMiddlewares)...)
+
+	rtr.Middlewares = defaultMiddlewares
+
+	fullBindAddress := net.JoinHostPort(rtr.Settings["bindingAddress"], rtr.Settings["port"])
+
+	if err := SecureServerInit(rtr.Engine, fullBindAddress); err != nil {
+		gl.Log("error", "Failed to initialize secure server: "+err.Error())
+		return err
+	}
+	gl.Log("debug", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
+
+	for groupName, routeGroup := range GetDefaultRouteMap(rtr) {
+		for routeName, route := range routeGroup {
+			if route != nil {
+				rtr.RegisterRoute(groupName, routeName, route, strMiddlewares)
+			}
+		}
+	}
+	gl.Log("debug", fmt.Sprintf("Default routes registered: %d groups", len(rtr.RoutesKbx)))
+
+	// TODO: Enable custom routes registration from config file or other source
+	// Custom routes need to be added programmatically as needed.
+	// if len(rtr.RoutesKbx) > 0 {
+	// 	for groupName, routeGroup := range rtr.RoutesKbx {
+	// 		for routeName, route := range routeGroup {
+	// 			if route != nil {
+	// 				rtr.RegisterRoute(groupName, routeName, route, strMiddlewares)
+	// 			}
+	// 		}
+	// 	}
+	// 	gl.Log("debug", fmt.Sprintf("Custom routes registered: %d groups", len(rtr.RoutesKbx)))
+	// } else {
+	// 	gl.Log("warn", "No custom routes to register")
+	// }
+
+	return nil
 }
 
 // Start starts the server with the configured settings.
@@ -223,9 +243,9 @@ func (rtr *Router) Start() error {
 		return nil
 	}
 
-	fullBindAddress := net.JoinHostPort(rtr.settings["bindingAddress"], rtr.settings["port"])
+	fullBindAddress := net.JoinHostPort(rtr.Settings["bindingAddress"], rtr.Settings["port"])
 
-	if err := rtr.engine.Run(fullBindAddress); err != nil {
+	if err := rtr.Engine.Run(fullBindAddress); err != nil {
 		gl.Log("error", "Failed to start server: "+err.Error())
 		return err
 	}
@@ -250,10 +270,10 @@ func (rtr *Router) SetProperty(key string, value any) {
 		gl.Log("error", err.Error())
 		return
 	}
-	if rtr.properties == nil {
-		rtr.properties = make(map[string]any)
+	if rtr.Properties == nil {
+		rtr.Properties = make(map[string]any)
 	}
-	rtr.properties[key] = value
+	rtr.Properties[key] = value
 }
 
 // GetProperty retrieves a property value by its key.
@@ -263,12 +283,12 @@ func (rtr *Router) GetProperty(key string) any {
 		gl.Log("error", err.Error())
 		return nil
 	}
-	if rtr.properties == nil {
+	if rtr.Properties == nil {
 		// Initialize the properties map if it is nil
 		return nil
 	}
 
-	if value, ok := rtr.properties[key]; ok {
+	if value, ok := rtr.Properties[key]; ok {
 		// Return the value if it exists
 		return value
 	}
@@ -287,12 +307,12 @@ func (rtr *Router) GetProperties() map[string]any {
 		return nil
 	}
 
-	if rtr.properties == nil {
+	if rtr.Properties == nil {
 		// Initialize the properties map if it is nil
 		return nil
 	}
 
-	return rtr.properties
+	return rtr.Properties
 }
 
 // SetProperties sets multiple properties in the router's properties map.
@@ -301,11 +321,11 @@ func (rtr *Router) SetProperties(properties map[string]any) {
 		gl.Log("error", err.Error())
 		return
 	}
-	if rtr.properties == nil {
-		rtr.properties = make(map[string]any)
+	if rtr.Properties == nil {
+		rtr.Properties = make(map[string]any)
 	}
 	for k, v := range properties {
-		rtr.properties[k] = v
+		rtr.Properties[k] = v
 	}
 }
 
@@ -315,10 +335,10 @@ func (rtr *Router) GetRoutes() map[string]map[string]ci.IRoute {
 		gl.Log("error", err.Error())
 		return nil
 	}
-	if rtr.routes == nil {
-		rtr.routes = make(map[string]map[string]ci.IRoute)
+	if rtr.RoutesKbx == nil {
+		rtr.RoutesKbx = make(map[string]map[string]ci.IRoute)
 	}
-	return rtr.routes
+	return rtr.RoutesKbx
 }
 
 // GetMiddlewares returns all registered middlewares in the router.
@@ -327,10 +347,10 @@ func (rtr *Router) GetMiddlewares() map[string]gin.HandlerFunc {
 		gl.Log("error", err.Error())
 		return nil
 	}
-	if rtr.middlewares == nil {
-		rtr.middlewares = make(map[string]gin.HandlerFunc)
+	if rtr.Middlewares == nil {
+		rtr.Middlewares = make(map[string]gin.HandlerFunc)
 	}
-	return rtr.middlewares
+	return rtr.Middlewares
 }
 
 // RegisterMiddleware registers a middleware with the router.
@@ -339,16 +359,16 @@ func (rtr *Router) RegisterMiddleware(name string, middleware gin.HandlerFunc, g
 		gl.Log("error", err.Error())
 		return
 	}
-	if rtr.middlewares == nil {
-		rtr.middlewares = make(map[string]gin.HandlerFunc)
+	if rtr.Middlewares == nil {
+		rtr.Middlewares = make(map[string]gin.HandlerFunc)
 	}
 	if global {
-		rtr.engine.Use(middleware)
+		rtr.Engine.Use(middleware)
 	} else {
-		if _, ok := rtr.middlewares[name]; ok {
+		if _, ok := rtr.Middlewares[name]; ok {
 			gl.Log("warn", fmt.Sprintf("Middleware %s already registered", name))
 		} else {
-			rtr.middlewares[name] = middleware
+			rtr.Middlewares[name] = middleware
 			gl.Log("debug", fmt.Sprintf("Middleware %s registered", name))
 		}
 	}
@@ -371,10 +391,10 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 	if routeName == "" {
 		routeName = strings.ReplaceAll(route.Path(), "/", "_")
 	}
-	if _, ok := rtr.routes[groupName]; !ok {
-		rtr.routes[groupName] = make(map[string]ci.IRoute)
+	if _, ok := rtr.RoutesKbx[groupName]; !ok {
+		rtr.RoutesKbx[groupName] = make(map[string]ci.IRoute)
 	}
-	if _, ok := rtr.routes[groupName][routeName]; ok {
+	if _, ok := rtr.RoutesKbx[groupName][routeName]; ok {
 		gl.Log("warn", fmt.Sprintf("Route %s already registered in group %s", routeName, groupName))
 		return
 	}
@@ -384,7 +404,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 		for _, middlewareName := range middlewares {
 			// If the middleware registered in the route is not in the list of middlewares
 			// registered in the router, do not add the middleware
-			if middleware, ok := rtr.middlewares[middlewareName]; ok {
+			if middleware, ok := rtr.Middlewares[middlewareName]; ok {
 				middlewaresStack = append(middlewaresStack, middleware)
 			} else {
 				gl.Log("warn", fmt.Sprintf("Middleware %s not found", middlewareName))
@@ -394,7 +414,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 
 	// Add specific middlewares for the route, if necessary
 	if route.Secure() {
-		if authMdw, ok := rtr.middlewares["authentication"]; ok {
+		if authMdw, ok := rtr.Middlewares["authentication"]; ok {
 			middlewaresStack = append(middlewaresStack, authMdw)
 		} else {
 			gl.Log("warn", "Global Authentication middleware not found")
@@ -402,7 +422,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 	}
 
 	if route.ValidateAndSanitize() {
-		if validateMdw, ok := rtr.middlewares["validateAndSanitize"]; ok {
+		if validateMdw, ok := rtr.Middlewares["validateAndSanitize"]; ok {
 			middlewaresStack = append(middlewaresStack, validateMdw)
 		} else {
 			gl.Log("warn", "Global Validate and sanitize middleware not found")
@@ -412,9 +432,9 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 	// Register route with individual middlewares + final handler
 	middlewaresStack = append(middlewaresStack, route.Handler())
 
-	rtr.engine.Handle(route.Method(), route.Path(), UniqueMiddlewareStack(middlewaresStack)...)
+	rtr.Engine.Handle(route.Method(), route.Path(), UniqueMiddlewareStack(middlewaresStack)...)
 
-	rtr.routes[groupName][routeName] = route
+	rtr.RoutesKbx[groupName][routeName] = route
 
 	gl.Log("debug", fmt.Sprintf("Route registered: [%s] %s", route.Method(), route.Path()))
 }
@@ -426,10 +446,15 @@ func (rtr *Router) StartServer() {
 		return
 	}
 
-	fullBindAddress := net.JoinHostPort(rtr.settings["bindingAddress"], rtr.settings["port"])
+	if err := rtr.InitializeResources(); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to initialize resources: %s", err.Error()))
+		return
+	}
+
+	fullBindAddress := net.JoinHostPort(rtr.Settings["bindingAddress"], rtr.Settings["port"])
 	gl.Log("info", fmt.Sprintf("Starting server at %s", fullBindAddress))
 
-	if err := rtr.engine.Run(fullBindAddress); err != nil {
+	if err := rtr.Engine.Run(fullBindAddress); err != nil {
 		gl.Log("error", fmt.Sprintf("Server failed to start: %s", err.Error()))
 		return
 	}
@@ -446,8 +471,8 @@ func (rtr *Router) ShutdownServerGracefully() {
 
 	// Create an HTTP server with the Gin engine
 	server := &http.Server{
-		Addr:    net.JoinHostPort(rtr.settings["bindingAddress"], rtr.settings["port"]),
-		Handler: rtr.engine,
+		Addr:    net.JoinHostPort(rtr.Settings["bindingAddress"], rtr.Settings["port"]),
+		Handler: rtr.Engine,
 	}
 
 	// Create a context with timeout for safe shutdown
@@ -480,7 +505,7 @@ func (rtr *Router) MonitorServer() {
 
 	go func() {
 		for range ticker.C {
-			connections := len(rtr.engine.Routes())
+			connections := len(rtr.Engine.Routes())
 			gl.Log("debug", fmt.Sprintf("Server running at %s | Active connections: %d", rtr.GetBindingAddress(), connections))
 		}
 	}()
@@ -491,10 +516,10 @@ func (rtr *Router) ValidateRouter() error {
 	if rtr == nil {
 		return fmt.Errorf("router is nil")
 	}
-	if rtr.engine == nil {
+	if rtr.Engine == nil {
 		return fmt.Errorf("engine is nil")
 	}
-	if rtr.databaseService == nil {
+	if rtr.DatabaseService == nil {
 		return fmt.Errorf("database service is nil")
 	}
 	return nil

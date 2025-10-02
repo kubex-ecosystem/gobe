@@ -32,7 +32,10 @@ func NewMCPAnalyzerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
-	mcpAnalyzerController := mcp_analyzer_controller.NewAnalyzerController(dbGorm)
+
+	// Create bridge to access services
+	bridge := gdbasez.NewBridge(dbGorm)
+	mcpAnalyzerController := mcp_analyzer_controller.NewAnalyzerController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)

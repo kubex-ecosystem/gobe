@@ -10,20 +10,22 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"reflect"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	crp "github.com/kubex-ecosystem/gobe/factory/security"
 	rts "github.com/kubex-ecosystem/gobe/internal/app/router"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
-	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
+	is "github.com/kubex-ecosystem/gdbase/factory"
 
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
@@ -41,22 +43,33 @@ type GoBE struct {
 	*t.Mutexes
 	*t.Reference
 
+	router *rts.Router
+
 	SignalManager ci.ISignalManager[chan string]
 
 	requestWindow   time.Duration
 	requestLimit    int
 	requestsTracers map[string]ci.IRequestsTracer
 
+	dbName string
+
 	// Configuration paths
 
-	configDir  string
-	configFile string
-	LogFile    string
+	configDir    string
+	configFile   string
+	configDbFile string
+	LogFile      string
+
+	privKey  string
+	certPath string
+	keyPath  string
 
 	chanCtl    chan string
 	emailQueue chan ci.ContactForm
 
-	Properties  map[string]any
+	certService *crt.CertService
+	dbService   *is.DBServiceImpl
+
 	Metadata    map[string]any
 	Middlewares map[string]any
 	Routes      map[string]map[string]any
@@ -77,6 +90,8 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		return nil, err
 	}
 
+	dbName := gl.GetEnvOrDefault("GOBE_DB_NAME", "kubex_db")
+
 	gbm := &GoBE{
 		InitArgs:  args,
 		Logger:    logger.GetLogger(),
@@ -84,13 +99,16 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		Reference: t.NewReference(args.Name).GetReference(),
 
 		SignalManager: signamManager,
-		Properties:    make(map[string]any),
-		Metadata:      make(map[string]any),
-		Middlewares:   make(map[string]any),
 
-		configFile: args.ConfigFile,
-		LogFile:    args.LogFile,
-		configDir:  filepath.Dir(args.ConfigFile),
+		Metadata:    make(map[string]any),
+		Middlewares: make(map[string]any),
+
+		dbName: dbName,
+
+		configFile:   args.ConfigFile,
+		configDbFile: args.ConfigDBFile,
+		LogFile:      args.LogFile,
+		configDir:    filepath.Dir(args.ConfigFile),
 
 		chanCtl:    chanCtl,
 		emailQueue: make(chan ci.ContactForm, 20),
@@ -163,12 +181,9 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		gl.Log("info", fmt.Sprintf("Private key generated at %s", pubKeyPath))
 		certObj.Cert = string(certEncodedBytes)
 		certObj.Key = string(keyEncodedBytes)
-		gbm.Properties["cert"] = t.NewProperty("cert", &certObj.Cert, true, nil)
-
 		mapper := t.NewMapper(&certObj, filepath.Join(gbm.configDir, "cert.json"))
 		mapper.SerializeToFile("json")
 		gl.Log("debug", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
-		gbm.Properties["privKey"] = t.NewProperty("privKey", &keyEncodedBytes, true, nil)
 	} else {
 		certObj := &GoBECertData{}
 		mapper := t.NewMapper(&certObj, filepath.Join(gbm.configDir, "cert.json"))
@@ -176,20 +191,11 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 			gl.Log("error", fmt.Sprintf("Error reading certificate: %v", err))
 			return nil, err
 		}
-		key := certObj.Key
-		gbm.Properties["privKey"] = t.NewProperty("privKey", &key, true, nil)
 	}
 	if _, err := os.Stat(pubKeyPath); err != nil {
 		gl.Log("error", fmt.Sprintf("Error generating certificate: %v", err))
 		return nil, err
 	}
-
-	gbm.Properties["certPath"] = t.NewProperty("certPath", &pubCertKeyPath, true, nil)
-	gbm.Properties["keyPath"] = t.NewProperty("keyPath", &pubKeyPath, true, nil)
-	gbm.Properties["certService"] = crtService
-
-	// Start listening for signals since the beginning, so we can handle them
-	// gracefully even if the server is not started yet.
 
 	return gbm, nil
 }
@@ -200,7 +206,6 @@ func (g *GoBE) GetReference() ci.IReference {
 func (g *GoBE) Environment() is.Environment {
 	return g.environment
 }
-
 func (g *GoBE) InitializeResources() error {
 	gl.Log("notice", "Initializing GoBE...")
 
@@ -208,8 +213,7 @@ func (g *GoBE) InitializeResources() error {
 		g.Logger = l.GetLogger("GoBE")
 	}
 	// Initialize the environment
-	ctx := context.Background()
-	dbService, initResourcesErr := is.InitializeAllServices(ctx, g.environment, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	dbService, initResourcesErr := g.initializeAllServices()
 	if initResourcesErr != nil {
 		return initResourcesErr
 	}
@@ -218,7 +222,7 @@ func (g *GoBE) InitializeResources() error {
 		gl.Log("error", "Database service is nil")
 		return errors.New("database service is nil")
 	}
-	g.Properties["dbService"] = t.NewProperty[is.DBService]("dbService", &dbService, true, nil)
+	g.dbService = dbService
 
 	g.SetDatabaseService(dbService)
 
@@ -227,15 +231,15 @@ func (g *GoBE) InitializeResources() error {
 func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	gl.Log("notice", "Initializing server...")
 
-	if !reflect.ValueOf(g.InitArgs.Port).IsValid() {
+	if g.InitArgs.Port == "" {
 		gl.Log("warn", "No port specified, using default port 8666")
 		g.InitArgs.Port = "8666"
 	}
-	if !reflect.ValueOf(g.InitArgs.Bind).IsValid() {
+	if g.InitArgs.Bind == "" {
 		gl.Log("warn", "Binding to all interfaces (default/IPv4)")
 		g.InitArgs.Bind = "0.0.0.0"
 	}
-	if !reflect.ValueOf(g.InitArgs.Address).IsValid() {
+	if g.InitArgs.Address == "" {
 		g.InitArgs.Address = net.JoinHostPort(g.InitArgs.Bind, g.InitArgs.Port)
 		gl.Log("warn", "No address specified, using default address %s", g.InitArgs.Address)
 	}
@@ -300,9 +304,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	gobeminConfig.SetRateLimitBurst(rateLimitBurst)
 	gobeminConfig.SetRequestWindow(requestWindow)
 
-	dbServiceT := g.Properties["dbService"].(*t.Property[is.DBService])
-	dbService := dbServiceT.GetValue()
-	if dbService == nil {
+	if g.dbService == nil {
 		gl.Log("error", "Database service is nil")
 		return nil, errors.New("database service is nil")
 	}
@@ -313,21 +315,17 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 		return nil, kubexErr
 	}
 
-	//gobeminConfig.Set
-
-	router, err := rts.NewRouter(gobeminConfig, dbService, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	router, err := rts.NewRouter(gobeminConfig, g.dbService, g.InitArgs, g.Logger, g.environment.Getenv("DEBUG") == "true")
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("Error initializing router: %v", err))
 		return nil, err
 	}
-
-	g.Properties["router"] = t.NewProperty("router", &router, true, nil)
-	if router == nil {
+	g.router = router.(*rts.Router)
+	if g.router == nil {
 		gl.Log("error", "Router is nil")
 		return nil, errors.New("router is nil")
 	}
-
-	return router, nil
+	return g.router, nil
 }
 func (g *GoBE) GetLogger() l.Logger {
 	return g.Logger
@@ -340,6 +338,7 @@ func (g *GoBE) StartGoBE() {
 		return
 	}
 
+	gl.Log("debug", "Initializing server...")
 	router, err := g.InitializeServer()
 	if err != nil {
 		gl.Log("fatal", fmt.Sprintf("Error initializing server: %v", err))
@@ -349,6 +348,7 @@ func (g *GoBE) StartGoBE() {
 		gl.Log("fatal", "Router is nil")
 		return
 	}
+
 	gl.Log("debug", "Loading request tracers...")
 	g.Mutexes.MuAdd(1)
 	go func(g *GoBE) {
@@ -375,6 +375,12 @@ func (g *GoBE) StartGoBE() {
 	gl.Log("notice", "Waiting for persisted request tracers to load...")
 	g.Mutexes.MuWait()
 
+	// Register routes and middlewares
+	if err := router.InitializeResources(); err != nil {
+		gl.Log("fatal", fmt.Sprintf("Error initializing router resources: %v", err))
+		return
+	}
+
 	gl.Log("debug", fmt.Sprintf("Server started on port %s", g.InitArgs.Port))
 
 	if err := router.Start(); err != nil {
@@ -387,21 +393,18 @@ func (g *GoBE) StopGoBE() {
 	g.Mutexes.MuAdd(1)
 	defer g.Mutexes.MuDone()
 
-	routerT := g.Properties["router"].(*t.Property[ci.IRouter])
-	router := routerT.GetValue()
-	if router == nil {
+	if g.router == nil {
 		gl.Log("error", "Router is nil")
 		return
 	}
 
-	router.ShutdownServerGracefully()
+	g.router.ShutdownServerGracefully()
 }
 func (g *GoBE) GetChanCtl() chan string {
 	//g.Mutexes.MuRLock()
 	//defer g.Mutexes.MuRUnlock()
 	return g.chanCtl
 }
-
 func (g *GoBE) GetLogFilePath() string {
 	return g.LogFile
 }
@@ -411,24 +414,12 @@ func (g *GoBE) GetConfigFilePath() string {
 func (g *GoBE) SetDatabaseService(dbService is.DBService) {
 	//g.Mutexes.MuAdd(1)
 	//defer g.Mutexes.MuDone()
-	g.Properties["dbService"] = t.NewProperty[is.DBService]("dbService", &dbService, true, nil)
+	g.dbService = dbService.(*is.DBServiceImpl)
 }
 func (g *GoBE) GetDatabaseService() is.DBService {
 	//g.Mutexes.MuRLock()
 	//defer g.Mutexes.MuRUnlock()
-	if dbT, ok := g.Properties["dbService"].(*t.Property[is.DBService]); ok {
-		db := dbT.GetValue()
-		return db
-	} else if dbT, ok := g.Properties["dbService"].(*t.Property[is.DBService]); ok {
-		dbS := dbT.GetValue()
-		return dbS
-	} else if dbT, ok := g.Properties["dbService"].(*t.Property[is.DBService]); ok {
-		dbS := dbT.GetValue()
-		return dbS
-	} else {
-		gl.Log("error", "Database service is nil")
-		return nil
-	}
+	return g.dbService
 }
 func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	//g.Mutexes.MuRLock()
@@ -455,92 +446,7 @@ func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	gl.Log("error", "Logger is nil")
 	return nil, errors.New("logger is nil")
 }
-func (g *GoBE) GetProperty(name string) (any, reflect.Type, error) {
-	if prop, ok := g.Properties[name]; ok {
-		return prop, reflect.TypeOf(prop), nil
-	}
-	return nil, nil, fmt.Errorf("property %q not found", name)
-}
 
-// Auxiliary functions for GoBE
-
-func chanRoutineCtl[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
-	select {
-	case cmd := <-chCtl:
-		switch cmd {
-		case "stop":
-			gl.Log("info", "Received stop command for:", v.GetName(), "ID:", v.GetID().String())
-			// If we receive a stop command, we need to close the channels.
-			if ch != nil {
-				close(ch)
-				ch = nil
-			}
-			if chCtl != nil {
-				close(chCtl)
-				chCtl = nil
-			}
-		case "reload":
-			gl.Log("info", "Received reload command for:", v.GetName(), "ID:", v.GetID().String())
-			// If we receive a reload command, we need to close the channels and create new ones.
-			if ch != nil {
-				close(ch)
-				ch = nil
-			}
-			if chCtl != nil {
-				close(chCtl)
-				chCtl = nil
-			}
-		default:
-			gl.Log("warn", "Received unknown command for:", v.GetName(), "ID:", v.GetID().String(), "Command:", cmd)
-		}
-	case data := <-ch:
-		gl.Log("debug", "Received data for:", v.GetName(), "ID:", v.GetID().String(), "Data:", data)
-		// Process the data received from the main channel.
-		action := func() string {
-			if reflect.ValueOf(data).Kind() == reflect.Ptr && !reflect.ValueOf(data).IsNil() {
-				return fmt.Sprintf("%v", reflect.ValueOf(data).Elem().Interface())
-			}
-			return fmt.Sprintf("%v", data)
-		}
-		v.ProcessData(action())
-	case <-time.After(5 * time.Second):
-		// Timeout after 5 seconds to check if we need to exit the routine.
-	}
-}
-
-func listenSystemSignals[T any](gbm *GoBE) {
-	chCtl := gbm.GetChanCtl()
-	if chCtl == nil {
-		gl.Log("error", "Control channel is nil, cannot listen for system signals")
-		return
-	}
-	signamManager := gbm.SignalManager
-	if signamManager == nil {
-		gl.Log("error", "Signal manager is nil, cannot listen for system signals")
-		return
-	}
-	if reflect.ValueOf(signamManager).IsNil() {
-		gl.Log("error", "Signal manager is nil, cannot listen for system signals")
-		return
-	}
-	go func(chan string, ci.ISignalManager[chan string], *GoBE) {
-		signamManager.ListenForSignals()
-		gl.Log("debug", "Listening for signals...")
-		for msg := range chCtl {
-			switch msg {
-			case "reload":
-				gl.Log("info", "Received reload signal, reloading server...")
-				gbm.StopGoBE()
-				gbm.StartGoBE()
-			default:
-				gl.Log("info", "Received stop signal, stopping server...")
-				gbm.StopGoBE()
-				gl.Log("info", "Server stopped gracefully")
-				return
-			}
-		}
-	}(chCtl, signamManager, gbm)
-}
 func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 	if args.Debug {
 		gl.SetDebugMode(args.Debug)
@@ -550,6 +456,15 @@ func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	// Ensure default config directory exists
+	kubexDefaultDir := filepath.Dir(filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath)))
+	if _, err := os.Stat(kubexDefaultDir); err != nil {
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(kubexDefaultDir, 0755); err != nil {
+				gl.Log("fatal", fmt.Sprintf("Error creating default kubex config directory: %v", err))
+			}
+		}
+	}
 	defaultDir := filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath))
 	if _, err := os.Stat(defaultDir); err != nil {
 		if os.IsNotExist(err) {
@@ -572,6 +487,11 @@ func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 			}
 		}
 	}
+
+	if args.ConfigDBFile == "" {
+		args.ConfigDBFile = filepath.Join(kubexDefaultDir, "gdbase", "config", "config.json")
+	}
+
 	if args.LogFile == "" {
 		args.LogFile = filepath.Join(defaultDir, "request_tracer.json")
 		if _, err := os.Stat(args.LogFile); err != nil {
@@ -595,6 +515,9 @@ func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 
 	initArgs := gl.InitArgs{
 		ConfigFile:     args.ConfigFile,
+		ConfigType:     filepath.Ext(args.ConfigFile)[1:],
+		ConfigDBFile:   args.ConfigDBFile,
+		ConfigDBType:   filepath.Ext(args.ConfigDBFile)[1:],
 		IsConfidential: args.IsConfidential,
 		Port:           args.Port,
 		Bind:           args.Bind,
@@ -617,4 +540,105 @@ func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 	// work with more than one instance of GoBE with different
 	// purposes.
 	return initArgs, nil
+}
+
+// InitializeAllServices inicializa todos os serviços (Docker + Database) com context
+func (g *GoBE) initializeAllServices() (*is.DBServiceImpl, error) {
+	// 1. Setup database config
+	dbConfig, err := g.setupDatabase()
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBConfig: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig: %w", err)
+	}
+
+	// 2. Initialize Docker Service (usando factory wrapper)
+	dockerService, err := is.NewDockerService(dbConfig, g.Logger)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DockerService: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao inicializar DockerService: %w", err)
+	}
+	if dockerService == nil {
+		gl.Log("info", "⚠️ DockerService é nil, pulando configuração do Docker")
+		return nil, fmt.Errorf("⚠️ DockerService é nil, pulando configuração do Docker")
+	}
+
+	ctx := context.Background()
+
+	// 3. Setup Database Services via factory
+	if err := is.SetupDatabaseServices(ctx, dockerService, dbConfig); err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao configurar Docker: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao configurar Docker: %w", err)
+	}
+
+	// 4. Wait for Database
+	if _, err := WaitForDatabase(dbConfig); err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao aguardar database: %v", err))
+		return nil, err
+	}
+
+	// 5. Create Database Service
+	dbService, err := is.NewDatabaseService(ctx, dbConfig, g.Logger)
+	if err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DatabaseService: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao inicializar DatabaseService: %w", err)
+	}
+
+	// 6. Initialize Database Service
+	if err := dbService.Initialize(ctx); err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao conectar ao banco: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao conectar ao banco: %w", err)
+	}
+
+	return dbService, nil
+}
+
+func (g *GoBE) setupDatabase() (*is.DBConfigImpl, error) {
+	if _, err := os.Stat(g.configDbFile); err != nil && os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(g.configDbFile), 0755); err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err))
+			return nil, fmt.Errorf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err)
+		}
+		if err := os.WriteFile(g.configDbFile, []byte(""), 0644); err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err))
+			return nil, fmt.Errorf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err)
+		}
+	}
+	dbConfig := is.NewDBConfigWithArgs(context.Background(), g.dbName, g.configDbFile, true, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	// if dbConfig == nil {
+	// 	gl.Log("error", "❌ Erro ao inicializar DBConfig")
+	// 	return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig")
+	// }
+	return dbConfig, nil
+}
+
+func WaitForDatabase(dbConfig is.DBConfig) (*gorm.DB, error) {
+	if dbConfig == nil {
+		return nil, fmt.Errorf("configuração do banco de dados não pode ser nula")
+	}
+
+	// Get PostgreSQL config using interface method
+	pgConfigAny := dbConfig.GetPostgresConfig()
+	if pgConfigAny == nil {
+		return nil, fmt.Errorf("configuração PostgreSQL não encontrada")
+	}
+
+	pgConfig := pgConfigAny
+
+	if pgConfig.Dsn == "" {
+		pgConfig.Dsn = pgConfig.ConnectionString
+	}
+	if pgConfig.Dsn == "" {
+		pgConfig.Dsn = fmt.Sprintf("host=%s port=%v user=%s password=%s dbname=%s sslmode=disable",
+			pgConfig.Host, pgConfig.Port, pgConfig.Username, pgConfig.Password, pgConfig.Name)
+	}
+
+	for index := 0; index < 10; index++ {
+		db, err := gorm.Open(postgres.Open(pgConfig.Dsn), &gorm.Config{})
+		if err == nil {
+			return db, nil
+		}
+		fmt.Println("Aguardando banco de dados iniciar...")
+		time.Sleep(5 * time.Second)
+	}
+	return nil, fmt.Errorf("tempo limite excedido ao esperar pelo banco de dados")
 }

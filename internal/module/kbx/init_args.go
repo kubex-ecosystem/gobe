@@ -11,6 +11,8 @@ import (
 type InitArgs struct {
 	ConfigFile     string
 	ConfigType     string
+	ConfigDBFile   string
+	ConfigDBType   string
 	EnvFile        string
 	LogFile        string
 	Name           string

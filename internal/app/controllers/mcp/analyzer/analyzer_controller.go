@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
-	"gorm.io/gorm"
 
 	m "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
@@ -26,15 +24,18 @@ import (
 )
 
 type AnalyzerController struct {
-	dbConn          *gorm.DB
+	bridge          *m.Bridge
 	APIWrapper      *t.APIWrapper[any]
 	analyzerService *analyzer.Service
 	analysisService m.AnalysisJobService
 }
 
-func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
-	if db == nil {
-		gl.Log("warn", "Database connection is nil for AnalyzerController")
+func NewAnalyzerController(bridge *m.Bridge) *AnalyzerController {
+	if bridge == nil {
+		gl.Log("warn", "Bridge is nil for AnalyzerController")
+		return &AnalyzerController{
+			APIWrapper: t.NewAPIWrapper[any](),
+		}
 	}
 
 	// Initialize analyzer service with environment configuration
@@ -43,23 +44,11 @@ func NewAnalyzerController(db *gorm.DB) *AnalyzerController {
 
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
 
-	var analysisService m.AnalysisJobService
-	if db != nil {
-		analysisRepo := m.NewAnalysisJobRepo(db)
-		analysisService = m.NewAnalysisJobService(analysisRepo)
-	} else {
-		gl.Log("warn", "Analysis job service initialized without database connection")
-	}
-
-	// Auto-migrate analysis jobs table
-	if db != nil {
-		if err := db.AutoMigrate(m.NewAnalysisJobModel()); err != nil {
-			gl.Log("error", "Failed to migrate AnalysisJob table", err)
-		}
-	}
+	// Use bridge to get analysis job service
+	analysisService := bridge.AnalysisJobService()
 
 	return &AnalyzerController{
-		dbConn:          db,
+		bridge:          bridge,
 		APIWrapper:      t.NewAPIWrapper[any](),
 		analyzerService: analyzerService,
 		analysisService: analysisService,
@@ -1125,8 +1114,6 @@ func isNotFoundError(err error) bool {
 	if err == nil {
 		return false
 	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return true
-	}
-	return strings.Contains(strings.ToLower(err.Error()), "not found")
+	return strings.Contains(strings.ToLower(err.Error()), "not found") ||
+		strings.Contains(strings.ToLower(err.Error()), "record not found")
 }

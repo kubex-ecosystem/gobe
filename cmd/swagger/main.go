@@ -23,7 +23,6 @@ import (
 	"context"
 	"net"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/router"
@@ -37,37 +36,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SwaggerMain() {
+func SwaggerMain(dbService *services.DBServiceImpl, _ error) {
 	// Initialize logger
 	gl.Log("info", "Initializing Swagger...")
-	environment, err := services.NewEnvironment(
-		"",
-		false,
-		l.GetLogger("GoBE Swagger"),
-	)
-	if err != nil {
-		gl.Log("fatal", "❌ Failed to create environment:", err)
-		return
-	}
-	dbConfigPathProp := gl.GetEnvOrDefault("DB_CONFIG_PATH", os.ExpandEnv("$HOME/.kubex/gdbase/config/db_config.json"))
-	dbConfigPath := dbConfigPathProp
-	dbConfig, err := services.SetupDatabase(
-		context.Background(),
-		environment,
-		dbConfigPath,
-		l.GetLogger("GoBE Swagger"),
-		false,
-	)
-	if err != nil {
-		gl.Log("fatal", "❌ Failed to set up database:", err)
-		return
-	}
-	dbService, err := services.NewDBService(context.Background(), dbConfig, l.GetLogger("GoBE Swagger"))
-	if err != nil {
-		gl.Log("fatal", "❌ Failed to create database service:", err)
-		return
-	}
-
 	rtr, err := router.NewRouter(
 		types.NewGoBEConfig(
 			"Swagger",
@@ -77,6 +48,7 @@ func SwaggerMain() {
 			"8088",
 		),
 		dbService,
+		gl.InitArgs{},
 		l.GetLogger("GoBE Swagger"),
 		true,
 	)
@@ -143,5 +115,5 @@ func SwaggerMain() {
 }
 
 func main() {
-	SwaggerMain()
+	SwaggerMain(services.NewDBService(context.Background(), nil, nil))
 }

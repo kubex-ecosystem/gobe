@@ -1,3 +1,4 @@
+// Package interfaces provides the interfaces for the security module.
 package interfaces
 
 import (
@@ -5,7 +6,6 @@ import (
 	"crypto/rsa"
 	"time"
 
-	m "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 )
 
@@ -46,9 +46,9 @@ type TokenRepo interface {
 }
 
 type TokenService interface {
-	NewPairFromUser(ctx context.Context, u m.UserModel, prevTokenID string) (*TokenPair, error)
+	NewPairFromUser(ctx context.Context, u svc.UserModel, prevTokenID string) (*TokenPair, error)
 	SignOut(ctx context.Context, uid string) error
-	ValidateIDToken(tokenString string) (m.UserModel, error)
+	ValidateIDToken(tokenString string) (svc.UserModel, error)
 	ValidateRefreshToken(refreshTokenString string) (*RefreshToken, error)
 	RenewToken(ctx context.Context, refreshToken string) (*TokenPair, error)
 }

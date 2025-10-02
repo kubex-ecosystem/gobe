@@ -21,6 +21,7 @@ type IRouter interface {
 	GetDatabaseService() is.DBService
 	HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes
 	DBConfig() is.DBConfig
+	InitializeResources() error
 	Start() error
 	Stop() error
 	SetProperty(key string, value any)
