@@ -16,12 +16,13 @@ import (
 	crp "github.com/kubex-ecosystem/gobe/factory/security"
 	rts "github.com/kubex-ecosystem/gobe/internal/app/router"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
-	cm "github.com/kubex-ecosystem/gobe/internal/commons"
-	cf "github.com/kubex-ecosystem/gobe/internal/config"
+	cf "github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
+
+	"github.com/kubex-ecosystem/gobe/internal/utils"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -36,7 +37,7 @@ type GoBECertData struct {
 }
 
 type GoBE struct {
-	InitArgs    gl.InitArgs
+	InitArgs    *gl.InitArgs
 	Logger      l.Logger
 	environment *is.EnvironmentType
 
@@ -75,19 +76,22 @@ type GoBE struct {
 	Routes      map[string]map[string]any
 }
 
-func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
+func NewGoBE(args *gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 	if logger == nil {
 		logger = gl.GetLogger("GoBE")
 	}
 
 	chanCtl := make(chan string, 3)
 	signamManager := t.NewSignalManager(chanCtl, logger.GetLogger())
-	var err error
 
-	args, err = validateIniArgs(args)
+	cfg, err := validateInitArgs(args)
 	if err != nil {
 		gl.Log("fatal", fmt.Sprintf("Error validating init args: %v", err))
 		return nil, err
+	}
+	if cfg == nil {
+		gl.Log("fatal", "Main config is nil")
+		return nil, fmt.Errorf("main config is nil")
 	}
 
 	dbName := gl.GetEnvOrDefault("GOBE_DB_NAME", "kubex_db")
@@ -129,11 +133,11 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 	args.Address = net.JoinHostPort(args.Bind, args.Port)
 	pubCertKeyPath := gbm.environment.Getenv("CERT_FILE_PATH")
 	if pubCertKeyPath == "" {
-		pubCertKeyPath = os.ExpandEnv(cm.DefaultGoBECertPath)
+		pubCertKeyPath = os.ExpandEnv(gl.DefaultGoBECertPath)
 	}
 	pubKeyPath := gbm.environment.Getenv("KEY_FILE_PATH")
 	if pubKeyPath == "" {
-		pubKeyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+		pubKeyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
 	}
 
 	var pwd string
@@ -292,13 +296,13 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	rateLimitBurst := gobeminConfig.RateLimitBurst
 	requestWindow := gobeminConfig.RequestWindow
 	if rateLimitLimit <= 0 {
-		rateLimitLimit = cm.DefaultRateLimitLimit
+		rateLimitLimit = gl.DefaultRateLimitLimit
 	}
 	if rateLimitBurst <= 0 {
-		rateLimitBurst = cm.DefaultRateLimitBurst
+		rateLimitBurst = gl.DefaultRateLimitBurst
 	}
 	if requestWindow <= 0 {
-		requestWindow = time.Duration(cm.DefaultRequestWindow) * time.Millisecond
+		requestWindow = time.Duration(gl.DefaultRequestWindow) * time.Millisecond
 	}
 	gobeminConfig.SetRateLimitLimit(rateLimitLimit)
 	gobeminConfig.SetRateLimitBurst(rateLimitBurst)
@@ -309,7 +313,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 		return nil, errors.New("database service is nil")
 	}
 
-	_, kubexErr := crt.GetOrGenPasswordKeyringPass(cm.KeyringService)
+	_, kubexErr := crt.GetOrGenPasswordKeyringPass(gl.KeyringService)
 	if kubexErr != nil {
 		gl.Log("error", fmt.Sprintf("Error reading kubex keyring password: %v", kubexErr))
 		return nil, kubexErr
@@ -447,43 +451,25 @@ func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	return nil, errors.New("logger is nil")
 }
 
-func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
+func validateInitArgs(args *gl.InitArgs) (*cf.Config, error) {
+	if args == nil {
+		args = &gl.InitArgs{}
+	}
+
 	if args.Debug {
 		gl.SetDebugMode(args.Debug)
 	}
 	if args.ReleaseMode {
-		os.Setenv("GIN_MODE", "release")
+		os.Setenv("GIN_MODE", gl.GetEnvOrDefault("GIN_MODE", "release"))
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	// Ensure default config directory exists
-	kubexDefaultDir := filepath.Dir(filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath)))
+	kubexDefaultDir := os.ExpandEnv(gl.DefaultKubexConfigDir)
 	if _, err := os.Stat(kubexDefaultDir); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(kubexDefaultDir, 0755); err != nil {
 				gl.Log("fatal", fmt.Sprintf("Error creating default kubex config directory: %v", err))
-			}
-		}
-	}
-	defaultDir := filepath.Dir(os.ExpandEnv(cm.DefaultGodoBaseConfigPath))
-	if _, err := os.Stat(defaultDir); err != nil {
-		if os.IsNotExist(err) {
-			if err := os.MkdirAll(defaultDir, 0755); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
-			}
-		}
-	}
-
-	if args.ConfigFile == "" {
-		args.ConfigFile = os.ExpandEnv(cm.DefaultGoBEConfigPath)
-		if _, err := os.Stat(args.ConfigFile); err != nil {
-			if os.IsNotExist(err) {
-				if err := os.MkdirAll(filepath.Dir(args.ConfigFile), 0755); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
-				}
-				if err := os.WriteFile(args.ConfigFile, []byte(""), 0644); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
-				}
 			}
 		}
 	}
@@ -492,54 +478,24 @@ func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 		args.ConfigDBFile = filepath.Join(kubexDefaultDir, "gdbase", "config", "config.json")
 	}
 
-	if args.LogFile == "" {
-		args.LogFile = filepath.Join(defaultDir, "request_tracer.json")
-		if _, err := os.Stat(args.LogFile); err != nil {
-			if os.IsNotExist(err) {
-				if err := os.MkdirAll(filepath.Dir(args.LogFile), 0755); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating directory: %v", err))
-				}
-				if err := os.WriteFile(args.LogFile, []byte(""), 0644); err != nil {
-					gl.Log("fatal", fmt.Sprintf("Error creating log file: %v", err))
-				}
-			}
-		}
-	}
-
 	if args.PubCertKeyPath == "" {
-		args.PubCertKeyPath = os.ExpandEnv(cm.DefaultGoBECertPath)
+		args.PubCertKeyPath = os.ExpandEnv(gl.DefaultGoBECertPath)
 	}
 	if args.PubKeyPath == "" {
-		args.PubKeyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+		args.PubKeyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
 	}
 
-	initArgs := gl.InitArgs{
-		ConfigFile:     args.ConfigFile,
-		ConfigType:     filepath.Ext(args.ConfigFile)[1:],
-		ConfigDBFile:   args.ConfigDBFile,
-		ConfigDBType:   filepath.Ext(args.ConfigDBFile)[1:],
-		IsConfidential: args.IsConfidential,
-		Port:           args.Port,
-		Bind:           args.Bind,
-		Address:        net.JoinHostPort(args.Bind, args.Port),
-		PubCertKeyPath: args.PubCertKeyPath,
-		EnvFile:        args.EnvFile,
-		Name:           args.Name,
-		Debug:          args.Debug,
-		ReleaseMode:    args.ReleaseMode,
-		LogFile:        args.LogFile,
-		PubKeyPath:     args.PubKeyPath,
-		Pwd:            args.Pwd,
+	cfg, err := cf.BootstrapMainConfig[*cf.Config](args)
+	if err != nil {
+		gl.Log("fatal", fmt.Sprintf("Error loading main config: %v", err))
+		return nil, err
+	}
+	if cfg == nil {
+		gl.Log("fatal", "Main config is nil")
+		return nil, fmt.Errorf("main config is nil")
 	}
 
-	if err := cf.BootstrapMainConfig(&initArgs); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
-	}
-
-	// We don't return a pointer, this allows us to
-	// work with more than one instance of GoBE with different
-	// purposes.
-	return initArgs, nil
+	return cfg, nil
 }
 
 // InitializeAllServices inicializa todos os serviços (Docker + Database) com context

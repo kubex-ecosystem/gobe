@@ -57,7 +57,7 @@ func startCommand() *cobra.Command {
 			if initArgs.Debug {
 				gl.SetDebugMode(true)
 			}
-			gbm, gbmErr := gb.NewGoBE(initArgs, nil)
+			gbm, gbmErr := gb.NewGoBE(&initArgs, nil)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
@@ -71,15 +71,7 @@ func startCommand() *cobra.Command {
 		},
 	}
 
-	startCmd.Flags().StringVarP(&initArgs.Name, "name", "n", "GoBE", "Name of the process")
-	startCmd.Flags().StringVarP(&initArgs.Port, "port", "p", "8666", "Port to listen on")
-	startCmd.Flags().StringVarP(&initArgs.Bind, "bind", "b", "0.0.0.0", "Bind address")
-	startCmd.Flags().StringVarP(&initArgs.LogFile, "log-file", "l", "", "Log file path")
-	startCmd.Flags().StringVarP(&initArgs.ConfigFile, "config-file", "c", "", "Configuration file path")
-	startCmd.Flags().StringVarP(&initArgs.EnvFile, "env-file", "e", "", "Environment file path")
-	startCmd.Flags().BoolVarP(&initArgs.IsConfidential, "confidential", "C", false, "Enable confidential mode")
-	startCmd.Flags().BoolVarP(&initArgs.Debug, "debug", "d", false, "Enable debug mode")
-	startCmd.Flags().BoolVarP(&initArgs.ReleaseMode, "release", "r", false, "Enable release mode")
+	getComandWithFlags(startCmd, &initArgs)
 
 	return startCmd
 }
@@ -125,7 +117,7 @@ func restartCommand() *cobra.Command {
 			if initArgs.Debug {
 				gl.SetDebugMode(true)
 			}
-			gbm, gbmErr := gb.NewGoBE(initArgs, nil)
+			gbm, gbmErr := gb.NewGoBE(&initArgs, nil)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
@@ -141,15 +133,7 @@ func restartCommand() *cobra.Command {
 		},
 	}
 
-	restartCmd.Flags().StringVarP(&initArgs.Name, "name", "n", "GoBE", "Name of the process")
-	restartCmd.Flags().StringVarP(&initArgs.Port, "port", "p", "8666", "Port to listen on")
-	restartCmd.Flags().StringVarP(&initArgs.Bind, "bind", "b", "0.0.0.0", "Bind address")
-	restartCmd.Flags().StringVarP(&initArgs.LogFile, "log-file", "l", "", "Log file path")
-	restartCmd.Flags().StringVarP(&initArgs.ConfigFile, "config-file", "c", "", "Configuration file path")
-	restartCmd.Flags().StringVarP(&initArgs.EnvFile, "env-file", "e", "", "Environment file path")
-	restartCmd.Flags().BoolVarP(&initArgs.IsConfidential, "confidential", "C", false, "Enable confidential mode")
-	restartCmd.Flags().BoolVarP(&initArgs.Debug, "debug", "d", false, "Enable debug mode")
-	restartCmd.Flags().BoolVarP(&initArgs.ReleaseMode, "release", "r", false, "Enable release mode")
+	getComandWithFlags(restartCmd, &initArgs)
 
 	return restartCmd
 }
@@ -772,4 +756,26 @@ func formatLogOutput(output string, timestamps bool) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func getComandWithFlags(cmdToAddFlags *cobra.Command, initArgs *gl.InitArgs) (*cobra.Command, *gl.InitArgs) {
+	cmdToAddFlags.Flags().StringVarP(&initArgs.Name, "name", "n", "GoBE", "Name of the process")
+	cmdToAddFlags.Flags().StringVarP(&initArgs.Port, "port", "p", "8088", "Port to listen on")
+	cmdToAddFlags.Flags().StringVarP(&initArgs.Bind, "bind", "b", "0.0.0.0", "Bind address")
+
+	cmdToAddFlags.Flags().StringVarP(&initArgs.LogFile, "log-file", "l", "", "Log file path")
+	cmdToAddFlags.Flags().StringVarP(&initArgs.ConfigFile, "config-file", "f", "", "Configuration file path")
+	cmdToAddFlags.Flags().StringVarP(&initArgs.EnvFile, "env-file", "e", "", "Environment file path")
+	cmdToAddFlags.Flags().StringVarP(&initArgs.ConfigDBFile, "config-db-file", "d", "", "Database configuration file path")
+
+	cmdToAddFlags.Flags().StringVar(&initArgs.PubKeyPath, "pub-key", "", "Public key path for TLS")
+	cmdToAddFlags.Flags().StringVar(&initArgs.PubCertKeyPath, "pub-cert", "", "Public certificate path for TLS")
+	cmdToAddFlags.Flags().StringVar(&initArgs.PrivKeyPath, "priv-key", "", "Private key path for TLS")
+	cmdToAddFlags.Flags().StringVar(&initArgs.Pwd, "pwd", "", "Password for private key encryption")
+
+	cmdToAddFlags.Flags().BoolVarP(&initArgs.IsConfidential, "confidential", "C", false, "Enable confidential mode")
+	cmdToAddFlags.Flags().BoolVarP(&initArgs.Debug, "debug", "D", false, "Enable debug mode")
+	cmdToAddFlags.Flags().BoolVarP(&initArgs.ReleaseMode, "release", "r", false, "Enable release mode")
+
+	return cmdToAddFlags, initArgs
 }

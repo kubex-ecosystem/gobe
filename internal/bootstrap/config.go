@@ -1,22 +1,19 @@
-// Package config provides functionality to load and manage the application configuration.
-package config
+package bootstrap
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
-
-	"github.com/joho/godotenv"
-	"github.com/spf13/viper"
 
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
 )
 
-func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *MCPServerConfig | any](configType string) (T, bool) {
-	switch configType {
+func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *MCPServerConfig | any](configType string) (T, bool) {
+	switch strings.ToLower(strings.ToValidUTF8(configType, "")) {
 	case "main_config":
 		return IConfig(newConfig()).(T), true
 	case "discord_config":
@@ -28,8 +25,6 @@ func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig 
 		return IConfig(newApprovalConfig()).(T), true
 	case "server_config":
 		return IConfig(newServerConfig()).(T), true
-	case "zmq_config":
-		return IConfig(newZMQConfig()).(T), true
 	case "gobe_config":
 		return IConfig(newGoBeConfig()).(T), true
 	case "gobeCtl_config":
@@ -57,7 +52,6 @@ type Config struct {
 	LLM            LLMConfig         `json:"llm"`
 	Approval       ApprovalConfig    `json:"approval"`
 	Server         ServerConfig      `json:"server"`
-	ZMQ            ZMQConfig         `json:"zmq"`
 	GoBE           GoBeConfig        `json:"gobe"`
 	GobeCtl        GobeCtlConfig     `json:"gobeCtl"`
 	Integrations   IntegrationConfig `json:"integrations"`
@@ -74,7 +68,6 @@ func (c *Config) GetSettings() map[string]interface{} {
 	settings["llm"] = c.LLM
 	settings["approval"] = c.Approval
 	settings["server"] = c.Server
-	settings["zmq"] = c.ZMQ
 	settings["gobe"] = c.GoBE
 	settings["gobeCtl"] = c.GobeCtl
 	settings["integrations"] = c.Integrations
@@ -187,23 +180,6 @@ func (c *ServerConfig) GetSettings() map[string]interface{} {
 	settings["port"] = c.Port
 	settings["host"] = c.Host
 	settings["enable_cors"] = c.EnableCORS
-	return settings
-}
-
-type ZMQConfig struct {
-	Address string `json:"address"`
-	Port    int    `json:"port"`
-	DevMode bool   `json:"dev_mode"`
-}
-
-func newZMQConfig() *ZMQConfig           { return &ZMQConfig{} }
-func NewZMQConfig() *ZMQConfig           { return newZMQConfig() }
-func (c *ZMQConfig) GetType() string     { return "zmq_config" }
-func (c *ZMQConfig) SetDevMode(dev bool) { c.DevMode = dev }
-func (c *ZMQConfig) GetSettings() map[string]interface{} {
-	settings := make(map[string]interface{})
-	settings["address"] = c.Address
-	settings["port"] = c.Port
 	return settings
 }
 
@@ -328,37 +304,20 @@ func (c *MCPServerConfig) GetSettings() map[string]interface{} {
 
 func Load[C *Config | *DiscordConfig |
 	*LLMConfig | *ApprovalConfig |
-	*ServerConfig | *ZMQConfig |
-	*GoBeConfig | *GobeCtlConfig |
+	*ServerConfig | *GoBeConfig | *GobeCtlConfig |
 	*IntegrationConfig | *WhatsAppConfig |
 	*MCPServerConfig | *TelegramConfig |
 	*IConfig](
-	initArgs gl.InitArgs,
+	initArgs *gl.InitArgs,
 ) (C, error) {
+	var err error
 
-	envVars := make(map[string]string)
-	envFilePath := ".env"
-
-	if _, err := os.Stat(envFilePath); os.IsNotExist(err) {
-		// .env file not found, skipping loading environment variables from file, reading from user/process environment
-		gl.Log("debug", ".env file not found, skipping loading environment variables from file")
-		envVarsList := os.Environ()
-		for _, envVar := range envVarsList {
-			parts := strings.SplitN(envVar, "=", 2)
-			if len(parts) == 2 {
-				envVars[parts[0]] = parts[1]
-			}
-		}
-	} else if os.IsPermission(err) {
-		gl.Log("fatal", fmt.Sprintf("permission denied to read %s file: %v", envFilePath, err))
-	} else {
-		gl.Log("debug", "Loading settings from .env file")
-		if err := godotenv.Load(envFilePath); err != nil {
-			// return nil, fmt.Errorf("error loading %s file: %w", envFilePath, err)
-			gl.Log("fatal", fmt.Sprintf("error loading %s file: %v", envFilePath, err))
-		}
+	// Se for um dos tipos conhecidos, retorna da config map
+	if cfg, found := getFromConfigMap[C](reflect.TypeFor[C]().Name()); found {
+		return cfg, nil
 	}
 
+	// Senão, tenta carregar do arquivo
 	if initArgs.ConfigFile == "" {
 		gl.Log("warn", "No config path provided, using default:", initArgs.ConfigFile)
 		initArgs.ConfigFile = GetConfigFilePath()
@@ -380,12 +339,6 @@ func Load[C *Config | *DiscordConfig |
 		if filepath.Ext(initArgs.ConfigFile) == "" && !strings.HasSuffix(initArgs.ConfigFile, ".json") {
 			initArgs.ConfigFile = filepath.Join(initArgs.ConfigFile, "gobe", "config.json")
 		}
-	}
-
-	// Map environment variables to config
-
-	for key, value := range envVars {
-		viper.Set(key, value)
 	}
 
 	configInstanceMapper := types.NewMapper(new(C), initArgs.ConfigFile)

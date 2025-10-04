@@ -28,7 +28,7 @@ func NewGoBE(args gl.InitArgs) (ci.IGoBE, error) {
 	if err != nil {
 		return nil, err
 	}
-	goBe, err := gb.NewGoBE(args, gl.GetLogger("GoBE"))
+	goBe, err := gb.NewGoBE(&args, gl.GetLogger("GoBE"))
 	if err != nil {
 		return nil, err
 	}

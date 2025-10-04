@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"fmt"
+
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 func Logger(logger l.Logger) gin.HandlerFunc {

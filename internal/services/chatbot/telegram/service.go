@@ -6,22 +6,22 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 )
 
 // Service interacts with Telegram Bot API.
 type Service struct {
-	cfg    config.TelegramConfig
+	cfg    bootstrap.TelegramConfig
 	client *http.Client
 }
 
 // NewService creates a new Telegram service.
-func NewService(cfg config.TelegramConfig) *Service {
+func NewService(cfg bootstrap.TelegramConfig) *Service {
 	return &Service{cfg: cfg, client: &http.Client{}}
 }
 
 // Config returns current configuration.
-func (s *Service) Config() config.TelegramConfig { return s.cfg }
+func (s *Service) Config() bootstrap.TelegramConfig { return s.cfg }
 
 // OutgoingMessage represents a telegram message to send.
 type OutgoingMessage struct {

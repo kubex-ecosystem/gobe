@@ -36,7 +36,7 @@ type IRouter interface {
 	ShutdownServerGracefully()
 	MonitorServer()
 	ValidateRouter() error
-	GetInitArgs() gl.InitArgs
+	GetInitArgs() *gl.InitArgs
 	DummyHandler(_ chan interface{}) gin.HandlerFunc
 }
 

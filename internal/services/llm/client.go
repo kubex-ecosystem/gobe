@@ -13,18 +13,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
 	"github.com/patrickmn/go-cache"
 	"github.com/sashabaranov/go-openai"
 	"google.golang.org/genai"
 
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type Client struct {
 	openai     *openai.Client
 	gemini     *genai.Client
-	config     config.LLMConfig
+	config     bootstrap.LLMConfig
 	cache      *cache.Cache
 	devMode    bool
 	provider   string // "openai", "gemini", "groq", "dev"
@@ -53,7 +53,7 @@ type AnalysisResponse struct {
 	Category          string   `json:"category"`
 }
 
-func NewClient(config config.LLMConfig) (*Client, error) {
+func NewClient(config bootstrap.LLMConfig) (*Client, error) {
 	// First check for API keys in environment
 	geminiKey := os.Getenv("GEMINI_API_KEY")
 	groqKey := os.Getenv("GROQ_API_KEY")

@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 
 	"github.com/google/uuid"
 )
 
 type Manager struct {
-	config           config.ApprovalConfig
+	config           bootstrap.ApprovalConfig
 	eventStream      *events.Stream
 	pendingApprovals map[string]*Request
 	mu               sync.RWMutex
@@ -46,7 +46,7 @@ const (
 	StatusExpired
 )
 
-func NewManager(config config.ApprovalConfig, eventStream *events.Stream) *Manager {
+func NewManager(config bootstrap.ApprovalConfig, eventStream *events.Stream) *Manager {
 	return &Manager{
 		config:           config,
 		eventStream:      eventStream,

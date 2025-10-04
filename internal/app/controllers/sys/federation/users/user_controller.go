@@ -9,10 +9,10 @@ import (
 	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type UserController struct {
@@ -216,8 +216,8 @@ func (uc *UserController) AuthenticateUser(c *gin.Context) {
 	}
 	tokenClient := sau.NewTokenClient(
 		crt.NewCertService(
-			os.ExpandEnv(cm.DefaultGoBEKeyPath),
-			os.ExpandEnv(cm.DefaultGoBECertPath),
+			os.ExpandEnv(gl.DefaultGoBEKeyPath),
+			os.ExpandEnv(gl.DefaultGoBECertPath),
 		),
 		uc.userService.GetContextDBService(),
 	)

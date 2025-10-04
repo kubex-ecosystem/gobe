@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 )
 
@@ -73,7 +73,7 @@ func TestLLMIntegration(t *testing.T) {
 				model = "gpt-4-turbo"
 			}
 
-			cfg := config.LLMConfig{
+			cfg := bootstrap.LLMConfig{
 				Provider:         tt.provider,
 				Model:            model,
 				MaxTokens:        100,
@@ -194,7 +194,7 @@ func TestProviderDetection(t *testing.T) {
 				os.Setenv("OPENAI_API_KEY", tt.openaiKey)
 			}
 
-			cfg := config.LLMConfig{
+			cfg := bootstrap.LLMConfig{
 				Provider:    tt.configProv,
 				Model:       "test-model",
 				MaxTokens:   100,
@@ -251,7 +251,7 @@ func TestCaching(t *testing.T) {
 	os.Unsetenv("GROQ_API_KEY")
 	os.Unsetenv("OPENAI_API_KEY")
 
-	cfg := config.LLMConfig{
+	cfg := bootstrap.LLMConfig{
 		Provider:    "dev", // Use dev mode for predictable responses
 		Model:       "test-model",
 		MaxTokens:   100,

@@ -41,12 +41,12 @@ type Router struct {
 	*gin.Engine
 	*t.Mutexes
 	*RouterConfigImpl
-	InitArgs gl.InitArgs
+	InitArgs *gl.InitArgs
 	Logger   l.Logger
 }
 
 // newRouter initializes a new Router instance with the provided configuration.
-func newRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs gl.InitArgs, logger l.Logger, debug bool) (*Router, error) {
+func newRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs *gl.InitArgs, logger l.Logger, debug bool) (*Router, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
@@ -85,7 +85,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, i
 }
 
 // NewRouter creates a new Router instance and returns it as an IRouter interface.
-func NewRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs gl.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
+func NewRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs *gl.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
 	return newRouter(serverConfig, databaseService, initArgs, logger, debug)
 }
 
@@ -538,10 +538,10 @@ func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 	}
 }
 
-func (rtr *Router) GetInitArgs() gl.InitArgs {
+func (rtr *Router) GetInitArgs() *gl.InitArgs {
 	if err := rtr.ValidateRouter(); err != nil {
 		gl.Log("error", err.Error())
-		return gl.InitArgs{}
+		return nil
 	}
 	return rtr.InitArgs
 }

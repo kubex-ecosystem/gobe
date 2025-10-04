@@ -16,7 +16,6 @@ import (
 	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
 	krs "github.com/kubex-ecosystem/gobe/internal/app/security/external"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"golang.org/x/crypto/chacha20poly1305"
 )
@@ -192,10 +191,10 @@ func (c *CertService) GetCertAndKeyFromFile() ([]byte, []byte, error) {
 		c = new(CertService)
 	}
 	if c.keyPath == "" {
-		c.keyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+		c.keyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
 	}
 	if c.certPath == "" {
-		c.certPath = os.ExpandEnv(cm.DefaultGoBECertPath)
+		c.certPath = os.ExpandEnv(gl.DefaultGoBECertPath)
 	}
 	certBytes, err := os.ReadFile(os.ExpandEnv(c.certPath))
 	if err != nil {
@@ -218,10 +217,10 @@ func (c *CertService) VerifyCert() error {
 		c = new(CertService)
 	}
 	if c.keyPath == "" {
-		c.keyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+		c.keyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
 	}
 	if c.certPath == "" {
-		c.certPath = os.ExpandEnv(cm.DefaultGoBECertPath)
+		c.certPath = os.ExpandEnv(gl.DefaultGoBECertPath)
 	}
 	certFile, err := os.Open(c.certPath)
 	if err != nil {
@@ -257,10 +256,10 @@ func (c *CertService) GetPublicKey() (*rsa.PublicKey, error) {
 		c = new(CertService)
 	}
 	if c.keyPath == "" {
-		c.keyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+		c.keyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
 	}
 	if c.certPath == "" {
-		c.certPath = os.ExpandEnv(cm.DefaultGoBECertPath)
+		c.certPath = os.ExpandEnv(gl.DefaultGoBECertPath)
 	}
 	certBytes, err := os.ReadFile(os.ExpandEnv(c.certPath))
 	if err != nil {
@@ -294,7 +293,7 @@ func (c *CertService) GetPublicKey() (*rsa.PublicKey, error) {
 func (c *CertService) GetPrivateKey() (*rsa.PrivateKey, error) {
 	var err error
 	if c.keyPath == "" {
-		c.keyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+		c.keyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
 	}
 	keyBytes, err := os.ReadFile(c.keyPath)
 	if err != nil {
@@ -371,10 +370,10 @@ func (c *CertService) GetPrivateKey() (*rsa.PrivateKey, error) {
 // Returns: A pointer to a CertService instance.
 func newCertService(keyPath, certPath string) *CertService {
 	if keyPath == "" {
-		keyPath = os.ExpandEnv(cm.DefaultGoBEKeyPath)
+		keyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
 	}
 	if certPath == "" {
-		certPath = os.ExpandEnv(cm.DefaultGoBECertPath)
+		certPath = os.ExpandEnv(gl.DefaultGoBECertPath)
 	}
 	crtService := &CertService{
 		keyPath:  os.ExpandEnv(keyPath),
@@ -408,7 +407,7 @@ func GetOrGenPasswordKeyringPass(name string) (string, error) {
 	cryptoService := crp.NewCryptoServiceType()
 
 	// Try to retrieve the password from the keyring
-	krPass, krPassErr := krs.NewKeyringService(cm.KeyringService, fmt.Sprintf("gobe-%s", name)).RetrievePassword()
+	krPass, krPassErr := krs.NewKeyringService(gl.KeyringService, fmt.Sprintf("gobe-%s", name)).RetrievePassword()
 	if krPassErr != nil {
 		if errors.Is(krPassErr, os.ErrNotExist) {
 			// If the error is "keyring: item not found", generate a new key
@@ -481,7 +480,7 @@ func storeKeyringPassword(name string, pass string) (string, error) {
 	// Store the password in the keyring DECODED to avoid storing the encoded password
 	// locally are much better for security keep binary static and encoded to handle with transport
 	// integration and other utilities
-	storeErr := krs.NewKeyringService(cm.KeyringService, fmt.Sprintf("gobe-%s", name)).StorePassword(outputPass)
+	storeErr := krs.NewKeyringService(gl.KeyringService, fmt.Sprintf("gobe-%s", name)).StorePassword(outputPass)
 	if storeErr != nil {
 		gl.Log("error", fmt.Sprintf("Error storing key: %v", storeErr))
 		return "", storeErr

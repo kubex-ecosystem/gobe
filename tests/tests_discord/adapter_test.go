@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 )
@@ -122,13 +122,13 @@ func TestToNeutralMessage(t *testing.T) {
 func TestOnMessageSwap(t *testing.T) {
 	tests := []struct {
 		name        string
-		setupConfig func() config.DiscordConfig
+		setupConfig func() bootstrap.DiscordConfig
 		wantCalls   int32
 	}{
 		{
 			name: "message handler swap works",
-			setupConfig: func() config.DiscordConfig {
-				cfg := config.DiscordConfig{}
+			setupConfig: func() bootstrap.DiscordConfig {
+				cfg := bootstrap.DiscordConfig{}
 				cfg.Bot.Token = "dev_token"
 				return cfg
 			},
@@ -136,8 +136,8 @@ func TestOnMessageSwap(t *testing.T) {
 		},
 		{
 			name: "multiple handler swaps work",
-			setupConfig: func() config.DiscordConfig {
-				cfg := config.DiscordConfig{}
+			setupConfig: func() bootstrap.DiscordConfig {
+				cfg := bootstrap.DiscordConfig{}
 				cfg.Bot.Token = "dev_token"
 				return cfg
 			},
@@ -197,7 +197,7 @@ func TestAdapterDevMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := config.DiscordConfig{}
+			cfg := bootstrap.DiscordConfig{}
 			cfg.Bot.Token = tt.token
 
 			adapter, err := discord.NewAdapter(cfg, "bot")
@@ -234,7 +234,7 @@ func TestAdapterDevMode(t *testing.T) {
 }
 
 func TestGetChannelsFormat(t *testing.T) {
-	cfg := config.DiscordConfig{}
+	cfg := bootstrap.DiscordConfig{}
 	cfg.Bot.Token = "dev_token"
 
 	adapter, err := discord.NewAdapter(cfg, "bot")
@@ -278,7 +278,7 @@ func TestPingAdapter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := config.DiscordConfig{}
+			cfg := bootstrap.DiscordConfig{}
 			cfg.Bot.Token = tt.token
 
 			adapter, err := discord.NewAdapter(cfg, "bot")

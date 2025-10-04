@@ -6,22 +6,22 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 )
 
 // Service provides methods to interact with the WhatsApp Business API.
 type Service struct {
-	cfg    config.WhatsAppConfig
+	cfg    bootstrap.WhatsAppConfig
 	client *http.Client
 }
 
 // NewService creates a new WhatsApp service with the provided configuration.
-func NewService(cfg config.WhatsAppConfig) *Service {
+func NewService(cfg bootstrap.WhatsAppConfig) *Service {
 	return &Service{cfg: cfg, client: &http.Client{}}
 }
 
 // Config returns the underlying WhatsApp configuration.
-func (s *Service) Config() config.WhatsAppConfig { return s.cfg }
+func (s *Service) Config() bootstrap.WhatsAppConfig { return s.cfg }
 
 // OutgoingMessage represents a message to be sent via WhatsApp.
 type OutgoingMessage struct {

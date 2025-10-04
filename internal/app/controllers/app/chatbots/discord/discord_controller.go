@@ -15,7 +15,7 @@ import (
 	"github.com/gorilla/websocket"
 	"gorm.io/gorm"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
@@ -43,7 +43,7 @@ type HubInterface interface {
 type DiscordController struct {
 	discordService svc.DiscordService
 	APIWrapper     *t.APIWrapper[svc.DiscordModel]
-	config         *config.Config
+	config         *bootstrap.Config
 	hub            HubInterface
 	upgrader       websocket.Upgrader
 }
@@ -119,7 +119,7 @@ type DiscordInteractionResponse struct {
 	Data map[string]interface{} `json:"data,omitempty"`
 }
 
-func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub, config *config.Config) *DiscordController {
+func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub, config *bootstrap.Config) *DiscordController {
 	return &DiscordController{
 		discordService: svc.NewDiscordService(svc.NewDiscordRepo(db)),
 		APIWrapper:     t.NewAPIWrapper[svc.DiscordModel](),
@@ -805,12 +805,12 @@ func (dc *DiscordController) PingAdapter(c *gin.Context) {
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/discord/ping [post]
 func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
-	var cfg *config.Config
+	var cfg *bootstrap.Config
 	var err error
 	if dc.config != nil {
 		cfg = dc.config
 	} else {
-		cfg, err = config.Load[*config.Config](kbx.InitArgs{
+		cfg, err = bootstrap.Load[*bootstrap.Config](&kbx.InitArgs{
 			ConfigFile: "./config/discord.json",
 		})
 		if err != nil {

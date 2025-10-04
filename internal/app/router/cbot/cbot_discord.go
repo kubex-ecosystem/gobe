@@ -2,15 +2,15 @@
 package cbot
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 
 	discord_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/discord"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	common "github.com/kubex-ecosystem/gobe/internal/commons"
-	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
@@ -33,7 +33,7 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for DiscordRoute")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
+	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
 	if err != nil {
 		gl.Log("error", "Failed to get DB from service", err)
 		return nil
@@ -63,9 +63,9 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = gl.GetEnvOrDefault("DISCORD_CONFIG_FILE", os.ExpandEnv(common.DefaultGoBEConfigPath)) //./config/social_discord.yaml"
+		initArgs.ConfigFile = gl.GetEnvOrDefault("DISCORD_CONFIG_FILE", os.ExpandEnv(gl.DefaultGoBEConfigPath)) //./config/social_discord.yaml"
 	}
-	cfg, configErr := config.Load[*config.Config](initArgs)
+	cfg, configErr := bootstrap.Load[*bootstrap.Config](initArgs)
 	if configErr != nil {
 		gl.Log("error", "Failed to load config for DiscordRoutes", configErr)
 		return nil

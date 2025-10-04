@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 func MeterMiddleware() gin.HandlerFunc {

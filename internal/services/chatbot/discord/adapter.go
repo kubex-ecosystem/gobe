@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type Adapter struct {
 	session        *discordgo.Session // nil in dev mode
-	config         config.DiscordConfig
+	config         bootstrap.DiscordConfig
 	messageHandler atomic.Value // func(interfaces.Message)
 }
 
-func NewAdapter(cfg config.DiscordConfig, purpose string) (interfaces.IAdapter, error) {
+func NewAdapter(cfg bootstrap.DiscordConfig, purpose string) (interfaces.IAdapter, error) {
 	// dev mode: no session
 	if cfg.Bot.Token == "dev_token" {
 		ad := &Adapter{config: cfg}

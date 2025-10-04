@@ -11,7 +11,7 @@ import (
 	"time"
 
 	f "github.com/kubex-ecosystem/gobe/factory"
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/spf13/cobra"
@@ -79,7 +79,7 @@ func startMCPServer() {
 		IsConfidential: mcpServerIsConfidential,
 	}
 
-	cfg, err := config.Load[*config.MCPServerConfig](initArgs)
+	cfg, err := bootstrap.Load[*bootstrap.MCPServerConfig](&initArgs)
 	if err != nil {
 		fmt.Printf("Error loading config: %s\n", err)
 		os.Exit(1)
@@ -370,7 +370,7 @@ func forever() {
 
 // Helper functions for LLM commands
 func createLLMClient() (*llm.Client, error) {
-	cfg := config.LLMConfig{
+	cfg := bootstrap.LLMConfig{
 		Provider:    llmProvider,
 		Model:       llmModel,
 		MaxTokens:   llmMaxTokens,

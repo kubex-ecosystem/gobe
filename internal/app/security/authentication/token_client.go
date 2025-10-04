@@ -9,7 +9,7 @@ import (
 	kri "github.com/kubex-ecosystem/gobe/internal/app/security/external"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	common "github.com/kubex-ecosystem/gobe/internal/commons"
+
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
@@ -43,7 +43,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	}
 	if t.crtSrv == nil {
 		gl.Log("error", "crtService is nil, trying to create a new one")
-		t.crtSrv = crt.NewCertService(common.DefaultGoBEKeyPath, common.DefaultGoBECertPath)
+		t.crtSrv = crt.NewCertService(gl.DefaultGoBEKeyPath, gl.DefaultGoBECertPath)
 		if t.crtSrv == nil {
 			gl.Log("fatal", "crtService is nil, unable to create a new one")
 		}
@@ -73,7 +73,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 		t.RefreshExpirationSecs = 604800 // 7 dias
 	}
 	if t.keyringService == nil {
-		t.keyringService = kri.NewKeyringService(common.KeyringService, fmt.Sprintf("gobe-%s", "jwt_secret"))
+		t.keyringService = kri.NewKeyringService(gl.KeyringService, fmt.Sprintf("gobe-%s", "jwt_secret"))
 		if t.keyringService == nil {
 			gl.Log("error", fmt.Sprintf("Error creating keyring service: %v", err))
 			return nil, 0, 0, err

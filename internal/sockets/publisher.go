@@ -7,7 +7,7 @@ package zmq
 
 // 	zmq "github.com/pebbe/zmq4@v1.4.0"
 
-// 	"github.com/kubex-ecosystem/gobe/internal/config"
+// 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 // )
 
 // type Publisher struct {

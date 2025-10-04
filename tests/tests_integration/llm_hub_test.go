@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
@@ -15,42 +15,37 @@ import (
 
 func TestDiscordMCPHubLLMIntegration(t *testing.T) {
 	// Create test configuration with dev mode
-	cfg := &config.Config{
-		Discord: config.DiscordConfig{
+	cfg := &bootstrap.Config{
+		Discord: bootstrap.DiscordConfig{
 			DevMode: true,
 		},
-		LLM: config.LLMConfig{
+		LLM: bootstrap.LLMConfig{
 			Provider:    "dev",
 			Model:       "test-model",
 			MaxTokens:   100,
 			Temperature: 0.7,
 			APIKey:      "", // Force dev mode
 		},
-		Approval: config.ApprovalConfig{
+		Approval: bootstrap.ApprovalConfig{
 			RequireApprovalForResponses: false,
 			ApprovalTimeoutMinutes:      5,
 			DevMode:                     true,
 		},
-		Server: config.ServerConfig{
+		Server: bootstrap.ServerConfig{
 			Port:       "8080",
 			Host:       "localhost",
 			EnableCORS: true,
 			DevMode:    true,
 		},
-		ZMQ: config.ZMQConfig{
-			Address: "localhost",
-			Port:    5555,
-			DevMode: true,
-		},
-		GoBE: config.GoBeConfig{
+		GoBE: bootstrap.GoBeConfig{
 			Enabled: false,
 			DevMode: true,
 		},
-		GobeCtl: config.GobeCtlConfig{
+		GobeCtl: bootstrap.GobeCtlConfig{
 			Enabled: false,
 			DevMode: true,
 		},
-		Integrations: config.IntegrationConfig{
+		Integrations: bootstrap.IntegrationConfig{
 			DevMode: true,
 		},
 		DevMode: true,
@@ -197,13 +192,13 @@ func TestLLMClientProviderSelection(t *testing.T) {
 
 	testCases := []struct {
 		name           string
-		config         config.LLMConfig
+		config         bootstrap.LLMConfig
 		clearEnv       bool
 		expectedResult bool
 	}{
 		{
 			name: "Dev Mode",
-			config: config.LLMConfig{
+			config: bootstrap.LLMConfig{
 				Provider: "dev",
 				Model:    "test-model",
 				APIKey:   "",
@@ -213,7 +208,7 @@ func TestLLMClientProviderSelection(t *testing.T) {
 		},
 		{
 			name: "Empty Config - Should fallback to dev",
-			config: config.LLMConfig{
+			config: bootstrap.LLMConfig{
 				Provider: "",
 				Model:    "",
 				APIKey:   "",

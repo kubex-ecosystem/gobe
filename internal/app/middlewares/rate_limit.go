@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	srv "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 // RequestInfo stores information about a request

@@ -1,3 +1,4 @@
+// Package telegram provides models for interacting with the Telegram API.
 package telegram
 
 import "time"

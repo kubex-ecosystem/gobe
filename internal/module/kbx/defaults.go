@@ -1,12 +1,26 @@
-// Package common has default configuration values
-package common
+// Package kbx has default configuration values
+package kbx
 
 const (
-	KeyringService            = "kubex"
-	DefaultGoBEConfigPath     = "$HOME/.kubex/gobe/config/config.json"
-	DefaultGoBEKeyPath        = "$HOME/.kubex/gobe/gobe-key.pem"
-	DefaultGoBECertPath       = "$HOME/.kubex/gobe/gobe-cert.pem"
-	DefaultGodoBaseConfigPath = "$HOME/.kubex/gdbase/config/config.json"
+	KeyringService        = "kubex"
+	DefaultKubexConfigDir = "$HOME/.kubex"
+
+	DefaultGoBEKeyPath    = "$HOME/.kubex/gobe/gobe-key.pem"
+	DefaultGoBECertPath   = "$HOME/.kubex/gobe/gobe-cert.pem"
+	DefaultGoBECAPath     = "$HOME/.kubex/gobe/ca-cert.pem"
+	DefaultGoBEConfigPath = "$HOME/.kubex/gobe/config/config.json"
+
+	DefaultConfigDir        = "$HOME/.kubex/gdbase/config"
+	DefaultConfigFile       = "$HOME/.kubex/gdbase/config.json"
+	DefaultGDBaseConfigPath = "$HOME/.kubex/gdbase/config/config.json"
+)
+
+const (
+	DefaultVolumesDir     = "$HOME/.kubex/volumes"
+	DefaultRedisVolume    = "$HOME/.kubex/volumes/redis"
+	DefaultPostgresVolume = "$HOME/.kubex/volumes/postgresql"
+	DefaultMongoVolume    = "$HOME/.kubex/volumes/mongo"
+	DefaultRabbitMQVolume = "$HOME/.kubex/volumes/rabbitmq"
 )
 
 const (

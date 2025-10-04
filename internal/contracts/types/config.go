@@ -7,7 +7,6 @@ import (
 	"time"
 
 	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
-	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
@@ -137,7 +136,7 @@ func NewGoBEConfig(name, filePath, configFormat, bind, port string) *GoBEConfig 
 		configFormat = "yaml"
 	}
 	if filePath == "" {
-		filePath = os.ExpandEnv(cm.DefaultGoBEConfigPath)
+		filePath = os.ExpandEnv(gl.DefaultGoBEConfigPath)
 	}
 	if bind == "" {
 		bind = "0.0.0.0"
@@ -318,3 +317,21 @@ func (c *GoBEConfig) Load() error {
 
 	return nil
 }
+
+// ErrConfigFileEmpty indicates that the configuration file is empty.
+var ErrConfigFileEmpty = errors.New("config file is empty")
+
+// ErrConfigFileNotFound indicates that the configuration file was not found.
+var ErrConfigFileNotFound = errors.New("config file not found")
+
+// ErrConfigFileInvalidFormat indicates that the configuration file has an invalid format.
+var ErrConfigFileInvalidFormat = errors.New("config file has invalid format")
+
+// ErrConfigFileReadError indicates that there was an error reading the configuration file.
+var ErrConfigFileReadError = errors.New("error reading config file")
+
+// ErrConfigFileWriteError indicates that there was an error writing the configuration file.
+var ErrConfigFileWriteError = errors.New("error writing config file")
+
+// ErrConfigInvalid indicates that the configuration is invalid.
+var ErrConfigInvalid = errors.New("config is invalid")

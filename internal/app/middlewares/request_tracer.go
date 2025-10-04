@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type RequestTracerMiddleware struct {

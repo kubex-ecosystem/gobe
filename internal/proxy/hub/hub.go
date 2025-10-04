@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
@@ -23,7 +23,7 @@ import (
 )
 
 type DiscordMCPHub struct {
-	config          *config.Config
+	config          *bootstrap.Config
 	discordAdapter  interfaces.IAdapter
 	llmClient       *llm.Client
 	approvalManager *approval.Manager
@@ -37,7 +37,7 @@ type DiscordMCPHub struct {
 	running       bool
 }
 
-func NewDiscordMCPHub(cfg *config.Config) (*DiscordMCPHub, error) {
+func NewDiscordMCPHub(cfg *bootstrap.Config) (*DiscordMCPHub, error) {
 	// ✅ Discord Integration
 	discordAdapter, err := discord.NewAdapter(cfg.Discord, "chatbot")
 	if err != nil {

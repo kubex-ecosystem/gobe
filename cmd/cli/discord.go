@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
@@ -299,7 +299,7 @@ func createDiscordAdapter() (interfaces.IAdapter, error) {
 		token = "dev_token" // Use dev token for dev mode
 	}
 
-	cfg := config.DiscordConfig{}
+	cfg := bootstrap.DiscordConfig{}
 	cfg.Bot.Token = token
 
 	adapter, err := discord.NewAdapter(cfg, "cli")

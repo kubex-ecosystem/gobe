@@ -13,7 +13,6 @@ import (
 	sau "github.com/kubex-ecosystem/gobe/factory/security"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	oauthsvc "github.com/kubex-ecosystem/gobe/internal/services/oauth"
 )
 
@@ -54,8 +53,8 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	// Create TokenService (same pattern as user routes)
 	certService := crt.NewCertService(
-		os.ExpandEnv(cm.DefaultGoBEKeyPath),
-		os.ExpandEnv(cm.DefaultGoBECertPath),
+		os.ExpandEnv(gl.DefaultGoBEKeyPath),
+		os.ExpandEnv(gl.DefaultGoBECertPath),
 	)
 	tokenClient := sau.NewTokenClient(certService, dbService)
 	tokenService, _, _, err := tokenClient.LoadTokenCfg()

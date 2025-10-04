@@ -48,7 +48,7 @@ func SwaggerMain(dbService *services.DBServiceImpl, _ error) {
 			"8088",
 		),
 		dbService,
-		gl.InitArgs{},
+		&gl.InitArgs{},
 		l.GetLogger("GoBE Swagger"),
 		true,
 	)
