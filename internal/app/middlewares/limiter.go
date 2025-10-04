@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -82,21 +81,21 @@ func RateLimiter(limit rate.Limit, burst int) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		// Get client IP (considering proxies)
-		clientIP := getClientIP(c)
+		// clientIP := getClientIP(c)
 
 		// Get the rate limiter for this client
-		limiter := globalClientLimiter.GetLimiter(clientIP)
+		// limiter := globalClientLimiter.GetLimiter(clientIP)
 
 		// Check if request is allowed
-		if !limiter.Allow() {
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":       "Too many requests",
-				"message":     "Rate limit exceeded. Please try again later.",
-				"retry_after": "60s", // Suggest retry time
-			})
-			c.Abort()
-			return
-		}
+		// if !limiter.Allow() {
+		// 	c.JSON(http.StatusTooManyRequests, gin.H{
+		// 		"error":       "Too many requests",
+		// 		"message":     "Rate limit exceeded. Please try again later.",
+		// 		"retry_after": "60s", // Suggest retry time
+		// 	})
+		// 	c.Abort()
+		// 	return
+		// }
 
 		c.Next()
 	}
