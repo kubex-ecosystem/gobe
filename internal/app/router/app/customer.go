@@ -35,17 +35,21 @@ func NewCustomerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	rtl := *rtr
+
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for CustomerRoute")
+		gl.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
-	bridge := gdbasez.NewBridge(dbGorm)
-	if err != nil {
-		gl.Log("error", "Failed to get DB from service", err)
+	ctx := context.Background()
+	dbCfg := dbService.GetConfig(ctx)
+	if dbCfg == nil {
+		gl.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
+	dbName := dbCfg.GetDBName()
+	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 	customerController := customers_controller.NewCustomerController(bridge)
 
 	secureProperties := make(map[string]bool)

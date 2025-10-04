@@ -15,8 +15,8 @@ import (
 )
 
 type TokenClientImpl struct {
-	mapper                ci.IMapper[sci.TSConfig]
-	dbSrv                 svc.DBService
+	mapper                ci.IMapper[*sci.TSConfig]
+	dbSrv                 *svc.DBServiceImpl
 	crtSrv                sci.ICertService
 	keyringService        sci.IKeyringService
 	TokenService          sci.TokenService
@@ -59,10 +59,17 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 		return nil, 0, 0, pubKeyErr
 	}
 
-	dB, dbErr := t.dbSrv.GetDB(context.Background(), svc.DefaultDBName)
-	if dbErr != nil {
-		gl.Log("error", fmt.Sprintf("Error getting DB: %v", dbErr))
-		return nil, 0, 0, dbErr
+	ctx := context.Background()
+	if err := t.dbSrv.IsConnected(ctx, svc.DefaultDBName); err != nil {
+		gl.Log("warning", fmt.Sprintf("DB not connected: %v", err))
+		gl.Log("info", fmt.Sprintf("Reconnecting to DB: %v", err))
+
+		if err := t.dbSrv.Reconnect(ctx, svc.DefaultDBName); err != nil {
+			gl.Log("error", fmt.Sprintf("Error reconnecting to DB: %v", err))
+			return nil, 0, 0, err
+		}
+
+		gl.Log("info", "DB reconnected successfully")
 	}
 
 	// Garantir valores padrão seguros
@@ -81,19 +88,19 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	}
 
 	tokenService := NewTokenService(&sci.TSConfig{
-		TokenRepository:  NewTokenRepo(dB),
+		TokenRepository:  NewTokenRepo(ctx, t.dbSrv, svc.DefaultDBName),
 		IDExpirationSecs: t.IDExpirationSecs,
 		PubKey:           pubKey,
 		PrivKey:          privKey,
 		TokenClient:      t,
-		DBService:        &t.dbSrv,
+		DBService:        t.dbSrv,
 		KeyringService:   t.keyringService,
 	})
 
 	return tokenService, t.IDExpirationSecs, t.RefreshExpirationSecs, nil
 }
 
-func NewTokenClient(crtService sci.ICertService, dbService svc.DBService) sci.TokenClient {
+func NewTokenClient(crtService sci.ICertService, dbService *svc.DBServiceImpl) *TokenClientImpl {
 	if crtService == nil {
 		gl.Log("error", fmt.Sprintf("error reading private key file: %v", "crtService is nil"))
 		return nil

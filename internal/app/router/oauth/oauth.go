@@ -2,6 +2,7 @@
 package oauth
 
 import (
+	"context"
 	"net/http"
 	"os"
 
@@ -29,26 +30,26 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 	rtl := *rtr
 
-	// Get database service from router
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
 		gl.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
-
-	// Get GORM DB connection
-	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
-	if err != nil {
-		gl.Log("error", "Failed to get DB from service for OAuthRoutes", err)
+	ctx := context.Background()
+	dbCfg := dbService.GetConfig(ctx)
+	if dbCfg == nil {
+		gl.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
+	dbName := dbCfg.GetDBName()
+	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
 
 	// Create OAuth services via bridge (clean abstraction)
-	oauthClientService := gdbasez.NewOAuthClientService(dbGorm)
-	authCodeService := gdbasez.NewAuthCodeService(dbGorm)
+	oauthClientService := gdbasez.NewOAuthClientService(ctx, dbService, dbName)
+	authCodeService := gdbasez.NewAuthCodeService(ctx, dbService, dbName)
 
 	// Create UserService
-	userRepo := gdbasez.NewUserRepo(dbGorm)
+	userRepo := gdbasez.NewUserRepo(ctx, dbService, dbName)
 	userService := gdbasez.NewUserService(userRepo)
 
 	// Create TokenService (same pattern as user routes)
@@ -67,7 +68,7 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	oauthService := oauthsvc.NewOAuthService(oauthClientService, authCodeService, userService, tokenService)
 
 	// Create controller
-	oauthController := oauth.NewOAuthController(dbGorm, oauthService)
+	oauthController := oauth.NewOAuthController(dbService, oauthService)
 
 	// Prepare routes map
 	routesMap := make(map[string]ar.IRoute)

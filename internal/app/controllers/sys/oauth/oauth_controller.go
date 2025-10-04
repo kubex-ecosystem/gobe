@@ -2,6 +2,7 @@
 package oauth
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -9,17 +10,18 @@ import (
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/oauth"
-	"gorm.io/gorm"
 )
 
 // OAuthController handles OAuth2/PKCE endpoints
 type OAuthController struct {
+	dbService    *svc.DBServiceImpl
 	oauthService oauth.IOAuthService
 }
 
 // NewOAuthController creates a new OAuth controller
-func NewOAuthController(db *gorm.DB, oauthService oauth.IOAuthService) *OAuthController {
+func NewOAuthController(dbService *svc.DBServiceImpl, oauthService oauth.IOAuthService) *OAuthController {
 	return &OAuthController{
+		dbService:    dbService,
 		oauthService: oauthService,
 	}
 }
@@ -208,15 +210,23 @@ func (c *OAuthController) RegisterClient(ctx *gin.Context) {
 		return
 	}
 
-	// Get database from context (injected by router)
-	db, exists := ctx.Get("db")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "database not available"})
+	dbService := c.dbService
+	if dbService == nil {
+		gl.Log("error", "Database service is nil for OAuthRoutes")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
+	dbCfg := dbService.GetConfig(ctx)
+	if dbCfg == nil {
+		gl.Log("error", "Database config is nil for OAuthRoutes")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+	dbName := dbCfg.GetDBName()
+	ctxB := context.WithValue(ctx, gl.ContextDBNameKey, dbName)
 
 	// Create OAuth client service
-	clientService := svc.NewOAuthClientService(db.(*gorm.DB))
+	clientService := svc.NewOAuthClientService(ctxB, dbService, dbName)
 
 	// Generate client_id
 	clientID := generateClientID()

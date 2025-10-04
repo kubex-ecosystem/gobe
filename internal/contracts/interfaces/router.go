@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"context"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,14 +14,14 @@ import (
 type IRouter interface {
 	GetDebug() bool
 	GetLogger() l.Logger
+	GetContext(c *gin.Context) context.Context
 	GetConfigPath() string
 	GetBindingAddress() string
 	GetPort() string
 	GetBasePath() string
 	GetEngine() *gin.Engine
-	GetDatabaseService() is.DBService
+	GetDatabaseService() *is.DBServiceImpl
 	HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes
-	DBConfig() is.DBConfig
 	InitializeResources() error
 	Start() error
 	Stop() error
@@ -51,5 +52,5 @@ type IRoute interface {
 	SecureProperties() map[string]bool
 	Handler() gin.HandlerFunc
 	Middlewares() map[string]gin.HandlerFunc
-	DBConfig() is.DBConfig
+	DBService() *is.DBServiceImpl
 }

@@ -2,6 +2,8 @@
 package user
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/federation/users"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
@@ -25,15 +27,18 @@ func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for AuthRoute")
+		gl.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
-	bridge := gdbasez.NewBridge(dbGorm)
-	if err != nil {
-		gl.Log("error", "Failed to get DB from service", err)
+	ctx := context.Background()
+	dbCfg := dbService.GetConfig(ctx)
+	if dbCfg == nil {
+		gl.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
+	dbName := dbCfg.GetDBName()
+	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 	userController := users.NewUserController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)
@@ -61,15 +66,19 @@ func NewUserRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for UserRoute")
+		gl.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
-	bridge := gdbasez.NewBridge(dbGorm)
-	if err != nil {
-		gl.Log("error", "Failed to get DB from service", err)
+	ctx := context.Background()
+	dbCfg := dbService.GetConfig(ctx)
+	if dbCfg == nil {
+		gl.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
+	dbName := dbCfg.GetDBName()
+	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+
+	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 	userController := users.NewUserController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)

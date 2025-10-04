@@ -7,12 +7,19 @@ import (
 
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/app/security/models"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"gorm.io/gorm"
 )
 
 type TokenRepoImpl struct{ *gorm.DB }
 
-func NewTokenRepo(db *gorm.DB) sci.TokenRepo { return &TokenRepoImpl{db} }
+func NewTokenRepo(ctx context.Context, dbSrv svc.DBService, dbName string) sci.TokenRepo {
+	db, err := dbSrv.GetDB(ctx, dbName)
+	if err != nil {
+		panic(fmt.Sprintf("failed to get DB instance: %v", err))
+	}
+	return &TokenRepoImpl{db}
+}
 
 func (g *TokenRepoImpl) TableName() string {
 	return "refresh_tokens"

@@ -1,8 +1,10 @@
 package gdbasez
 
 import (
+	"context"
+
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	user "github.com/kubex-ecosystem/gdbase/factory/models"
-	"gorm.io/gorm"
 )
 
 type UserService = user.UserService
@@ -14,7 +16,17 @@ func NewUserService(db user.UserRepo) UserService {
 	return user.NewUserService(db)
 }
 
-func NewUserRepo(db *gorm.DB) UserRepo {
+func NewUserRepo(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) UserRepo {
+	if dbService == nil {
+		return nil
+	}
+	db, err := dbService.GetDB(ctx, dbName)
+	if err != nil {
+		return nil
+	}
+	if db == nil {
+		return nil
+	}
 	return user.NewUserRepo(db)
 }
 

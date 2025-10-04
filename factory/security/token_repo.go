@@ -1,9 +1,13 @@
 package security
 
 import (
+	"context"
+
 	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	"gorm.io/gorm"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 )
 
-func NewTokenRepo(db *gorm.DB) sci.TokenRepo { return sau.NewTokenRepo(db) }
+func NewTokenRepo(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) sci.TokenRepo {
+	return sau.NewTokenRepo(ctx, dbService, dbName)
+}

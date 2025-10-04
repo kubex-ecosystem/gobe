@@ -90,7 +90,7 @@ func NewRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, i
 }
 
 // NewRequest is a placeholder function for creating a new request.
-func NewRequest(dBConfig svc.DBConfig, s string, i1, i2 int) (any, any) {
+func NewRequest(dbService *svc.DBServiceImpl, s string, i1, i2 int) (any, any) {
 	panic("unimplemented")
 }
 
@@ -130,19 +130,13 @@ func (rtr *Router) GetEngine() *gin.Engine {
 }
 
 // GetDatabaseService returns the database service instance.
-func (rtr *Router) GetDatabaseService() svc.DBService {
+func (rtr *Router) GetDatabaseService() *svc.DBServiceImpl {
 	return rtr.DatabaseService
 }
 
 // HandleFunc registers a GET route with the specified path and handler.
 func (rtr *Router) HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes {
 	return rtr.Engine.Handle("GET", path, handler)
-}
-
-// DBConfig is a placeholder function for database configuration.
-func (rtr *Router) DBConfig() svc.DBConfig {
-	dbService := rtr.DatabaseService
-	return dbService.GetConfig(context.Background())
 }
 
 // InitializeResources initializes the router's resources, including middlewares and routes.
@@ -544,6 +538,14 @@ func (rtr *Router) GetInitArgs() *gl.InitArgs {
 		return nil
 	}
 	return rtr.InitArgs
+}
+
+func (rtr *Router) GetContext(c *gin.Context) context.Context {
+	if err := rtr.ValidateRouter(); err != nil {
+		gl.Log("error", err.Error())
+		return nil
+	}
+	return c.Request.Context()
 }
 
 func SecureServerInit(r *gin.Engine, fullBindAddress string) error {

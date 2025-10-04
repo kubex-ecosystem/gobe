@@ -10,9 +10,9 @@ import (
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
-// DBConfig implements interfaces.IRoute.
-func (r *Route) DBConfig() svc.DBConfig {
-	panic("unimplemented")
+func (r *Route) DBService() *svc.DBServiceImpl {
+	// TODO: Improve this method... Its current implementation or nothing is the same...
+	return r.dbService
 }
 
 type Route struct {
@@ -31,13 +31,13 @@ type Route struct {
 	secureProperties map[string]bool
 
 	// route objects
-	dbService   svc.DBService
+	dbService   *svc.DBServiceImpl
 	handler     gin.HandlerFunc
 	middlewares map[string]gin.HandlerFunc
 	metadata    map[string]any
 }
 
-func newRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbService svc.DBService, secureProperties map[string]bool, metadata map[string]any) *Route {
+func newRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbService *svc.DBServiceImpl, secureProperties map[string]bool, metadata map[string]any) *Route {
 	if len(secureProperties) == 0 {
 		secureProperties = make(map[string]bool)
 		secureProperties["secure"] = false
@@ -61,7 +61,7 @@ func newRoute(method, path, contentType string, handler gin.HandlerFunc, middlew
 	}
 }
 
-func NewRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbConfig svc.DBService, secureProperties map[string]bool, metadata map[string]any) ci.IRoute {
+func NewRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbConfig *svc.DBServiceImpl, secureProperties map[string]bool, metadata map[string]any) ci.IRoute {
 	if len(secureProperties) == 0 {
 		secureProperties = make(map[string]bool)
 		secureProperties["secure"] = false
@@ -82,7 +82,7 @@ func (r *Route) ValidateAndSanitizeBody() bool           { return r.secureProper
 func (r *Route) SecureProperties() map[string]bool       { return r.secureProperties }
 func (r *Route) Handler() gin.HandlerFunc                { return r.handler }
 func (r *Route) Middlewares() map[string]gin.HandlerFunc { return r.middlewares }
-func (r *Route) GetDatabaseService() svc.DBService       { return r.dbService }
+func (r *Route) GetDatabaseService() *svc.DBServiceImpl  { return r.dbService }
 
 func (r *Route) SetMethod(method string)               { r.properties["method"] = method }
 func (r *Route) SetPath(path string)                   { r.properties["path"] = path }
@@ -98,7 +98,7 @@ func (r *Route) SetValidateAndSanitizeBody(validate bool) {
 }
 func (r *Route) SetHandler(handler gin.HandlerFunc)                    { r.handler = handler }
 func (r *Route) SetMiddlewares(middlewares map[string]gin.HandlerFunc) { r.middlewares = middlewares }
-func (r *Route) SetDatabaseService(dbConfig svc.DBService)             { r.dbService = dbConfig }
+func (r *Route) SetDatabaseService(dbConfig *svc.DBServiceImpl)        { r.dbService = dbConfig }
 func (r *Route) SetProperties(properties map[string]string)            { r.properties = properties }
 func (r *Route) SetSecureProperties(secureProperties map[string]bool) {
 	r.secureProperties = secureProperties

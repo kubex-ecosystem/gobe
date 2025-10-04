@@ -4,6 +4,7 @@ package gdbasez
 import (
 	"context"
 
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	models "github.com/kubex-ecosystem/gdbase/factory/models"
 	mcpmodels "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
@@ -19,14 +20,23 @@ type Bridge struct {
 
 // NewBridge creates a new clean bridge to gdbase
 // This is the ONLY function in gobe that should accept *gorm.DB
-func NewBridge(db *gorm.DB) *Bridge {
+func NewBridge(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) *Bridge {
+	if dbService == nil {
+		gl.Log("error", "Bridge: dbService is nil")
+		return nil
+	}
+	db, err := dbService.GetDB(ctx, dbName)
+	if err != nil {
+		gl.Log("error", "Bridge: failed to get db: %v", err)
+		return nil
+	}
 	if db == nil {
-		gl.Log("error", "Bridge: database connection is nil")
+		gl.Log("error", "Bridge: db is nil")
 		return nil
 	}
 	return &Bridge{
 		db:  db,
-		ctx: context.Background(),
+		ctx: ctx,
 	}
 }
 
@@ -114,13 +124,13 @@ func (b *Bridge) AnalysisJobService() AnalysisJobService {
 // OAuth (PKCE)
 // ========================================
 
-func (b *Bridge) OAuthClientService() OAuthClientService {
-	repo := models.NewOAuthClientRepo(b.db)
+func (b *Bridge) OAuthClientService(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) OAuthClientService {
+	repo := models.NewOAuthClientRepo(ctx, dbService, dbName)
 	return models.NewOAuthClientService(repo)
 }
 
-func (b *Bridge) AuthCodeService() AuthCodeService {
-	repo := models.NewAuthCodeRepo(b.db)
+func (b *Bridge) AuthCodeService(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) AuthCodeService {
+	repo := models.NewAuthCodeRepo(ctx, dbService, dbName)
 	return models.NewAuthCodeService(repo)
 }
 

@@ -63,3 +63,25 @@ const (
 	DefaultServerPort = "8088"
 	DefaultServerHost = "0.0.0.0"
 )
+
+type DBNameKey string
+
+const (
+	ContextDBNameKey = DBNameKey("dbName")
+)
+
+const (
+	HeaderRequestIDKey = "X-Request-ID"
+)
+
+const (
+	CookieSessionIDKey = "session_id"
+)
+
+const (
+	AuthTypeNone   = "none"
+	AuthTypeBasic  = "basic"
+	AuthTypeBearer = "bearer"
+	AuthTypeAPIKey = "api_key" // pragma: allowlist secret
+	AuthTypeOIDC   = "oidc"
+)

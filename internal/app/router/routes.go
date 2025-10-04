@@ -16,7 +16,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/router/webhooks"
 )
 
-func NewRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbConfig svc.DBService, secureProperties map[string]bool, metadata map[string]any) ci.IRoute {
+func NewRoute(method, path, contentType string, handler gin.HandlerFunc, middlewares map[string]gin.HandlerFunc, dbConfig *svc.DBServiceImpl, secureProperties map[string]bool, metadata map[string]any) ci.IRoute {
 	return proto.NewRoute(method, path, contentType, handler, middlewares, dbConfig, secureProperties, metadata)
 }
 
