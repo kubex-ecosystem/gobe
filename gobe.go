@@ -17,7 +17,7 @@ import (
 	rts "github.com/kubex-ecosystem/gobe/internal/app/router"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
-	"github.com/kubex-ecosystem/gobe/internal/config"
+	cf "github.com/kubex-ecosystem/gobe/internal/config"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
@@ -57,7 +57,7 @@ type GoBE struct {
 
 	configDir    string
 	configFile   string
-	configDbFile string
+	configDBFile string
 	LogFile      string
 
 	privKey  string
@@ -106,7 +106,7 @@ func NewGoBE(args gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		dbName: dbName,
 
 		configFile:   args.ConfigFile,
-		configDbFile: args.ConfigDBFile,
+		configDBFile: args.ConfigDBFile,
 		LogFile:      args.LogFile,
 		configDir:    filepath.Dir(args.ConfigFile),
 
@@ -532,7 +532,7 @@ func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 		Pwd:            args.Pwd,
 	}
 
-	if err := config.BootstrapMainConfig(&initArgs); err != nil {
+	if err := cf.BootstrapMainConfig(&initArgs); err != nil {
 		gl.Log("error", fmt.Sprintf("Failed to bootstrap config file: %v", err))
 	}
 
@@ -544,6 +544,11 @@ func validateIniArgs(args gl.InitArgs) (gl.InitArgs, error) {
 
 // InitializeAllServices inicializa todos os serviços (Docker + Database) com context
 func (g *GoBE) initializeAllServices() (*is.DBServiceImpl, error) {
+	ctx := context.Background()
+
+	// 🎯 NOVO SISTEMA: Usar DockerStackProvider com migrations programáticas
+	gl.Log("info", "🚀 Initializing services with new DockerStackProvider...")
+
 	// 1. Setup database config
 	dbConfig, err := g.setupDatabase()
 	if err != nil {
@@ -551,59 +556,85 @@ func (g *GoBE) initializeAllServices() (*is.DBServiceImpl, error) {
 		return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig: %w", err)
 	}
 
-	// 2. Initialize Docker Service (usando factory wrapper)
+	// 2. Initialize Docker service with existing DBConfig (legacy flow)
 	dockerService, err := is.NewDockerService(dbConfig, g.Logger)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DockerService: %v", err))
-		return nil, fmt.Errorf("❌ Erro ao inicializar DockerService: %w", err)
-	}
-	if dockerService == nil {
-		gl.Log("info", "⚠️ DockerService é nil, pulando configuração do Docker")
-		return nil, fmt.Errorf("⚠️ DockerService é nil, pulando configuração do Docker")
+		gl.Log("error", fmt.Sprintf("❌ Erro ao criar DockerService: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao criar DockerService: %w", err)
 	}
 
-	ctx := context.Background()
-
-	// 3. Setup Database Services via factory
-	if err := is.SetupDatabaseServices(ctx, dockerService, dbConfig); err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao configurar Docker: %v", err))
-		return nil, fmt.Errorf("❌ Erro ao configurar Docker: %w", err)
+	// 3. Initialize containers (this creates/starts containers if needed)
+	if err := dockerService.Initialize(); err != nil {
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar Docker containers: %v", err))
+		return nil, fmt.Errorf("❌ Erro ao inicializar Docker containers: %w", err)
 	}
 
-	// 4. Wait for Database
-	if _, err := WaitForDatabase(dbConfig); err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao aguardar database: %v", err))
-		return nil, err
+	// 4. 🎯 NOVO: Run migrations programmatically using existing DBConfig
+	pgConfig := dbConfig.Databases["postgresql"]
+	if pgConfig != nil && pgConfig.Enabled {
+		gl.Log("info", "🎯 Running PostgreSQL migrations programmatically...")
+
+		var port int
+		switch p := pgConfig.Port.(type) {
+		case int:
+			port = p
+		case string:
+			fmt.Sscanf(p, "%d", &port)
+		default:
+			port = 5432
+		}
+
+		// pragma: allowlist nextline secret
+		dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", // pragma: allowlist secret
+			pgConfig.Username, pgConfig.Password, pgConfig.Host, port, pgConfig.Name) // pragma: allowlist secret
+
+		migrationMgr := is.NewMigrationManager(dsn, g.Logger)
+		if err := migrationMgr.WaitForPostgres(ctx, 30*time.Second); err != nil {
+			gl.Log("error", fmt.Sprintf("❌ PostgreSQL não está pronto: %v", err))
+			return nil, fmt.Errorf("❌ PostgreSQL não está pronto: %w", err)
+		}
+
+		results, err := migrationMgr.RunMigrations(ctx)
+		if err != nil {
+			gl.Log("warn", fmt.Sprintf("⚠️ Erro parcial nas migrations: %v", err))
+		} else {
+			totalSuccess := 0
+			for _, r := range results {
+				totalSuccess += r.SuccessfulStmts
+			}
+			gl.Log("info", fmt.Sprintf("✅ Migrations executadas com sucesso! (%d statements)", totalSuccess))
+		}
 	}
 
-	// 5. Create Database Service
+	// 5. Create and initialize Database Service
 	dbService, err := is.NewDatabaseService(ctx, dbConfig, g.Logger)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DatabaseService: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao inicializar DatabaseService: %w", err)
 	}
 
-	// 6. Initialize Database Service
+	// 6. Initialize Database Service connections
 	if err := dbService.Initialize(ctx); err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao conectar ao banco: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao conectar ao banco: %w", err)
 	}
 
+	gl.Log("info", "✅ All services initialized successfully!")
 	return dbService, nil
 }
 
 func (g *GoBE) setupDatabase() (*is.DBConfigImpl, error) {
-	if _, err := os.Stat(g.configDbFile); err != nil && os.IsNotExist(err) {
-		if err := os.MkdirAll(filepath.Dir(g.configDbFile), 0755); err != nil {
+	if _, err := os.Stat(g.configDBFile); err != nil && os.IsNotExist(err) {
+		if err := os.MkdirAll(filepath.Dir(g.configDBFile), 0755); err != nil {
 			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err))
 			return nil, fmt.Errorf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err)
 		}
-		if err := os.WriteFile(g.configDbFile, []byte(""), 0644); err != nil {
+		if err := os.WriteFile(g.configDBFile, []byte(""), 0644); err != nil {
 			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err))
 			return nil, fmt.Errorf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err)
 		}
 	}
-	dbConfig := is.NewDBConfigWithArgs(context.Background(), g.dbName, g.configDbFile, true, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	dbConfig := is.NewDBConfigWithArgs(context.Background(), g.dbName, g.configDBFile, true, g.Logger, g.environment.Getenv("DEBUG") == "true")
 	// if dbConfig == nil {
 	// 	gl.Log("error", "❌ Erro ao inicializar DBConfig")
 	// 	return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig")
@@ -628,6 +659,7 @@ func WaitForDatabase(dbConfig is.DBConfig) (*gorm.DB, error) {
 		pgConfig.Dsn = pgConfig.ConnectionString
 	}
 	if pgConfig.Dsn == "" {
+		// pragma: allowlist secret
 		pgConfig.Dsn = fmt.Sprintf("host=%s port=%v user=%s password=%s dbname=%s sslmode=disable",
 			pgConfig.Host, pgConfig.Port, pgConfig.Username, pgConfig.Password, pgConfig.Name)
 	}
