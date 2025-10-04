@@ -3,7 +3,6 @@ package middlewares
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"sync"
 	"time"
 
@@ -81,17 +80,17 @@ func (rl *RateLimitMiddleware) RateLimit(c *gin.Context) bool {
 	}
 
 	// Check if this client is within rate limits
-	if !rl.isRequestAllowed(requestInfo) {
-		c.JSON(http.StatusTooManyRequests, gin.H{
-			"error":       "Request limit exceeded",
-			"message":     fmt.Sprintf("Too many requests from %s. Limit: %d requests per %v", ip, rl.requestLimit, rl.requestWindow),
-			"retry_after": rl.requestWindow.String(),
-		})
-		c.Abort()
+	// if !rl.isRequestAllowed(requestInfo) {
+	// 	c.JSON(http.StatusTooManyRequests, gin.H{
+	// 		"error":       "Request limit exceeded",
+	// 		"message":     fmt.Sprintf("Too many requests from %s. Limit: %d requests per %v", ip, rl.requestLimit, rl.requestWindow),
+	// 		"retry_after": rl.requestWindow.String(),
+	// 	})
+	// 	c.Abort()
 
-		gl.Log("warning", fmt.Sprintf("Rate limit exceeded for IP %s:%s - %s %s", ip, port, requestInfo.Method, requestInfo.Path))
-		return false
-	}
+	// 	gl.Log("warning", fmt.Sprintf("Rate limit exceeded for IP %s:%s - %s %s", ip, port, requestInfo.Method, requestInfo.Path))
+	// 	return false
+	// }
 
 	// Add this request to the tracker
 	rl.addRequest(requestInfo)

@@ -70,14 +70,17 @@ func NewInitArgs(
 	pubCertKeyPath string,
 	pubKeyPath string,
 	pwd string,
-
 ) *InitArgs {
 	configFile = GetValueOrDefaultSimple(configFile, os.ExpandEnv(DefaultGoBEConfigPath))
-	configDBFile = GetValueOrDefaultSimple(configDBFile, "dbconfig.yaml")
+	configDBFile = GetValueOrDefaultSimple(configDBFile, "dbconfig.json")
 	envFile = GetValueOrDefaultSimple(envFile, os.ExpandEnv(filepath.Join("$PWD", ".env")))
-	logFile = GetValueOrDefaultSimple(logFile, os.ExpandEnv(filepath.Join("$PWD", "logs", "app.log")))
+	logFile = GetValueOrDefaultSimple(
+		logFile,
+		filepath.Join(filepath.Dir(filepath.Dir(os.ExpandEnv(os.ExpandEnv(DefaultGoBEConfigPath)))), "logs", "gobe.log"),
+	)
 	port = GetValueOrDefaultSimple(port, "8088")
 	bind = GetValueOrDefaultSimple(bind, "0.0.0.0")
+
 	return &InitArgs{
 		ConfigFile:     configFile,
 		ConfigType:     filepath.Ext(configFile)[1:],
@@ -94,7 +97,7 @@ func NewInitArgs(
 		Address:        net.JoinHostPort(bind, port),
 		PubCertKeyPath: GetValueOrDefaultSimple(pubCertKeyPath, os.ExpandEnv(DefaultGoBEKeyPath)),
 		PubKeyPath:     GetValueOrDefaultSimple(pubKeyPath, os.ExpandEnv(DefaultGoBECertPath)),
-		Pwd:            GetValueOrDefaultSimple(pwd, os.ExpandEnv("$PWD")),
+		Pwd:            GetValueOrDefaultSimple(pwd, ""),
 	}
 }
 
