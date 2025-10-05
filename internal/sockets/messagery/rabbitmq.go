@@ -15,7 +15,7 @@ import (
 
 	crtSvc "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 )
 
 type AMQP struct {

@@ -3,8 +3,8 @@ package gdbasez
 import (
 	"context"
 
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	fscm "github.com/kubex-ecosystem/gdbase/factory/models"
-	"gorm.io/gorm"
 )
 
 type (
@@ -71,8 +71,8 @@ func NewClientModel() *ClientModel {
 	return &ClientModel{}
 }
 
-func NewClientRepo(dbConn *gorm.DB) ClientRepo {
-	return fscm.NewClientRepo(dbConn)
+func NewClientRepo(ctx context.Context, dbService *svc.DBServiceImpl) ClientRepo {
+	return fscm.NewClientRepo(ctx, dbService)
 }
 
 func NewProductService(db ProductRepo) ProductService {
@@ -83,8 +83,8 @@ func NewProductModel() *ProductModel {
 	return &ProductModel{}
 }
 
-func NewProductRepo(dbConn *gorm.DB) ProductRepo {
-	return fscm.NewProductRepo(dbConn)
+func NewProductRepo(ctx context.Context, dbService *svc.DBServiceImpl) ProductRepo {
+	return fscm.NewProductRepo(ctx, dbService)
 }
 
 func NewCronJobService(db CronJobRepo) CronJobService {
@@ -95,8 +95,8 @@ func NewCronModel() *CronJobModel {
 	return &CronJobModel{}
 }
 
-func NewCronRepo(ctx context.Context, dbConn *gorm.DB) CronJobRepo {
-	return fscm.NewCronJobRepo(ctx, dbConn)
+func NewCronRepo(ctx context.Context, dbService *svc.DBServiceImpl) CronJobRepo {
+	return fscm.NewCronJobRepo(ctx, dbService)
 }
 
 func NewDiscordService(db DiscordRepo) DiscordService {
@@ -107,15 +107,15 @@ func NewDiscordModel() *DiscordModel {
 	return &DiscordModel{}
 }
 
-func NewDiscordRepo(db *gorm.DB) DiscordRepo {
-	return fscm.NewDiscordRepo(db)
+func NewDiscordRepo(ctx context.Context, dbService *svc.DBServiceImpl) DiscordRepo {
+	return fscm.NewDiscordRepo(ctx, dbService)
 }
 func NewJobQueueService(db JobQueueRepo) JobQueueService {
 	return fscm.NewJobQueueService(db)
 }
 
-func NewJobQueueRepo(dbConn *gorm.DB) JobQueueRepo {
-	return fscm.NewJobQueueRepo(dbConn)
+func NewJobQueueRepo(ctx context.Context, dbService *svc.DBServiceImpl) JobQueueRepo {
+	return fscm.NewJobQueueRepo(ctx, dbService)
 }
 
 func NewJobQueueModel() JobQueueModel {
@@ -126,16 +126,16 @@ func NewAnalysisJobService(db AnalysisJobRepo) AnalysisJobService {
 	return fscm.NewAnalysisJobService(db)
 }
 
-func NewAnalysisJobRepo(dbConn *gorm.DB) AnalysisJobRepo {
-	return fscm.NewAnalysisJobRepo(dbConn)
+func NewAnalysisJobRepo(ctx context.Context, dbService *svc.DBServiceImpl) AnalysisJobRepo {
+	return fscm.NewAnalysisJobRepo(ctx, dbService)
 }
 
 func NewAnalysisJobModel() AnalysisJobModel {
 	return fscm.NewAnalysisJobModel()
 }
 
-func NewWebhookRepo(db *gorm.DB) WebhookRepo {
-	return fscm.NewWebhookRepo(db)
+func NewWebhookRepo(ctx context.Context, dbService *svc.DBServiceImpl) WebhookRepo {
+	return fscm.NewWebhookRepo(ctx, dbService)
 }
 
 func NewWebhookService(repo WebhookRepo) WebhookService {

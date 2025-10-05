@@ -1,7 +1,8 @@
 package cron
 
 import (
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory/models"
+
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 

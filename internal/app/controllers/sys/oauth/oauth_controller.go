@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
+
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/oauth"
 )
@@ -224,15 +226,16 @@ func (c *OAuthController) RegisterClient(ctx *gin.Context) {
 	}
 	dbName := dbCfg.GetDBName()
 	ctxB := context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	clientRepo := mdl.NewOAuthClientRepo(ctxB, dbService)
 
 	// Create OAuth client service
-	clientService := svc.NewOAuthClientService(ctxB, dbService, dbName)
+	clientService := mdl.NewOAuthClientService(clientRepo)
 
 	// Generate client_id
 	clientID := generateClientID()
 
 	// Create client model
-	client := svc.NewOAuthClientModel(clientID, req.ClientName, req.RedirectURIs, req.Scopes)
+	client := mdl.NewOAuthClientModel(clientID, req.ClientName, req.RedirectURIs, req.Scopes)
 
 	// Save to database
 	created, err := clientService.CreateClient(client)
@@ -255,7 +258,7 @@ func (c *OAuthController) RegisterClient(ctx *gin.Context) {
 func generateClientID() string {
 	// TODO: Implement proper client_id generation
 	// For now, use a simple UUID-based approach
-	return "client_" + strings.ReplaceAll(svc.NewUserModel("", "", "").GetID(), "-", "")[:16]
+	return "client_" + strings.ReplaceAll(mdl.NewUserModel("", "", "").GetID(), "-", "")[:16]
 }
 
 // TokenResponse represents the OAuth2 token response

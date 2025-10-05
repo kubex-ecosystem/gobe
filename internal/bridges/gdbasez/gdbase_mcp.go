@@ -1,8 +1,10 @@
 package gdbasez
 
 import (
+	"context"
+
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
-	"gorm.io/gorm"
 )
 
 // LLM aliases
@@ -35,8 +37,8 @@ func NewProvidersService(repo ProvidersRepo) ProvidersService {
 	return models.NewProvidersService(repo)
 }
 
-func NewProvidersRepo(db *gorm.DB) ProvidersRepo {
-	return models.NewProvidersRepo(db)
+func NewProvidersRepo(ctx context.Context, dbService *svc.DBServiceImpl) ProvidersRepo {
+	return models.NewProvidersRepo(ctx, dbService)
 }
 
 // Tasks aliases
@@ -49,8 +51,8 @@ func NewTasksService(repo TasksRepo) TasksService {
 	return models.NewTasksService(repo)
 }
 
-func NewTasksRepo(db *gorm.DB) TasksRepo {
-	return models.NewTasksRepo(db)
+func NewTasksRepo(ctx context.Context, dbService *svc.DBServiceImpl) TasksRepo {
+	return models.NewTasksRepo(ctx, dbService)
 }
 
 // Model constructors - Using factory functions from gdbase

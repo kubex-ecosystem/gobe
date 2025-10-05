@@ -2,9 +2,11 @@
 package preferences
 
 import (
+	"context"
 	"net/http"
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +20,7 @@ type PreferencesController struct {
 
 func NewPreferencesController(bridge *svc.Bridge) *PreferencesController {
 	return &PreferencesController{
-		preferencesService: bridge.PreferencesService(),
+		preferencesService: bridge.PreferencesService(context.Background()),
 		APIWrapper:         types.NewAPIWrapper[svc.PreferencesModel](),
 	}
 }

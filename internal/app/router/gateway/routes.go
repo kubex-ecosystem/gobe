@@ -12,12 +12,12 @@ import (
 	gatewayController "github.com/kubex-ecosystem/gobe/internal/app/controllers/gateway"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 	webhooksvc "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
 	messagery "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
-	"gorm.io/gorm"
 )
 
 type GatewayRoutes struct {
@@ -32,40 +32,32 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
-	var db *gorm.DB
-	if dbService != nil {
-		var err error
-		db, err = dbService.GetDB(context.Background(), svc.DefaultDBName)
-		if err != nil {
-			gl.Log("warn", "Failed to fetch DB for gateway module", err)
-		}
-	} else {
+	if dbService == nil {
 		gl.Log("warn", "Database service is nil for GatewayRoutes")
+		return nil
 	}
 
 	var gatewayService *gatewaysvc.Service
 	var webhookService *webhooksvc.WebhookService
 
-	if db != nil {
-		providersSvc := svc.NewProvidersService(svc.NewProvidersRepo(db))
-		gw, err := gatewaysvc.NewService(providersSvc)
-		if err != nil {
-			gl.Log("error", "failed to initialize gateway service", err)
-		} else {
-			gatewayService = gw
-		}
-
-		// Initialize webhook service with AMQP connection
-		amqp := messagery.NewAMQP()
-		webhookService = webhooksvc.NewWebhookService(amqp)
+	providersSvc := svc.NewProvidersService(svc.NewProvidersRepo(context.Background(), dbService))
+	gw, err := gatewaysvc.NewService(providersSvc)
+	if err != nil {
+		gl.Log("error", "failed to initialize gateway service", err)
+	} else {
+		gatewayService = gw
 	}
+
+	// Initialize webhook service with AMQP connection
+	amqp := messagery.NewAMQP()
+	webhookService = webhooksvc.NewWebhookService(amqp)
 
 	chatController := gatewayController.NewChatController(gatewayService)
 	providersController := gatewayController.NewProvidersController(gatewayService)
 	adviseController := gatewayController.NewAdviseController(gatewayService)
-	scorecardController := gatewayController.NewScorecardController(db)
+	scorecardController := gatewayController.NewScorecardController(dbService)
 	healthController := gatewayController.NewHealthController(dbService, gatewayService)
-	lookAtniController := gatewayController.NewLookAtniController(db)
+	lookAtniController := gatewayController.NewLookAtniController(dbService)
 	webhookController := gatewayController.NewWebhookController(webhookService)
 	schedulerController := gatewayController.NewSchedulerController()
 

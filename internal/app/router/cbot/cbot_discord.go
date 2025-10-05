@@ -2,7 +2,6 @@
 package cbot
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,7 +9,6 @@ import (
 	discord_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/discord"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
-	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
@@ -31,11 +29,6 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
 		gl.Log("error", "Database service is nil for DiscordRoute")
-		return nil
-	}
-	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
-	if err != nil {
-		gl.Log("error", "Failed to get DB from service", err)
 		return nil
 	}
 
@@ -76,7 +69,7 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 
-	discordController := discord_controller.NewDiscordController(dbGorm, h, cfg)
+	discordController := discord_controller.NewDiscordController(dbService, h, cfg)
 
 	routesMap["DiscordWebSocket"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/websocket", "application/json", discordController.HandleWebSocket, middlewaresMap, dbService, secureProperties, nil)
 	routesMap["DiscordOAuth2Authorize"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/oauth2/authorize", "application/json", discordController.HandleDiscordOAuth2Authorize, middlewaresMap, dbService, secureProperties, nil)

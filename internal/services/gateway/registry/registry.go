@@ -7,16 +7,17 @@ import (
 	"fmt"
 	"sync"
 
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	prv "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	gateway "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+
 	"github.com/kubex-ecosystem/gobe/internal/services/gateway/providers"
 )
 
 type Registry struct {
 	mu          sync.RWMutex
 	entries     map[string]*gateway.ProviderEntry
-	providerSvc svc.ProvidersService
+	providerSvc prv.ProvidersService
 }
 
 var ErrProviderNotFound = errors.New("gateway: provider not found")
@@ -30,7 +31,7 @@ type providerPayload struct {
 	Metadata     map[string]interface{} `json:"metadata"`
 }
 
-func New(providerSvc svc.ProvidersService) *Registry {
+func New(providerSvc prv.ProvidersService) *Registry {
 	return &Registry{
 		entries:     make(map[string]*gateway.ProviderEntry),
 		providerSvc: providerSvc,

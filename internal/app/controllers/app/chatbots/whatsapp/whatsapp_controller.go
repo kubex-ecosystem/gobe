@@ -1,19 +1,20 @@
+// Package whatsapp implements a controller for handling WhatsApp-related endpoints.
 package whatsapp
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
-	wa "github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	wa "github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
 )
 
 // Controller manages WhatsApp webhooks and message sending.
 type Controller struct {
-	db      *gorm.DB
-	service *wa.Service
+	dbService *svc.DBServiceImpl
+	service   *wa.Service
 }
 
 type (
@@ -28,8 +29,8 @@ type SendMessageRequest struct {
 }
 
 // NewController returns a new WhatsApp controller.
-func NewController(db *gorm.DB, service *wa.Service) *Controller {
-	return &Controller{db: db, service: service}
+func NewController(dbService *svc.DBServiceImpl, service *wa.Service) *Controller {
+	return &Controller{dbService: dbService, service: service}
 }
 
 // HandleWebhook processes incoming WhatsApp webhook events and verification.
@@ -82,7 +83,7 @@ func (c *Controller) HandleWebhook(ctx *gin.Context) {
 			}
 		}
 	}
-	c.db.Create(&msg)
+	//c.service.PersistMessage(msg)
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 

@@ -10,11 +10,10 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
-	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
-	"gorm.io/gorm"
 
 	l "github.com/kubex-ecosystem/logz"
 )
@@ -25,11 +24,11 @@ var (
 
 // TunnelStatus represents the current tunnel state
 type TunnelStatus struct {
-	Mode    gdbasez.TunnelMode `json:"mode"`
-	Public  string             `json:"public"`
-	Running bool               `json:"running"`
-	Network string             `json:"network,omitempty"`
-	Target  string             `json:"target,omitempty"`
+	Mode    svc.TunnelMode `json:"mode"`
+	Public  string         `json:"public"`
+	Running bool           `json:"running"`
+	Network string         `json:"network,omitempty"`
+	Target  string         `json:"target,omitempty"`
 }
 
 // TunnelRequest represents the request payload for tunnel operations
@@ -44,20 +43,16 @@ type TunnelRequest struct {
 
 // GDBaseController handles GDBase tunnel operations
 type GDBaseController struct {
-	dbConn       *gorm.DB
+	dbConn       *svc.DBServiceImpl
 	mcpState     *hooks.Bitstate[uint64, system.SystemDomain]
 	dockerCli    *client.Client
 	tunnelState  *TunnelStatus
 	tunnelMutex  sync.RWMutex
-	activeHandle gdbasez.TunnelHandle
+	activeHandle svc.TunnelHandle
 }
 
 // NewGDBaseController creates a new GDBaseController instance
-func NewGDBaseController(db *gorm.DB) *GDBaseController {
-	if db == nil {
-		gl.Log("warn", "Database connection is nil")
-	}
-
+func NewGDBaseController(dbService *svc.DBServiceImpl) *GDBaseController {
 	// Initialize Docker client
 	dockerCli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -66,7 +61,7 @@ func NewGDBaseController(db *gorm.DB) *GDBaseController {
 	}
 
 	return &GDBaseController{
-		dbConn:    db,
+		dbConn:    dbService,
 		dockerCli: dockerCli,
 		tunnelState: &TunnelStatus{
 			Running: false,
@@ -106,11 +101,11 @@ func (g *GDBaseController) PostGDBaseTunnelUp(c *gin.Context) {
 		return
 	}
 
-	mode := gdbasez.TunnelMode(req.Mode)
+	mode := svc.TunnelMode(req.Mode)
 	ctx := c.Request.Context()
 
 	switch mode {
-	case gdbasez.TunnelQuick:
+	case svc.TunnelQuick:
 		if err := g.handleQuickTunnel(ctx, &req); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "Internal Server Error",
@@ -127,7 +122,7 @@ func (g *GDBaseController) PostGDBaseTunnelUp(c *gin.Context) {
 			"running": true,
 		})
 
-	case gdbasez.TunnelNamed:
+	case svc.TunnelNamed:
 		if err := g.handleNamedTunnel(ctx, &req); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":   "Internal Server Error",
@@ -212,8 +207,8 @@ func (g *GDBaseController) handleQuickTunnel(ctx context.Context, req *TunnelReq
 	}
 
 	// Create tunnel options
-	opts := gdbasez.NewCloudflaredOpts(
-		gdbasez.TunnelQuick,
+	opts := svc.NewCloudflaredOpts(
+		svc.TunnelQuick,
 		networkName,
 		req.Target,
 		req.Port,
@@ -229,7 +224,7 @@ func (g *GDBaseController) handleQuickTunnel(ctx context.Context, req *TunnelReq
 	// Update state
 	g.activeHandle = handle
 	g.tunnelState = &TunnelStatus{
-		Mode:    gdbasez.TunnelQuick,
+		Mode:    svc.TunnelQuick,
 		Public:  publicURL,
 		Running: true,
 		Network: networkName,
@@ -254,8 +249,8 @@ func (g *GDBaseController) handleNamedTunnel(ctx context.Context, req *TunnelReq
 	}
 
 	// Create tunnel options
-	opts := gdbasez.NewCloudflaredOpts(
-		gdbasez.TunnelNamed,
+	opts := svc.NewCloudflaredOpts(
+		svc.TunnelNamed,
 		networkName,
 		"", // no target for named mode
 		0,  // no port for named mode
@@ -271,7 +266,7 @@ func (g *GDBaseController) handleNamedTunnel(ctx context.Context, req *TunnelReq
 	// Update state
 	g.activeHandle = handle
 	g.tunnelState = &TunnelStatus{
-		Mode:    gdbasez.TunnelNamed,
+		Mode:    svc.TunnelNamed,
 		Public:  "Use your configured tunnel hostnames",
 		Running: true,
 		Network: networkName,

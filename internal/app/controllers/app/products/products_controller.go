@@ -2,16 +2,19 @@
 package products
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
 type ProductController struct {
-	productService svc.ProductService
-	APIWrapper     *t.APIWrapper[svc.ProductModel]
+	productService mdl.ProductService
+	APIWrapper     *t.APIWrapper[mdl.ProductModel]
 }
 
 type (
@@ -20,9 +23,11 @@ type (
 )
 
 func NewProductController(bridge *svc.Bridge) *ProductController {
+	prodRepo := mdl.NewProductRepo(context.Background(), bridge.DBService())
+	prodService := mdl.NewProductService(prodRepo)
 	return &ProductController{
-		productService: bridge.ProductService(),
-		APIWrapper:     t.NewAPIWrapper[svc.ProductModel](),
+		productService: prodService,
+		APIWrapper:     t.NewAPIWrapper[mdl.ProductModel](),
 	}
 }
 

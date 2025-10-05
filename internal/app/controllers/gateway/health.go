@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
+
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 )
 
@@ -139,7 +140,7 @@ func (hc *HealthController) checkDatabase() bool {
 	if hc.dbService == nil {
 		return false
 	}
-	if err := hc.dbService.CheckDatabaseHealth(context.Background(), svc.DefaultDBName); err != nil {
+	if err := hc.dbService.CheckDatabaseHealth(context.Background()); err != nil {
 		return false
 	}
 	return true

@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
+
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )

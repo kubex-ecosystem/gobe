@@ -45,7 +45,7 @@ func NewAnalyzerController(bridge *m.Bridge) *AnalyzerController {
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
 
 	// Use bridge to get analysis job service
-	analysisService := bridge.AnalysisJobService()
+	analysisService := bridge.AnalysisJobService(context.Background())
 
 	return &AnalyzerController{
 		bridge:          bridge,

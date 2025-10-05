@@ -11,31 +11,31 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
-	"gorm.io/gorm"
 )
 
 // ScorecardController exposes real scorecard and metrics endpoints.
 type ScorecardController struct {
-	db                 *gorm.DB
+	dbService          *svc.DBServiceImpl
 	analyzerService    *analyzer.Service
-	analysisJobService gdbasez.AnalysisJobService
+	analysisJobService svc.AnalysisJobService
 }
 
-func NewScorecardController(db *gorm.DB) *ScorecardController {
+func NewScorecardController(dbService *svc.DBServiceImpl) *ScorecardController {
 	// Initialize analyzer service
 	analyzerBaseURL := getEnv("GEMX_ANALYZER_URL", "http://localhost:8080")
 	analyzerAPIKey := getEnv("GEMX_ANALYZER_API_KEY", "")
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
 
 	// Initialize GDBase AnalysisJob service using gdbasez bridge
-	analysisJobRepo := gdbasez.NewAnalysisJobRepo(db)
-	analysisJobService := gdbasez.NewAnalysisJobService(analysisJobRepo)
+	analysisJobRepo := svc.NewAnalysisJobRepo(context.Background(), dbService)
+	analysisJobService := svc.NewAnalysisJobService(analysisJobRepo)
 
 	return &ScorecardController{
-		db:                 db,
+		dbService:          dbService,
 		analyzerService:    analyzerService,
 		analysisJobService: analysisJobService,
 	}
@@ -83,14 +83,14 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 	}
 
 	// Filter jobs by type "SCORECARD_ANALYSIS"
-	analysisJobs := make([]*gdbasez.AnalysisJobImpl, 0)
+	analysisJobs := make([]*svc.AnalysisJobImpl, 0)
 	for _, job := range jobs {
 		if job.GetJobType() == "SCORECARD_ANALYSIS" {
 			errorMsg := job.GetErrorMessage()
 			completedAt := job.GetCompletedAt()
 			updatedBy := job.GetUpdatedBy()
 			// Create concrete type from interface
-			analysisJob := &gdbasez.AnalysisJobImpl{
+			analysisJob := &svc.AnalysisJobImpl{
 				ID:           job.GetID(),
 				ProjectID:    job.GetProjectID(),
 				JobType:      job.GetJobType(),
@@ -179,7 +179,7 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 	}
 
 	// Filter jobs by type "SCORECARD_ANALYSIS" and by repo URL if specified
-	analysisJobs := make([]*gdbasez.AnalysisJobImpl, 0)
+	analysisJobs := make([]*svc.AnalysisJobImpl, 0)
 	for _, job := range allJobs {
 		if job.GetJobType() == "SCORECARD_ANALYSIS" {
 			// Filter by repo URL if specified
@@ -196,7 +196,7 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 				completedAt := job.GetCompletedAt()
 				updatedBy := job.GetUpdatedBy()
 				// Create concrete type from interface
-				analysisJob := &gdbasez.AnalysisJobImpl{
+				analysisJob := &svc.AnalysisJobImpl{
 					ID:           job.GetID(),
 					ProjectID:    job.GetProjectID(),
 					JobType:      job.GetJobType(),
@@ -281,13 +281,13 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 		})
 		return
 	}
-	var allAnalysisJobs []*gdbasez.AnalysisJobImpl
+	var allAnalysisJobs []*svc.AnalysisJobImpl
 	for _, job := range allJobs {
 		errorMsg := job.GetErrorMessage()
 		completedAt := job.GetCompletedAt()
 		updatedBy := job.GetUpdatedBy()
 		// Create concrete type from interface
-		analysisJob := &gdbasez.AnalysisJobImpl{
+		analysisJob := &svc.AnalysisJobImpl{
 			ID:           job.GetID(),
 			ProjectID:    job.GetProjectID(),
 			JobType:      job.GetJobType(),
@@ -343,7 +343,7 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 }
 
 // convertAnalysisJobToScorecardEntry converts an analysis job to a scorecard entry
-func convertAnalysisJobToScorecardEntry(job *gdbasez.AnalysisJobImpl) *ScorecardEntry {
+func convertAnalysisJobToScorecardEntry(job *svc.AnalysisJobImpl) *ScorecardEntry {
 
 	// Parse metadata and output data to extract score and tags
 	score := 0.0
@@ -405,7 +405,7 @@ func convertAnalysisJobToScorecardEntry(job *gdbasez.AnalysisJobImpl) *Scorecard
 }
 
 // generateAdviceFromAnalysisJobs analyzes recent analysis jobs and generates intelligent advice
-func generateAdviceFromAnalysisJobs(jobs []*gdbasez.AnalysisJobImpl, repoURL string) *AdviceData {
+func generateAdviceFromAnalysisJobs(jobs []*svc.AnalysisJobImpl, repoURL string) *AdviceData {
 	if len(jobs) == 0 {
 		return &AdviceData{
 			Message:  "No recent analysis data available for generating advice",
@@ -420,7 +420,7 @@ func generateAdviceFromAnalysisJobs(jobs []*gdbasez.AnalysisJobImpl, repoURL str
 	failedJobs := 0
 	avgScore := 0.0
 	scoreCount := 0
-	var lastJob *gdbasez.AnalysisJobImpl
+	var lastJob *svc.AnalysisJobImpl
 	// issues := []string{}
 	recommendations := []string{}
 
@@ -511,11 +511,11 @@ func generateAdviceFromAnalysisJobs(jobs []*gdbasez.AnalysisJobImpl, repoURL str
 }
 
 // calculateAnalysisMetrics calculates real system metrics from analysis job data
-func calculateAnalysisMetrics(jobs []*gdbasez.AnalysisJobImpl, since time.Time, period string) map[string]interface{} {
+func calculateAnalysisMetrics(jobs []*svc.AnalysisJobImpl, since time.Time, period string) map[string]interface{} {
 	metrics := make(map[string]interface{})
 
 	// Filter analysis jobs by time period
-	periodJobs := make([]*gdbasez.AnalysisJobImpl, 0)
+	periodJobs := make([]*svc.AnalysisJobImpl, 0)
 	for _, job := range jobs {
 		if job.GetCreatedAt().After(since) {
 			periodJobs = append(periodJobs, job)
@@ -659,7 +659,7 @@ func extractRepoName(repoURL string) string {
 }
 
 // extractRepoNameFromAnalysisJob extracts repository name from analysis job source URL or metadata
-func extractRepoNameFromAnalysisJob(job *gdbasez.AnalysisJobImpl) string {
+func extractRepoNameFromAnalysisJob(job *svc.AnalysisJobImpl) string {
 	// Try to extract from source URL first
 	sourceURL := job.GetSourceURL()
 	if sourceURL != "" {
@@ -681,7 +681,7 @@ func extractRepoNameFromAnalysisJob(job *gdbasez.AnalysisJobImpl) string {
 }
 
 // calculateJobsPerHour calculates analysis jobs per hour for the given period
-func calculateJobsPerHour(jobs []*gdbasez.AnalysisJobImpl, since time.Time) float64 {
+func calculateJobsPerHour(jobs []*svc.AnalysisJobImpl, since time.Time) float64 {
 	if len(jobs) == 0 {
 		return 0.0
 	}

@@ -2,9 +2,11 @@
 package llm
 
 import (
+	"context"
 	"net/http"
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +20,7 @@ type LLMController struct {
 
 func NewLLMController(bridge *svc.Bridge) *LLMController {
 	return &LLMController{
-		llmService: bridge.LLMService(),
+		llmService: bridge.LLMService(context.Background()),
 		APIWrapper: types.NewAPIWrapper[svc.LLMModel](),
 	}
 }

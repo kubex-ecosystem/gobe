@@ -2,21 +2,24 @@
 package providers
 
 import (
+	"context"
 	"net/http"
 
+	mcp "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ProvidersController struct {
-	providersService svc.ProvidersService
+	providersService mcp.ProvidersService
 }
 
 func NewProvidersController(bridge *svc.Bridge) *ProvidersController {
 	return &ProvidersController{
-		providersService: bridge.ProvidersService(),
+		providersService: bridge.ProvidersService(context.Background()),
 	}
 }
 
@@ -58,7 +61,7 @@ func (pc *ProvidersController) CreateProvider(c *gin.Context) {
 	}
 
 	// Create a new provider model
-	newProvider := svc.NewProvidersModel(
+	newProvider := mcp.NewProvidersModel(
 		providerRequest.Provider,
 		providerRequest.OrgOrGroup,
 		svc.MapToJSONB(providerRequest.Config),

@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"gorm.io/gorm"
 
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
@@ -21,17 +20,11 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 
-	l "github.com/kubex-ecosystem/logz"
-
-	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
-)
-
-var (
-	gl = logger.GetLogger[l.Logger](nil)
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
 type HubInterface interface {
@@ -41,8 +34,8 @@ type HubInterface interface {
 }
 
 type DiscordController struct {
-	discordService svc.DiscordService
-	APIWrapper     *t.APIWrapper[svc.DiscordModel]
+	discordService mdl.DiscordService
+	APIWrapper     *t.APIWrapper[mdl.DiscordModel]
 	config         *bootstrap.Config
 	hub            HubInterface
 	upgrader       websocket.Upgrader
@@ -119,10 +112,10 @@ type DiscordInteractionResponse struct {
 	Data map[string]interface{} `json:"data,omitempty"`
 }
 
-func NewDiscordController(db *gorm.DB, hub *hub.DiscordMCPHub, config *bootstrap.Config) *DiscordController {
+func NewDiscordController(db *svc.DBServiceImpl, hub *hub.DiscordMCPHub, config *bootstrap.Config) *DiscordController {
 	return &DiscordController{
-		discordService: svc.NewDiscordService(svc.NewDiscordRepo(db)),
-		APIWrapper:     t.NewAPIWrapper[svc.DiscordModel](),
+		discordService: mdl.NewDiscordService(mdl.NewDiscordRepo(context.Background(), db)),
+		APIWrapper:     t.NewAPIWrapper[mdl.DiscordModel](),
 		hub:            hub,
 		config:         config,
 		upgrader: websocket.Upgrader{
@@ -810,7 +803,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 	if dc.config != nil {
 		cfg = dc.config
 	} else {
-		cfg, err = bootstrap.Load[*bootstrap.Config](&kbx.InitArgs{
+		cfg, err = bootstrap.Load[*bootstrap.Config](&gl.InitArgs{
 			ConfigFile: "./config/discord.json",
 		})
 		if err != nil {

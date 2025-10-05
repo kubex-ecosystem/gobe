@@ -2,6 +2,7 @@
 package system
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,36 +14,33 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/security/execsafe"
-	services "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	mcp "github.com/kubex-ecosystem/gobe/internal/services/mcp"
+
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/module/logger"
-	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
-	"gorm.io/gorm"
 
 	l "github.com/kubex-ecosystem/logz"
 )
 
 var (
 	gl          = logger.GetLogger[l.Logger](nil)
-	sysServ     services.ISystemService
+	sysServ     svc.ISystemService
 	mcpRegistry mcp.Registry
 )
 
 type MetricsController struct {
-	dbConn        *gorm.DB
+	dbConn        *svc.DBServiceImpl
 	mcpState      *hooks.Bitstate[uint64, system.SystemDomain]
-	systemService services.ISystemService
+	systemService svc.ISystemService
 	registry      mcp.Registry
 	apiWrapper    *types.APIWrapper[interface{}]
 }
 
-func NewMetricsController(db *gorm.DB) *MetricsController {
-	if db == nil {
-		gl.Log("warn", "Database connection is nil")
-	}
-
+func NewMetricsController(ctx context.Context, dbService *svc.DBServiceImpl) *MetricsController {
 	// Initialize registry if not already done
 	if mcpRegistry == nil {
 		mcpRegistry = mcp.NewRegistry()
@@ -56,7 +54,7 @@ func NewMetricsController(db *gorm.DB) *MetricsController {
 	}
 
 	return &MetricsController{
-		dbConn:        db,
+		dbConn:        dbService,
 		systemService: sysServ,
 		registry:      mcpRegistry,
 		apiWrapper:    types.NewAPIWrapper[interface{}](),
@@ -66,7 +64,7 @@ func NewMetricsController(db *gorm.DB) *MetricsController {
 func (c *MetricsController) GetGeneralSystemMetrics(ctx *gin.Context) {
 	if c.systemService == nil {
 		if sysServ == nil {
-			sysServ = services.NewSystemService()
+			sysServ = svc.NewSystemService()
 		}
 		if sysServ == nil {
 			gl.Log("error", "System service is nil")
@@ -115,14 +113,14 @@ func (c *MetricsController) RegisterRoutes(router *gin.RouterGroup) {
 	gl.Log("info", "Routes registered for MetricsController")
 	if c.systemService == nil {
 		gl.Log("warn", "System service is nil, initializing a new instance")
-		c.systemService = services.NewSystemService()
+		c.systemService = svc.NewSystemService()
 	}
 	if c.systemService == nil {
 		gl.Log("error", "Failed to initialize system service")
 		return
 	}
 	// Register the system service routes
-	ssrvc, ok := c.systemService.(*services.SystemService)
+	ssrvc, ok := c.systemService.(*svc.SystemService)
 	if !ok {
 		gl.Log("error", "Failed to assert system service")
 		return
@@ -133,7 +131,7 @@ func (c *MetricsController) RegisterRoutes(router *gin.RouterGroup) {
 }
 
 // SetSystemService allows setting the system service externally.
-func SetSystemService(service services.ISystemService) {
+func SetSystemService(service svc.ISystemService) {
 	if service == nil {
 		gl.Log("warn", "Attempted to set a nil system service")
 		return
@@ -142,10 +140,10 @@ func SetSystemService(service services.ISystemService) {
 }
 
 // GetSystemService returns the current system service instance.
-func GetSystemService() services.ISystemService {
+func GetSystemService() svc.ISystemService {
 	if sysServ == nil {
 		gl.Log("warn", "System service is not initialized, creating a new instance")
-		sysServ = services.NewSystemService()
+		sysServ = svc.NewSystemService()
 	}
 	return sysServ
 }

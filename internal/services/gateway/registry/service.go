@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	prv "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 
 	t "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 )
@@ -13,7 +13,7 @@ type Service struct {
 	registry *Registry
 }
 
-func NewService(providerSvc svc.ProvidersService) (*Service, error) {
+func NewService(providerSvc prv.ProvidersService) (*Service, error) {
 	reg := New(providerSvc)
 	// Try to reload, but don't fail if table doesn't exist yet (during initialization)
 	if err := reg.Reload(); err != nil {

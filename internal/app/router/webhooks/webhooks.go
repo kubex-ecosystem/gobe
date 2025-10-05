@@ -9,8 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/controllers/webhooks"
 
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
@@ -37,15 +38,9 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 		return nil
 	}
 
-	db, err := dbService.GetDB(context.Background(), svc.DefaultDBName)
-	if err != nil {
-		gl.Log("error", "Failed to get DB from dbService")
-		return nil
-	}
-
 	// Inicialize o repositório e o serviço de webhooks.
-	webhookRepo := svc.NewWebhookRepo(db)
-	webhookService := svc.NewWebhookService(webhookRepo)
+	webhookRepo := mdl.NewWebhookRepo(context.Background(), dbService)
+	webhookService := mdl.NewWebhookService(webhookRepo)
 
 	// Configuração do RabbitMQ
 	dbService = rtl.GetDatabaseService()
@@ -56,6 +51,7 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 	url := msg.GetRabbitMQURL(dbService)
 	gl.Log("debug", fmt.Sprintf("RabbitMQ URL: %s", url))
 	var rabbitMQConn *amqp.Connection
+	var err error
 	if url != "" {
 		gl.Log("debug", fmt.Sprintf("Connecting to RabbitMQ at %s", url))
 		rabbitMQConn, err = amqp.Dial(url)

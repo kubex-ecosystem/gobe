@@ -1,20 +1,20 @@
-// gobe/internal/controllers/telegram/telegram_controller.go
+// Package telegram implements the Telegram chatbot controller.
 package telegram
 
 import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
-	tg "github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	tg "github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
 )
 
 // Controller handles Telegram webhook events and messaging.
 type Controller struct {
-	db      *gorm.DB
-	service *tg.Service
+	dbService *svc.DBServiceImpl
+	service   *tg.Service
 }
 
 type (
@@ -29,8 +29,8 @@ type SendMessageRequest struct {
 }
 
 // NewController creates a new Telegram controller.
-func NewController(db *gorm.DB, service *tg.Service) *Controller {
-	return &Controller{db: db, service: service}
+func NewController(dbService *svc.DBServiceImpl, service *tg.Service) *Controller {
+	return &Controller{dbService: dbService, service: service}
 }
 
 // HandleWebhook processes incoming Telegram updates.
@@ -58,7 +58,8 @@ func (c *Controller) HandleWebhook(ctx *gin.Context) {
 		msg.ChatID, _ = getInt64(m["chat"].(map[string]any)["id"])
 		msg.Text, _ = m["text"].(string)
 	}
-	c.db.Create(&msg)
+
+	//c.dbService.Create(&msg)
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok"})
 }
 

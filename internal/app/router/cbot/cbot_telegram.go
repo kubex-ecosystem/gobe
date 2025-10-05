@@ -1,14 +1,12 @@
 package cbot
 
 import (
-	"context"
 	"net/http"
 	"os"
 
 	telegram_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/telegram"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
-	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
@@ -26,11 +24,6 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for TelegramRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
-	if err != nil {
-		gl.Log("error", "Failed to get DB for TelegramRoutes", err)
-		return nil
-	}
 	initArgs := rtl.GetInitArgs()
 	if !gl.IsObjValid(initArgs) {
 		gl.Log("error", "InitArgs is nil for TelegramRoutes")
@@ -46,7 +39,7 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	svc := telegram.NewService(cfg.Integrations.Telegram)
-	controller := telegram_controller.NewController(dbGorm, svc)
+	controller := telegram_controller.NewController(dbService, svc)
 	routes := make(map[string]ar.IRoute)
 	routes["TelegramWebhook"] = proto.NewRoute(http.MethodPost, "/api/v1/telegram/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil, nil)
 	routes["TelegramSend"] = proto.NewRoute(http.MethodPost, "/api/v1/telegram/send", "application/json", controller.SendMessage, nil, dbService, nil, nil)

@@ -5,10 +5,11 @@ import (
 	"crypto/rsa"
 	"fmt"
 
+	svc "github.com/kubex-ecosystem/gdbase/factory"
+
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	kri "github.com/kubex-ecosystem/gobe/internal/app/security/external"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
@@ -60,11 +61,11 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	}
 
 	ctx := context.Background()
-	if err := t.dbSrv.IsConnected(ctx, svc.DefaultDBName); err != nil {
+	if err := t.dbSrv.IsConnected(ctx); err != nil {
 		gl.Log("warning", fmt.Sprintf("DB not connected: %v", err))
 		gl.Log("info", fmt.Sprintf("Reconnecting to DB: %v", err))
 
-		if err := t.dbSrv.Reconnect(ctx, svc.DefaultDBName); err != nil {
+		if err := t.dbSrv.Reconnect(ctx); err != nil {
 			gl.Log("error", fmt.Sprintf("Error reconnecting to DB: %v", err))
 			return nil, 0, 0, err
 		}
@@ -88,7 +89,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	}
 
 	tokenService := NewTokenService(&sci.TSConfig{
-		TokenRepository:  NewTokenRepo(ctx, t.dbSrv, svc.DefaultDBName),
+		TokenRepository:  NewTokenRepo(ctx, t.dbSrv),
 		IDExpirationSecs: t.IDExpirationSecs,
 		PubKey:           pubKey,
 		PrivKey:          privKey,

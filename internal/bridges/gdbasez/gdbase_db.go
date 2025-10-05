@@ -24,6 +24,7 @@ type IDBConfig = svc.IDBConfig
 type DBConfigImpl = svc.DBConfigImpl
 
 type DatabaseImpl = svc.DatabaseImpl
+type MessageryImpl = svc.Messagery
 type JSONB = svc.JSONB
 type IJSONBData = svc.IJSONBData
 type JSONBData = svc.JSONBData

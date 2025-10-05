@@ -45,11 +45,11 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
 
 	// Create OAuth services via bridge (clean abstraction)
-	oauthClientService := gdbasez.NewOAuthClientService(ctx, dbService, dbName)
-	authCodeService := gdbasez.NewAuthCodeService(ctx, dbService, dbName)
+	oauthClientService := gdbasez.NewOAuthClientService(ctx, dbService)
+	authCodeService := gdbasez.NewAuthCodeService(ctx, dbService)
 
 	// Create UserService
-	userRepo := gdbasez.NewUserRepo(ctx, dbService, dbName)
+	userRepo := gdbasez.NewUserRepo(ctx, dbService)
 	userService := gdbasez.NewUserService(userRepo)
 
 	// Create TokenService (same pattern as user routes)

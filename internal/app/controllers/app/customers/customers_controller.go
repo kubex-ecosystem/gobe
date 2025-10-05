@@ -2,18 +2,20 @@
 package customers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 )
 
-type ClientModel = svc.ClientModel
-
 type CustomerController struct {
-	customerService svc.ClientService
-	APIWrapper      *t.APIWrapper[ClientModel]
+	customerService mdl.ClientService
+	APIWrapper      *t.APIWrapper[mdl.ClientModel]
 }
 
 type (
@@ -21,10 +23,16 @@ type (
 	ErrorResponse = t.ErrorResponse
 )
 
-func NewCustomerController(bridge *svc.Bridge) *CustomerController {
+func NewCustomerController(bridge *gdbasez.Bridge) *CustomerController {
+	clientRepo := mdl.NewClientRepo(context.Background(), bridge.DBService())
+	if clientRepo == nil {
+		gl.Log("error", "Failed to create ClientRepo")
+		return nil
+	}
+	clientService := mdl.NewClientService(clientRepo)
 	return &CustomerController{
-		customerService: bridge.ClientService(),
-		APIWrapper:      t.NewAPIWrapper[svc.ClientModel](),
+		customerService: clientService,
+		APIWrapper:      t.NewAPIWrapper[mdl.ClientModel](),
 	}
 }
 
@@ -85,7 +93,7 @@ func (cc *CustomerController) GetCustomerByID(w http.ResponseWriter, r *http.Req
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/customers [post]
 func (cc *CustomerController) CreateCustomer(w http.ResponseWriter, r *http.Request) {
-	var customerRequest svc.ClientModel
+	var customerRequest gdbasez.ClientModel
 	if err := json.NewDecoder(r.Body).Decode(&customerRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -115,7 +123,7 @@ func (cc *CustomerController) CreateCustomer(w http.ResponseWriter, r *http.Requ
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/customers/{id} [put]
 func (cc *CustomerController) UpdateCustomer(w http.ResponseWriter, r *http.Request) {
-	var customerRequest svc.ClientModel
+	var customerRequest gdbasez.ClientModel
 	if err := json.NewDecoder(r.Body).Decode(&customerRequest); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

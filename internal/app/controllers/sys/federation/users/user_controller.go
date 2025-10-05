@@ -2,10 +2,12 @@
 package users
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"strings"
 
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
@@ -16,15 +18,15 @@ import (
 )
 
 type UserController struct {
-	userService svc.UserService
-	APIWrapper  *types.APIWrapper[svc.UserModel]
+	userService mdl.UserService
+	APIWrapper  *types.APIWrapper[mdl.UserModel]
 }
 
 func respondUserError(c *gin.Context, status int, message string) {
 	c.JSON(status, ErrorResponse{Status: "error", Message: message})
 }
 
-func summaryFromUser(u svc.UserModel) (UserSummary, bool) {
+func summaryFromUser(u mdl.UserModel) (UserSummary, bool) {
 	if u == nil {
 		return UserSummary{}, false
 	}
@@ -38,7 +40,7 @@ func summaryFromUser(u svc.UserModel) (UserSummary, bool) {
 	}, true
 }
 
-func summariesFromUsers(users []svc.UserModel) []UserSummary {
+func summariesFromUsers(users []mdl.UserModel) []UserSummary {
 	if len(users) == 0 {
 		return []UserSummary{}
 	}
@@ -53,8 +55,8 @@ func summariesFromUsers(users []svc.UserModel) []UserSummary {
 
 func NewUserController(bridge *svc.Bridge) *UserController {
 	return &UserController{
-		userService: bridge.UserService(),
-		APIWrapper:  types.NewAPIWrapper[svc.UserModel](),
+		userService: bridge.UserService(context.Background()),
+		APIWrapper:  types.NewAPIWrapper[mdl.UserModel](),
 	}
 }
 

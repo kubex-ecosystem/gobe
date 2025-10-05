@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"

@@ -8,14 +8,13 @@ import (
 	models "github.com/kubex-ecosystem/gdbase/factory/models"
 	mcpmodels "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	"gorm.io/gorm"
 )
 
 // Bridge provides a clean interface to gdbase services without exposing *gorm.DB
 // This is the ONLY place where *gorm.DB should be visible in gobe
 type Bridge struct {
-	db  *gorm.DB
-	ctx context.Context
+	dbService *svc.DBServiceImpl
+	ctx       context.Context
 }
 
 // NewBridge creates a new clean bridge to gdbase
@@ -25,35 +24,33 @@ func NewBridge(ctx context.Context, dbService *svc.DBServiceImpl, dbName string)
 		gl.Log("error", "Bridge: dbService is nil")
 		return nil
 	}
-	db, err := dbService.GetDB(ctx, dbName)
-	if err != nil {
-		gl.Log("error", "Bridge: failed to get db: %v", err)
-		return nil
-	}
-	if db == nil {
-		gl.Log("error", "Bridge: db is nil")
-		return nil
-	}
+
 	return &Bridge{
-		db:  db,
-		ctx: ctx,
+		dbService: dbService,
+		ctx:       ctx,
 	}
 }
 
 // WithContext returns a new bridge with the specified context
 func (b *Bridge) WithContext(ctx context.Context) *Bridge {
 	return &Bridge{
-		db:  b.db,
-		ctx: ctx,
+		dbService: b.dbService,
+		ctx:       ctx,
 	}
+}
+
+// DBService returns the underlying *gorm.DB used by the bridge.
+// This is provided for callers that need direct DB access for repo constructors.
+func (b *Bridge) DBService() *svc.DBServiceImpl {
+	return b.dbService
 }
 
 // ========================================
 // Users
 // ========================================
 
-func (b *Bridge) UserService() UserService {
-	repo := models.NewUserRepo(b.db)
+func (b *Bridge) UserService(ctx context.Context) UserService {
+	repo := models.NewUserRepo(ctx, b.dbService)
 	return models.NewUserService(repo)
 }
 
@@ -61,8 +58,8 @@ func (b *Bridge) UserService() UserService {
 // Clients
 // ========================================
 
-func (b *Bridge) ClientService() ClientService {
-	repo := models.NewClientRepo(b.db)
+func (b *Bridge) ClientService(ctx context.Context) ClientService {
+	repo := models.NewClientRepo(ctx, b.dbService)
 	return models.NewClientService(repo)
 }
 
@@ -70,8 +67,8 @@ func (b *Bridge) ClientService() ClientService {
 // Products
 // ========================================
 
-func (b *Bridge) ProductService() ProductService {
-	repo := models.NewProductRepo(b.db)
+func (b *Bridge) ProductService(ctx context.Context) ProductService {
+	repo := models.NewProductRepo(ctx, b.dbService)
 	return models.NewProductService(repo)
 }
 
@@ -79,8 +76,8 @@ func (b *Bridge) ProductService() ProductService {
 // Cron Jobs
 // ========================================
 
-func (b *Bridge) NewCronJobService() CronJobService {
-	repo := models.NewCronJobRepo(b.ctx, b.db)
+func (b *Bridge) NewCronJobService(ctx context.Context) CronJobService {
+	repo := models.NewCronJobRepo(ctx, b.dbService)
 	return models.NewCronJobService(repo)
 }
 
@@ -88,8 +85,8 @@ func (b *Bridge) NewCronJobService() CronJobService {
 // Discord
 // ========================================
 
-func (b *Bridge) DiscordService() DiscordService {
-	repo := models.NewDiscordRepo(b.db)
+func (b *Bridge) DiscordService(ctx context.Context) DiscordService {
+	repo := models.NewDiscordRepo(ctx, b.dbService)
 	return models.NewDiscordService(repo)
 }
 
@@ -97,8 +94,8 @@ func (b *Bridge) DiscordService() DiscordService {
 // Job Queue
 // ========================================
 
-func (b *Bridge) JobQueueService() JobQueueService {
-	repo := models.NewJobQueueRepo(b.db)
+func (b *Bridge) JobQueueService(ctx context.Context) JobQueueService {
+	repo := models.NewJobQueueRepo(ctx, b.dbService)
 	return models.NewJobQueueService(repo)
 }
 
@@ -106,8 +103,8 @@ func (b *Bridge) JobQueueService() JobQueueService {
 // Webhooks
 // ========================================
 
-func (b *Bridge) WebhookService() WebhookService {
-	repo := models.NewWebhookRepo(b.db)
+func (b *Bridge) WebhookService(ctx context.Context) WebhookService {
+	repo := models.NewWebhookRepo(ctx, b.dbService)
 	return models.NewWebhookService(repo)
 }
 
@@ -115,8 +112,8 @@ func (b *Bridge) WebhookService() WebhookService {
 // Analysis Jobs
 // ========================================
 
-func (b *Bridge) AnalysisJobService() AnalysisJobService {
-	repo := models.NewAnalysisJobRepo(b.db)
+func (b *Bridge) AnalysisJobService(ctx context.Context) AnalysisJobService {
+	repo := models.NewAnalysisJobRepo(ctx, b.dbService)
 	return models.NewAnalysisJobService(repo)
 }
 
@@ -124,13 +121,13 @@ func (b *Bridge) AnalysisJobService() AnalysisJobService {
 // OAuth (PKCE)
 // ========================================
 
-func (b *Bridge) OAuthClientService(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) OAuthClientService {
-	repo := models.NewOAuthClientRepo(ctx, dbService, dbName)
+func (b *Bridge) OAuthClientService(ctx context.Context) OAuthClientService {
+	repo := models.NewOAuthClientRepo(ctx, b.dbService)
 	return models.NewOAuthClientService(repo)
 }
 
-func (b *Bridge) AuthCodeService(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) AuthCodeService {
-	repo := models.NewAuthCodeRepo(ctx, dbService, dbName)
+func (b *Bridge) AuthCodeService(ctx context.Context) AuthCodeService {
+	repo := models.NewAuthCodeRepo(ctx, b.dbService)
 	return models.NewAuthCodeService(repo)
 }
 
@@ -170,8 +167,8 @@ func (b *Bridge) NewOAuthClientModel(clientID, clientName string, redirectURIs, 
 // MCP: LLM
 // ========================================
 
-func (b *Bridge) LLMService() LLMService {
-	repo := mcpmodels.NewLLMRepo(b.db)
+func (b *Bridge) LLMService(ctx context.Context) LLMService {
+	repo := mcpmodels.NewLLMRepo(ctx, b.dbService)
 	return mcpmodels.NewLLMService(repo)
 }
 
@@ -179,8 +176,8 @@ func (b *Bridge) LLMService() LLMService {
 // MCP: Tasks
 // ========================================
 
-func (b *Bridge) TasksService() TasksService {
-	repo := mcpmodels.NewTasksRepo(b.db)
+func (b *Bridge) TasksService(ctx context.Context) TasksService {
+	repo := mcpmodels.NewTasksRepo(ctx, b.dbService)
 	return mcpmodels.NewTasksService(repo)
 }
 
@@ -188,8 +185,8 @@ func (b *Bridge) TasksService() TasksService {
 // MCP: Preferences
 // ========================================
 
-func (b *Bridge) PreferencesService() PreferencesService {
-	repo := mcpmodels.NewPreferencesRepo(b.db)
+func (b *Bridge) PreferencesService(ctx context.Context) PreferencesService {
+	repo := mcpmodels.NewPreferencesRepo(ctx, b.dbService)
 	return mcpmodels.NewPreferencesService(repo)
 }
 
@@ -197,7 +194,7 @@ func (b *Bridge) PreferencesService() PreferencesService {
 // MCP: Providers
 // ========================================
 
-func (b *Bridge) ProvidersService() ProvidersService {
-	repo := mcpmodels.NewProvidersRepo(b.db)
+func (b *Bridge) ProvidersService(ctx context.Context) ProvidersService {
+	repo := mcpmodels.NewProvidersRepo(ctx, b.dbService)
 	return mcpmodels.NewProvidersService(repo)
 }

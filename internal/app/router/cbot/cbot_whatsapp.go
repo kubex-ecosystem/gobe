@@ -1,14 +1,12 @@
 package cbot
 
 import (
-	"context"
 	"net/http"
 	"os"
 
 	whatsapp_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/whatsapp"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
-	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
@@ -26,11 +24,6 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for WhatsAppRoutes")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB(context.Background(), gdbasez.DefaultDBName)
-	if err != nil {
-		gl.Log("error", "Failed to get DB for WhatsAppRoutes", err)
-		return nil
-	}
 	initArgs := rtl.GetInitArgs()
 	if !gl.IsObjValid(initArgs) {
 		gl.Log("error", "InitArgs is nil for WhatsAppRoutes")
@@ -46,7 +39,7 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	svc := whatsapp.NewService(cfg.Integrations.WhatsApp)
-	controller := whatsapp_controller.NewController(dbGorm, svc)
+	controller := whatsapp_controller.NewController(dbService, svc)
 	routes := make(map[string]ar.IRoute)
 	routes["WhatsAppWebhookPost"] = proto.NewRoute(http.MethodPost, "/api/v1/whatsapp/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil, nil)
 	routes["WhatsAppWebhookGet"] = proto.NewRoute(http.MethodGet, "/api/v1/whatsapp/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil, nil)

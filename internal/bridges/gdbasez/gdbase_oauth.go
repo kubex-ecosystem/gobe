@@ -26,16 +26,16 @@ type (
 // NewOAuthClientService creates a new OAuth client service
 // Note: This function still accepts *gorm.DB but this is the ONLY place where it's needed
 // All other code uses only interfaces
-func NewOAuthClientService(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) OAuthClientService {
-	repo := models.NewOAuthClientRepo(ctx, dbService, dbName)
+func NewOAuthClientService(ctx context.Context, dbService *svc.DBServiceImpl) OAuthClientService {
+	repo := models.NewOAuthClientRepo(ctx, dbService)
 	return models.NewOAuthClientService(repo)
 }
 
 // NewAuthCodeService creates a new authorization code service
 // Note: This function still accepts *gorm.DB but this is the ONLY place where it's needed
 // All other code uses only interfaces
-func NewAuthCodeService(ctx context.Context, dbService *svc.DBServiceImpl, dbName string) AuthCodeService {
-	repo := models.NewAuthCodeRepo(ctx, dbService, dbName)
+func NewAuthCodeService(ctx context.Context, dbService *svc.DBServiceImpl) AuthCodeService {
+	repo := models.NewAuthCodeRepo(ctx, dbService)
 	return models.NewAuthCodeService(repo)
 }
 

@@ -9,31 +9,30 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
-	"gorm.io/gorm"
 )
 
 // LookAtniController manages LookAtni automation operations with real job processing.
 type LookAtniController struct {
-	db                 *gorm.DB
+	dbService          *svc.DBServiceImpl
 	analyzerService    *analyzer.Service
-	analysisJobService gdbasez.AnalysisJobService
+	analysisJobService svc.AnalysisJobService
 }
 
-func NewLookAtniController(db *gorm.DB) *LookAtniController {
+func NewLookAtniController(dbService *svc.DBServiceImpl) *LookAtniController {
 	// Initialize analyzer service
 	analyzerBaseURL := getEnv("GEMX_ANALYZER_URL", "http://localhost:8080")
 	analyzerAPIKey := getEnv("GEMX_ANALYZER_API_KEY", "")
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
 
 	// Initialize GDBase AnalysisJob service using gdbasez bridge
-	analysisJobRepo := gdbasez.NewAnalysisJobRepo(db)
-	analysisJobService := gdbasez.NewAnalysisJobService(analysisJobRepo)
+	analysisJobRepo := svc.NewAnalysisJobRepo(context.Background(), dbService)
+	analysisJobService := svc.NewAnalysisJobService(analysisJobRepo)
 
 	return &LookAtniController{
-		db:                 db,
+		dbService:          dbService,
 		analyzerService:    analyzerService,
 		analysisJobService: analysisJobService,
 	}
@@ -67,7 +66,7 @@ func (lc *LookAtniController) Extract(c *gin.Context) {
 	}
 
 	// Create new analysis job for extraction
-	job := &gdbasez.AnalysisJobImpl{
+	job := &svc.AnalysisJobImpl{
 		ID:         uuid.New(),
 		JobType:    "CODE_ANALYSIS",
 		Status:     "PENDING",
@@ -137,7 +136,7 @@ func (lc *LookAtniController) Archive(c *gin.Context) {
 	}
 
 	// Create new analysis job for archiving
-	job := &gdbasez.AnalysisJobImpl{
+	job := &svc.AnalysisJobImpl{
 		ID:         uuid.New(),
 		JobType:    "DEPENDENCY_ANALYSIS",
 		Status:     "PENDING",
@@ -298,7 +297,7 @@ func (lc *LookAtniController) Projects(c *gin.Context) {
 }
 
 // processExtractionJob handles asynchronous extraction job processing
-func (lc *LookAtniController) processExtractionJob(ctx context.Context, job gdbasez.AnalysisJobModel) {
+func (lc *LookAtniController) processExtractionJob(ctx context.Context, job svc.AnalysisJobModel) {
 	// Mark job as started
 	if err := lc.analysisJobService.StartJob(ctx, job.GetID()); err != nil {
 		gl.Log("error", "Failed to mark extraction job as started", "error", err, "job_id", job.GetID())
@@ -335,7 +334,7 @@ func (lc *LookAtniController) processExtractionJob(ctx context.Context, job gdba
 }
 
 // processArchiveJob handles asynchronous archive job processing
-func (lc *LookAtniController) processArchiveJob(ctx context.Context, job gdbasez.AnalysisJobModel) {
+func (lc *LookAtniController) processArchiveJob(ctx context.Context, job svc.AnalysisJobModel) {
 	// Mark job as started
 	if err := lc.analysisJobService.StartJob(ctx, job.GetID()); err != nil {
 		gl.Log("error", "Failed to mark archive job as started", "error", err, "job_id", job.GetID())

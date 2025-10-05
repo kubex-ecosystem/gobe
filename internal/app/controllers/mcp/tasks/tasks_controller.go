@@ -2,21 +2,24 @@
 package tasks
 
 import (
+	"context"
 	"net/http"
 
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
 )
 
 type TasksController struct {
-	tasksService svc.TasksService
+	tasksService mdl.TasksService
 }
 
 func NewTasksController(bridge *svc.Bridge) *TasksController {
 	return &TasksController{
-		tasksService: bridge.TasksService(),
+		tasksService: bridge.TasksService(context.Background()),
 	}
 }
 
