@@ -10,7 +10,7 @@ github:
     kind: "pat"
     token: "${GITHUB_PAT_TOKEN}"
   repos:
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "gastype"
       rules:
         runs:
@@ -30,7 +30,8 @@ github:
           inactive_days_threshold: 30
           monitor_prs: true
           monitor_issues: true
-    - owner: "rafa-mori"
+
+    - owner: "kubex-ecosystem"
       name: "xtui"
       rules:
         runs:
@@ -50,7 +51,8 @@ github:
           inactive_days_threshold: 30
           monitor_prs: true
           monitor_issues: true
-    - owner: "rafa-mori"
+
+    - owner: "kubex-ecosystem"
       name: "logz"
       rules:
         runs:
@@ -72,7 +74,7 @@ github:
           monitor_issues: true
 
     # PROJETOS DIVERTIDOS/PORTFÓLIO
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "mini_games"
       rules:
         runs:
@@ -92,7 +94,7 @@ github:
           inactive_days_threshold: 90
 
     # PROJETOS PUBLICADOS (VSCode Marketplace, PyPI)
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "byte_sleuth"
       rules:
         runs:
@@ -113,7 +115,7 @@ github:
           monitor_prs: true
           monitor_issues: true
 
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "formatpilot"
       rules:
         runs:
@@ -135,7 +137,7 @@ github:
           monitor_issues: true
 
     # PROJETOS PAUSADOS MAS QUE VÃO VOLTAR
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "selfrestart"
       rules:
         runs:
@@ -156,7 +158,7 @@ github:
           monitor_prs: true
           monitor_issues: true
 
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "gocrafter"
       rules:
         runs:
@@ -178,7 +180,7 @@ github:
           monitor_issues: true
 
     # PROJETOS FUNDAMENTAIS/PROMISSORES
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "golife"
       rules:
         runs:
@@ -199,7 +201,7 @@ github:
           monitor_prs: true
           monitor_issues: true
 
-    - owner: "rafa-mori"
+    - owner: "kubex-ecosystem"
       name: "getl"
       rules:
         runs:
@@ -222,6 +224,7 @@ github:
 
 notifiers:
   - type: "stdout"
-  # Uncomment for Discord notifications
-  # - type: "discord"
-  #   webhook: "${DISCORD_WEBHOOK_URL}"
+
+    # Uncomment for Discord notifications
+  - type: "discord"
+    webhook: "${DISCORD_WEBHOOK_URL}"
