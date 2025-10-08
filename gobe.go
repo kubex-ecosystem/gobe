@@ -313,6 +313,19 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 		return nil, errors.New("database service is nil")
 	}
 
+	// Ensure database is fully ready before proceeding
+	ctx := context.Background()
+	if !g.dbService.IsReady(ctx) {
+		gl.Log("warn", "⏳ Database service is initializing, waiting...")
+		// Wait a moment for DB to be ready
+		time.Sleep(1 * time.Second)
+		if !g.dbService.IsReady(ctx) {
+			gl.Log("error", "❌ Database service failed to become ready")
+			return nil, errors.New("database service not ready")
+		}
+	}
+	gl.Log("info", "✅ Database service is ready")
+
 	_, kubexErr := crt.GetOrGenPasswordKeyringPass(gl.KeyringService)
 	if kubexErr != nil {
 		gl.Log("error", fmt.Sprintf("Error reading kubex keyring password: %v", kubexErr))

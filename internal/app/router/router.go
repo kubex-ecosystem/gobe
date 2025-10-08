@@ -146,6 +146,13 @@ func (rtr *Router) InitializeResources() error {
 		return err
 	}
 
+	// Ensure database is fully ready before initializing resources that depend on it
+	ctx := context.Background()
+	if rtr.DatabaseService != nil && !rtr.DatabaseService.IsReady(ctx) {
+		gl.Log("error", "❌ Database service is not ready - waiting for initialization")
+		return fmt.Errorf("database service is not ready")
+	}
+
 	var autenticationMiddleware *mdw.AuthenticationMiddleware
 	if rtr.DatabaseService != nil {
 		tokenService, certService, err := mdw.NewTokenService(rtr.DatabaseService)

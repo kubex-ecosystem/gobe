@@ -4,13 +4,11 @@ import (
 	"context"
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
-	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
-	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 )
 
-// NewTokenRepo creates a token repository using the provided DB service.
-// It no longer requires dbName: the dbName is read from the DBService config and
-// injected into context by NewBridgeFromService when needed.
-func NewTokenRepo(ctx context.Context, dbService *svc.DBServiceImpl) sci.TokenRepo {
-	return sau.NewTokenRepo(ctx, dbService)
+// NewTokenRepo creates a token repository using GDBase factory.
+// This repository is used for persisting refresh tokens in the database.
+func NewTokenRepo(ctx context.Context, dbService *svc.DBServiceImpl) mdl.ITokenRepo {
+	return mdl.NewTokenRepo(ctx, dbService)
 }

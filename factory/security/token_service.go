@@ -1,10 +1,11 @@
 package security
 
 import (
-	sau "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
-	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 )
 
-func NewTokenService(c *sci.TSConfig) sci.TokenService {
-	return sau.NewTokenService(c)
+// NewTokenService creates a token service using GDBase factory.
+// This service handles token CRUD operations at the persistence layer.
+func NewTokenService(tokenRepo mdl.ITokenRepo) mdl.ITokenService {
+	return mdl.NewTokenService(tokenRepo)
 }

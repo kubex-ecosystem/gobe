@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
+	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	kri "github.com/kubex-ecosystem/gobe/internal/app/security/external"
@@ -23,6 +24,7 @@ type TokenClientImpl struct {
 	TokenService          sci.TokenService
 	IDExpirationSecs      int64
 	RefreshExpirationSecs int64
+	tokenRepo             mdl.ITokenRepo
 }
 
 func (t *TokenClientImpl) LoadPublicKey() *rsa.PublicKey {
@@ -44,27 +46,25 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	}
 	if t.crtSrv == nil {
 		gl.Log("error", "crtService is nil, trying to create a new one")
-		t.crtSrv = crt.NewCertService(gl.DefaultGoBEKeyPath, gl.DefaultGoBECertPath)
+		t.crtSrv = crt.NewCertService(gl.DefaultGoBEKeyPath, gl.DefaultGoBECertPath) // pragma: allowlist secret
 		if t.crtSrv == nil {
-			gl.Log("fatal", "crtService is nil, unable to create a new one")
+			gl.Log("fatal", "crtService is nil, unable to create a new one") // pragma: allowlist secret
 		}
 	}
-	privKey, err := t.crtSrv.GetPrivateKey()
+
+	// Get RSA keys
+	privKey, err := t.crtSrv.GetPrivateKey() // pragma: allowlist secret
 	if err != nil {
 		gl.Log("fatal", fmt.Sprintf("Error reading private key file: %v", err))
 		return nil, 0, 0, err
 	}
-	pubKey, pubKeyErr := t.crtSrv.GetPublicKey()
+	pubKey, pubKeyErr := t.crtSrv.GetPublicKey() // pragma: allowlist secret
 	if pubKeyErr != nil {
 		gl.Log("error", fmt.Sprintf("Error reading public key file: %v", pubKeyErr))
 		return nil, 0, 0, pubKeyErr
 	}
 
 	ctx := context.Background()
-	// if err := t.dbSrv.Reconnect(ctx); err != nil {
-	// 	gl.Log("error", fmt.Sprintf("Error reconnecting to DB: %v", err))
-	// 	return nil, 0, 0, err
-	// }
 
 	// Garantir valores padrão seguros
 	if t.IDExpirationSecs == 0 {
@@ -73,6 +73,8 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	if t.RefreshExpirationSecs == 0 {
 		t.RefreshExpirationSecs = 604800 // 7 dias
 	}
+
+	// Setup keyring service
 	if t.keyringService == nil {
 		t.keyringService = kri.NewKeyringService(gl.KeyringService, fmt.Sprintf("gobe-%s", "jwt_secret"))
 		if t.keyringService == nil {
@@ -81,15 +83,39 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 		}
 	}
 
-	tokenService := NewTokenService(&sci.TSConfig{
-		TokenRepository:  NewTokenRepo(ctx, t.dbSrv),
-		IDExpirationSecs: t.IDExpirationSecs,
-		PubKey:           pubKey,
-		PrivKey:          privKey,
-		TokenClient:      t,
-		DBService:        t.dbSrv,
-		KeyringService:   t.keyringService,
-	})
+	// Get or generate JWT secret
+	jwtSecret, jwtSecretErr := crt.GetOrGenPasswordKeyringPass("jwt_secret") // pragma: allowlist secret
+	if jwtSecretErr != nil {                                                 // pragma: allowlist secret
+		gl.Log("fatal", fmt.Sprintf("Error retrieving JWT secret key: %v", jwtSecretErr))
+		return nil, 0, 0, jwtSecretErr
+	}
+
+	// Create token repository via GDBase factory
+	if t.tokenRepo == nil {
+		t.tokenRepo = mdl.NewTokenRepo(ctx, t.dbSrv)
+		if t.tokenRepo == nil {
+			gl.Log("error", "Failed to create token repository")
+			return nil, 0, 0, fmt.Errorf("failed to create token repository")
+		}
+	}
+
+	// Create JWT service using new JWTService
+	jwtService := NewJWTService(
+		t.tokenRepo,
+		privKey,
+		pubKey,
+		jwtSecret,
+		t.IDExpirationSecs,
+		t.RefreshExpirationSecs,
+	)
+
+	if jwtService == nil {
+		gl.Log("error", "Failed to create JWT service")
+		return nil, 0, 0, fmt.Errorf("failed to create JWT service")
+	}
+
+	// Wrap JWTService to implement TokenService interface
+	tokenService := &TokenServiceWrapper{jwtService: jwtService}
 
 	return tokenService, t.IDExpirationSecs, t.RefreshExpirationSecs, nil
 }
