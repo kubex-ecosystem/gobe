@@ -28,7 +28,10 @@ require (
 	gorm.io/gorm v1.31.0
 )
 
-require github.com/lib/pq v1.10.9
+require (
+	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/lib/pq v1.10.9
+)
 
 require (
 	cloud.google.com/go v0.123.0 // indirect
@@ -57,7 +60,6 @@ require (
 	github.com/go-openapi/swag/typeutils v0.25.1 // indirect
 	github.com/go-openapi/swag/yamlutils v0.25.1 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
