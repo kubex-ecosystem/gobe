@@ -2,13 +2,17 @@
 package middlewares
 
 import (
+	"crypto/rsa"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
+	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
@@ -18,23 +22,70 @@ type WebAuthConfig struct {
 	SessionSecret string
 	RequireAuth   bool // If false, auth is optional
 	AllowDiscord  bool // Allow Discord OAuth tokens
+	CertService   sci.ICertService
 }
 
 // WebAuthMiddleware handles authentication for web UI routes
 type WebAuthMiddleware struct {
-	config WebAuthConfig
+	config      WebAuthConfig
+	certService sci.ICertService
+	privateKey  *rsa.PrivateKey
+	publicKey   *rsa.PublicKey
 }
 
 // NewWebAuthMiddleware creates a new web auth middleware
 func NewWebAuthMiddleware(config WebAuthConfig) *WebAuthMiddleware {
-	if config.JWTSecret == "" {
-		config.JWTSecret = "gobe-default-secret-change-in-production" // pragma: allowlist secret
-		gl.Log("warn", "Using default JWT secret - set GOBE_JWT_SECRET in production!")
+	middleware := &WebAuthMiddleware{}
+
+	certService := config.CertService
+	if certService == nil {
+		defaultKeyPath := os.ExpandEnv(gl.DefaultGoBEKeyPath)
+		defaultCertPath := os.ExpandEnv(gl.DefaultGoBECertPath)
+		certService = crt.NewCertService(defaultKeyPath, defaultCertPath)
 	}
 
-	return &WebAuthMiddleware{
-		config: config,
+	middleware.certService = certService
+
+	if certService != nil {
+		privKey, err := certService.GetPrivateKey() // pragma: allowlist secret
+		if err != nil {
+			gl.Log("error", "Failed to load RSA private key for web auth", "error", err)
+		} else {
+			middleware.privateKey = privKey // pragma: allowlist secret
+		}
+
+		pubKey, err := certService.GetPublicKey() // pragma: allowlist secret
+		if err != nil {
+			gl.Log("error", "Failed to load RSA public key for web auth", "error", err)
+		} else {
+			middleware.publicKey = pubKey
+		}
+	} else {
+		gl.Log("warn", "Certificate service not configured for web auth; falling back to HMAC secret")
 	}
+
+	if middleware.privateKey != nil && middleware.publicKey != nil { // pragma: allowlist secret
+		gl.Log("info", "Web auth middleware configured to validate JWT using RSA keys")
+	} else {
+		if config.JWTSecret == "" {
+			keyringSecret, err := crt.GetOrGenPasswordKeyringPass("jwt_secret") // pragma: allowlist secret
+			if err != nil {
+				config.JWTSecret = "gobe-default-secret-change-in-production" // pragma: allowlist secret
+				gl.Log("warn", "Using default JWT secret fallback - RSA keys unavailable", "error", err)
+			} else {
+				config.JWTSecret = keyringSecret                                                     // pragma: allowlist secret
+				gl.Log("info", "Web auth middleware using keyring-managed secret for HMAC fallback") // pragma: allowlist secret
+			}
+		}
+
+		if config.JWTSecret == "gobe-default-secret-change-in-production" { // pragma: allowlist secret
+			gl.Log("warn", "Default JWT secret is active; configure RSA certificates or custom secret for production")
+		}
+	}
+
+	config.CertService = certService
+	middleware.config = config
+	return middleware
 }
 
 // RequireAuth is the middleware function
@@ -127,20 +178,32 @@ func (m *WebAuthMiddleware) extractToken(c *gin.Context) string {
 
 // validateToken validates JWT token and returns claims
 func (m *WebAuthMiddleware) validateToken(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Verify signing method
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(m.config.JWTSecret), nil
-	})
+	var (
+		token *jwt.Token
+		err   error
+	)
+
+	if m.publicKey != nil {
+		token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return m.publicKey, nil
+		})
+	} else {
+		token, err = jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(m.config.JWTSecret), nil
+		})
+	}
 
 	if err != nil {
 		return nil, err
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// Check expiration
 		if exp, ok := claims["exp"].(float64); ok {
 			if time.Now().Unix() > int64(exp) {
 				return nil, fmt.Errorf("token expired")
@@ -392,6 +455,15 @@ func (m *WebAuthMiddleware) GenerateToken(userID, username string) (string, erro
 		"iat":      time.Now().Unix(),
 	}
 
+	if m.privateKey != nil { // pragma: allowlist secret
+		token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+		return token.SignedString(m.privateKey) // pragma: allowlist secret
+	}
+
+	if m.config.JWTSecret == "" {
+		return "", fmt.Errorf("no signing credentials configured")
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(m.config.JWTSecret))
+	return token.SignedString([]byte(m.config.JWTSecret)) // pragma: allowlist secret
 }
