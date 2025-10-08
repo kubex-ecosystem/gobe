@@ -1,16 +1,42 @@
-/* GoBE Landing Page Styles */
+/* GoBE Landing Page Styles - Kubex Brand v0.0.2 (Light-First) */
 :root {
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --secondary-gradient: linear-gradient(45deg, #FFD700, #FFA500);
-    --accent-color: #00ff88;
-    --bg-dark: #0d1117;
-    --bg-secondary: #161b22;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --border-subtle: rgba(255, 255, 255, 0.1);
-    --glass-bg: rgba(255, 255, 255, 0.05);
-    --shadow-primary: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 12px 40px rgba(102, 126, 234, 0.4);
+    /* Kubex Light-First Palette */
+    --bg-base: #f9fafb;
+    --bg-surface: #ffffff;
+    --text-head: #111827;
+    --text-body: #334155;
+    --text-muted: #64748b;
+
+    /* Primary & Accent Colors */
+    --primary-cyan: #06b6d4;
+    --primary-cyan-hover: #0891b2;
+    --primary-cyan-subtle: #ecfeff;
+    --accent-lilac: #a855f7;
+    --accent-fuchsia: #d946ef;
+
+    /* Semantic Colors */
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    /* Borders & Surfaces */
+    --border-muted: #e2e8f0;
+    --border-focus: #06b6d4;
+
+    /* Soft Neon Glows (≤10%) */
+    --glow-cyan: rgba(0, 136, 255, 0.08);
+    --glow-lilac: rgba(124, 77, 255, 0.08);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 12px 24px rgba(6, 182, 212, 0.15);
+
+    /* Gradients */
+    --gradient-cyan: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    --gradient-lilac: linear-gradient(135deg, #a855f7 0%, #d946ef 100%);
+    --gradient-hero: linear-gradient(135deg, #06b6d4 0%, #a855f7 100%);
 }
 
 * {
@@ -21,13 +47,13 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg-dark);
-    color: var(--text-primary);
+    background: var(--bg-base);
+    color: var(--text-body);
     line-height: 1.6;
     overflow-x: hidden;
 }
 
-/* Background Animation */
+/* Background Animation - Soft Hex Grid */
 .bg-animation {
     position: fixed;
     top: 0;
@@ -35,8 +61,8 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
-    background: var(--primary-gradient);
-    opacity: 0.1;
+    background: var(--gradient-cyan);
+    opacity: 0.05;
 }
 
 .bg-animation::before {
@@ -46,7 +72,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-opacity="0.1" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') repeat;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="hexgrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(0,76,153,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23hexgrid)"/></svg>') repeat;
     animation: float 20s ease-in-out infinite;
 }
 
@@ -60,9 +86,10 @@ body {
     position: relative;
     padding: 2rem 1rem;
     text-align: center;
-    background: var(--glass-bg);
+    background: var(--bg-surface);
     backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-muted);
+    box-shadow: var(--shadow-sm);
 }
 
 .logo {
@@ -80,18 +107,19 @@ body {
 @keyframes pulse-glow {
     0%, 100% {
         transform: scale(1);
-        filter: drop-shadow(0 0 10px var(--accent-color));
+        filter: drop-shadow(0 0 3px var(--glow-cyan));
     }
     50% {
-        transform: scale(1.1);
-        filter: drop-shadow(0 0 20px var(--accent-color));
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 6px var(--glow-cyan));
     }
 }
 
 .logo h1 {
     font-size: 3rem;
-    font-weight: 800;
-    background: var(--secondary-gradient);
+    font-weight: 700;
+    font-family: 'Exo 2', 'Orbitron', sans-serif;
+    background: var(--gradient-hero);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -100,14 +128,15 @@ body {
 
 .tagline {
     font-size: 1.25rem;
-    color: var(--text-secondary);
+    color: var(--text-head);
     margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .subtitle {
     font-size: 1.1rem;
-    color: var(--accent-color);
-    font-weight: 600;
+    color: var(--primary-cyan);
+    font-weight: 500;
 }
 
 /* Status Section */
@@ -374,24 +403,96 @@ body {
 /* Utility Classes */
 .text-center { text-align: center; }
 .text-gradient {
-    background: var(--secondary-gradient);
+    background: var(--gradient-hero);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
-/* Dark mode optimizations */
-@media (prefers-color-scheme: light) {
+/* Kubex Badge - As per Brand Spec v0.0.2 */
+.kubex-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(6, 182, 212, 0.2);
+    background: var(--primary-cyan-subtle);
+    color: #0e7490;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.kubex-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-cyan);
+}
+
+.kubex-badge-icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--primary-cyan);
+}
+
+/* Dark Mode Parity (Optional) - Kubex Brand v0.0.2 */
+@media (prefers-color-scheme: dark) {
     :root {
-        --bg-dark: #ffffff;
-        --bg-secondary: #f6f8fa;
-        --text-primary: #24292f;
-        --text-secondary: #656d76;
-        --border-subtle: rgba(0, 0, 0, 0.1);
-        --glass-bg: rgba(0, 0, 0, 0.02);
+        /* Dark mode tokens with same spacing and geometry */
+        --bg-base: #0a0f14;
+        --bg-surface: #0f1419;
+        --text-head: #e5f2f2;
+        --text-body: #cbd5e1;
+        --text-muted: #94a3b8;
+        --border-muted: #1e293b;
+        --glow-cyan: rgba(0, 136, 255, 0.15);
+        --glow-lilac: rgba(124, 77, 255, 0.15);
     }
 
     .bg-animation {
-        opacity: 0.05;
+        opacity: 0.15;
+    }
+
+    .endpoint {
+        background: rgba(6, 182, 212, 0.1);
+    }
+
+    .endpoint:hover {
+        background: rgba(6, 182, 212, 0.2);
+    }
+
+    .card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-muted);
+    }
+
+    .header {
+        background: var(--bg-surface);
+        border-bottom: 1px solid var(--border-muted);
+    }
+
+    .status-section {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-muted);
+    }
+
+    .footer {
+        background: var(--bg-surface);
+        border-top: 1px solid var(--border-muted);
+    }
+}
+
+/* Respect reduced motion preference - Accessibility (WCAG AA) */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }

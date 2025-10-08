@@ -61,17 +61,10 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	}
 
 	ctx := context.Background()
-	if err := t.dbSrv.IsConnected(ctx); err != nil {
-		gl.Log("warning", fmt.Sprintf("DB not connected: %v", err))
-		gl.Log("info", fmt.Sprintf("Reconnecting to DB: %v", err))
-
-		if err := t.dbSrv.Reconnect(ctx); err != nil {
-			gl.Log("error", fmt.Sprintf("Error reconnecting to DB: %v", err))
-			return nil, 0, 0, err
-		}
-
-		gl.Log("info", "DB reconnected successfully")
-	}
+	// if err := t.dbSrv.Reconnect(ctx); err != nil {
+	// 	gl.Log("error", fmt.Sprintf("Error reconnecting to DB: %v", err))
+	// 	return nil, 0, 0, err
+	// }
 
 	// Garantir valores padrão seguros
 	if t.IDExpirationSecs == 0 {

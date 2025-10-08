@@ -8,6 +8,7 @@ import (
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 
 	"github.com/kubex-ecosystem/gobe/internal/app/security/models"
@@ -18,6 +19,10 @@ type TokenRepoImpl struct{ *sql.Conn }
 // NewTokenRepo creates a TokenRepo using the provided DBService. It infers
 // dbName from the DBService config via gdbasez.NewBridgeFromService.
 func NewTokenRepo(ctx context.Context, dbSrv *svc.DBServiceImpl) sci.TokenRepo {
+	if dbSrv == nil {
+		gl.Log("error", "DBService is nil")
+		return nil
+	}
 	db, err := dbSrv.GetConnection(ctx, 60*time.Second)
 	if err != nil {
 		panic(fmt.Sprintf("failed to get database from DBService: %v", err))
