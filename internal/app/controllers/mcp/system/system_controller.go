@@ -51,6 +51,26 @@ func NewMetricsController(ctx context.Context, dbService *svc.DBServiceImpl) *Me
 		if err != nil {
 			gl.Log("error", "Failed to register built-in tools", err)
 		}
+
+		// Register external Kubex ecosystem tools (Grompt, Analyzer)
+		externalConfig := mcp.DefaultExternalConfig()
+
+		// Allow configuration via environment variables
+		if gromptURL := os.Getenv("GROMPT_URL"); gromptURL != "" {
+			externalConfig.GromptURL = gromptURL
+		}
+		if analyzerURL := os.Getenv("ANALYZER_URL"); analyzerURL != "" {
+			externalConfig.AnalyzerURL = analyzerURL
+		}
+
+		err = mcp.RegisterExternalTools(mcpRegistry, externalConfig)
+		if err != nil {
+			gl.Log("warn", "Failed to register external tools (Grompt/Analyzer may not be available)", err)
+		} else {
+			gl.Log("info", "External Kubex ecosystem tools registered successfully",
+				"grompt", externalConfig.GromptURL,
+				"analyzer", externalConfig.AnalyzerURL)
+		}
 	}
 
 	return &MetricsController{
