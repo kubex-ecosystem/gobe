@@ -2,6 +2,7 @@
 package discord
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
+	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
@@ -31,6 +33,7 @@ type HubInterface interface {
 	GetEventStream() *events.Stream
 	GetApprovalManager() *approval.Manager
 	ProcessMessageWithLLM(ctx context.Context, msg interface{}) error
+	ProcessDiscordWebhook(ctx context.Context, payload hub.DiscordWebhookPayload) error
 }
 
 type DiscordController struct {
@@ -629,17 +632,26 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 
 	gl.Log("info", "🪝 Discord webhook received:")
 	gl.Log("info", fmt.Sprintf("  Webhook ID: %s", webhookID))
-	gl.Log("info", fmt.Sprintf("  Webhook Token: %s", webhookToken[:10]+"..."))
+	gl.Log("info", fmt.Sprintf("  Webhook Token: %s", truncateSecret(webhookToken)))
 
-	// Read the body
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Error reading webhook body: %v", err))
-		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
-		return
+	signature := getContextString(c, middlewares.DiscordSignatureContextKey)
+	timestamp := getContextString(c, middlewares.DiscordTimestampContextKey)
+	verified := getContextBool(c, middlewares.DiscordVerifiedContextKey)
+	gl.Log("info", fmt.Sprintf("  Signature provided: %t (verified=%v)", signature != "", verified))
+	gl.Log("info", fmt.Sprintf("  Timestamp header: %s", timestamp))
+
+	body, ok := getDiscordRequestBody(c)
+	if !ok {
+		var err error
+		body, err = io.ReadAll(c.Request.Body)
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Error reading webhook body: %v", err))
+			c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
+			return
+		}
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 	}
 
-	// Parse JSON
 	var webhookData map[string]interface{}
 	if err := json.Unmarshal(body, &webhookData); err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Error parsing webhook JSON: %v", err))
@@ -648,6 +660,22 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	}
 
 	gl.Log("info", fmt.Sprintf("📦 Webhook data: %+v", webhookData))
+
+	if dc.hub != nil {
+		envelope := hub.DiscordWebhookPayload{
+			WebhookID:    webhookID,
+			WebhookToken: webhookToken,
+			Signature:    signature,
+			Timestamp:    timestamp,
+			EventID:      getContextString(c, middlewares.DiscordEventIDContextKey),
+			Verified:     verified,
+			Body:         append([]byte(nil), body...),
+			Data:         webhookData,
+		}
+		if err := dc.hub.ProcessDiscordWebhook(c.Request.Context(), envelope); err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Failed to process webhook via hub: %v", err))
+		}
+	}
 
 	// Process webhook (you can integrate this with your hub)
 	// dc.hub.ProcessWebhook(webhookData)
@@ -669,20 +697,24 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	gl.Log("info", "⚡ Discord interaction received")
 
-	// Verify Discord signature (important for security)
-	signature := c.GetHeader("X-Signature-Ed25519")
-	timestamp := c.GetHeader("X-Signature-Timestamp")
-
+	signature := getContextString(c, middlewares.DiscordSignatureContextKey)
+	timestamp := getContextString(c, middlewares.DiscordTimestampContextKey)
+	verified := getContextBool(c, middlewares.DiscordVerifiedContextKey)
 	gl.Log("info", "📋 Headers:")
 	gl.Log("info", fmt.Sprintf("  X-Signature-Ed25519: %s", signature))
 	gl.Log("info", fmt.Sprintf("  X-Signature-Timestamp: %s", timestamp))
+	gl.Log("info", fmt.Sprintf("  Guard verified: %v", verified))
 
-	// Read body
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Error reading interaction body: %v", err))
-		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
-		return
+	body, ok := getDiscordRequestBody(c)
+	if !ok {
+		var err error
+		body, err = io.ReadAll(c.Request.Body)
+		if err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Error reading interaction body: %v", err))
+			c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
+			return
+		}
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 	}
 
 	// Parse interaction
@@ -699,7 +731,6 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	if interactionType, ok := interaction["type"].(float64); ok && interactionType == 1 {
 		gl.Log("info", "🏓 Ping interaction - responding with pong")
 
-		// ✅ RESPOSTA CORRETA PARA PING
 		c.JSON(http.StatusOK, DiscordInteractionResponse{
 			Type: 1, // PONG response
 		})
@@ -713,6 +744,40 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 			"content": "Hello from Discord MCP Hub! 🤖",
 		},
 	})
+}
+
+func getDiscordRequestBody(c *gin.Context) ([]byte, bool) {
+	if raw, ok := c.Get(middlewares.DiscordBodyContextKey); ok {
+		if buf, ok := raw.([]byte); ok {
+			return buf, true
+		}
+	}
+	return nil, false
+}
+
+func getContextString(c *gin.Context, key string) string {
+	if raw, ok := c.Get(key); ok {
+		if value, ok := raw.(string); ok {
+			return value
+		}
+	}
+	return ""
+}
+
+func getContextBool(c *gin.Context, key string) bool {
+	if raw, ok := c.Get(key); ok {
+		if value, ok := raw.(bool); ok {
+			return value
+		}
+	}
+	return false
+}
+
+func truncateSecret(token string) string {
+	if len(token) <= 8 {
+		return token
+	}
+	return token[:8] + "..."
 }
 
 func (dc *DiscordController) InitiateBotMCP() {

@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gin-gonic/gin"
 	discord_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/discord"
+	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
@@ -70,6 +72,8 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 
 	discordController := discord_controller.NewDiscordController(dbService, h, cfg)
+	discordGuard := middlewares.DiscordWebhookGuard(cfg.Discord)
+	webhookMiddlewares := map[string]gin.HandlerFunc{"discordWebhookGuard": discordGuard}
 
 	routesMap["DiscordWebSocket"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/websocket", "application/json", discordController.HandleWebSocket, middlewaresMap, dbService, secureProperties, nil)
 	routesMap["DiscordOAuth2Authorize"] = proto.NewRoute(http.MethodGet, "/api/v1/discord/oauth2/authorize", "application/json", discordController.HandleDiscordOAuth2Authorize, middlewaresMap, dbService, secureProperties, nil)
@@ -79,8 +83,8 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	routesMap["DiscordApp"] = proto.NewRoute(http.MethodGet, "/api/v1/discord", "text/html", discordController.HandleDiscordApp, nil, dbService, nil, nil)
 	routesMap["OAuth2AuthorizeDiscord"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/oauth2/authorize", "application/json", discordController.HandleDiscordOAuth2Authorize, nil, dbService, nil, nil)
 	routesMap["OAuth2TokenDiscord"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/oauth2/token", "application/json", discordController.HandleDiscordOAuth2Token, nil, dbService, nil, nil)
-	routesMap["WebhookDiscord"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/webhook/:webhookId/:webhookToken", "application/json", discordController.HandleDiscordWebhook, nil, dbService, nil, nil)
-	routesMap["InteractionsDiscord"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/interactions", "application/json", discordController.HandleDiscordInteractions, nil, dbService, nil, nil)
+	routesMap["WebhookDiscord"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/webhook/:webhookId/:webhookToken", "application/json", discordController.HandleDiscordWebhook, webhookMiddlewares, dbService, nil, nil)
+	routesMap["InteractionsDiscord"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/interactions", "application/json", discordController.HandleDiscordInteractions, webhookMiddlewares, dbService, nil, nil)
 	routesMap["GetPendingApprovals"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/interactions/pending", "application/json", discordController.GetPendingApprovals, nil, dbService, nil, nil)
 	routesMap["GetApprovals"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/approvals", "application/json", discordController.GetPendingApprovals, nil, dbService, nil, nil)
 	routesMap["ApproveRequest"] = proto.NewRoute(http.MethodPost, "/api/v1/discord/approve", "application/json", discordController.ApproveRequest, nil, dbService, nil, nil)

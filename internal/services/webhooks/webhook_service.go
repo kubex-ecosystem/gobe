@@ -200,6 +200,8 @@ func (ws *WebhookService) processWebhookEvent(event *WebhookEvent) bool {
 		return ws.processGitHubPush(event)
 	case "discord.message":
 		return ws.processDiscordMessage(event)
+	case "discord.webhook":
+		return ws.processDiscordWebhook(event)
 	case "stripe.payment":
 		return ws.processStripePayment(event)
 	case "user.created":
@@ -235,6 +237,28 @@ func (ws *WebhookService) processDiscordMessage(event *WebhookEvent) bool {
 	gl.Log("info", "Processing Discord message webhook", "channel", event.Payload["channel_id"])
 
 	// Could trigger bot responses or logging
+	return true
+}
+
+// processDiscordWebhook handles generic Discord webhook envelopes.
+func (ws *WebhookService) processDiscordWebhook(event *WebhookEvent) bool {
+	gl.Log("info", "Processing Discord webhook", "verified", event.Headers["x-discord-verified"])
+
+	if ws.amqp != nil && ws.amqp.IsReady() {
+		notification := map[string]interface{}{
+			"type":       event.EventType,
+			"event_id":   event.Headers["x-discord-event-id"],
+			"webhook_id": event.Headers["x-discord-webhook-id"],
+			"verified":   event.Headers["x-discord-verified"],
+			"payload":    event.Payload,
+		}
+
+		notifBytes, _ := json.Marshal(notification)
+		if err := ws.amqp.Publish("gobe.discord", "webhook.received", notifBytes); err != nil {
+			gl.Log("error", "Failed to publish Discord webhook notification", err)
+		}
+	}
+
 	return true
 }
 

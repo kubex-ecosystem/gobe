@@ -16,6 +16,7 @@
     ]
   },
   "oauth2": {
+    "public_key": "${DISCORD_PUBLIC_KEY}",
     "client_id": "${DISCORD_CLIENT_ID}",
     "client_secret": "${DISCORD_CLIENT_SECRET}",
     "redirect_uri": "http://localhost:8088/oauth2/callback",
@@ -25,6 +26,13 @@
       "guilds"
     ]
   },
+  "webhook": [
+    {
+      "name": "primary",
+      "url": "",
+      "secret": ""
+    }
+  ],
   "rate_limits": {
     "requests_per_minute": 50,
     "burst_size": 5
@@ -32,7 +40,8 @@
   "features": {
     "auto_response": true,
     "task_creation": true,
-    "cross_platform_forwarding": false
+    "cross_platform_forwarding": false,
+    "verify_signatures": true
   },
   "llm": {
     "provider": "gemini",

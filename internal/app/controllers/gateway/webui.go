@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -27,7 +28,22 @@ func (wc *WebUIController) ServeRoot(c *gin.Context) {
 	if path == "" {
 		path = "index.html"
 	}
-	if wc.serveFile(c, path) {
+	urlPath, err := url.JoinPath("./", path)
+	if err != nil {
+		gl.Log("error", "Failed to join URL path for web UI", "error", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if wc.serveFile(c, urlPath) {
+		return
+	}
+	urlPath, err = url.JoinPath("./assets", path)
+	if err != nil {
+		gl.Log("error", "Failed to join URL path for web UI assets", "error", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if wc.serveFile(c, urlPath) {
 		return
 	}
 	// Fallback to SPA entry point.
@@ -51,7 +67,13 @@ func (wc *WebUIController) ServeAssets(c *gin.Context) {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	if wc.serveFile(c, path) {
+	urlPath, err := url.JoinPath("assets", path)
+	if err != nil {
+		gl.Log("error", "Failed to join URL path for web UI assets", "error", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if wc.serveFile(c, urlPath) {
 		return
 	}
 	// Fallback to SPA entry point.
@@ -67,6 +89,15 @@ func (wc *WebUIController) ServeApp(c *gin.Context) {
 		path = "index.html"
 	}
 	if wc.serveFile(c, path) {
+		return
+	}
+	urlPath, err := url.JoinPath("assets", path)
+	if err != nil {
+		gl.Log("error", "Failed to join URL path for web UI assets", "error", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	if wc.serveFile(c, urlPath) {
 		return
 	}
 	// Fallback to SPA entry point.

@@ -105,7 +105,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	// Web UI Favicon
 	routes["WebUIFavicon"] = proto.NewRoute(http.MethodGet, "/favicon.ico", "image/x-icon", webUIController.ServeFavicon, middlewaresMap, dbService, secure(false), nil)
 	// Web UI Root
-	routes["WebUIRoot"] = proto.NewRoute(http.MethodGet, "/", "text/html", webUIController.ServeRoot, middlewaresMap, dbService, secure(false), nil)
+	routes["WebUIRoot"] = proto.NewRoute(http.MethodGet, "", "text/html", webUIController.ServeRoot, middlewaresMap, dbService, secure(false), nil)
 	// Web UI Static Assets
 	routes["WebUIAssets"] = proto.NewRoute(http.MethodGet, "/assets/*path", "application/octet-stream", webUIController.ServeAssets, middlewaresMap, dbService, secure(false), nil)
 	// Route for serving the main app (SPA)

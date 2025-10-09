@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 //go:embed all:embedded/guiweb
@@ -39,6 +40,7 @@ func (g *GUIGoBE) GetWebRoot(path string) os.DirEntry {
 	if g == nil {
 		return nil
 	}
+	path = g.normalizePath(path)
 	embedFS := g.GetWebFS()
 	if embedFS == nil {
 		return nil
@@ -64,7 +66,8 @@ func (g *GUIGoBE) GetWebFile(path string) ([]byte, error) {
 	if embedFS == nil {
 		return nil, os.ErrNotExist
 	}
-	fullPath := filepath.Join("embedded/guiweb", path)
+	cleanPath := g.normalizePath(path)
+	fullPath := filepath.Join("embedded/guiweb", cleanPath)
 	if _, err := embedFS.Open(fullPath); err != nil {
 		return nil, os.ErrNotExist
 	}
@@ -90,7 +93,7 @@ func (g *GUIGoBE) ListWebFiles() ([]string, error) {
 			return err
 		}
 		if !d.IsDir() {
-			files = append(files, path)
+			files = append(files, strings.TrimPrefix(path, "embedded/guiweb/"))
 		}
 		return nil
 	})
@@ -125,7 +128,8 @@ func (g *GUIGoBE) ReadFile(path string) ([]byte, error) {
 	if fsys == nil {
 		return nil, os.ErrNotExist
 	}
-	data, err := fs.ReadFile(fsys, path)
+	cleanPath := g.normalizePath(path)
+	data, err := fs.ReadFile(fsys, cleanPath)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +145,8 @@ func (g *GUIGoBE) OpenFile(path string) (fs.File, error) {
 	if fsys == nil {
 		return nil, os.ErrNotExist
 	}
-	file, err := fsys.Open(path)
+	cleanPath := g.normalizePath(path)
+	file, err := fsys.Open(cleanPath)
 	if err != nil {
 		return nil, err
 	}
@@ -157,6 +162,17 @@ func (g *GUIGoBE) Exists(path string) bool {
 	if fsys == nil {
 		return false
 	}
-	_, err := fsys.Open(path)
+	cleanPath := g.normalizePath(path)
+	_, err := fsys.Open(cleanPath)
 	return err == nil
+}
+
+func (g *GUIGoBE) normalizePath(path string) string {
+	if path == "" {
+		return path
+	}
+	clean := strings.TrimSpace(path)
+	clean = strings.TrimPrefix(clean, "./")
+	clean = strings.TrimPrefix(clean, "/")
+	return clean
 }

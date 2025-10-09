@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/web"
 )
 
 type RouterConfigImpl struct {
@@ -210,6 +212,10 @@ func (rtr *Router) InitializeResources() error {
 		return err
 	}
 	gl.Log("debug", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
+
+	if err := web.SetupWebRoutes(rtr.Engine.Group(""), rtr.DatabaseService); err != nil {
+		gl.Log("error", fmt.Sprintf("Failed to setup web routes: %v", err))
+	}
 
 	for groupName, routeGroup := range GetDefaultRouteMap(rtr) {
 		for routeName, route := range routeGroup {
@@ -428,6 +434,17 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 			middlewaresStack = append(middlewaresStack, validateMdw)
 		} else {
 			gl.Log("warn", "Global Validate and sanitize middleware not found")
+		}
+	}
+
+	if routeMiddlewares := route.Middlewares(); len(routeMiddlewares) > 0 {
+		keys := make([]string, 0, len(routeMiddlewares))
+		for name := range routeMiddlewares {
+			keys = append(keys, name)
+		}
+		sort.Strings(keys)
+		for _, name := range keys {
+			middlewaresStack = append(middlewaresStack, routeMiddlewares[name])
 		}
 	}
 

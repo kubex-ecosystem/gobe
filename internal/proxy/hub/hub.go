@@ -19,7 +19,12 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	"github.com/kubex-ecosystem/gobe/internal/services/webhooks"
 	"github.com/spf13/viper"
+)
+
+import (
+	"github.com/google/uuid"
 )
 
 type DiscordMCPHub struct {
@@ -31,10 +36,23 @@ type DiscordMCPHub struct {
 	mcpServer       *mcp.Server
 	mcpRegistry     mcp.Registry // Registry MCP real
 	// zmqPublisher    *zmq.Publisher
-	gobeCtlClient *gobe_ctl.Client // ⚙️ K8s Integration
-	gobeClient    *gobe.Client     // 🔗 GoBE Integration
-	mu            sync.RWMutex
-	running       bool
+	gobeCtlClient  *gobe_ctl.Client // ⚙️ K8s Integration
+	gobeClient     *gobe.Client     // 🔗 GoBE Integration
+	webhookService *webhooks.WebhookService
+	mu             sync.RWMutex
+	running        bool
+}
+
+// DiscordWebhookPayload represents a normalized Discord webhook event.
+type DiscordWebhookPayload struct {
+	WebhookID    string                 `json:"webhook_id"`
+	WebhookToken string                 `json:"webhook_token"`
+	Signature    string                 `json:"signature"`
+	Timestamp    string                 `json:"timestamp"`
+	EventID      string                 `json:"event_id"`
+	Verified     bool                   `json:"verified"`
+	Body         []byte                 `json:"body"`
+	Data         map[string]interface{} `json:"data"`
 }
 
 func NewDiscordMCPHub(cfg *bootstrap.Config) (*DiscordMCPHub, error) {
@@ -100,8 +118,9 @@ func NewDiscordMCPHub(cfg *bootstrap.Config) (*DiscordMCPHub, error) {
 		eventStream:     eventStream,
 		mcpRegistry:     mcpRegistry,
 		// zmqPublisher:    zmqPublisher,
-		gobeCtlClient: gobeCtlClient,
-		gobeClient:    gobeClient,
+		gobeCtlClient:  gobeCtlClient,
+		gobeClient:     gobeClient,
+		webhookService: webhooks.NewWebhookService(nil),
 	}
 
 	// 🔌 MCP Server (needs hub as handler)
@@ -212,6 +231,61 @@ func (h *DiscordMCPHub) handleDiscordMessage(msg interfaces.Message) {
 	} else {
 		gl.Log("notice", fmt.Sprintf("⏭️ Mensagem ignorada pela triagem inteligente: %s", msg.Content))
 	}
+}
+
+// ProcessDiscordWebhook publishes webhook events to the stream for downstream consumers.
+func (h *DiscordMCPHub) ProcessDiscordWebhook(ctx context.Context, payload DiscordWebhookPayload) error {
+	if payload.Data == nil {
+		payload.Data = make(map[string]interface{})
+	}
+	if payload.EventID == "" {
+		payload.EventID = uuid.NewString()
+	}
+	metadata := map[string]interface{}{
+		"webhook_id":    payload.WebhookID,
+		"verified":      payload.Verified,
+		"signature":     payload.Signature,
+		"timestamp":     payload.Timestamp,
+		"event_id":      payload.EventID,
+		"data":          payload.Data,
+		"raw_body_size": len(payload.Body),
+	}
+
+	gl.Log("info", fmt.Sprintf("📡 Discord webhook dispatched | id=%s verified=%v", payload.EventID, payload.Verified))
+
+	if h.eventStream != nil {
+		h.eventStream.Broadcast(events.Event{
+			Type: "discord_webhook",
+			Data: metadata,
+		})
+		job := events.MessageProcessingJob{
+			ID:       payload.EventID,
+			Platform: "discord_webhook",
+			Message:  payload.Data,
+			Priority: events.PriorityNormal,
+		}
+		h.eventStream.ProcessMessage(job)
+	}
+
+	if h.webhookService != nil {
+		headers := map[string]string{
+			"x-signature-ed25519":     payload.Signature,
+			"x-signature-timestamp":   payload.Timestamp,
+			"x-discord-event-id":      payload.EventID,
+			"x-discord-webhook-id":    payload.WebhookID,
+			"x-discord-webhook-token": payload.WebhookToken,
+			"x-discord-verified":      fmt.Sprintf("%t", payload.Verified),
+		}
+		eventType := "discord.webhook"
+		if rawType, ok := payload.Data["type"].(string); ok && rawType != "" {
+			eventType = fmt.Sprintf("discord.%s", strings.ToLower(rawType))
+		}
+		if _, err := h.webhookService.ReceiveWebhook("discord", eventType, payload.Data, headers); err != nil {
+			gl.Log("error", fmt.Sprintf("❌ Failed to persist discord webhook: %v", err))
+		}
+	}
+
+	return nil
 }
 
 func (h *DiscordMCPHub) ProcessMessageWithLLM(ctx context.Context, iMsg interface{}) error {

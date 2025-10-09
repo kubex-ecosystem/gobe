@@ -92,6 +92,9 @@ GoBE evoluiu de um servidor backend simples para uma plataforma abrangente integ
 - **🤖 Ecossistema Completo de Provedores IA:** Integração completa com 4 grandes provedores de IA
 - **🔗 Integração Real Discord MCP:** Transformação de bots Discord de placeholder para ferramentas IA funcionais
 - **📬 Webhooks de Produção:** Sistema de webhook totalmente funcional com persistência e lógica de retry
+- **🪝 Multi-webhooks no Discord:** Configure múltiplos destinos de webhook com compatibilidade automática para configs legadas
+- **🛡️ Guardião de Assinaturas Discord:** Middleware opcional para verificar assinaturas Ed25519 mantendo bypass seguro por padrão
+- **📡 Stream de webhooks Discord:** Hub publica eventos recebidos no serviço de webhooks e no event bus interno
 - **⚡ Respostas IA com Streaming:** Chat IA em tempo real com Server-Sent Events
 - **🔧 Ferramentas MCP Aprimoradas:** Execução de comando shell com whitelist de segurança
 

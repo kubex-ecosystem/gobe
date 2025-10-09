@@ -1,6 +1,8 @@
 package bootstrap
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -90,11 +92,7 @@ type DiscordConfig struct {
 		RedirectURI  string   `json:"redirect_uri,omitempty"`
 		Scopes       []string `json:"scopes,omitempty"`
 	} `json:"oauth2,omitempty"`
-	Webhook []struct {
-		Name   string `json:"name,omitempty"`
-		URL    string `json:"url,omitempty"`
-		Secret string `json:"secret,omitempty"`
-	} `json:"webhook,omitempty"`
+	Webhook    DiscordWebhookList `json:"webhook,omitempty"`
 	RateLimits struct {
 		RequestsPerMinute int `json:"requests_per_minute,omitempty"`
 		BurstSize         int `json:"burst_size,omitempty"`
@@ -103,6 +101,7 @@ type DiscordConfig struct {
 		AutoResponse            bool `json:"auto_response,omitempty"`
 		TaskCreation            bool `json:"task_creation,omitempty"`
 		CrossPlatformForwarding bool `json:"cross_platform_forwarding,omitempty"`
+		VerifySignatures        bool `json:"verify_signatures,omitempty"`
 	} `json:"features,omitempty"`
 	DevMode bool `json:"dev_mode,omitempty"`
 }
@@ -119,6 +118,47 @@ func (c *DiscordConfig) GetSettings() map[string]interface{} {
 	settings["rate_limits"] = c.RateLimits.RequestsPerMinute
 	settings["features"] = c.Features
 	return settings
+}
+
+// DiscordWebhook represents a Discord webhook target entry.
+type DiscordWebhook struct {
+	Name   string `json:"name,omitempty" mapstructure:"name"`
+	URL    string `json:"url,omitempty" mapstructure:"url"`
+	Secret string `json:"secret,omitempty" mapstructure:"secret"`
+}
+
+// DiscordWebhookList enables backwards compatibility with legacy webhook configs.
+type DiscordWebhookList []DiscordWebhook
+
+// UnmarshalJSON accepts either an array of webhooks or a legacy object.
+func (l *DiscordWebhookList) UnmarshalJSON(data []byte) error {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || bytes.Equal(trimmed, []byte("null")) {
+		*l = nil
+		return nil
+	}
+	if trimmed[0] == '{' {
+		var single DiscordWebhook
+		if err := json.Unmarshal(trimmed, &single); err != nil {
+			return err
+		}
+		*l = []DiscordWebhook{single}
+		return nil
+	}
+	var many []DiscordWebhook
+	if err := json.Unmarshal(trimmed, &many); err != nil {
+		return err
+	}
+	*l = many
+	return nil
+}
+
+// MarshalJSON preserves the slice format while omitting empty entries.
+func (l DiscordWebhookList) MarshalJSON() ([]byte, error) {
+	if len(l) == 0 {
+		return []byte("[]"), nil
+	}
+	return json.Marshal([]DiscordWebhook(l))
 }
 
 type LLMConfig struct {

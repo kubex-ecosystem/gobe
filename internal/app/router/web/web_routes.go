@@ -2,7 +2,6 @@
 package web
 
 import (
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -35,59 +34,84 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 		TokenService: tokenService,
 	}
 
-	// Web group - all routes require OAuth authentication
-	webGroup := router.Group("/")
+	// serveIndex := func(c *gin.Context) {
+	// 	data, err := webGUIFiles.ReadFile("index.html")
+	// 	if err != nil {
+	// 		gl.Log("error", "Failed to read index.html", err)
+	// 		c.String(http.StatusInternalServerError, "Internal Server Error")
+	// 		return
+	// 	}
+	// 	c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	// }
 
-	// Apply JWT validation for all web routes
+	// serveAsset := func(c *gin.Context, requestedPath string) {
+	// 	requestedPath = strings.TrimPrefix(requestedPath, "/")
+	// 	if requestedPath == "" {
+	// 		c.Status(http.StatusBadRequest)
+	// 		return
+	// 	}
+	// 	if !webGUIFiles.Exists(requestedPath) {
+	// 		c.Status(http.StatusNotFound)
+	// 		return
+	// 	}
+
+	// 	file, err := webGUIFiles.OpenFile(requestedPath)
+	// 	if err != nil {
+	// 		gl.Log("error", "Failed to open asset file", "file", requestedPath, "error", err)
+	// 		c.String(http.StatusInternalServerError, "Internal Server Error")
+	// 		return
+	// 	}
+	// 	defer file.Close()
+
+	// 	content, err := io.ReadAll(file)
+	// 	if err != nil {
+	// 		gl.Log("error", "Failed to read asset file", "file", requestedPath, "error", err)
+	// 		c.String(http.StatusInternalServerError, "Internal Server Error")
+	// 		return
+	// 	}
+
+	// 	ext := filepath.Ext(requestedPath)
+	// 	contentType := mime.TypeByExtension(ext)
+	// 	if contentType == "" {
+	// 		contentType = http.DetectContentType(content)
+	// 	}
+	// 	c.Data(http.StatusOK, contentType, content)
+	// }
+
+	// assetHandler := func(c *gin.Context) {
+	// 	requestedPath := c.Param("filepath")
+	// 	serveAsset(c, requestedPath)
+	// }
+
+	// router.GET("/assets/*filepath", assetHandler)
+	// // router.GET("/", serveIndex)
+	// router.GET("/app", serveIndex)
+	// // router.GET("/app/", serveIndex)
+	// router.GET("/app/*path", func(c *gin.Context) {
+	// 	path := strings.TrimPrefix(c.Param("path"), "/")
+	// 	if strings.HasPrefix(path, "assets/") {
+	// 		serveAsset(c, strings.TrimPrefix(path, ""))
+	// 		return
+	// 	}
+	// 	serveIndex(c)
+	// })
+
+	// Authenticated group for proxied services
+	webGroup := router.Group("/")
 	webGroup.Use(authInstance.ValidateJWT(func(c *gin.Context) {
 		c.Next()
 	}))
 
-	// Serve GoBE Dashboard (static files)
-	webGroup.GET("/", func(c *gin.Context) {
-		data, err := webGUIFiles.OpenFile("index.html")
-		if err != nil {
-			gl.Log("error", "Failed to open index.html", err)
-			c.String(500, "Internal Server Error")
-			return
-		}
-		defer data.Close()
-		content := make([]byte, 0)
-		_, _ = data.Read(content)
-		c.Data(200, "text/html; charset=utf-8", content)
-	})
-	webGroup.GET("/assets/*filepath", func(c *gin.Context) {
-		filepath := c.Param("filepath")
-		if filepath == "" {
-			c.Status(http.StatusBadRequest)
-			return
-		}
-		if webGUIFiles.Exists(filepath) {
-			data, err := webGUIFiles.OpenFile(filepath)
-			if err != nil {
-				gl.Log("error", "Failed to open asset file", "file", filepath, "error", err)
-				c.String(500, "Internal Server Error")
-				return
-			}
-			defer data.Close()
-			content := make([]byte, 0)
-			_, _ = data.Read(content)
-			c.Data(200, http.DetectContentType(content), content)
-			return
-		}
-		c.Status(http.StatusNotFound)
-	})
-
 	// Initialize proxy router for ecosystem services
 	proxyConfig := getProxyConfig()
-	proxyRouter, err := proxy.NewWebProxyRouter(proxyConfig)
+	_, err = proxy.NewWebProxyRouter(proxyConfig)
 	if err != nil {
 		gl.Log("error", "Failed to initialize proxy router", err)
 		return err
 	}
 
-	// Register proxy routes (Grompt, Analyzer, GemX)
-	proxyRouter.RegisterRoutes(webGroup)
+	// // Register proxy routes (Grompt, Analyzer, GemX)
+	// proxyRouter.RegisterRoutes(webGroup)
 
 	gl.Log("info", "Web routes configured successfully",
 		"grompt_url", proxyConfig.GromptURL,

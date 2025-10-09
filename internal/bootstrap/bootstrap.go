@@ -234,11 +234,7 @@ func defaultConfig[C *Config | *DiscordConfig |
 				RedirectURI:  "http://" + net.JoinHostPort(args.Bind, args.Port) + "/api/v1/discord/oauth2/callback",
 				Scopes:       []string{"bot", "applications.commands"},
 			},
-			Webhook: []struct {
-				Name   string `json:"name,omitempty"`
-				URL    string `json:"url,omitempty"`
-				Secret string `json:"secret,omitempty"`
-			}{},
+			Webhook: DiscordWebhookList{},
 			RateLimits: struct {
 				RequestsPerMinute int `json:"requests_per_minute,omitempty"`
 				BurstSize         int `json:"burst_size,omitempty"`
@@ -250,10 +246,12 @@ func defaultConfig[C *Config | *DiscordConfig |
 				AutoResponse            bool `json:"auto_response,omitempty"`
 				TaskCreation            bool `json:"task_creation,omitempty"`
 				CrossPlatformForwarding bool `json:"cross_platform_forwarding,omitempty"`
+				VerifySignatures        bool `json:"verify_signatures,omitempty"`
 			}{
 				AutoResponse:            true,
 				TaskCreation:            true,
 				CrossPlatformForwarding: false,
+				VerifySignatures:        true,
 			},
 			DevMode: true,
 		},
