@@ -1,0 +1,1 @@
+export { ManifestoPage } from "./manifesto";

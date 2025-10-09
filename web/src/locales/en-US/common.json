@@ -1,0 +1,126 @@
+{
+  "nav": {
+    "home": "Home",
+    "manifesto": "Manifesto",
+    "access": "Access",
+    "about": "About Kubex",
+    "signIn": "Sign in"
+  },
+  "theme": {
+    "light": "Light mode",
+    "dark": "Dark mode"
+  },
+  "language": {
+    "title": "Lang",
+    "ptBR": "Português (Brasil)",
+    "enUS": "English (US)"
+  },
+  "home": {
+    "headline": "GoBE keeps Kubex together — freedom with lean governance",
+    "subtitle": "Connect modules, services, and teams without giving up autonomy. Kubex's main backend coordinates identities, integrations, and critical flows transparently.",
+    "primaryCta": "Enter GoBE",
+    "secondaryCta": "About Kubex",
+    "badges": [
+      "Kubex core backend",
+      "Open • Independent",
+      "Agent-assisted governance"
+    ],
+    "runtime": {
+      "title": "Runtime overview",
+      "items": [
+        "Auth flows",
+        "Event bus",
+        "Modules health"
+      ],
+      "status": "Operational",
+      "caption": "Freedom, Engineered — every module keeps autonomy yet speaks the same language."
+    },
+    "features": [
+      {
+        "title": "Unified identity",
+        "description": "Orchestrate authentication, authorization, and access policies in a resilient core."
+      },
+      {
+        "title": "Pluggable modules",
+        "description": "Each Kubex domain integrates via cohesive modules, with no lock-in or opaque dependencies."
+      },
+      {
+        "title": "Agents + Humans",
+        "description": "Shared governance with AI agents, retaining traceability and accountability."
+      },
+      {
+        "title": "Active observability",
+        "description": "Telemetry designed to catch anomalies before they impact customers or operations."
+      }
+    ],
+    "sustainable": {
+      "title": "Kubex is sustainable co-authorship",
+      "items": [
+        {
+          "title": "Lean runtime",
+          "description": "Static Vite build embedded into the Go binary for simplified delivery."
+        },
+        {
+          "title": "Kubex design v0.0.2",
+          "description": "Light-first palette, crystal/line icons, and Orbitron + Inter typography as default."
+        },
+        {
+          "title": "CLI + HTTP + Jobs",
+          "description": "One module interface exposed via CLI, HTTP APIs, and scheduled routines."
+        }
+      ]
+    },
+    "matrix": {
+      "badge": "Kubex matrix",
+      "heading": "Blocks that connect modules, agents, and teams",
+      "copy": "Every feature is built to cooperate with CLI, APIs, and automations. Deliver consistent experiences even in hybrid environments."
+    },
+    "ready": {
+      "title": "Kick off authentication",
+      "description": "Grant secure access to co-authors, internal teams, and agents. Configure OIDC providers, API keys, and service tokens in minutes.",
+      "primary": "Open access portal",
+      "secondary": "Configure providers"
+    }
+  },
+  "access": {
+    "badge": "Authentication portal",
+    "headline": "Grant access with Kubex governance",
+    "subtitle": "Pick the right flow for co-authors, humans, agents, or integrations — every attempt is auditable and honors the Kubex manifesto directives.",
+    "bullets": [
+      "Tokens and credentials live in the GoBE core. Define scopes, TTLs, and rotation policies per module.",
+      "Support MFA with TOTP, WebAuthn, and hardware tokens.",
+      "Logs enriched with origin, device, and responsible agent.",
+      "Automated provisioning via CLI or APIs whenever needed."
+    ],
+    "tabs": {
+      "kubexId": "Kubex ID",
+      "sso": "SSO",
+      "token": "Service token"
+    },
+    "form": {
+      "email": "Corporate email",
+      "password": "Password",
+      "issuer": "Issuer URL",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "submit": "Continue"
+    }
+  },
+  "manifesto": {
+    "headline": "Freedom, Engineered.",
+    "tagline": "Independent by Design.",
+    "quote": "No artificial borders. Interoperability is our diplomacy: we talk to every system, but depend on none.",
+    "blocks": {
+      "principle": "Principle",
+      "directives": "Directives",
+      "sustainable": "Sustainable Co-Authorship",
+      "done": "“Done” Checklist",
+      "epilogue": "Epilogue"
+    }
+  },
+  "runtime": {
+    "operational": "Operational",
+    "degraded": "Degraded",
+    "down": "Down"
+  }
+}

@@ -10,7 +10,8 @@
         "ignore": [
           "backdrop-filter",
           "scrollbar-width",
-          "scrollbar-color"
+          "scrollbar-color",
+          "mask-image"
         ]
       }
     ],

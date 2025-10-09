@@ -72,7 +72,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/
 lib64/
 parts/
 sdist/
@@ -266,11 +266,11 @@ node_modules/
 */prompt/*.py
 */prompt/**/*.py
 dist/*
-.codex/
+# .codex/
 .notes/
-.kubex/
-.claude/
-CLAUDE.md
+# .kubex/
+# .claude/
+# CLAUDE.md
 .env*
 .env.example
 config/config.json

@@ -16,7 +16,7 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
-        exclude: '(^docs/.*$|^README\.md$|^internal/sockets/messagery/rabbitmq\.go$)'
+        exclude: '(^docs/.*$|^README\.md$|^internal/sockets/messagery/rabbitmq\.go$|^web/tsconfig\.json$|^docs/swagger\.json$|^web/src/locales/.*$)'
         files: '^(.*\.go$|.*\.yaml$|.*\.yml$|.*\.json$|.*\.tf$|.*\.tfvars$|.*\.sh$|.*\.ps1$)'
         pragma: allowlist dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",pgConfig.Username, pgConfig.Password, pgConfig.Host, port, pgConfig.Name)
 

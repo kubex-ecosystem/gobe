@@ -1,0 +1,126 @@
+{
+  "nav": {
+    "home": "Início",
+    "manifesto": "Manifesto",
+    "access": "Acesso",
+    "about": "Sobre o Kubex",
+    "signIn": "Entrar"
+  },
+  "theme": {
+    "light": "Modo claro",
+    "dark": "Modo escuro"
+  },
+  "language": {
+    "title": "Idioma",
+    "ptBR": "Português (Brasil)",
+    "enUS": "English (US)"
+  },
+  "home": {
+    "headline": "GoBE mantém o Kubex unido — liberdade com governança enxuta",
+    "subtitle": "Conecte módulos, serviços e times sem abrir mão de autonomia. O backend principal do Kubex coordena identidades, integrações e fluxos críticos com transparência.",
+    "primaryCta": "Entrar no GoBE",
+    "secondaryCta": "Sobre o Kubex",
+    "badges": [
+      "Backend principal Kubex",
+      "Open • Independent",
+      "Governança assistida por agentes"
+    ],
+    "runtime": {
+      "title": "Runtime overview",
+      "items": [
+        "Auth flows",
+        "Event bus",
+        "Modules health"
+      ],
+      "status": "Operational",
+      "caption": "“Freedom, Engineered.” — cada módulo mantém autonomia, mas fala a mesma língua."
+    },
+    "features": [
+      {
+        "title": "Identidade unificada",
+        "description": "Orquestre autenticação, autorização e políticas de acesso em um núcleo resiliente."
+      },
+      {
+        "title": "Módulos plugáveis",
+        "description": "Cada domínio Kubex integra via módulos coesos, sem lock-in nem dependências obscuras."
+      },
+      {
+        "title": "Agentes + Humanos",
+        "description": "Governança compartilhada com agentes e IA, mantendo rastreabilidade e accountability."
+      },
+      {
+        "title": "Observabilidade ativa",
+        "description": "Telemetry pensada para detectar anomalias antes de impactos clientes ou operacionais."
+      }
+    ],
+    "sustainable": {
+      "title": "Kubex é coautoria sustentável",
+      "items": [
+        {
+          "title": "Runtime enxuto",
+          "description": "Build estático com assets Vite, embarcado no binário Go para entrega simplificada."
+        },
+        {
+          "title": "Design Kubex v0.0.2",
+          "description": "Paleta light-first, ícones crystal/line e tipografia Orbitron + Inter como padrão."
+        },
+        {
+          "title": "CLI + HTTP + Jobs",
+          "description": "Mesma interface de módulos, exposta via CLI, APIs HTTP e rotinas programadas."
+        }
+      ]
+    },
+    "matrix": {
+      "badge": "Matriz Kubex",
+      "heading": "Os blocos que conectam módulos, agentes e times",
+      "copy": "Cada feature nasce para cooperar com CLI, APIs e automações. Entregue experiências consistentes, mesmo em ambientes híbridos."
+    },
+    "ready": {
+      "title": "Inicie a autenticação",
+      "description": "Libere acesso seguro para coautores, times internos e agentes. Configure provedores OIDC, chaves API e tokens de serviço em minutos.",
+      "primary": "Abrir portal de acesso",
+      "secondary": "Configurar provedores"
+    }
+  },
+  "access": {
+    "badge": "Portal de Autenticação",
+    "headline": "Conceda acesso com governança Kubex",
+    "subtitle": "Escolha o fluxo adequado para coautores, humanos, agentes ou integrações… cada tentativa é auditável e respeita as diretivas do manifesto Kubex.",
+    "bullets": [
+      "Tokens e credenciais são armazenados no núcleo GoBE. Defina escopos, TTLs e políticas de rotação por módulo.",
+      "Suporte a MFA via TOTP, WebAuthn e tokens físicos.",
+      "Logs enriquecidos com origem, dispositivo e agente responsável.",
+      "Provisionamento automatizado via CLI ou APIs quando necessário."
+    ],
+    "tabs": {
+      "kubexId": "Kubex ID",
+      "sso": "SSO",
+      "token": "Token de serviço"
+    },
+    "form": {
+      "email": "Email corporativo",
+      "password": "Senha",
+      "issuer": "Issuer URL",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "submit": "Continuar"
+    }
+  },
+  "manifesto": {
+    "headline": "Freedom, Engineered.",
+    "tagline": "Independent by Design.",
+    "quote": "No artificial borders. Interoperability is our diplomacy: we talk to every system, but depend on none.",
+    "blocks": {
+      "principle": "Principle",
+      "directives": "Directives",
+      "sustainable": "Sustainable Co-Authorship",
+      "done": "“Done” Checklist",
+      "epilogue": "Epilogue"
+    }
+  },
+  "runtime": {
+    "operational": "Operational",
+    "degraded": "Degraded",
+    "down": "Down"
+  }
+}

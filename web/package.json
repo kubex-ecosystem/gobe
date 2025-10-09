@@ -1,0 +1,44 @@
+{
+  "name": "gobe",
+  "markdown": "github",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kubex-ecosystem/gobe.git"
+  },
+  "homepage": "https://kubex-ecosystem.github.io/gobe/",
+  "packageManager": "npm@10.9.2",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "setup": "npm i --no-fund --no-audit --legacy-peer-deps --loglevel=error --silent",
+    "setup:ci": "npm ci --no-fund --no-audit --legacy-peer-deps --loglevel=error --silent",
+    "build": "vite build",
+    "build:static": "vite build --mode production",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.63.0",
+    "@google/genai": "^1.20.0",
+    "framer-motion": "^10.18.0",
+    "idb": "^8.0.3",
+    "lucide-react": "^0.542.0",
+    "openai": "^5.22.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "remark-gfm": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.17.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "react-markdown": "^10.1.0",
+    "tailwindcss": "^3.4.4",
+    "typescript": "~5.8.2",
+    "vite": "^7.1.9"
+  }
+}
