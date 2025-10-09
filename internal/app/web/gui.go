@@ -147,3 +147,16 @@ func (g *GUIGoBE) OpenFile(path string) (fs.File, error) {
 	}
 	return file, nil
 }
+
+// Exists checks if a file exists in the embedded GUI web assets
+func (g *GUIGoBE) Exists(path string) bool {
+	if g == nil {
+		return false
+	}
+	fsys := g.GetFS()
+	if fsys == nil {
+		return false
+	}
+	_, err := fsys.Open(path)
+	return err == nil
+}

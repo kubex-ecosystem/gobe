@@ -9,11 +9,11 @@ import { LandingPage } from "./pages/Landing";
 import { ManifestoPage } from "./pages/Manifesto";
 
 const routes: RouteObject[] = [
-  { path: "/", element: <PageShell><LandingPage /></PageShell> },
-  { path: "/access", element: <PageShell><AccessPage /></PageShell> },
-  { path: "/auth", element: <PageShell><AccessPage /></PageShell> },
-  { path: "/manifesto", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
-  { path: "/about", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
+  { path: "/app/", element: <PageShell><LandingPage /></PageShell> },
+  { path: "/app/access", element: <PageShell><AccessPage /></PageShell> },
+  { path: "/app/auth", element: <PageShell><AccessPage /></PageShell> },
+  { path: "/app/manifesto", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
+  { path: "/app/about", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
 ];
 
 function NotFound() {
@@ -28,13 +28,13 @@ function NotFound() {
         </p>
         <div className="mt-8 flex gap-3">
           <Link
-            to="/"
+            to="/app/"
             className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary.hover"
           >
             Back to Home
           </Link>
           <Link
-            to="/manifesto"
+            to="/app/manifesto"
             className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/50 hover:text-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-cyan-400/60 dark:hover:text-cyan-200"
           >
             Manifesto Kubex

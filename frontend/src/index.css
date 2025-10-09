@@ -1,6 +1,13 @@
+/* Tailwind directives are processed by PostCSS + Tailwind; disable the stylelint rule for unknown at-rules */
+
+/*
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+*/
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
 :root {
   color-scheme: light;

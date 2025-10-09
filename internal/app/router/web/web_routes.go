@@ -2,6 +2,7 @@
 package web
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 		return err
 	}
 
-	authMiddleware := middlewares.NewAuthenticationMiddleware(tokenService, certService, nil)
+	//authMiddleware := middlewares.NewAuthenticationMiddleware(tokenService, certService, nil)
 	authInstance := &middlewares.AuthenticationMiddleware{
 		CertService:  certService,
 		TokenService: tokenService,
@@ -38,7 +39,7 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 	webGroup := router.Group("/")
 
 	// Apply JWT validation for all web routes
-	webGroup.Use(authMiddleware, authInstance.ValidateJWT(func(c *gin.Context) {
+	webGroup.Use(authInstance.ValidateJWT(func(c *gin.Context) {
 		c.Next()
 	}))
 
@@ -54,6 +55,27 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 		content := make([]byte, 0)
 		_, _ = data.Read(content)
 		c.Data(200, "text/html; charset=utf-8", content)
+	})
+	webGroup.GET("/assets/*filepath", func(c *gin.Context) {
+		filepath := c.Param("filepath")
+		if filepath == "" {
+			c.Status(http.StatusBadRequest)
+			return
+		}
+		if webGUIFiles.Exists(filepath) {
+			data, err := webGUIFiles.OpenFile(filepath)
+			if err != nil {
+				gl.Log("error", "Failed to open asset file", "file", filepath, "error", err)
+				c.String(500, "Internal Server Error")
+				return
+			}
+			defer data.Close()
+			content := make([]byte, 0)
+			_, _ = data.Read(content)
+			c.Data(200, http.DetectContentType(content), content)
+			return
+		}
+		c.Status(http.StatusNotFound)
 	})
 
 	// Initialize proxy router for ecosystem services

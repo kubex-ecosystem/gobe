@@ -18,7 +18,7 @@ export function LangSwitcher() {
         onChange={handleChange}
         className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.7rem] font-semibold text-slate-700 shadow-sm transition hover:border-primary/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-400/50 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/30"
       >
-        <option value="pt-BR">{t("language.ptBR", "Português (Brasil)")}</option>
+        <option value="pt-BR">{t("language.ptBR", "Português (BR)")}</option>
         <option value="en-US">{t("language.enUS", "English (US)")}</option>
       </select>
     </label>

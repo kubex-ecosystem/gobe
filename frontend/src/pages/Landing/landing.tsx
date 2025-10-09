@@ -1,6 +1,6 @@
-import * as React from "react";
 import { motion } from "framer-motion";
 import { Layers, LucideIcon, Radar, ShieldCheck, Sparkle, Workflow } from "lucide-react";
+import * as React from "react";
 
 import { RuntimeOverview } from "../../components/modules/RuntimeOverview";
 import { Button } from "../../components/ui/Button";
@@ -72,13 +72,13 @@ export function LandingPage() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
-              to="/access"
+              to="/app/access"
               className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-primary.hover dark:bg-cyan-500 dark:hover:bg-cyan-400"
             >
               {t("home.primaryCta")}
             </Link>
             <Link
-              to="/manifesto"
+              to="/app/manifesto"
               className="inline-flex items-center justify-center rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary/50 hover:text-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-cyan-400/60 dark:hover:text-cyan-300"
             >
               {t("home.secondaryCta")}
@@ -157,9 +157,9 @@ export function LandingPage() {
             <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">{t("home.ready.description")}</p>
           </div>
           <div className="flex flex-col gap-3">
-            <Button className="w-full" onClick={() => navigate("/access")}>{t("home.ready.primary")}</Button>
+            <Button className="w-full" onClick={() => navigate("/app/access")}>{t("home.ready.primary")}</Button>
             <Link
-              to="/access"
+              to="/app/access"
               className="w-full rounded-full border border-cyan-500/40 px-5 py-2 text-center text-sm font-semibold text-cyan-700 transition hover:border-cyan-500/60 hover:text-cyan-600 dark:border-cyan-500/30 dark:text-cyan-200 dark:hover:border-cyan-400/60 dark:hover:text-cyan-100"
             >
               {t("home.ready.secondary")}

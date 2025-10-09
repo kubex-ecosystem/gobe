@@ -61,13 +61,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	webhookController := gatewayController.NewWebhookController(webhookService)
 	schedulerController := gatewayController.NewSchedulerController()
 
-	webRoot := ""
-	if prop := rtl.GetProperty("gateway.web.root"); prop != nil {
-		if path, ok := prop.(string); ok {
-			webRoot = path
-		}
-	}
-	webUIController := gatewayController.NewWebUIController(webRoot)
+	webUIController := gatewayController.NewWebUIController()
 
 	routes := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)
@@ -108,7 +102,13 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	routes["SchedulerStats"] = proto.NewRoute(http.MethodGet, "/health/scheduler/stats", "application/json", schedulerController.Stats, middlewaresMap, dbService, secure(true), nil)
 	routes["SchedulerForce"] = proto.NewRoute(http.MethodPost, "/health/scheduler/force", "application/json", schedulerController.ForceRun, middlewaresMap, dbService, secure(true), nil)
 
+	// Web UI Favicon
+	routes["WebUIFavicon"] = proto.NewRoute(http.MethodGet, "/favicon.ico", "image/x-icon", webUIController.ServeFavicon, middlewaresMap, dbService, secure(false), nil)
+	// Web UI Root
 	routes["WebUIRoot"] = proto.NewRoute(http.MethodGet, "/", "text/html", webUIController.ServeRoot, middlewaresMap, dbService, secure(false), nil)
+	// Web UI Static Assets
+	routes["WebUIAssets"] = proto.NewRoute(http.MethodGet, "/assets/*path", "application/octet-stream", webUIController.ServeAssets, middlewaresMap, dbService, secure(false), nil)
+	// Route for serving the main app (SPA)
 	routes["WebUIApp"] = proto.NewRoute(http.MethodGet, "/app/*path", "text/html", webUIController.ServeApp, middlewaresMap, dbService, secure(false), nil)
 
 	// Integrate GemX Analyzer when available

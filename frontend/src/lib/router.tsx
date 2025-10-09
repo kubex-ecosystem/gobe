@@ -25,7 +25,7 @@ export function RouterProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navigate = React.useCallback((to: string, options?: { replace?: boolean }) => {
-    const normalized = to.startsWith("/") ? to : `/${to}`;
+    const normalized = to.startsWith("/app/") ? to : `/app/${to}`;
     if (options?.replace) {
       window.history.replaceState(null, "", normalized);
     } else {

@@ -115,7 +115,7 @@ export function ManifestoPage() {
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-6 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
           <span>© 2025 Kubex Ecosystem — All co‑authors, human and artificial.</span>
           <Link
-            to="/"
+            to="/app/"
             className="underline decoration-cyan-600/40 underline-offset-4 hover:text-cyan-700 dark:text-cyan-200 dark:hover:text-cyan-100"
           >
             Back to Home

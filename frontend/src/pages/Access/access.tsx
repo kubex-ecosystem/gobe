@@ -1,9 +1,9 @@
-import * as React from "react";
 import { CheckCircle2, Shield } from "lucide-react";
+import * as React from "react";
 
+import { AuthForm } from "../../components/modules/AuthForm";
 import { Card, CardDescription, CardHeader, CardTitle } from "../../components/ui/Card";
 import { KxBadge } from "../../components/ui/KxBadge";
-import { AuthForm } from "../../components/modules/AuthForm";
 import { useI18n } from "../../i18n/provider";
 import { Link, useRouter } from "../../lib/router";
 
@@ -14,7 +14,7 @@ export function AccessPage() {
   const [primaryBullet, ...secondaryBullets] = bullets;
 
   const handleComplete = React.useCallback((identifier: string) => {
-    window.setTimeout(() => navigate("/"), 900);
+    window.setTimeout(() => navigate("/app/"), 900);
   }, [navigate]);
 
   return (

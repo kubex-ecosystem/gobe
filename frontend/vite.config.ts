@@ -49,20 +49,22 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         external: [
           'buffer', 'stream', 'util', 'events', 'http', 'https', 'url', 'zlib', 'crypto',
-          './src/components/layout/Footer'
+          './src/components/layout/Footer', './src/components/layout/Header', './src/components/layout/Navbar',
         ],
         input: {
-          main: path.resolve(__dirname, 'index.html'),
+          main: path.resolve(__dirname, 'index.html')
         },
         output: {
           manualChunks: {
             vendor: [
               'react',
-              'react-dom'
-            ],
+              'react-dom',
+              'framer-motion',
+              'react-markdown'
+            ]
           },
           plugins: [
-            {
+            /* {
               name: 'watch-external',
               handleHotUpdate({ file, server }: { file: string; server: any }) {
                 if (file.endsWith('shared/config.json')) {
@@ -117,10 +119,9 @@ export default defineConfig(({ mode }) => {
                 }
                 warn(warning);
               },
-            }
+            } */
           ]
-
-        },
+        }
       },
       outDir: 'dist',
       sourcemap: false,
@@ -129,12 +130,12 @@ export default defineConfig(({ mode }) => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@import "@/styles/variables.scss";`
+          additionalData: `@import "@/src/styles/index.scss";`
         }
       }
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'framer-motion', 'uuid',],
+      include: ['react', 'react-dom', 'framer-motion', 'react-markdown'],
     },
     esbuild: {
       drop: ['console', 'debugger'],
