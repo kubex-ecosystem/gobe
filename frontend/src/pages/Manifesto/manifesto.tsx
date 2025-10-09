@@ -14,7 +14,7 @@ const sections = [
         <p>
           Agents and humans do not deliver <em>tasks</em> — they deliver <strong>products</strong>. Co‑authorship is technical, but also moral: each agent and each human share responsibility for the impact and longevity of the systems they build.
         </p>
-        <blockquote className="border-l-2 border-cyan-600/30 pl-4 text-cyan-800 dark:border-cyan-500/30 dark:text-cyan-200">
+        <blockquote className="border-l-2 border-cyan-600/30 my-5 pl-4 text-cyan-800 dark:border-cyan-500/30 dark:text-cyan-200">
           “No artificial borders. Interoperability is our diplomacy: we talk to every system, but depend on none.”
         </blockquote>
       </>

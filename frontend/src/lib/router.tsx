@@ -1,5 +1,7 @@
 import * as React from "react";
 
+import { withAppPath } from "./config";
+
 interface RouterState {
   pathname: string;
   navigate: (to: string, options?: { replace?: boolean }) => void;
@@ -7,8 +9,16 @@ interface RouterState {
 
 const RouterContext = React.createContext<RouterState | undefined>(undefined);
 
+function normalizePath(path: string) {
+  if (!path) return "/";
+  if (path.length > 1 && path.endsWith("/")) {
+    return path.slice(0, -1);
+  }
+  return path;
+}
+
 function getPathname() {
-  return window.location.pathname || "/";
+  return normalizePath(window.location.pathname || "/");
 }
 
 export function RouterProvider({ children }: { children: React.ReactNode }) {
@@ -25,7 +35,8 @@ export function RouterProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navigate = React.useCallback((to: string, options?: { replace?: boolean }) => {
-    const normalized = to.startsWith("/app/") ? to : `/app/${to}`;
+    const target = withAppPath(to === "/" ? "/" : to);
+    const normalized = normalizePath(target);
     if (options?.replace) {
       window.history.replaceState(null, "", normalized);
     } else {
@@ -57,7 +68,11 @@ export interface RouteObject {
 
 export function useRouteMatch(routes: RouteObject[]) {
   const { pathname } = useRouter();
-  const match = React.useMemo(() => routes.find((route) => route.path === pathname), [routes, pathname]);
+  const normalizedPath = normalizePath(pathname);
+  const match = React.useMemo(
+    () => routes.find((route) => normalizePath(route.path) === normalizedPath),
+    [routes, normalizedPath]
+  );
   return match?.element;
 }
 

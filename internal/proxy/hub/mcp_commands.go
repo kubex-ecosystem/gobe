@@ -281,7 +281,7 @@ func formatGromptResponse(result interface{}) string {
 		response = response[:1800] + "\n\n... *(truncated)*"
 	}
 
-	output := fmt.Sprintf("🧠 **Grompt - Structured Prompt Generated**\n\n")
+	output := "🧠 **Grompt - Structured Prompt Generated**\n\n"
 	output += fmt.Sprintf("📝 **Provider:** %s (%s)\n", provider, model)
 	output += fmt.Sprintf("```\n%s\n```\n", response)
 

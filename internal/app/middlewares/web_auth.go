@@ -120,7 +120,12 @@ func (m *WebAuthMiddleware) RequireAuth() gin.HandlerFunc {
 		c.Set("username", claims["username"])
 		c.Set("authenticated", true)
 
-		gl.Log("debug", "User authenticated", "user", claims["username"])
+		// Skip authentication logging for health check endpoints to reduce noise
+		if !strings.HasPrefix(c.Request.URL.Path, "/health") &&
+			!strings.HasPrefix(c.Request.URL.Path, "/api/v1/health") &&
+			!strings.HasPrefix(c.Request.URL.Path, "/status") {
+			gl.Log("debug", "User authenticated", "user", claims["username"])
+		}
 
 		c.Next()
 	}

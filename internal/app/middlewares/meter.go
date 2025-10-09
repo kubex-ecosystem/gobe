@@ -2,12 +2,31 @@ package middlewares
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
+
+// skipMeteringPaths are paths that should not log telemetry to reduce noise
+var skipMeteringPaths = []string{
+	"/health",
+	"/healthz",
+	"/api/v1/health",
+	"/status",
+}
+
+// shouldSkipMetering determines if a request path should skip telemetry logging
+func shouldSkipMetering(path string) bool {
+	for _, skipPath := range skipMeteringPaths {
+		if strings.HasPrefix(path, skipPath) {
+			return true
+		}
+	}
+	return false
+}
 
 func MeterMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -23,6 +42,11 @@ func MeterMiddleware() gin.HandlerFunc {
 
 		// End telemetry
 		c.Set("endTime", time.Now())
+
+		// Skip telemetry logging for health check endpoints
+		if shouldSkipMetering(c.Request.URL.Path) {
+			return
+		}
 
 		// Log telemetry data
 		startTime, exists := c.Get("startTime")

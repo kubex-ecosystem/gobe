@@ -8,7 +8,7 @@ import { useI18n } from "../../i18n/provider";
 import { Link, useRouter } from "../../lib/router";
 
 const modes = [
-  { id: "kubex-id", label: "Kubex ID", description: "Email corporativo + MFA" },
+  { id: "kubex-id", label: "Kubex ID", description: "User/Email corporativo + MFA" },
   { id: "sso", label: "SSO", description: "Provedor OIDC / SAML" },
   { id: "service", label: "Token de serviço", description: "Client credentials" },
 ] as const;
@@ -107,7 +107,7 @@ export function AuthPage() {
                   required
                   id="email"
                   name="email"
-                  type="email"
+                  type="text"
                   placeholder="coauthor@kubex.world"
                   className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
                 />

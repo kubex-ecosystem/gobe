@@ -15,7 +15,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/gobe"
-	"github.com/kubex-ecosystem/gobe/internal/proxy/gobe_ctl"
+	gobe_ctl "github.com/kubex-ecosystem/gobe/internal/proxy/gobectl"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"

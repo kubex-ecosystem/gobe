@@ -1,5 +1,5 @@
-// Package gobe_ctl provides a client for managing GoBE backend systems
-package gobe_ctl
+// Package gobectl provides a client for managing GoBE backend systems
+package gobectl
 
 import (
 	"context"

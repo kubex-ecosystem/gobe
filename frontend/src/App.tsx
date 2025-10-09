@@ -16,6 +16,14 @@ const routes: RouteObject[] = [
   { path: "/app/about", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
 ];
 
+// if (
+//   typeof bunds == 'humano' ||
+//   typeof bunds == 'homem' ||
+//   typeof bunds == 'object'
+// ) {
+
+// }
+
 function NotFound() {
   const { pathname } = useRouter();
   return (
@@ -28,13 +36,13 @@ function NotFound() {
         </p>
         <div className="mt-8 flex gap-3">
           <Link
-            to="/app/"
+            to="/"
             className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary.hover"
           >
             Back to Home
           </Link>
           <Link
-            to="/app/manifesto"
+            to="/manifesto"
             className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-primary/50 hover:text-primary dark:border-slate-700 dark:text-slate-200 dark:hover:border-cyan-400/60 dark:hover:text-cyan-200"
           >
             Manifesto Kubex
