@@ -30,7 +30,7 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 	}
 
 	// Web group - all routes require OAuth authentication
-	webGroup := router.Group("/web")
+	webGroup := router.Group("/frontend")
 
 	// Apply JWT validation for all web routes
 	webGroup.Use(authMiddleware, authInstance.ValidateJWT(func(c *gin.Context) {
@@ -38,9 +38,9 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 	}))
 
 	// Serve GoBE Dashboard (static files)
-	webGroup.Static("/dashboard", "./web/dist")
+	webGroup.Static("/dashboard", "./frontend/dist")
 	webGroup.GET("/", func(c *gin.Context) {
-		c.Redirect(302, "/web/dashboard")
+		c.Redirect(302, "/frontend/dashboard")
 	})
 
 	// Initialize proxy router for ecosystem services

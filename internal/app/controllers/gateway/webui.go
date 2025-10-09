@@ -18,7 +18,7 @@ type WebUIController struct {
 
 func NewWebUIController(root string) *WebUIController {
 	if root == "" {
-		root = "web"
+		root = "frontend/dist"
 	}
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
