@@ -90,7 +90,8 @@ type DiscordConfig struct {
 		RedirectURI  string   `json:"redirect_uri,omitempty"`
 		Scopes       []string `json:"scopes,omitempty"`
 	} `json:"oauth2,omitempty"`
-	Webhook struct {
+	Webhook []struct {
+		Name   string `json:"name,omitempty"`
 		URL    string `json:"url,omitempty"`
 		Secret string `json:"secret,omitempty"`
 	} `json:"webhook,omitempty"`
@@ -114,7 +115,7 @@ func (c *DiscordConfig) GetSettings() map[string]interface{} {
 	settings := make(map[string]interface{})
 	settings["bot"] = c.Bot.Intents
 	settings["oauth2"] = c.OAuth2.ClientID
-	settings["webhook"] = c.Webhook.URL
+	settings["webhook"] = c.Webhook
 	settings["rate_limits"] = c.RateLimits.RequestsPerMinute
 	settings["features"] = c.Features
 	return settings

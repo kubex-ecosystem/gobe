@@ -234,13 +234,11 @@ func defaultConfig[C *Config | *DiscordConfig |
 				RedirectURI:  "http://" + net.JoinHostPort(args.Bind, args.Port) + "/api/v1/discord/oauth2/callback",
 				Scopes:       []string{"bot", "applications.commands"},
 			},
-			Webhook: struct {
+			Webhook: []struct {
+				Name   string `json:"name,omitempty"`
 				URL    string `json:"url,omitempty"`
 				Secret string `json:"secret,omitempty"`
-			}{
-				URL:    "",
-				Secret: "",
-			},
+			}{},
 			RateLimits: struct {
 				RequestsPerMinute int `json:"requests_per_minute,omitempty"`
 				BurstSize         int `json:"burst_size,omitempty"`
