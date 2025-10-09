@@ -9,7 +9,12 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/proxy"
+	gui "github.com/kubex-ecosystem/gobe/internal/app/web"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+)
+
+var (
+	webGUIFiles *gui.GUIGoBE = gui.NewGUIGoBE()
 )
 
 // SetupWebRoutes configures all web UI routes with OAuth 2.1 authentication
@@ -30,7 +35,7 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 	}
 
 	// Web group - all routes require OAuth authentication
-	webGroup := router.Group("/frontend")
+	webGroup := router.Group("/")
 
 	// Apply JWT validation for all web routes
 	webGroup.Use(authMiddleware, authInstance.ValidateJWT(func(c *gin.Context) {
@@ -38,9 +43,17 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 	}))
 
 	// Serve GoBE Dashboard (static files)
-	webGroup.Static("/dashboard", "./frontend/dist")
 	webGroup.GET("/", func(c *gin.Context) {
-		c.Redirect(302, "/frontend/dashboard")
+		data, err := webGUIFiles.OpenFile("index.html")
+		if err != nil {
+			gl.Log("error", "Failed to open index.html", err)
+			c.String(500, "Internal Server Error")
+			return
+		}
+		defer data.Close()
+		content := make([]byte, 0)
+		_, _ = data.Read(content)
+		c.Data(200, "text/html; charset=utf-8", content)
 	})
 
 	// Initialize proxy router for ecosystem services

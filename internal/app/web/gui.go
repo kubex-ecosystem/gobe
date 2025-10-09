@@ -3,6 +3,7 @@ package web
 
 import (
 	"embed"
+	"io/fs"
 	"os"
 	"path/filepath"
 )
@@ -34,7 +35,7 @@ func (g *GUIGoBE) GetWebFS() *embed.FS {
 }
 
 // GetWebRoot returns the root directory for GUI web assets
-func (g *GUIGoBE) GetWebRoot(path string) *os.DirEntry {
+func (g *GUIGoBE) GetWebRoot(path string) os.DirEntry {
 	if g == nil {
 		return nil
 	}
@@ -48,7 +49,7 @@ func (g *GUIGoBE) GetWebRoot(path string) *os.DirEntry {
 	}
 	for _, entry := range dirEntries {
 		if entry.Name() == path {
-			return &entry
+			return entry
 		}
 	}
 	return nil
@@ -72,4 +73,77 @@ func (g *GUIGoBE) GetWebFile(path string) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+// ListWebFiles lists all files in the embedded GUI web assets
+func (g *GUIGoBE) ListWebFiles() ([]string, error) {
+	if g == nil {
+		return nil, os.ErrNotExist
+	}
+	embedFS := g.GetWebFS()
+	if embedFS == nil {
+		return nil, os.ErrNotExist
+	}
+	var files []string
+	err := fs.WalkDir(*embedFS, "embedded/guiweb", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
+// GetFS returns a sub-filesystem for the GUI web assets
+func (g *GUIGoBE) GetFS() fs.FS {
+	if g == nil {
+		return nil
+	}
+	embedFS := g.GetWebFS()
+	if embedFS == nil {
+		return nil
+	}
+	subFS, err := fs.Sub(*embedFS, "embedded/guiweb")
+	if err != nil {
+		return nil
+	}
+	return subFS
+}
+
+// ReadFile reads a file from the embedded GUI web assets
+func (g *GUIGoBE) ReadFile(path string) ([]byte, error) {
+	if g == nil {
+		return nil, os.ErrNotExist
+	}
+	fsys := g.GetFS()
+	if fsys == nil {
+		return nil, os.ErrNotExist
+	}
+	data, err := fs.ReadFile(fsys, path)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// OpenFile opens a file from the embedded GUI web assets
+func (g *GUIGoBE) OpenFile(path string) (fs.File, error) {
+	if g == nil {
+		return nil, os.ErrNotExist
+	}
+	fsys := g.GetFS()
+	if fsys == nil {
+		return nil, os.ErrNotExist
+	}
+	file, err := fsys.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
 }

@@ -11,7 +11,8 @@
           "backdrop-filter",
           "scrollbar-width",
           "scrollbar-color",
-          "mask-image"
+          "mask-image",
+          "-webkit-text-size-adjust"
         ]
       }
     ],
