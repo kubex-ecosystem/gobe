@@ -9,20 +9,13 @@ import { LandingPage } from "./pages/Landing";
 import { ManifestoPage } from "./pages/Manifesto";
 
 const routes: RouteObject[] = [
+  { path: "/", element: <PageShell><LandingPage /></PageShell> },
   { path: "/app/", element: <PageShell><LandingPage /></PageShell> },
   { path: "/app/access", element: <PageShell><AccessPage /></PageShell> },
   { path: "/app/auth", element: <PageShell><AccessPage /></PageShell> },
   { path: "/app/manifesto", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
   { path: "/app/about", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
 ];
-
-// if (
-//   typeof bunds == 'humano' ||
-//   typeof bunds == 'homem' ||
-//   typeof bunds == 'object'
-// ) {
-
-// }
 
 function NotFound() {
   const { pathname } = useRouter();

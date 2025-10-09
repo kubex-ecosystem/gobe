@@ -61,7 +61,7 @@ export function AuthPage() {
           </ul>
 
           <Link
-            to="/app/about"
+            to="/about"
             className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-700 transition hover:text-cyan-600 dark:text-cyan-200 dark:hover:text-cyan-100"
           >
             Manifesto Kubex

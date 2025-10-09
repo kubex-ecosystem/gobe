@@ -15,7 +15,7 @@ declare global {
 const fallbackConfig: RuntimeConfig = {
   apiBase: import.meta.env.VITE_KUBEX_API_BASE || "",
   apiToken: import.meta.env.VITE_KUBEX_API_TOKEN || undefined,
-  appBasePath: import.meta.env.VITE_KUBEX_APP_BASE || "/",
+  appBasePath: import.meta.env.VITE_KUBEX_APP_BASE || "/app",
 };
 
 function normalizeBasePath(path: string) {

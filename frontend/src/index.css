@@ -1,3 +1,4 @@
+/* stylelint-disable at-rule-no-unknown */
 /* Tailwind directives are processed by PostCSS + Tailwind; disable the stylelint rule for unknown at-rules */
 
 /*
@@ -18,7 +19,11 @@
 }
 
 body {
-  @apply bg-background text-text-body antialiased transition-colors duration-300 dark:bg-[#0a0f14] dark:text-slate-200;
+  @apply bg-background text-text-body antialiased transition-colors duration-300;
+}
+
+.dark body {
+  @apply bg-[#0a0f14] text-slate-200;
 }
 
 ::selection {
@@ -27,12 +32,23 @@ body {
 }
 
 a {
-  @apply text-slate-800 underline decoration-primary/40 underline-offset-4 transition-colors duration-150 dark:text-cyan-200;
+  @apply text-slate-800 underline decoration-primary/40 underline-offset-4 transition-colors duration-150;
+
+}
+
+a:hover {
+  @apply text-primary;
+}
+
+.dark a:hover {
+  @apply text-cyan-100;
 }
 
 a:hover {
   @apply text-primary dark:text-cyan-100;
 }
+
+/* stylelint-enable at-rule-no-unknown */
 
 .hex-bg {
   position: absolute;

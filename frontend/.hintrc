@@ -3,12 +3,35 @@
     "development"
   ],
   "hints": {
+    "apply": "none",
+    "no-inline-styles": "off",
+    "tailwindcss/no-custom-classname": "off",
     "axe/aria": [
       "default",
       {
         "aria-valid-attr-value": "off"
       }
     ],
-    "no-inline-styles": "off"
+    "rules": {
+      "apply": "none",
+      "at-rule-no-unknown": [
+        true,
+        {
+          "ignoreAtRules": [
+            "apply",
+            "tailwind",
+            "layer",
+            "variants",
+            "responsive",
+            "screen",
+            "tailwind",
+            "layer",
+            "variants",
+            "responsive",
+            "screen"
+          ]
+        }
+      ]
+    }
   }
 }

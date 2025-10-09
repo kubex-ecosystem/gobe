@@ -1,8 +1,8 @@
-import * as React from "react";
 import { Key, Lock, LogIn } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "../ui/Button";
 import { useI18n } from "../../i18n/provider";
+import { Button } from "../ui/Button";
 
 const MODE_ORDER = ["kubex-id", "sso", "service"] as const;
 
@@ -42,11 +42,10 @@ export function AuthForm({ onComplete }: AuthFormProps) {
                 setMode(tab);
                 setStatus(null);
               }}
-              className={`${baseTabStyles} ${
-                isActive
+              className={`${baseTabStyles} ${isActive
                   ? "border-primary/60 bg-primary.subtle text-primary.foreground dark:border-cyan-500/40 dark:bg-slate-800/80 dark:text-cyan-200"
                   : "border-slate-200 bg-white text-slate-600 hover:border-primary/40 hover:text-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-cyan-400/60 dark:hover:text-cyan-200"
-              }`}
+                }`}
             >
               {t(labelKey)}
             </button>
@@ -63,7 +62,7 @@ export function AuthForm({ onComplete }: AuthFormProps) {
                 required
                 id="email"
                 name="email"
-                type="email"
+                type="text"
                 placeholder="coauthor@kubex.world"
                 className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
               />
