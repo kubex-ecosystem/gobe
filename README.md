@@ -95,6 +95,7 @@ GoBE has evolved from a simple backend server to a comprehensive AI-integrated p
 - **🪝 Discord Multi-Webhooks:** Configure multiple Discord webhook targets with legacy config auto-migration
 - **🛡️ Discord Signature Guard:** Optional Ed25519 verification middleware with safe bypass defaults
 - **📡 Discord Webhook Streams:** Hub dispatches incoming Discord events into the shared webhook service & event bus
+- **🧑‍💻 Web Dashboard:** Built-in authenticated UI to browse Kubex users via GoBE + gdbase
 - **⚡ Streaming AI Responses:** Real-time AI chat with Server-Sent Events
 - **🔧 Enhanced MCP Tools:** Shell command execution with security whitelisting
 

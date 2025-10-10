@@ -3,6 +3,8 @@ import * as React from "react";
 
 import { useI18n } from "../../i18n/provider";
 import { fetchJson } from "../../lib/api";
+import { useRouter } from "../../lib/router";
+import { useAuth } from "../../context/auth";
 import { Button } from "../ui/Button";
 
 const MODE_ORDER = ["kubex-id", "sso", "service"] as const;
@@ -22,6 +24,8 @@ export function AuthForm({ onComplete }: AuthFormProps) {
   const [status, setStatus] = React.useState<string | null>(null);
   const [statusType, setStatusType] = React.useState<"success" | "error" | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
+  const { setAuth } = useAuth();
+  const { navigate } = useRouter();
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
@@ -51,15 +55,15 @@ export function AuthForm({ onComplete }: AuthFormProps) {
           },
         });
 
+        setAuth(response.access_token, response.user);
         if (typeof window !== "undefined") {
-          window.localStorage.setItem("kubex:apiToken", response.access_token);
-          window.localStorage.setItem("kubex:refreshToken", response.refresh_token);
-          window.localStorage.setItem("kubex:user", JSON.stringify(response.user));
+          window.sessionStorage.setItem("kubex:refreshToken", response.refresh_token);
         }
 
         setStatusType("success");
         setStatus(t("access.feedback.success", "You're authenticated. Tokens stored locally."));
         onComplete?.(identifier);
+        navigate("/dashboard", { replace: true });
         return;
       }
 

@@ -4,18 +4,26 @@ import * as React from "react";
 import { AuthForm } from "../../components/modules/AuthForm";
 import { Card, CardDescription, CardHeader, CardTitle } from "../../components/ui/Card";
 import { KxBadge } from "../../components/ui/KxBadge";
+import { useAuth } from "../../context/auth";
 import { useI18n } from "../../i18n/provider";
 import { Link, useRouter } from "../../lib/router";
 
 export function AccessPage() {
   const { t, get } = useI18n();
   const { navigate } = useRouter();
+  const { accessToken } = useAuth();
   const bullets = get<string[]>("access.bullets", []);
   const [primaryBullet, ...secondaryBullets] = bullets;
 
-  const handleComplete = React.useCallback((identifier: string) => {
-    window.setTimeout(() => navigate("/app/"), 900);
+  const handleComplete = React.useCallback((_identifier: string) => {
+    window.setTimeout(() => navigate("/dashboard", { replace: true }), 900);
   }, [navigate]);
+
+  React.useEffect(() => {
+    if (accessToken) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [accessToken, navigate]);
 
   return (
     <div className="relative mx-auto flex max-w-5xl flex-col-reverse gap-14 px-4 pb-24 pt-12 text-slate-700 transition-colors duration-300 sm:px-6 md:flex-row md:items-start md:pb-28 md:pt-16 dark:text-slate-300">

@@ -52,9 +52,13 @@ export function getApiBase() {
 
 export function getAuthToken() {
   if (typeof window !== "undefined") {
-    const stored = window.localStorage?.getItem("kubex:apiToken");
-    if (stored) {
-      return stored;
+    const storedSession = window.sessionStorage?.getItem("kubex:apiToken");
+    if (storedSession) {
+      return storedSession;
+    }
+    const storedLocal = window.localStorage?.getItem("kubex:apiToken");
+    if (storedLocal) {
+      return storedLocal;
     }
   }
   return runtimeConfig.apiToken;

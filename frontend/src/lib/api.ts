@@ -1,4 +1,5 @@
 import { buildApiUrl, getAuthToken } from "./config";
+import { getAuthState } from "../state/authState";
 
 export interface ApiRequestOptions {
   path: string;
@@ -28,7 +29,13 @@ export async function fetchJson<T>({
   }
 
   if (auth) {
-    const token = getAuthToken();
+    let token = getAuthState().accessToken;
+    if (!token && typeof window !== "undefined") {
+      token = window.sessionStorage.getItem("kubex:apiToken");
+    }
+    if (!token) {
+      token = getAuthToken();
+    }
     if (token) {
       finalHeaders["Authorization"] = `Bearer ${token}`;
     }

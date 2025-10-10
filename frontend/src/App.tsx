@@ -1,10 +1,12 @@
 import * as React from "react";
 
 import PageShell from "./components/layout/PageShell";
+import { AuthProvider } from "./context/auth";
 import { ThemeProvider } from "./context/theme";
 import { I18nProvider } from "./i18n/provider";
 import { Link, RouteObject, RouterProvider, useRouteMatch, useRouter } from "./lib/router";
 import { AccessPage } from "./pages/Access";
+import { DashboardPage } from "./pages/Dashboard";
 import { LandingPage } from "./pages/Landing";
 import { ManifestoPage } from "./pages/Manifesto";
 
@@ -15,6 +17,7 @@ const routes: RouteObject[] = [
   { path: "/app/auth", element: <PageShell><AccessPage /></PageShell> },
   { path: "/app/manifesto", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
   { path: "/app/about", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
+  { path: "/app/dashboard", element: <PageShell withBackgroundPattern={false}><DashboardPage /></PageShell> },
 ];
 
 function NotFound() {
@@ -55,9 +58,11 @@ export default function App() {
   return (
     <I18nProvider>
       <ThemeProvider>
-        <RouterProvider>
-          <AppRoutes />
-        </RouterProvider>
+        <AuthProvider>
+          <RouterProvider>
+            <AppRoutes />
+          </RouterProvider>
+        </AuthProvider>
       </ThemeProvider>
     </I18nProvider>
   );

@@ -95,6 +95,7 @@ GoBE evoluiu de um servidor backend simples para uma plataforma abrangente integ
 - **🪝 Multi-webhooks no Discord:** Configure múltiplos destinos de webhook com compatibilidade automática para configs legadas
 - **🛡️ Guardião de Assinaturas Discord:** Middleware opcional para verificar assinaturas Ed25519 mantendo bypass seguro por padrão
 - **📡 Stream de webhooks Discord:** Hub publica eventos recebidos no serviço de webhooks e no event bus interno
+- **🧑‍💻 Painel Web:** UI autenticada para listar usuários Kubex via GoBE + gdbase
 - **⚡ Respostas IA com Streaming:** Chat IA em tempo real com Server-Sent Events
 - **🔧 Ferramentas MCP Aprimoradas:** Execução de comando shell com whitelist de segurança
 
