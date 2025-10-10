@@ -226,7 +226,7 @@ func (g *GoBE) InitializeResources() error {
 		gl.Log("error", "Database service is nil")
 		return errors.New("database service is nil")
 	}
-	g.dbService = dbService
+	g.dbService = dbService.(*is.DBServiceImpl)
 
 	g.SetDatabaseService(dbService)
 
@@ -512,7 +512,7 @@ func validateInitArgs(args *gl.InitArgs) (*cf.Config, error) {
 }
 
 // InitializeAllServices inicializa todos os serviços (Docker + Database) com context
-func (g *GoBE) initializeAllServices() (*is.DBServiceImpl, error) {
+func (g *GoBE) initializeAllServices() (is.DBService, error) {
 	ctx := context.Background()
 
 	// 🎯 NOVO SISTEMA: Usar DockerStackProvider com migrations programáticas

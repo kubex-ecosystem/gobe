@@ -16,7 +16,7 @@ const DefaultDBName = "kubex_db"
 // Database service and config type aliases
 
 type DBService = svc.DBService
-type IDBService = svc.IDBService
+type IDBService interface{ svc.DBService }
 type DBServiceImpl = svc.DBServiceImpl
 
 type DBConfig = svc.DBConfig
@@ -25,10 +25,6 @@ type DBConfigImpl = svc.DBConfigImpl
 
 type DatabaseImpl = svc.DatabaseImpl
 type MessageryImpl = svc.Messagery
-type JSONB = svc.JSONB
-type IJSONBData = svc.IJSONBData
-type JSONBData = svc.JSONBData
-type JSONBImpl = svc.JSONBImpl
 
 // Additional type aliases from factory
 
@@ -50,11 +46,11 @@ func NewJSONB() JSONB {
 	return svc.NewJSONB()
 }
 
-func NewJSONBData() IJSONBData {
+func NewJSONBData() JSONBImpl {
 	return svc.NewJSONBData()
 }
 
-func MapToJSONB(data map[string]interface{}) JSONBImpl {
+func MapToJSONB(data map[string]interface{}) svc.JSONBImpl {
 	jsonb := svc.JSONBImpl{}
 	for k, v := range data {
 		jsonb[k] = v
@@ -64,20 +60,24 @@ func MapToJSONB(data map[string]interface{}) JSONBImpl {
 
 func JSONBToImpl(data interface{}) JSONBImpl {
 	if data == nil {
-		return JSONBImpl{}
+		return svc.NewJSONBData()
 	}
 	// Try to convert to JSONBImpl
 	if impl, ok := data.(JSONBImpl); ok {
 		return impl
 	}
 	// Try to convert to map
+	mapData := svc.NewJSONBData()
 	if m, ok := data.(map[string]interface{}); ok {
-		return MapToJSONB(m)
+		for k, v := range m {
+			mapData.Set(k, v)
+		}
+		return mapData
 	}
-	return JSONBImpl{}
+	return svc.NewJSONBData()
 }
 
-func NewDBService(ctx context.Context, config *DBConfigImpl, logger l.Logger) (*DBServiceImpl, error) {
+func NewDBService(ctx context.Context, config *DBConfigImpl, logger l.Logger) (DBService, error) {
 	return svc.NewDatabaseService(ctx, config, logger)
 }
 

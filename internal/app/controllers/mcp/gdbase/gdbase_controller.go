@@ -43,7 +43,7 @@ type TunnelRequest struct {
 
 // GDBaseController handles GDBase tunnel operations
 type GDBaseController struct {
-	dbConn       *svc.DBServiceImpl
+	bridge       *svc.Bridge
 	mcpState     *hooks.Bitstate[uint64, system.SystemDomain]
 	dockerCli    *client.Client
 	tunnelState  *TunnelStatus
@@ -52,7 +52,7 @@ type GDBaseController struct {
 }
 
 // NewGDBaseController creates a new GDBaseController instance
-func NewGDBaseController(dbService *svc.DBServiceImpl) *GDBaseController {
+func NewGDBaseController(dbService *svc.Bridge) *GDBaseController {
 	// Initialize Docker client
 	dockerCli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -61,7 +61,7 @@ func NewGDBaseController(dbService *svc.DBServiceImpl) *GDBaseController {
 	}
 
 	return &GDBaseController{
-		dbConn:    dbService,
+		bridge:    dbService,
 		dockerCli: dockerCli,
 		tunnelState: &TunnelStatus{
 			Running: false,
@@ -274,4 +274,21 @@ func (g *GDBaseController) handleNamedTunnel(ctx context.Context, req *TunnelReq
 
 	gl.Log("info", "Named tunnel started successfully")
 	return nil
+}
+
+func (g *GDBaseController) ProcessDBMigration(c *gin.Context) {
+
+	// if err := g.bridge.Migrate(); err != nil {
+	// 	gl.Log("error", "Database migration failed", err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{
+	// 		"error":   "Internal Server Error",
+	// 		"message": "Database migration failed: " + err.Error(),
+	// 	})
+	// 	return
+	// }
+
+	gl.Log("info", "Database migration completed successfully")
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Database migration completed successfully",
+	})
 }

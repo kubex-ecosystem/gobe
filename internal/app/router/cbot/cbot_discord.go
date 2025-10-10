@@ -2,6 +2,7 @@
 package cbot
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
+	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
@@ -70,8 +72,13 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Failed to create Discord hub", err)
 		return nil
 	}
-
-	discordController := discord_controller.NewDiscordController(dbService, h, cfg)
+	ctx := context.Background()
+	dbCfg := dbService.GetConfig(ctx)
+	if dbCfg == nil {
+		gl.Log("error", "Database config is nil for OAuthRoutes")
+		return nil
+	}
+	discordController := discord_controller.NewDiscordController(dbService.(*gdbasez.DBServiceImpl), h, cfg)
 	discordGuard := middlewares.DiscordWebhookGuard(cfg.Discord)
 	webhookMiddlewares := map[string]gin.HandlerFunc{"discordWebhookGuard": discordGuard}
 

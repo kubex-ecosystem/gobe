@@ -18,8 +18,9 @@ type TasksController struct {
 }
 
 func NewTasksController(bridge *svc.Bridge) *TasksController {
+	repo := bridge.TasksRepo(context.Background(), bridge.DBService())
 	return &TasksController{
-		tasksService: bridge.TasksService(context.Background()),
+		tasksService: bridge.TasksService(repo),
 	}
 }
 

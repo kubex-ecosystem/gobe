@@ -18,7 +18,7 @@ import (
 
 type TokenClientImpl struct {
 	mapper                ci.IMapper[*sci.TSConfig]
-	dbSrv                 *svc.DBServiceImpl
+	dbSrv                 svc.DBService
 	crtSrv                sci.ICertService
 	keyringService        sci.IKeyringService
 	TokenService          sci.TokenService
@@ -120,7 +120,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	return tokenService, t.IDExpirationSecs, t.RefreshExpirationSecs, nil
 }
 
-func NewTokenClient(crtService sci.ICertService, dbService *svc.DBServiceImpl) *TokenClientImpl {
+func NewTokenClient(crtService sci.ICertService, dbService svc.DBService) *TokenClientImpl {
 	if crtService == nil {
 		gl.Log("error", fmt.Sprintf("error reading private key file: %v", "crtService is nil"))
 		return nil

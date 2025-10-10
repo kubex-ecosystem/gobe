@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 )
@@ -20,7 +20,7 @@ type IRouter interface {
 	GetPort() string
 	GetBasePath() string
 	GetEngine() *gin.Engine
-	GetDatabaseService() *is.DBServiceImpl
+	GetDatabaseService() svc.DBService
 	HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes
 	InitializeResources() error
 	Start() error
@@ -52,5 +52,5 @@ type IRoute interface {
 	SecureProperties() map[string]bool
 	Handler() gin.HandlerFunc
 	Middlewares() map[string]gin.HandlerFunc
-	DBService() *is.DBServiceImpl
+	DBService() svc.DBService
 }

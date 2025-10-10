@@ -11,7 +11,7 @@ require (
 	github.com/hyperledger/fabric-contract-api-go v1.2.2
 	github.com/kubex-ecosystem/analyzer v0.0.3
 	github.com/kubex-ecosystem/gdbase v1.2.11
-	github.com/kubex-ecosystem/logz v1.5.0
+	github.com/kubex-ecosystem/logz v1.5.1
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/shirou/gopsutil/v4 v4.25.8

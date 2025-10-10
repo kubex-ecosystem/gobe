@@ -3,7 +3,7 @@ package interfaces
 import (
 	"io"
 
-	is "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gdbase/factory"
 	l "github.com/kubex-ecosystem/logz"
 )
 
@@ -17,7 +17,7 @@ type ContactForm struct {
 
 type IGoBE interface {
 	GetReference() IReference
-	Environment() is.Environment
+	Environment() svc.Environment
 	InitializeResources() error
 	InitializeServer() (IRouter, error)
 	GetLogger() l.Logger
@@ -26,7 +26,7 @@ type IGoBE interface {
 	GetChanCtl() chan string
 	GetLogFilePath() string
 	GetConfigFilePath() string
-	SetDatabaseService(dbService is.DBService)
-	GetDatabaseService() is.DBService
+	SetDatabaseService(dbService svc.DBService)
+	GetDatabaseService() svc.DBService
 	LogsGoBE() (*io.OffsetWriter, error)
 }

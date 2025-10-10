@@ -57,10 +57,10 @@ func NewTasksRepo(ctx context.Context, dbService *svc.DBServiceImpl) TasksRepo {
 
 // Model constructors - Using factory functions from gdbase
 
-func NewProvidersModel(provider, orgOrGroup string, config JSONBImpl) ProvidersModel {
+func NewProvidersModel(provider, orgOrGroup string, config svc.JSONBImpl) ProvidersModel {
 	return models.NewProvidersModel(provider, orgOrGroup, config)
 }
 
-func NewPreferencesModel(scope string, config JSONBImpl) PreferencesModel {
+func NewPreferencesModel(scope string, config svc.JSONBImpl) PreferencesModel {
 	return models.NewPreferencesModel(scope, config)
 }

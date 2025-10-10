@@ -21,9 +21,20 @@ type OAuthController struct {
 }
 
 // NewOAuthController creates a new OAuth controller
-func NewOAuthController(dbService *svc.DBServiceImpl, oauthService oauth.IOAuthService) *OAuthController {
+func NewOAuthController(dbService svc.DBService, oauthService oauth.IOAuthService) *OAuthController {
+	var dbSvc *svc.DBServiceImpl
+	if dbService != nil {
+		if impl, ok := dbService.(*svc.DBServiceImpl); ok {
+			dbSvc = impl
+		}
+	}
+	if oauthService == nil {
+		gl.Log("error", "OAuthService is nil in NewOAuthController")
+		return nil
+	}
+
 	return &OAuthController{
-		dbService:    dbService,
+		dbService:    dbSvc,
 		oauthService: oauthService,
 	}
 }

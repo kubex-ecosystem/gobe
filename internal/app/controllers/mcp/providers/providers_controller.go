@@ -18,8 +18,10 @@ type ProvidersController struct {
 }
 
 func NewProvidersController(bridge *svc.Bridge) *ProvidersController {
+	repo := bridge.ProvidersRepo(context.Background(), bridge.DBService())
+
 	return &ProvidersController{
-		providersService: bridge.ProvidersService(context.Background()),
+		providersService: bridge.ProvidersService(repo),
 	}
 }
 

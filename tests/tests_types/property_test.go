@@ -17,7 +17,7 @@ import (
 
 func TestProperty_GetSetSerialize(t *testing.T) {
 	val := 0
-	p := types.NewProperty("counter", &val, false, nil).(*types.Property[int])
+	p := types.NewProperty("counter", &val, false, nil)
 	if p.GetName() != "counter" {
 		t.Fatalf("expected name 'counter'")
 	}

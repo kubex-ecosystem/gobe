@@ -19,8 +19,10 @@ type PreferencesController struct {
 }
 
 func NewPreferencesController(bridge *svc.Bridge) *PreferencesController {
+	repo := bridge.PreferencesRepo(context.Background(), bridge.DBService())
+
 	return &PreferencesController{
-		preferencesService: bridge.PreferencesService(context.Background()),
+		preferencesService: bridge.PreferencesService(repo),
 		APIWrapper:         types.NewAPIWrapper[svc.PreferencesModel](),
 	}
 }

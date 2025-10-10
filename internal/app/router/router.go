@@ -49,9 +49,16 @@ type Router struct {
 }
 
 // newRouter initializes a new Router instance with the provided configuration.
-func newRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs *gl.InitArgs, logger l.Logger, debug bool) (*Router, error) {
+func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *gl.InitArgs, logger l.Logger, debug bool) (*Router, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
+	}
+
+	var dbService *svc.DBServiceImpl
+	if databaseService != nil {
+		if ds, ok := databaseService.(*svc.DBServiceImpl); ok {
+			dbService = ds
+		}
 	}
 
 	rtr := &Router{
@@ -61,7 +68,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, i
 		RouterConfigImpl: &RouterConfigImpl{
 			RoutesKbx:       make(map[string]map[string]ci.IRoute),
 			Debug:           debug,
-			DatabaseService: databaseService,
+			DatabaseService: dbService,
 			Properties:      make(map[string]any),
 			Middlewares:     make(map[string]gin.HandlerFunc),
 			Settings: map[string]string{
@@ -88,12 +95,12 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, i
 }
 
 // NewRouter creates a new Router instance and returns it as an IRouter interface.
-func NewRouter(serverConfig *t.GoBEConfig, databaseService *svc.DBServiceImpl, initArgs *gl.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
-	return newRouter(serverConfig, databaseService, initArgs, logger, debug)
+func NewRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *gl.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
+	return NewRouterImpl(serverConfig, databaseService, initArgs, logger, debug)
 }
 
 // NewRequest is a placeholder function for creating a new request.
-func NewRequest(dbService *svc.DBServiceImpl, s string, i1, i2 int) (any, any) {
+func NewRequest(dbService svc.DBService, s string, i1, i2 int) (any, any) {
 	panic("unimplemented")
 }
 
@@ -133,7 +140,7 @@ func (rtr *Router) GetEngine() *gin.Engine {
 }
 
 // GetDatabaseService returns the database service instance.
-func (rtr *Router) GetDatabaseService() *svc.DBServiceImpl {
+func (rtr *Router) GetDatabaseService() svc.DBService {
 	return rtr.DatabaseService
 }
 

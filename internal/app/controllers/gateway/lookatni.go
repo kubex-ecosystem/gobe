@@ -27,9 +27,11 @@ func NewLookAtniController(dbService *svc.DBServiceImpl) *LookAtniController {
 	analyzerAPIKey := getEnv("GEMX_ANALYZER_API_KEY", "")
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
 
+	bridge := svc.NewBridge(context.Background(), dbService, "gdbase")
+
 	// Initialize GDBase AnalysisJob service using gdbasez bridge
-	analysisJobRepo := svc.NewAnalysisJobRepo(context.Background(), dbService)
-	analysisJobService := svc.NewAnalysisJobService(analysisJobRepo)
+	analysisJobRepo := bridge.AnalysisJobRepo(context.Background(), dbService)
+	analysisJobService := bridge.AnalysisJobService(analysisJobRepo)
 
 	return &LookAtniController{
 		dbService:          dbService,

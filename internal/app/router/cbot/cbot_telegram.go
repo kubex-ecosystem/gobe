@@ -7,6 +7,7 @@ import (
 	telegram_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/chatbots/telegram"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
+	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
@@ -39,7 +40,7 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	svc := telegram.NewService(cfg.Integrations.Telegram)
-	controller := telegram_controller.NewController(dbService, svc)
+	controller := telegram_controller.NewController(dbService.(*gdbasez.DBServiceImpl), svc)
 	routes := make(map[string]ar.IRoute)
 	routes["TelegramWebhook"] = proto.NewRoute(http.MethodPost, "/api/v1/telegram/webhook", "application/json", controller.HandleWebhook, nil, dbService, nil, nil)
 	routes["TelegramSend"] = proto.NewRoute(http.MethodPost, "/api/v1/telegram/send", "application/json", controller.SendMessage, nil, dbService, nil, nil)

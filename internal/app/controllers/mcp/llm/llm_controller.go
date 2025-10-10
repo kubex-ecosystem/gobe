@@ -19,8 +19,10 @@ type LLMController struct {
 }
 
 func NewLLMController(bridge *svc.Bridge) *LLMController {
+	repo := bridge.LLMRepo(context.Background(), bridge.DBService())
+
 	return &LLMController{
-		llmService: bridge.LLMService(context.Background()),
+		llmService: bridge.LLMService(repo),
 		APIWrapper: types.NewAPIWrapper[svc.LLMModel](),
 	}
 }

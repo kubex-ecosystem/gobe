@@ -115,5 +115,6 @@ func SwaggerMain(dbService *services.DBServiceImpl, _ error) {
 }
 
 func main() {
-	SwaggerMain(services.NewDBService(context.Background(), nil, nil))
+	dbService, err := services.NewDBService(context.Background(), nil, nil)
+	SwaggerMain(dbService.(*services.DBServiceImpl), err)
 }

@@ -6,6 +6,7 @@ import (
 
 	mcp_system_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/system"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
@@ -26,7 +27,7 @@ func NewMCPSystemRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for MCPSystemRoutes")
 		return nil
 	}
-	mcpSystemController := mcp_system_controller.NewMetricsController(context.Background(), dbService)
+	mcpSystemController := mcp_system_controller.NewMetricsController(context.Background(), dbService.(*svc.DBServiceImpl))
 
 	routesMap := make(map[string]ar.IRoute)
 	// middlewaresMap := rtl.GetMiddlewares()

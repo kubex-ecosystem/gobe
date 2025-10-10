@@ -70,12 +70,12 @@ func marshalToMapSlice(value any) ([]map[string]any, error) {
 }
 
 func NewCronJobController(bridge *svc.Bridge) *CronController {
-	cronRepo, ok := bridge.NewCronJobRepo(context.Background(), bridge.DBService()).(*mdl.CronJobRepoImpl)
+	cronRepo, ok := bridge.CronJobRepo(context.Background(), bridge.DBService()).(*mdl.CronJobRepoImpl)
 	if !ok {
 		gl.Log("error", "Failed to create CronJobRepo")
 		return nil
 	}
-	cronService, ok := bridge.NewCronJobService(context.Background(), cronRepo).(*mdl.CronJobServiceImpl)
+	cronService, ok := bridge.CronJobService(cronRepo).(*mdl.CronJobServiceImpl)
 	if !ok {
 		gl.Log("error", "Failed to create CronJobService")
 		return nil

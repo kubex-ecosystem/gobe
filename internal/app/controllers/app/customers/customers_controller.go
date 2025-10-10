@@ -24,7 +24,7 @@ type (
 )
 
 func NewCustomerController(bridge *gdbasez.Bridge) *CustomerController {
-	clientRepo := mdl.NewClientRepo(context.Background(), bridge.DBService())
+	clientRepo := mdl.NewClientRepo(context.Background(), bridge.DBService().(*gdbasez.DBServiceImpl))
 	if clientRepo == nil {
 		gl.Log("error", "Failed to create ClientRepo")
 		return nil

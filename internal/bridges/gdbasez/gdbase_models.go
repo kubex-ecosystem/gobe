@@ -1,13 +1,16 @@
 package gdbasez
 
 import (
-	"context"
-
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	fscm "github.com/kubex-ecosystem/gdbase/factory/models"
 )
 
 type (
+	JSONB      = svc.JSONB
+	JSONBData  = svc.JSONBData
+	IJSONBData = svc.JSONBData
+	JSONBImpl  = svc.JSONBData
+
 	// Client definitions
 
 	ClientService = fscm.ClientService
@@ -30,9 +33,10 @@ type (
 
 	// Discord definitions
 
-	DiscordService = fscm.DiscordService
-	DiscordRepo    = fscm.DiscordRepo
-	DiscordModel   = fscm.DiscordModel
+	DiscordService   = fscm.DiscordService
+	DiscordRepo      = fscm.DiscordRepo
+	DiscordModelImpl = fscm.DiscordModel
+	DiscordModel     = fscm.DiscordModelInterface
 
 	// JobQueue definitions
 
@@ -56,6 +60,14 @@ type (
 	AnalysisJobImpl    = fscm.AnalysisJob
 	AnalysisJobModel   = fscm.AnalysisJobModel
 
+	OAuthClient        = fscm.OAuthClient
+	OAuthClientRepo    = fscm.OAuthClientRepo
+	OAuthClientService = fscm.OAuthClientService
+
+	AuthCode        = fscm.AuthCode
+	AuthCodeRepo    = fscm.AuthCodeRepo
+	AuthCodeService = fscm.AuthCodeService
+
 	// OrderModel   = fscm.OrderModel
 	// OrderRepo    = fscm.OrderRepo
 	// OrderService = fscm.OrderService
@@ -64,86 +76,3 @@ type (
 	// ContactRepo    = fscm.ContactRepo
 	// ContactService = fscm.ContactService
 )
-
-func NewClientService(db ClientRepo) ClientService {
-	return fscm.NewClientService(db)
-}
-
-func NewClientModel() *ClientModel {
-	return &ClientModel{}
-}
-
-func NewClientRepo(ctx context.Context, dbService *svc.DBServiceImpl) ClientRepo {
-	return fscm.NewClientRepo(ctx, dbService)
-}
-
-func NewProductService(db ProductRepo) ProductService {
-	return fscm.NewProductService(db)
-}
-
-func NewProductModel() *ProductModel {
-	return &ProductModel{}
-}
-
-func NewProductRepo(ctx context.Context, dbService *svc.DBServiceImpl) ProductRepo {
-	return fscm.NewProductRepo(ctx, dbService)
-}
-
-func NewCronJobServiceImpl(dbRepo *CronJobRepoImpl) *CronJobServiceImpl {
-	return fscm.NewCronJobServiceImpl(dbRepo)
-}
-
-func NewCronJobService(db *CronJobRepoImpl) CronJobService {
-	return fscm.NewCronJobService(db)
-}
-
-func NewCronModel() *CronJobModel {
-	return &CronJobModel{}
-}
-
-func NewCronRepo(ctx context.Context, dbService *svc.DBServiceImpl) *CronJobRepoImpl {
-	return fscm.NewCronJobRepoImpl(ctx, dbService)
-}
-
-func NewDiscordService(db DiscordRepo) DiscordService {
-	return fscm.NewDiscordService(db)
-}
-
-func NewDiscordModel() *DiscordModel {
-	return &DiscordModel{}
-}
-
-func NewDiscordRepo(ctx context.Context, dbService *svc.DBServiceImpl) DiscordRepo {
-	return fscm.NewDiscordRepo(ctx, dbService)
-}
-func NewJobQueueService(db JobQueueRepo) JobQueueService {
-	return fscm.NewJobQueueService(db)
-}
-
-func NewJobQueueRepo(ctx context.Context, dbService *svc.DBServiceImpl) JobQueueRepo {
-	return fscm.NewJobQueueRepo(ctx, dbService)
-}
-
-func NewJobQueueModel() JobQueueModel {
-	return fscm.NewJobQueueModel()
-}
-
-func NewAnalysisJobService(db AnalysisJobRepo) AnalysisJobService {
-	return fscm.NewAnalysisJobService(db)
-}
-
-func NewAnalysisJobRepo(ctx context.Context, dbService *svc.DBServiceImpl) AnalysisJobRepo {
-	return fscm.NewAnalysisJobRepo(ctx, dbService)
-}
-
-func NewAnalysisJobModel() AnalysisJobModel {
-	return fscm.NewAnalysisJobModel()
-}
-
-func NewWebhookRepo(ctx context.Context, dbService *svc.DBServiceImpl) WebhookRepo {
-	return fscm.NewWebhookRepo(ctx, dbService)
-}
-
-func NewWebhookService(repo WebhookRepo) WebhookService {
-	return fscm.NewWebhookService(repo)
-}

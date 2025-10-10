@@ -23,7 +23,7 @@ type (
 )
 
 func NewProductController(bridge *svc.Bridge) *ProductController {
-	prodRepo := mdl.NewProductRepo(context.Background(), bridge.DBService())
+	prodRepo := mdl.NewProductRepo(context.Background(), bridge.DBService().(*svc.DBServiceImpl))
 	prodService := mdl.NewProductService(prodRepo)
 	return &ProductController{
 		productService: prodService,

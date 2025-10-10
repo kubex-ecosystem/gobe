@@ -11,6 +11,7 @@ import (
 	analyzergateway "github.com/kubex-ecosystem/analyzer/factory/gateway"
 	gatewayController "github.com/kubex-ecosystem/gobe/internal/app/controllers/gateway"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
@@ -40,7 +41,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	var gatewayService *gatewaysvc.Service
 	var webhookService *webhooksvc.WebhookService
 
-	providersSvc := svc.NewProvidersService(svc.NewProvidersRepo(context.Background(), dbService))
+	providersSvc := svc.NewProvidersService(svc.NewProvidersRepo(context.Background(), dbService.(*gdbasez.DBServiceImpl)))
 	gw, err := gatewaysvc.NewService(providersSvc)
 	if err != nil {
 		gl.Log("error", "failed to initialize gateway service", err)
@@ -55,9 +56,9 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	chatController := gatewayController.NewChatController(gatewayService)
 	providersController := gatewayController.NewProvidersController(gatewayService)
 	adviseController := gatewayController.NewAdviseController(gatewayService)
-	scorecardController := gatewayController.NewScorecardController(dbService)
+	scorecardController := gatewayController.NewScorecardController(dbService.(*gdbasez.DBServiceImpl))
 	healthController := gatewayController.NewHealthController(dbService, gatewayService)
-	lookAtniController := gatewayController.NewLookAtniController(dbService)
+	lookAtniController := gatewayController.NewLookAtniController(dbService.(*gdbasez.DBServiceImpl))
 	webhookController := gatewayController.NewWebhookController(webhookService)
 	schedulerController := gatewayController.NewSchedulerController()
 

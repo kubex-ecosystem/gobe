@@ -54,8 +54,9 @@ func summariesFromUsers(users []mdl.UserModel) []UserSummary {
 }
 
 func NewUserController(bridge *svc.Bridge) *UserController {
+	repo := bridge.UserRepo(context.Background(), bridge.DBService())
 	return &UserController{
-		userService: bridge.UserService(context.Background()),
+		userService: bridge.UserService(repo),
 		APIWrapper:  types.NewAPIWrapper[mdl.UserModel](),
 	}
 }

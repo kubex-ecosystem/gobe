@@ -44,8 +44,11 @@ func NewAnalyzerController(bridge *m.Bridge) *AnalyzerController {
 
 	analyzerService := analyzer.NewService(analyzerBaseURL, analyzerAPIKey)
 
+	// Use bridge to get analysis job repository
+	repo := bridge.AnalysisJobRepo(context.Background(), bridge.DBService())
+
 	// Use bridge to get analysis job service
-	analysisService := bridge.AnalysisJobService(context.Background())
+	analysisService := bridge.AnalysisJobService(repo)
 
 	return &AnalyzerController{
 		bridge:          bridge,
@@ -1052,11 +1055,11 @@ func convertModelToAnalysisJob(job *m.AnalysisJobImpl) AnalysisJob {
 }
 
 func jsonbToMap(data m.JSONBImpl) map[string]interface{} {
-	if len(data) == 0 {
+	if data.Len() == 0 {
 		return nil
 	}
-	result := make(map[string]interface{}, len(data))
-	for key, value := range data {
+	result := make(map[string]interface{}, data.Len())
+	for key, value := range data.ToMap() {
 		result[key] = value
 	}
 	return result

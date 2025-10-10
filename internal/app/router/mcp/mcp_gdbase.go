@@ -1,10 +1,12 @@
 package mcp
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
+	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
@@ -24,10 +26,19 @@ func NewMCPGDBaseRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for MCP GDBase Route")
+		gl.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
-	mcpGDBaseController := mcp_gdbase_controller.NewGDBaseController(dbService)
+	ctx := context.Background()
+	dbCfg := dbService.GetConfig(ctx)
+	if dbCfg == nil {
+		gl.Log("error", "Database config is nil for OAuthRoutes")
+		return nil
+	}
+	dbName := dbCfg.GetDBName()
+	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
+	mcpGDBaseController := mcp_gdbase_controller.NewGDBaseController(bridge)
 
 	routesMap := make(map[string]ar.IRoute)
 

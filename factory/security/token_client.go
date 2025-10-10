@@ -6,6 +6,6 @@ import (
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 )
 
-func NewTokenClient(certService sci.ICertService, db *s.DBServiceImpl) *sau.TokenClientImpl {
+func NewTokenClient(certService sci.ICertService, db s.DBService) *sau.TokenClientImpl {
 	return sau.NewTokenClient(certService, db)
 }

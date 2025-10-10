@@ -11,9 +11,10 @@ import (
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
+	// svc "github.com/kubex-ecosystem/gdbase/factory"
 	sau "github.com/kubex-ecosystem/gobe/factory/security"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
-	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	oauthsvc "github.com/kubex-ecosystem/gobe/internal/services/oauth"
 )
 
@@ -44,13 +45,20 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	dbName := dbCfg.GetDBName()
 	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
 
+	// Create bridge to gdbase (clean abstraction)
+	bridge := svc.NewBridge(ctx, dbService, dbName)
+
 	// Create OAuth services via bridge (clean abstraction)
-	oauthClientService := gdbasez.NewOAuthClientService(ctx, dbService)
-	authCodeService := gdbasez.NewAuthCodeService(ctx, dbService)
+	oauthClientRepo := bridge.OAuthClientRepo(ctx, dbService)
+	oauthClientService := bridge.OAuthClientService(oauthClientRepo)
+
+	// Create AuthCodeService
+	authCodeRepo := bridge.AuthCodeRepo(ctx, dbService)
+	authCodeService := bridge.AuthCodeService(authCodeRepo)
 
 	// Create UserService
-	userRepo := gdbasez.NewUserRepo(ctx, dbService)
-	userService := gdbasez.NewUserService(userRepo)
+	userRepo := bridge.UserRepo(ctx, dbService)
+	userService := bridge.UserService(userRepo)
 
 	// Create TokenService (same pattern as user routes)
 	certService := crt.NewCertService(
