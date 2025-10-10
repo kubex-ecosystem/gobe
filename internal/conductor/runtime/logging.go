@@ -61,7 +61,7 @@ func InitPromShim() {
 func (p *promShim) Inc(name string, delta float64) { p.pm.IncrementMetric(name, delta) }
 
 // Histogram-like (we store sum/count and derive mean)
-func (p *promShim) ObserveLatency(seconds float64) {
+func (p *promShim) ObserveLatency(path string, seconds float64) {
 	p.pm.IncrementMetric("conductor_dispatch_latency_seconds_sum", seconds)
 	p.pm.IncrementMetric("conductor_dispatch_latency_seconds_count", 1)
 
@@ -111,7 +111,7 @@ func EventLog(ev Event) {
 
 // RecordLatency sets the latency metric (in seconds).
 func RecordLatency(seconds float64) {
-	Prom.ObserveLatency(seconds)
+	Prom.ObserveLatency("", seconds)
 	gl.Log("debug", fmt.Sprintf("latency observed: %.4fs", seconds))
 }
 

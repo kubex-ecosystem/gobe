@@ -1,11 +1,15 @@
 package types
 
-// Database is an interface for database operations.
-type Database interface {
-	Query(query string, args ...interface{}) (Rows, error)
+import "context"
+
+type DBService interface {
+	Database() DirectDatabase
 }
 
-// Rows is an interface for iterating over database query results.
+type DirectDatabase interface {
+	Query(context.Context, string, ...interface{}) (any, error)
+}
+
 type Rows interface {
 	Next() bool
 	Scan(dest ...interface{}) error

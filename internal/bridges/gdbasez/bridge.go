@@ -76,9 +76,17 @@ func (b *Bridge) ProductService(ctx context.Context) ProductService {
 // Cron Jobs
 // ========================================
 
-func (b *Bridge) NewCronJobService(ctx context.Context) CronJobService {
-	repo := models.NewCronJobRepo(ctx, b.dbService)
-	return models.NewCronJobService(repo)
+func (b *Bridge) NewCronJobRepoImpl(ctx context.Context, db *svc.DBServiceImpl) *CronJobRepoImpl {
+	return models.NewCronJobRepo(ctx, db).(*CronJobRepoImpl)
+}
+func (b *Bridge) NewCronJobRepo(ctx context.Context, db *svc.DBServiceImpl) CronJobRepo {
+	return models.NewCronJobRepo(ctx, db)
+}
+func (b *Bridge) NewCronJobServiceImpl(ctx context.Context, repo *CronJobRepoImpl) *CronJobServiceImpl {
+	return models.NewCronJobService(repo).(*CronJobServiceImpl)
+}
+func (b *Bridge) NewCronJobService(ctx context.Context, repo *CronJobRepoImpl) models.CronJobService {
+	return models.NewCronJobServiceImpl(repo)
 }
 
 // ========================================

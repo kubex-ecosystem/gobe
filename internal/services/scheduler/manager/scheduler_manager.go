@@ -1,72 +1,110 @@
 package manager
 
 import (
+	"context"
 	"fmt"
+	"sync"
 
+	"github.com/google/uuid"
 	tp "github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
 )
 
 type Scheduler struct {
-	// Implement the scheduler fields
-	jobs map[string]tp.Job
+	mu   sync.RWMutex
+	jobs map[string]*tp.JobImpl
 }
 
-// ScheduleJob adds a new job to the scheduler.
-func (s *Scheduler) ScheduleJob(job *tp.Job) error {
+func (s *Scheduler) ScheduleJob(ctx context.Context, job *tp.JobImpl) (tp.JobStatusResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	if s.jobs == nil {
-		s.jobs = make(map[string]tp.Job)
+		s.jobs = make(map[string]*tp.JobImpl)
 	}
-	jobID := job.Ref().ID.String() // Convertendo UUID para string
-	s.jobs[jobID] = *job
-	return nil
+
+	jobID := job.Ref().ID.String()
+	s.jobs[jobID] = job
+	job.SetStatus(tp.StatusScheduled, "queued by manager")
+
+	return tp.JobStatusResponse{
+		JobID:  jobID,
+		Status: job.GetStatus(),
+	}, nil
 }
 
-// CancelJob removes a job from the scheduler by its ID.
-func (s *Scheduler) CancelJob(jobID string) error {
-	if _, exists := s.jobs[jobID]; !exists {
+func (s *Scheduler) CancelJob(ctx context.Context, jobID uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	j, ok := s.jobs[jobID.String()]
+	if !ok {
 		return fmt.Errorf("job with ID %s not found", jobID)
 	}
-	delete(s.jobs, jobID)
+	j.SetStatus(tp.StatusCanceled, "canceled by manager")
+	delete(s.jobs, jobID.String())
 	return nil
 }
 
-// GetJobStatus retrieves the current status of a job by its ID.
-func (s *Scheduler) GetJobStatus(jobID string) (tp.JobStatus, error) {
-	job, exists := s.jobs[jobID]
+func (s *Scheduler) GetJobStatus(ctx context.Context, jobID uuid.UUID) (tp.JobStatus, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	job, exists := s.jobs[jobID.String()]
 	if !exists {
-		return "", fmt.Errorf("job with ID %s not found", jobID)
+		return tp.JobStatus{}, fmt.Errorf("job with ID %s not found", jobID)
 	}
-	return job.Status, nil
+	return job.GetStatus(), nil
 }
 
-// ListScheduledJobs returns a list of all scheduled jobs.
-func (s *Scheduler) ListScheduledJobs() ([]tp.Job, error) {
-	jobs := make([]tp.Job, 0, len(s.jobs))
+func (s *Scheduler) ListScheduledJobs(ctx context.Context) ([]*tp.JobImpl, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	jobs := make([]*tp.JobImpl, 0, len(s.jobs))
 	for _, job := range s.jobs {
 		jobs = append(jobs, job)
 	}
 	return jobs, nil
 }
 
-// RescheduleJob updates the schedule of an existing job.
-func (s *Scheduler) RescheduleJob(jobID string, newSchedule string) error {
+func (s *Scheduler) RescheduleJob(ctx context.Context, jobID string, newSchedule string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	job, exists := s.jobs[jobID]
 	if !exists {
 		return fmt.Errorf("job with ID %s not found", jobID)
 	}
 	job.Schedule = newSchedule
-	s.jobs[jobID] = job
+	job.SetStatus(tp.StatusRescheduled, "rescheduled by manager")
 	return nil
 }
 
-// StartScheduler starts the scheduler to process jobs.
-func (s *Scheduler) StartScheduler() error {
-	// Implementation for starting the scheduler
+func (s *Scheduler) StartScheduler(ctx context.Context) error { return nil }
+
+func (s *Scheduler) StopScheduler(ctx context.Context) error { return nil }
+
+// func (s *Scheduler) CancelJob(ctx context.Context, jobID string) error {
+// 	s.mu.Lock()
+// 	defer s.mu.Unlock()
+
+// 	j, ok := s.jobs[jobID]
+// 	if !ok {
+// 		return fmt.Errorf("job with ID %s not found", jobID)
+// 	}
+// 	j.SetStatus(tp.StatusCanceled, "canceled by manager")
+// 	delete(s.jobs, jobID)
+// 	return nil
+// }
+
+func (s *Scheduler) Health(ctx context.Context) error {
+	if s == nil {
+		return fmt.Errorf("scheduler is nil")
+	}
 	return nil
 }
-
-// StopScheduler stops the scheduler gracefully.
-func (s *Scheduler) StopScheduler() error {
-	// Implementation for stopping the scheduler
-	return nil
+func (s *Scheduler) Stats(ctx context.Context) map[string]any {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return map[string]any{"total_jobs": len(s.jobs)}
 }

@@ -4,17 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	scheduler "github.com/kubex-ecosystem/gobe/internal/services/scheduler"
 	l "github.com/kubex-ecosystem/logz/api"
 )
-
-type Dispatcher struct {
-	sched *scheduler.SchedulerImpl
-}
 
 type State string
 
@@ -43,6 +38,7 @@ type Event struct {
 	Schedule string
 	Command  string
 	Time     time.Time
+	Meta     map[string]any
 }
 
 func (e Event) ToMap() map[string]any {
@@ -58,15 +54,22 @@ func (e Event) ToMap() map[string]any {
 		"command":   e.Command,
 		"time":      e.Time.Format(time.RFC3339),
 		"timestamp": strconv.FormatInt(e.Time.UnixNano(), 10),
+		"meta":      e.Meta,
 	}
 }
 
-func NewDispatcher(s *scheduler.SchedulerImpl) *Dispatcher {
+type Dispatcher struct {
+	sched scheduler.IScheduler
+}
+
+func NewDispatcher(s scheduler.IScheduler) *Dispatcher {
 	return &Dispatcher{sched: s}
 }
 
 func (d *Dispatcher) Dispatch(intent *Intent) error {
 	start := time.Now()
+
+	// accepted → planned
 	PublishEvent(intent.Context, Event{
 		Kind:     "intent.accepted",
 		IntentID: intent.ID,
@@ -74,7 +77,6 @@ func (d *Dispatcher) Dispatch(intent *Intent) error {
 		Method:   intent.Method,
 		Time:     time.Now(),
 	})
-
 	PublishEvent(intent.Context, Event{
 		Kind:     "fsm.transition",
 		IntentID: intent.ID,
@@ -86,14 +88,13 @@ func (d *Dispatcher) Dispatch(intent *Intent) error {
 		Time:     time.Now(),
 	})
 
-	cap := d.resolveCapability(intent.Path)
-	switch cap {
+	switch cap := d.resolveCapability(intent.Path); cap {
 	case "scheduler.job.run":
 		err := d.dispatchToScheduler(intent)
 		RecordLatency(time.Since(start).Seconds())
 		return err
 	case "webhook.receive":
-		// pode plugar o webhooks aqui depois
+		// placeholder: encaixe futuro do webhooks
 		RecordLatency(time.Since(start).Seconds())
 		return errors.New("webhook.receive not wired yet")
 	default:
@@ -103,6 +104,7 @@ func (d *Dispatcher) Dispatch(intent *Intent) error {
 }
 
 func (d *Dispatcher) dispatchToScheduler(intent *Intent) error {
+	// planned → running
 	PublishEvent(intent.Context, Event{
 		Kind:     "fsm.transition",
 		IntentID: intent.ID,
@@ -114,18 +116,26 @@ func (d *Dispatcher) dispatchToScheduler(intent *Intent) error {
 		Time:     time.Now(),
 	})
 
-	job := scheduler.NewJobImpl(
-		// id int,
-		intent.ID,
-		// name string,
-		intent.Path,
-		// schedule string,
-		intent.Schedule,
-		// command string,
-		intent.Command,
+	// Extrair campos esperados do body (defensivo)
+	var (
+		spec    string
+		command string
 	)
+	if v, ok := intent.Body["schedule"].(string); ok {
+		spec = v
+	}
+	if v, ok := intent.Body["command"].(string); ok {
+		command = v
+	}
 
-	if err := d.sched.ScheduleJob(job); err != nil {
+	// Criar Job (UUID novo — não depende do formato do Intent.ID)
+	jobID := uuid.New()
+	job := scheduler.NewJobImpl(jobID, "intent:"+intent.Path, spec, command)
+
+	// Chamar scheduler (ctx-aware, retorna JobStatusResponse)
+	resp, err := d.sched.ScheduleJob(intent.Context, job)
+	if err != nil {
+		// running → failed
 		PublishEvent(intent.Context, Event{
 			Kind:     "fsm.transition",
 			IntentID: intent.ID,
@@ -135,10 +145,14 @@ func (d *Dispatcher) dispatchToScheduler(intent *Intent) error {
 			Method:   intent.Method,
 			Message:  err.Error(),
 			Time:     time.Now(),
+			Meta: map[string]any{
+				"job_id": jobID.String(),
+			},
 		})
 		return err
 	}
 
+	// running → done (agendado/enfileirado com sucesso)
 	PublishEvent(intent.Context, Event{
 		Kind:     "fsm.transition",
 		IntentID: intent.ID,
@@ -146,19 +160,39 @@ func (d *Dispatcher) dispatchToScheduler(intent *Intent) error {
 		To:       StateDone,
 		Path:     intent.Path,
 		Method:   intent.Method,
-		Message:  "job completed (scheduled/queued)",
+		Message:  "job accepted by scheduler",
 		Time:     time.Now(),
+		Meta: map[string]any{
+			"job_id":  resp.JobID,
+			"status":  resp.Status.Code,
+			"message": resp.Status.Message,
+		},
 	})
 	return nil
 }
 
 func (d *Dispatcher) resolveCapability(path string) string {
-	switch {
-	case strings.Contains(path, "/jobs"), strings.Contains(path, "/tasks"):
+	// simples e direto; pode trocar por uma tabela DCL/YAML depois
+	if contains(path, "/jobs") || contains(path, "/tasks") {
 		return "scheduler.job.run"
-	case strings.Contains(path, "/webhook"):
-		return "webhook.receive"
-	default:
-		return ""
 	}
+	if contains(path, "/webhook") {
+		return "webhook.receive"
+	}
+	return ""
+}
+
+// contains: helper local pra evitar import de strings só pra isso.
+func contains(s, sub string) bool {
+	// implementação trivial (pode substituir por strings.Contains se preferir)
+	n := len(sub)
+	if n == 0 {
+		return true
+	}
+	for i := 0; i+n <= len(s); i++ {
+		if s[i:i+n] == sub {
+			return true
+		}
+	}
+	return false
 }

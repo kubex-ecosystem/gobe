@@ -44,7 +44,7 @@ func init() {
 	// notifier = logz.NewWebSocketNotifier(wsNotifierConfig)
 }
 
-func Init(router *gin.Engine, s *scheduler.SchedulerImpl) {
+func Init(router *gin.Engine, s scheduler.IScheduler) {
 	// log.Println("[Conductor] initializing runtime...")
 	gl.Log("info", "[Conductor] initializing runtime...")
 

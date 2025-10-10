@@ -10,7 +10,7 @@ import (
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 )
 
-type IJob interface {
+type Job interface {
 	Mu() *t.Mutexes
 	Ref() *t.Reference
 	GetUserID() uuid.UUID
@@ -19,7 +19,7 @@ type IJob interface {
 	Cancel() error
 }
 
-type Job struct {
+type JobImpl struct {
 	*t.Mutexes
 	*t.Reference
 
@@ -32,8 +32,8 @@ type Job struct {
 	Status JobStatus // Adicionado para rastrear o status do job
 }
 
-func NewJobImpl(id uuid.UUID, name, schedule, command string) *Job {
-	return &Job{
+func NewJobImpl(id uuid.UUID, name, schedule, command string) *JobImpl {
+	return &JobImpl{
 		ID:       id,
 		Name:     name,
 		Schedule: schedule,
@@ -41,30 +41,30 @@ func NewJobImpl(id uuid.UUID, name, schedule, command string) *Job {
 	}
 }
 
-func NewJob(id uuid.UUID, name, schedule, command string) IJob {
+func NewJob(id uuid.UUID, name, schedule, command string) Job {
 	return NewJobImpl(id, name, schedule, command)
 }
 
-func (j *Job) Mu() *t.Mutexes {
+func (j *JobImpl) Mu() *t.Mutexes {
 	return j.Mutexes
 }
-func (j *Job) Ref() *t.Reference {
+func (j *JobImpl) Ref() *t.Reference {
 	return j.Reference
 }
-func (j *Job) GetUserID() uuid.UUID {
+func (j *JobImpl) GetUserID() uuid.UUID {
 	return j.userID
 }
-func (j *Job) Run() error {
+func (j *JobImpl) Run() error {
 	gl.Log("info", fmt.Sprintf("Running job: %s (ID: %d)", j.Name, j.ID))
 	// Implement the logic to execute the command.
 	return nil
 }
-func (j *Job) Retry() error {
+func (j *JobImpl) Retry() error {
 	gl.Log("info", fmt.Sprintf("Retrying job: %s (ID: %d)", j.Name, j.ID))
 
 	return nil
 }
-func (j *Job) Cancel() error {
+func (j *JobImpl) Cancel() error {
 	gl.Log("info", fmt.Sprintf("Cancelling job: %s (ID: %d)", j.Name, j.ID))
 	// Implement cancel logic.
 	return nil

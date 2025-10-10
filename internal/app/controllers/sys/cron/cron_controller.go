@@ -18,7 +18,7 @@ import (
 )
 
 type CronController struct {
-	ICronService mdl.CronJobService
+	ICronService *mdl.CronJobServiceImpl
 	APIWrapper   *types.APIWrapper[mdl.CronJobModel]
 }
 
@@ -70,8 +70,18 @@ func marshalToMapSlice(value any) ([]map[string]any, error) {
 }
 
 func NewCronJobController(bridge *svc.Bridge) *CronController {
+	cronRepo, ok := bridge.NewCronJobRepo(context.Background(), bridge.DBService()).(*mdl.CronJobRepoImpl)
+	if !ok {
+		gl.Log("error", "Failed to create CronJobRepo")
+		return nil
+	}
+	cronService, ok := bridge.NewCronJobService(context.Background(), cronRepo).(*mdl.CronJobServiceImpl)
+	if !ok {
+		gl.Log("error", "Failed to create CronJobService")
+		return nil
+	}
 	return &CronController{
-		ICronService: bridge.NewCronJobService(context.Background()),
+		ICronService: cronService,
 		APIWrapper:   types.NewAPIWrapper[mdl.CronJobModel](),
 	}
 }

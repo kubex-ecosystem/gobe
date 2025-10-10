@@ -1,57 +1,73 @@
 package types
 
-type JobStatus string
+import "time"
+
+// JobStatusType define os possíveis estados de um job.
+type JobStatusType string
 
 const (
-	JobStatusPending   JobStatus = "pending"
-	JobStatusRunning   JobStatus = "running"
-	JobStatusCompleted JobStatus = "completed"
-	JobStatusFailed    JobStatus = "failed"
+	StatusPending     JobStatusType = "pending"
+	StatusScheduled   JobStatusType = "scheduled"
+	StatusRunning     JobStatusType = "running"
+	StatusCompleted   JobStatusType = "completed"
+	StatusFailed      JobStatusType = "failed"
+	StatusCanceled    JobStatusType = "canceled"
+	StatusRescheduled JobStatusType = "rescheduled"
 )
 
-// JobStatusMap is a map of job statuses to their string representations.
-var JobStatusMap = map[JobStatus]string{
-	JobStatusPending:   "pending",
-	JobStatusRunning:   "running",
-	JobStatusCompleted: "completed",
-	JobStatusFailed:    "failed",
+type JobStatus struct {
+	Code       JobStatusType `json:"code"`
+	Message    string        `json:"message,omitempty"`
+	UpdatedAt  time.Time     `json:"updated_at"`
+	Progress   float64       `json:"progress,omitempty"`
+	LastOutput string        `json:"last_output,omitempty"`
 }
 
-// JobStatusList is a list of all possible job statuses.
-var JobStatusList = []JobStatus{
-	JobStatusPending,
-	JobStatusRunning,
-	JobStatusCompleted,
-	JobStatusFailed,
+// NewStatus cria um novo status de job.
+func NewStatus(code JobStatusType, msg string) JobStatus {
+	return JobStatus{
+		Code:      code,
+		Message:   msg,
+		UpdatedAt: time.Now(),
+	}
 }
 
-type JobStatusType struct {
-	JobID     string    `json:"job_id"`
-	JobStatus JobStatus `json:"job_status"`
-}
-
+// JobStatusResponse é o payload de resposta retornado por operações do scheduler.
 type JobStatusResponse struct {
-	JobID               string    `json:"job_id"`
-	JobStatus           JobStatus `json:"job_status"`
-	JobMessage          string    `json:"job_message"`
-	JobTime             string    `json:"job_time"`
-	JobDuration         string    `json:"job_duration"`
-	JobRetries          int       `json:"job_retries"`
-	JobMaxRetries       int       `json:"job_max_retries"`
-	JobExecTimeout      int       `json:"job_exec_timeout"`
-	JobMaxExecutionTime int       `json:"job_max_execution_time"`
-	JobCreatedAt        string    `json:"job_created_at"`
-	JobUpdatedAt        string    `json:"job_updated_at"`
-	JobLastExecutedAt   string    `json:"job_last_executed_at"`
-	JobLastExecutedBy   string    `json:"job_last_executed_by"`
-	JobCreatedBy        string    `json:"job_created_by"`
-	JobUpdatedBy        string    `json:"job_updated_by"`
-	JobUserID           string    `json:"job_user_id"`
-	JobCronType         string    `json:"job_cron_type"`
-	JobCronExpression   string    `json:"job_cron_expression"`
-	JobCommand          string    `json:"job_command"`
-	JobMethod           string    `json:"job_method"`
-	JobAPIEndpoint      string    `json:"job_api_endpoint"`
-	JobLastRunStatus    string    `json:"job_last_run_status"`
-	JobLastRunMessage   string    `json:"job_last_run_message"`
+	JobID     string      `json:"job_id"`
+	Status    JobStatus   `json:"status"`
+	Scheduled bool        `json:"scheduled"`
+	Error     string      `json:"error,omitempty"`
+	CreatedAt time.Time   `json:"created_at"`
+	Metadata  interface{} `json:"metadata,omitempty"`
+}
+
+// NewJobStatusResponse cria uma resposta padronizada para um job.
+func NewJobStatusResponse(jobID string, status JobStatusType, msg string, err error) JobStatusResponse {
+	resp := JobStatusResponse{
+		JobID:     jobID,
+		Scheduled: status == StatusScheduled,
+		Status: JobStatus{
+			Code:      status,
+			Message:   msg,
+			UpdatedAt: time.Now(),
+		},
+		CreatedAt: time.Now(),
+	}
+	if err != nil {
+		resp.Error = err.Error()
+		resp.Status.Code = StatusFailed
+		resp.Status.Message = msg
+	}
+	return resp
+}
+
+// SetStatus atualiza o status do job de forma segura e consistente.
+func (j *JobImpl) SetStatus(code JobStatusType, msg string) {
+	j.Status = NewStatus(code, msg)
+}
+
+// GetStatus Atalho opcional pra ler o status atual do job.
+func (j *JobImpl) GetStatus() JobStatus {
+	return j.Status
 }

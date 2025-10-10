@@ -22,9 +22,11 @@ type (
 
 	// Cron definitions
 
-	CronJobService = fscm.CronJobService
-	CronJobRepo    = fscm.CronJobRepo
-	CronJobModel   = fscm.CronJobModel
+	CronJobServiceImpl = fscm.CronJobServiceImpl
+	CronJobService     = fscm.CronJobService
+	CronJobRepoImpl    = fscm.CronJobRepoImpl
+	CronJobRepo        = fscm.CronJobRepo
+	CronJobModel       = fscm.CronJobModel
 
 	// Discord definitions
 
@@ -87,7 +89,11 @@ func NewProductRepo(ctx context.Context, dbService *svc.DBServiceImpl) ProductRe
 	return fscm.NewProductRepo(ctx, dbService)
 }
 
-func NewCronJobService(db CronJobRepo) CronJobService {
+func NewCronJobServiceImpl(dbRepo *CronJobRepoImpl) *CronJobServiceImpl {
+	return fscm.NewCronJobServiceImpl(dbRepo)
+}
+
+func NewCronJobService(db *CronJobRepoImpl) CronJobService {
 	return fscm.NewCronJobService(db)
 }
 
@@ -95,8 +101,8 @@ func NewCronModel() *CronJobModel {
 	return &CronJobModel{}
 }
 
-func NewCronRepo(ctx context.Context, dbService *svc.DBServiceImpl) CronJobRepo {
-	return fscm.NewCronJobRepo(ctx, dbService)
+func NewCronRepo(ctx context.Context, dbService *svc.DBServiceImpl) *CronJobRepoImpl {
+	return fscm.NewCronJobRepoImpl(ctx, dbService)
 }
 
 func NewDiscordService(db DiscordRepo) DiscordService {

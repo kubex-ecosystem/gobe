@@ -38,14 +38,14 @@ import (
 // - Logs detalhados para rastreamento de ações e métricas.
 type GoroutinePool struct {
 	maxWorkers int
-	jobs       chan tp.IJob
+	jobs       chan tp.Job
 	wg         sync.WaitGroup
 }
 
 func NewGoroutinePool(maxWorkers int) *GoroutinePool {
 	return &GoroutinePool{
 		maxWorkers: maxWorkers,
-		jobs:       make(chan tp.IJob),
+		jobs:       make(chan tp.Job),
 	}
 }
 
@@ -164,11 +164,11 @@ func (p *GoroutinePool) StartWithResilientMonitoring(maxGoroutines int, maxHeapM
 func (p *GoroutinePool) Restart() {
 	log.Println("Restarting GoroutinePool...")
 	p.Stop()
-	p.jobs = make(chan tp.IJob, cap(p.jobs)) // Recria o canal com o mesmo buffer
+	p.jobs = make(chan tp.Job, cap(p.jobs))  // Recria o canal com o mesmo buffer
 	p.StartWithResilientMonitoring(100, 500) // Valores padrão para reinício
 }
 
-func (p *GoroutinePool) Submit(job tp.IJob) {
+func (p *GoroutinePool) Submit(job tp.Job) {
 	p.wg.Add(1)
 	p.jobs <- job
 }
