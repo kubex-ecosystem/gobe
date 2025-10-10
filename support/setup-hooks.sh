@@ -20,45 +20,76 @@ shopt -s inherit_errexit # Inherit the errexit option in functions
 _SCRIPT_DIR="$(git rev-parse --show-toplevel)"
 cd "$_SCRIPT_DIR" || exit 1
 
-echo "🚀 Configurando pre-commit hooks..."
-
 _default_pre_commit_config() {
+  echo "🚀 Configurando pre-commit hooks (defaults)..."
+
   # Create support/pre-commit-config.yaml if it doesn't exist
-  if [[ ! -f support/pre-commit-config.yaml ]]; then
-    echo "🛠️  Creating support/pre-commit-config.yaml..."
-    touch support/pre-commit-config.yaml
-    # shellcheck disable=SC2155
-    local _DEFAULT_PRE_COMMIT_CONFIG=$(cat <<'EOF'
+  if [[ ! -f support/.pre-commit-config.yaml || -z "$(cat support/.pre-commit-config.yaml)" ]]; then
+    echo "🛠️  Creating support/.pre-commit-config.yaml..."
+    printf '%s\n' '
+# This is the default pre-commit configuration file.
+# It includes basic hygiene checks, security scans
 # Pre-commit configuration file
 # Documentation: https://pre-commit.com/
 repos:
   # -------- Hygiene básica --------
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
-        args: ["--maxkb=1000"]
+        args: ["--maxkb=1512"]
 
   # -------- Segurança: detect-secrets --------
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
+        exclude: '"'"'(^docs/.*$|^README\.md$|^internal/sockets/messagery/rabbitmq\.go$|^frontend/tsconfig\.json$|^docs/swagger\.json$|^frontend/src/locales/.*$)'"'"'
+        files: '"'"'^(.*\.go$|.*\.yaml$|.*\.yml$|.*\.json$|.*\.tf$|.*\.tfvars$|.*\.sh$|.*\.ps1$)'"'"'
+        pragma: allowlist dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", pgConfig.Username, pgConfig.Password, pgConfig.Host, port, pgConfig.Name)
+
+  # -------- Segurança: semgrep --------
+  # - repo: https://github.com/returntocorp/semgrep
+  #   rev: v1.35.0
+  #   hooks:
+  #     - id: semgrep
+  #       args:
+  #         [
+  #           "--config=auto",
+  #           "--exclude=vendor/",
+  #           "--exclude=docs/",
+  #           "--exclude=support/",
+  #         ]
+  #       files: '"'"'^(.*\.go$|.*\.yaml$|.*\.yml$|.*\.json$|.*\.tf$|.*\.tfvars$|.*\.sh$|.*\.ps1$)'"'"'
+
+  # -------- Segurança: bandit --------
+  # - repo: https://github.com/PyCQA/bandit
+  #   rev: v1.7.0
+  #   hooks:
+  #     - id: bandit
+  #       args: ["-r", "."]
 
   # -------- Segurança: gitleaks --------
   - repo: https://github.com/zricethezav/gitleaks
-    rev: v8.17.0
+    rev: v8.28.0
     hooks:
       - id: gitleaks
         name: gitleaks
-        entry: gitleaks protect --staged --no-banner
+        entry: gitleaks
         language: system
         pass_filenames: false
+        args:
+          [
+            "protect",
+            "--staged",
+            "--no-banner",
+            "--config=support/.gitleaks.toml",
+          ]
 
   # -------- Go tools --------
   - repo: https://github.com/dnephin/pre-commit-golang
@@ -67,38 +98,20 @@ repos:
       - id: go-fmt
       - id: go-vet
       - id: go-mod-tidy
-      - id: golangci-lint
-        args: ["--fast"]
-
-  # # -------- Python tools --------
-  # - repo: https://github.com/pre-commit/mirrors-autopep8
-  #   rev: v1.5.7
-  #   hooks:
-  #     - id: autopep8
-  #       args: ["--aggressive", "--aggressive"]
-  # - repo: https://github.com/pre-commit/mirrors-isort
-  #   rev: v5.10.1
-  #   hooks:
-  #     - id: isort
-  #       args: ["--profile", "black"]
-  # - repo: https://github.com/pre-commit/mirrors-black
-  #   rev: 22.3.0
-  #   hooks:
-  #     - id: black
-  #       args: ["--line-length", "88"]
-
-EOF
-)
-  echo "$_DEFAULT_PRE_COMMIT_CONFIG"
+        # - id: golangci-lint
+        # args: ["run", "--config=./support/.golangci.yaml"]
+' | tee "support/.pre-commit-config.yaml"
   # else
   #   cat support/pre-commit-config.yaml
   fi
 }
 
 _install_pre_commit_tools() {
+  echo "🚀 Configurando pre-commit hooks (installs)..."
   # Create and activate a virtual environment for hooks
   if [[ ! -d .venv-hooks ]]; then
     python3 -m venv .venv-hooks
+    echo '.venv-hooks' >> .gitignore
   fi
   if [[ ! -f .venv-hooks/bin/activate ]]; then
     echo "❌ Falha ao encontrar o ambiente virtual em .venv-hooks"
@@ -117,7 +130,7 @@ _install_pre_commit_tools() {
   pip install pre-commit detect-secrets
 
   # Install pre-commit hooks
-  pre-commit install --config support/pre-commit-config.yaml --install-hooks
+  pre-commit install --config support/.pre-commit-config.yaml --install-hooks
 }
 
 _create_baseline() {
@@ -136,9 +149,12 @@ _main() {
     return 0
   fi
 
-  _default_pre_commit_config > support/pre-commit-config.yaml
+  _default_pre_commit_config
+
   _install_pre_commit_tools
+
   _create_baseline
+
   echo "✅ Pre-commit hooks configured successfully!"
 }
 
