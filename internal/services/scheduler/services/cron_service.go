@@ -2,6 +2,7 @@
 package services
 
 import (
+	"github.com/google/uuid"
 	tp "github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
 )
 
@@ -32,7 +33,7 @@ func (s *CronService) GetScheduledCronJobs() ([]tp.IJob, error) {
 
 	var jobs []tp.IJob
 	for rows.Next() {
-		var jobID int
+		var jobID uuid.UUID
 		var name, schedule, command string
 		if err := rows.Scan(&jobID, &name, &schedule, &command); err != nil {
 			return nil, err

@@ -200,3 +200,5 @@ require (
 )
 
 replace github.com/kubex-ecosystem/gdbase => ../gdbase
+
+replace github.com/kubex-ecosystem/logz => ../logz

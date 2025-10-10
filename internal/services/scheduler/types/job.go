@@ -23,7 +23,7 @@ type Job struct {
 	*t.Mutexes
 	*t.Reference
 
-	ID       int
+	ID       uuid.UUID
 	Name     string
 	Schedule string
 	Command  string
@@ -32,13 +32,17 @@ type Job struct {
 	Status JobStatus // Adicionado para rastrear o status do job
 }
 
-func NewJob(id int, name, schedule, command string) IJob {
+func NewJobImpl(id uuid.UUID, name, schedule, command string) *Job {
 	return &Job{
 		ID:       id,
 		Name:     name,
 		Schedule: schedule,
 		Command:  command,
 	}
+}
+
+func NewJob(id uuid.UUID, name, schedule, command string) IJob {
+	return NewJobImpl(id, name, schedule, command)
 }
 
 func (j *Job) Mu() *t.Mutexes {

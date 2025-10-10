@@ -629,3 +629,12 @@ func GetLogger[T any](obj *T) GLog[l.Logger] {
 		gDebug:     g.gDebug,
 	}
 }
+
+// ----------------------------- Logz Prometheus and WS implementation -----------------------------
+
+func (g *gLog[T]) Init() error {
+	if g.Logger == nil {
+		_ = GetLogger[l.Logger](nil)
+	}
+	return nil
+}

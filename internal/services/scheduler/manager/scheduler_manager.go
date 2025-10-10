@@ -12,12 +12,12 @@ type Scheduler struct {
 }
 
 // ScheduleJob adds a new job to the scheduler.
-func (s *Scheduler) ScheduleJob(job tp.Job) error {
+func (s *Scheduler) ScheduleJob(job *tp.Job) error {
 	if s.jobs == nil {
 		s.jobs = make(map[string]tp.Job)
 	}
 	jobID := job.Ref().ID.String() // Convertendo UUID para string
-	s.jobs[jobID] = job
+	s.jobs[jobID] = *job
 	return nil
 }
 
