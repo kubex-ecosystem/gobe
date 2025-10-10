@@ -2,6 +2,7 @@ import { Key, Lock, LogIn } from "lucide-react";
 import * as React from "react";
 
 import { useI18n } from "../../i18n/provider";
+import { fetchJson } from "../../lib/api";
 import { Button } from "../ui/Button";
 
 const MODE_ORDER = ["kubex-id", "sso", "service"] as const;
@@ -19,13 +20,66 @@ export function AuthForm({ onComplete }: AuthFormProps) {
   const { t } = useI18n();
   const [mode, setMode] = React.useState<Mode>("kubex-id");
   const [status, setStatus] = React.useState<string | null>(null);
+  const [statusType, setStatusType] = React.useState<"success" | "error" | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
+  const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (event) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const identifier = (form.get("email") || form.get("clientId") || "usuário").toString();
-    setStatus(`Acesso preparado para ${identifier}.`);
-    onComplete?.(identifier);
+    const identifierField = form.get("identifier") || form.get("email") || form.get("clientId");
+    const identifier = (identifierField || "usuário").toString();
+
+    setSubmitting(true);
+    setStatus(null);
+    setStatusType(null);
+
+    try {
+      if (mode === "kubex-id") {
+        const password = (form.get("password") || "").toString();
+        if (!identifier || !password) {
+          setStatusType("error");
+          setStatus(t("access.feedback.error", "Authentication failed. Please check your credentials."));
+          return;
+        }
+
+        const response = await fetchJson<AuthResponse>({
+          path: "/api/v1/sign-in",
+          method: "POST",
+          body: {
+            username: identifier,
+            password,
+          },
+        });
+
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("kubex:apiToken", response.access_token);
+          window.localStorage.setItem("kubex:refreshToken", response.refresh_token);
+          window.localStorage.setItem("kubex:user", JSON.stringify(response.user));
+        }
+
+        setStatusType("success");
+        setStatus(t("access.feedback.success", "You're authenticated. Tokens stored locally."));
+        onComplete?.(identifier);
+        return;
+      }
+
+      setStatusType("success");
+      setStatus(
+        t("access.feedback.placeholder", "Access prepared for {{identifier}}.", {
+          identifier,
+        })
+      );
+      onComplete?.(identifier);
+    } catch (error) {
+      setStatusType("error");
+      if (error instanceof Error) {
+        setStatus(error.message);
+      } else {
+        setStatus(t("access.feedback.error", "Authentication failed. Please check your credentials."));
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -57,13 +111,13 @@ export function AuthForm({ onComplete }: AuthFormProps) {
         {mode === "kubex-id" && (
           <>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
-              {t("access.form.email")}
+              {t("access.form.identifier")}
               <input
                 required
-                id="email"
-                name="email"
+                id="identifier"
+                name="identifier"
                 type="text"
-                placeholder="coauthor@kubex.world"
+                placeholder="testUser ou coauthor@kubex.world"
                 className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-cyan-400 dark:focus:ring-cyan-400/40"
               />
             </label>
@@ -137,12 +191,42 @@ export function AuthForm({ onComplete }: AuthFormProps) {
           </>
         )}
 
-        <Button type="submit" className="flex w-full items-center justify-center gap-2">
+        <Button
+          type="submit"
+          disabled={submitting}
+          className="flex w-full items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60"
+        >
           <LogIn className="h-4 w-4" />
           {t("access.form.submit")}
         </Button>
-        {status && <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-200">{status}</p>}
+        {status && (
+          <p
+            className={`text-sm font-semibold ${
+              statusType === "error"
+                ? "text-rose-600 dark:text-rose-300"
+                : "text-cyan-700 dark:text-cyan-200"
+            }`}
+          >
+            {status}
+          </p>
+        )}
       </form>
     </div>
   );
+}
+
+interface AuthResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_expires_in: number;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    name: string;
+    role: string;
+    active: boolean;
+  };
 }

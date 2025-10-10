@@ -539,7 +539,7 @@ func (g *GoBE) initializeAllServices() (*is.DBServiceImpl, error) {
 	}
 
 	// 4. 🎯 NOVO: Run migrations programmatically using existing DBConfig
-	pgConfig := dbConfig.Databases["postgresql"]
+	pgConfig := dbConfig.Databases["kubex_db"]
 	if pgConfig != nil && pgConfig.Enabled {
 		gl.Log("info", "🎯 Running PostgreSQL migrations programmatically...")
 
@@ -578,7 +578,7 @@ func (g *GoBE) initializeAllServices() (*is.DBServiceImpl, error) {
 	// 5. Create and initialize Database Service
 	dbService, err := is.NewDatabaseService(ctx, dbConfig, g.Logger)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DatabaseService: %v", err))
+		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DatabapostgresqlseService: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao inicializar DatabaseService: %w", err)
 	}
 

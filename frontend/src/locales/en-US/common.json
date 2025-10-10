@@ -98,12 +98,17 @@
       "token": "Service token"
     },
     "form": {
-      "email": "Corporate email",
+      "identifier": "Kubex user or corporate email",
       "password": "Password",
       "issuer": "Issuer URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "submit": "Continue"
+    },
+    "feedback": {
+      "success": "You're authenticated. Tokens stored locally.",
+      "error": "Authentication failed. Please check your credentials.",
+      "placeholder": "Access prepared for {{identifier}}."
     }
   },
   "manifesto": {

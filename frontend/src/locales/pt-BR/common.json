@@ -98,12 +98,17 @@
       "token": "Token de serviço"
     },
     "form": {
-      "email": "Email corporativo",
+      "identifier": "Usuário Kubex ou e-mail corporativo",
       "password": "Senha",
       "issuer": "Issuer URL",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "submit": "Continuar"
+    },
+    "feedback": {
+      "success": "Autenticado com sucesso. Tokens armazenados localmente.",
+      "error": "Falha na autenticação. Verifique suas credenciais.",
+      "placeholder": "Acesso preparado para {{identifier}}."
     }
   },
   "manifesto": {
