@@ -108,12 +108,14 @@ The system now serves as a **complete AI backend solution**, enabling developers
 ### **🤖 AI Integration**
 
 ✨ **4 AI Providers Ready**
+
 - **OpenAI** (GPT-3.5, GPT-4 series) with customizable base URLs
 - **Anthropic Claude** (3.5 Sonnet, Opus, Haiku) with streaming support
 - **Google Gemini** (1.5 Pro, Flash) with proper cost calculation
 - **Groq** (Llama, Mixtral models) with ultra-fast inference
 
 🎯 **Smart Provider Management**
+
 - Dynamic provider switching and availability checks
 - External API key support per request
 - Automatic cost estimation and usage tracking
@@ -122,12 +124,14 @@ The system now serves as a **complete AI backend solution**, enabling developers
 ### **🔧 System Integration**
 
 ✨ **MCP Protocol (Model Context Protocol)**
+
 - Dynamic tool registry with thread-safe execution
 - Built-in system monitoring tools
 - Shell command execution with security whitelisting
 - Discord bot integration with real tool functionality
 
 📬 **Production Webhook System**
+
 - AMQP/RabbitMQ integration for async processing
 - Persistent webhook storage with retry logic
 - Specialized handlers (GitHub, Discord, Stripe, etc.)
@@ -136,37 +140,44 @@ The system now serves as a **complete AI backend solution**, enabling developers
 ### **🏗️ Core Platform**
 
 ✨ **Fully modular**
+
 - All logic follows well-defined interfaces, ensuring encapsulation
 - Can be used as a server or as a library/module
 - Factory pattern for all major components
 
 🔒 **Zero-config, but customizable**
+
 - Runs without initial configuration, but supports customization via files
 - Automatically generates certificates, passwords, and secure settings
 - Environment variable override support
 
 🔗 **Direct integration with `gdbase`**
+
 - Database management via Docker
 - Automatic optimizations for persistence and performance
 - Multi-database support (PostgreSQL, SQLite)
 
 🛡️ **Advanced authentication**
+
 - Dynamically generated certificates
 - Random passwords and secure keyring
 - JWT token management with refresh logic
 
 🌐 **Comprehensive REST API**
+
 - AI chat endpoints with streaming
 - Webhook management and monitoring
 - Authentication, user management, products, clients
 - System health and metrics
 
 📋 **Enterprise-grade monitoring**
+
 - Protected routes, secure storage, and request monitoring
 - Real-time system metrics via MCP tools
 - Connection health checks (DB, AMQP, webhooks)
 
 🧑‍💻 **Powerful CLI**
+
 - Commands to start, configure, and monitor the server
 - Zero-config startup with detailed logging
 
@@ -227,11 +238,13 @@ GoBE includes **4 production-ready AI providers** with streaming support and cos
 ### **Usage Examples**
 
 #### **List Available Providers**
+
 ```bash
 curl http://localhost:3666/providers
 ```
 
 #### **Chat with Streaming**
+
 ```bash
 curl -X POST http://localhost:3666/chat \
   -H "Content-Type: application/json" \
@@ -245,6 +258,7 @@ curl -X POST http://localhost:3666/chat \
 ```
 
 #### **Provider Switching**
+
 ```bash
 # Use different providers for different tasks
 curl -X POST http://localhost:3666/chat \
@@ -255,6 +269,7 @@ curl -X POST http://localhost:3666/chat \
 ```
 
 #### **External API Keys**
+
 ```bash
 # Use your own API key for a specific request
 curl -X POST http://localhost:3666/chat \
@@ -319,11 +334,13 @@ POST /mcp/exec      # Execute tools
 ### Example Usage
 
 #### **List Available Tools**
+
 ```bash
 curl http://localhost:3666/mcp/tools
 ```
 
 #### **System Status (Basic)**
+
 ```bash
 curl -X POST http://localhost:3666/mcp/exec \
   -H "Content-Type: application/json" \
@@ -331,6 +348,7 @@ curl -X POST http://localhost:3666/mcp/exec \
 ```
 
 #### **System Status (Detailed)**
+
 ```bash
 curl -X POST http://localhost:3666/mcp/exec \
   -H "Content-Type: application/json" \
@@ -338,6 +356,7 @@ curl -X POST http://localhost:3666/mcp/exec \
 ```
 
 #### **Execute Shell Commands**
+
 ```bash
 # List files
 curl -X POST http://localhost:3666/mcp/exec \
@@ -397,6 +416,7 @@ GoBE provides a **production-ready webhook system** with persistence, retry logi
 ### **Usage Examples**
 
 #### **Receive Webhooks**
+
 ```bash
 # Generic webhook
 curl -X POST http://localhost:3666/v1/webhooks \
@@ -407,10 +427,13 @@ curl -X POST http://localhost:3666/v1/webhooks \
 ```
 
 #### **Check System Health**
+
 ```bash
 curl http://localhost:3666/v1/webhooks/health
 ```
+
 **Response:**
+
 ```json
 {
   "status": "ok",
@@ -427,6 +450,7 @@ curl http://localhost:3666/v1/webhooks/health
 ```
 
 #### **List Webhook Events**
+
 ```bash
 # All events (paginated)
 curl "http://localhost:3666/v1/webhooks/events?limit=10&offset=0"
@@ -436,15 +460,19 @@ curl "http://localhost:3666/v1/webhooks/events?source=github&limit=20"
 ```
 
 #### **Get Event Details**
+
 ```bash
 curl http://localhost:3666/v1/webhooks/events/123e4567-e89b-12d3-a456-426614174000
 ```
 
 #### **Retry Failed Events**
+
 ```bash
 curl -X POST http://localhost:3666/v1/webhooks/retry
 ```
+
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -468,6 +496,7 @@ The system provides specialized handling for different webhook types:
 ### **Integration Examples**
 
 #### **GitHub Integration**
+
 ```bash
 # Configure GitHub webhook to point to your GoBE instance
 # Webhook URL: https://your-server.com/v1/webhooks
@@ -481,6 +510,7 @@ curl -X POST https://your-server.com/v1/webhooks \
 ```
 
 #### **Discord Bot Integration**
+
 ```bash
 # Discord events are automatically processed and can trigger MCP tools
 curl -X POST http://localhost:3666/v1/webhooks \
@@ -498,6 +528,7 @@ Webhooks are automatically published to RabbitMQ queues:
 - **Queue Bindings:** `gobe.system.events`, `gobe.mcp.tasks`
 
 **AMQP Message Format:**
+
 ```json
 {
   "id": "uuid",
@@ -668,6 +699,7 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3666/mcp/tools
 ### **Response Formats**
 
 #### **Success Response**
+
 ```json
 {
   "status": "success",
@@ -677,6 +709,7 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3666/mcp/tools
 ```
 
 #### **Error Response**
+
 ```json
 {
   "status": "error",
@@ -687,6 +720,7 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:3666/mcp/tools
 ```
 
 #### **Streaming Response (SSE)**
+
 ```
 data: {"content": "Hello", "done": false}
 
