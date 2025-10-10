@@ -50,12 +50,13 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           <LangSwitcher />
           <ThemeToggle />
-          <Link
+          {/* <Link
             to="/access"
-            className="hidden rounded-full border border-cyan-600/30 px-3 py-1 text-sm font-semibold text-cyan-700 shadow-sm transition hover:border-cyan-500/40 hover:text-cyan-600 dark:border-cyan-500/20 dark:text-cyan-300 dark:hover:border-cyan-400/50 dark:hover:text-cyan-200 sm:inline-flex"
+            className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary.hover dark:bg-cyan-500 dark:hover:bg-cyan-400"
+          // className="hidden rounded-full border border-cyan-600/30 px-3 py-1 text-sm font-semibold text-cyan-700 shadow-sm transition hover:border-cyan-500/40 hover:text-cyan-600 dark:border-cyan-500/20 dark:text-cyan-300 dark:hover:border-cyan-400/50 dark:hover:text-cyan-200 sm:inline-flex"
           >
             {t("home.primaryCta", "Entrar")}
-          </Link>
+          </Link> */}
           <Link
             to="/access"
             className="inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-primary.hover dark:bg-cyan-500 dark:hover:bg-cyan-400"

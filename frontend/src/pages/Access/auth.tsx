@@ -30,7 +30,7 @@ export function AuthPage() {
   };
 
   return (
-    <div className="relative mx-auto flex max-w-5xl flex-col-reverse gap-14 px-4 pb-24 pt-12 text-slate-700 transition-colors duration-300 sm:px-6 md:flex-row md:items-start md:pb-28 md:pt-16 dark:text-slate-300">
+    <div className="relative mx-auto flex max-w-7xl flex-col-reverse gap-14 px-4 pb-24 pt-12 text-slate-700 transition-colors duration-300 sm:px-6 md:flex-row md:items-start md:pb-28 md:pt-16 dark:text-slate-300">
       <div className="md:w-1/2">
         <Badge tone="cyan">{t("auth.badge", "Portal de Autenticação")}</Badge>
         <h1 className="mt-5 text-3xl font-semibold text-slate-900 dark:text-white">{t("auth.title", "Conceda acesso com governança Kubex")}</h1>

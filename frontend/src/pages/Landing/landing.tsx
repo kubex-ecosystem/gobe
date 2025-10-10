@@ -49,7 +49,7 @@ export function LandingPage() {
   }));
 
   return (
-    <div className="relative mx-auto flex max-w-6xl flex-col gap-20 px-4 pb-24 pt-12 text-slate-700 transition-colors duration-300 sm:px-6 md:gap-24 md:pt-16 dark:text-slate-300">
+    <div className="relative mx-auto flex max-w-7xl flex-col gap-20 px-4 pb-24 pt-12 text-slate-700 transition-colors duration-300 sm:px-6 md:gap-24 md:pt-16 dark:text-slate-300">
       <section className="grid gap-12 md:grid-cols-[1.2fr,0.8fr] md:items-center">
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
