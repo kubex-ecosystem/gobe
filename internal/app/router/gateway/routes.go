@@ -60,7 +60,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	healthController := gatewayController.NewHealthController(dbService, gatewayService)
 	lookAtniController := gatewayController.NewLookAtniController(dbService.(*gdbasez.DBServiceImpl))
 	webhookController := gatewayController.NewWebhookController(webhookService)
-	schedulerController := gatewayController.NewSchedulerController()
+	// schedulerController := gatewayController.NewSchedulerController()
 
 	webUIController := gatewayController.NewWebUIController()
 
@@ -99,9 +99,6 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	routes["WebhooksEventsList"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/events", "application/json", webhookController.ListEvents, middlewaresMap, dbService, secure(true), nil)
 	routes["WebhooksEventsGet"] = proto.NewRoute(http.MethodGet, "/v1/webhooks/events/:id", "application/json", webhookController.GetEvent, middlewaresMap, dbService, secure(true), nil)
 	routes["WebhooksRetry"] = proto.NewRoute(http.MethodPost, "/v1/webhooks/retry", "application/json", webhookController.RetryFailedEvents, middlewaresMap, dbService, secure(true), nil)
-
-	routes["SchedulerStats"] = proto.NewRoute(http.MethodGet, "/health/scheduler/stats", "application/json", schedulerController.Stats, middlewaresMap, dbService, secure(true), nil)
-	routes["SchedulerForce"] = proto.NewRoute(http.MethodPost, "/health/scheduler/force", "application/json", schedulerController.ForceRun, middlewaresMap, dbService, secure(true), nil)
 
 	// Web UI Favicon
 	routes["WebUIFavicon"] = proto.NewRoute(http.MethodGet, "/favicon.ico", "image/x-icon", webUIController.ServeFavicon, middlewaresMap, dbService, secure(false), nil)

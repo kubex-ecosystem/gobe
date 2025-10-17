@@ -48,7 +48,7 @@ type Router struct {
 	Logger   l.Logger
 }
 
-// newRouter initializes a new Router instance with the provided configuration.
+// NewRouterImpl initializes a new Router instance with the provided configuration.
 func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *gl.InitArgs, logger l.Logger, debug bool) (*Router, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")

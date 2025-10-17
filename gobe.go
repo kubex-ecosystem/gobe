@@ -377,16 +377,29 @@ func (g *GoBE) StartGoBE() {
 		defer g.Mutexes.MuDone()
 		var err error
 		var requestsTracers ci.IRequestTracers
-
 		requestsTracers, err = t.LoadRequestsTracerFromFile(g)
 		if requestsTracers == nil {
 			gl.Log("warn", "No persisted request tracers found, creating a new one")
 			requestsTracers = t.NewRequestTracers(g)
 		}
 		g.requestsTracers = requestsTracers.GetRequestTracers()
-
-		if err != nil {
-			gl.Log("error", "Error loading request tracers: %v", err.Error())
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			gl.Log("error", fmt.Sprintf("Error loading request tracers: %v", err.Error()))
+		} else if errors.Is(err, os.ErrNotExist) {
+			gl.Log("info", "No persisted request tracers found, starting fresh")
+			if g.configDir == "" {
+				g.configDir = filepath.Dir(g.configFile)
+			}
+			requestTracersDir := filepath.Join(filepath.Dir(g.configDir), "logs")
+			if err := os.MkdirAll(requestTracersDir, 0755); err != nil {
+				gl.Log("error", fmt.Sprintf("Error creating request tracers directory: %v", err))
+			} else {
+				requestTracersMapper := t.NewMapper(
+					&requestsTracers,
+					filepath.Join(requestTracersDir, "request_tracers.json"),
+				)
+				requestTracersMapper.SerializeToFile("json")
+			}
 		}
 	}(g)
 	gl.Log("notice", "Waiting for persisted request tracers to load...")

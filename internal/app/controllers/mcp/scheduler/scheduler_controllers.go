@@ -20,13 +20,14 @@ type SchedulerController struct {
 	bridge *gdbasez.Bridge
 }
 
-func NewSchedulerController(b *gdbasez.Bridge) *SchedulerController {
+func NewSchedulerController(b *gdbasez.Bridge, s scheduler.IScheduler) *SchedulerController {
 	if b == nil {
 		gl.Log("error", "Bridge is nil for SchedulerController")
 		return nil
 	}
 	return &SchedulerController{
 		bridge: b,
+		sched:  s,
 	}
 }
 
@@ -77,6 +78,11 @@ func (sc *SchedulerController) GetJob(c *gin.Context) {
 func (sc *SchedulerController) ListJobs(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
+
+	if sc.sched == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "scheduler not initialized"})
+		return
+	}
 
 	jobs, err := sc.sched.ListScheduledJobs(ctx)
 	if err != nil {

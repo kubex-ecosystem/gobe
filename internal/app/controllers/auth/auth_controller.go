@@ -11,7 +11,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+
+	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"golang.org/x/crypto/bcrypt"
+)
+
+type (
+	// ErrorResponse padroniza respostas de erro para endpoints Discord.
+	ErrorResponse = t.ErrorResponse
 )
 
 // AuthController handles authentication routes
@@ -58,7 +65,18 @@ func (ac *AuthController) createDefaultUser() {
 	gl.Log("info", "Default admin user created", "username", "admin", "password", "admin")
 }
 
-// Login handles POST /auth/login
+// Login endpoint handles POST /auth/login
+//
+// @Summary     Login
+// @Description Realiza o login de um usuário.
+// @Tags        auth
+// @Accept      json
+// @Produce     json
+// @Param       body  body     map[string]interface{}  true  "Login request"
+// @Success     200   {object} map[string]interface{}
+// @Failure     400   {object} ErrorResponse
+// @Failure     401   {object} ErrorResponse
+// @Router      /auth/login [post]
 func (ac *AuthController) Login(c *gin.Context) {
 	var req struct {
 		Username string `json:"username" binding:"required"`
@@ -118,7 +136,18 @@ func (ac *AuthController) Login(c *gin.Context) {
 	})
 }
 
-// Logout handles POST /auth/logout
+// Logout endpoint handles POST /auth/logout
+//
+// @Summary     Logout
+// @Description Realiza o logout de um usuário.
+// @Tags        auth
+// @Accept      json
+// @Produce     json
+// @Param       body  body     map[string]interface{}  true  "Logout request"
+// @Success     200   {object} map[string]interface{}
+// @Failure     400   {object} ErrorResponse
+// @Failure     401   {object} ErrorResponse
+// @Router      /auth/logout [post]
 func (ac *AuthController) Logout(c *gin.Context) {
 	// Clear cookie
 	c.SetCookie("gobe_token", "", -1, "/", "", false, true)
@@ -129,7 +158,16 @@ func (ac *AuthController) Logout(c *gin.Context) {
 	})
 }
 
-// Me handles GET /auth/me
+// Me endpoint handles GET /auth/me
+//
+// @Summary     Me
+// @Description Retorna informações do usuário autenticado.
+// @Tags        auth
+// @Security    BearerAuth
+// @Produce     json
+// @Success     200 {object} map[string]interface{}
+// @Failure     401 {object} ErrorResponse
+// @Router      /auth/me [get]
 func (ac *AuthController) Me(c *gin.Context) {
 	authenticated, _ := c.Get("authenticated")
 	if !authenticated.(bool) {
@@ -212,7 +250,18 @@ func (ac *AuthController) DiscordCallback(c *gin.Context) {
 	})
 }
 
-// Register handles POST /auth/register
+// Register endpoint handles POST /auth/register
+//
+// @Summary     Register
+// @Description Registra um novo usuário.
+// @Tags        auth
+// @Accept      json
+// @Produce     json
+// @Param       body  body     map[string]interface{}  true  "Register request"
+// @Success     201   {object} map[string]interface{}
+// @Failure     400   {object} ErrorResponse
+// @Failure     409   {object} ErrorResponse
+// @Router      /auth/register [post]
 func (ac *AuthController) Register(c *gin.Context) {
 	var req struct {
 		Username string `json:"username" binding:"required"`

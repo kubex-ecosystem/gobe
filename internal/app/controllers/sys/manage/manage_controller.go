@@ -1,3 +1,4 @@
+// Package manage provides controllers for managing the application instance.
 package manage
 
 import (
@@ -11,7 +12,6 @@ type ServerController struct{}
 
 func NewServerController() *ServerController { return &ServerController{} }
 
-// respondError devolve erro padronizado.
 // Health verifica o estado básico da aplicação.
 //
 // @Summary     Healthcheck

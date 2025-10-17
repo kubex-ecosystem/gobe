@@ -30,9 +30,9 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"webhookRoutes": webhooks.NewWebhookRoutes(&rtr),
 		"gatewayRoutes": gateway.NewGatewayRoutes(&rtr),
 
-		"contactRoutes":  app.NewContactRoutes(&rtr),
-		"productRoutes":  app.NewProductRoutes(&rtr),
-		"customerRoutes": app.NewCustomerRoutes(&rtr),
+		"contactRoutes": app.NewContactRoutes(&rtr),
+		"productRoutes": app.NewProductRoutes(&rtr),
+		// "customerRoutes": app.NewCustomerRoutes(&rtr),
 
 		"authRoutes":  user.NewAuthRoutes(&rtr),
 		"userRoutes":  user.NewUserRoutes(&rtr),
@@ -49,5 +49,6 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"mcpSystemRoutes":      mcp.NewMCPSystemRoutes(&rtr),
 		"mcpAnalyzerRoutes":    mcp.NewMCPAnalyzerRoutes(&rtr),
 		"mcpGDBaseRoutes":      mcp.NewMCPGDBaseRoutes(&rtr),
+		"mcpSchedulerRoutes":   mcp.NewMCPSchedulerRoutes(&rtr), // default key for scheduler routes
 	}
 }

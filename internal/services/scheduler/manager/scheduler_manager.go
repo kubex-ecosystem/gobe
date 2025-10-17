@@ -11,24 +11,25 @@ import (
 
 type Scheduler struct {
 	mu   sync.RWMutex
-	jobs map[string]*tp.JobImpl
+	jobs map[string]tp.Job
 }
 
-func (s *Scheduler) ScheduleJob(ctx context.Context, job *tp.JobImpl) (tp.JobStatusResponse, error) {
+func (s *Scheduler) ScheduleJob(ctx context.Context, job tp.Job) (tp.JobStatusResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.jobs == nil {
-		s.jobs = make(map[string]*tp.JobImpl)
+		s.jobs = make(map[string]tp.Job)
 	}
 
 	jobID := job.Ref().ID.String()
 	s.jobs[jobID] = job
-	job.SetStatus(tp.StatusScheduled, "queued by manager")
+
+	// job
 
 	return tp.JobStatusResponse{
 		JobID:  jobID,
-		Status: job.GetStatus(),
+		Status: tp.NewStatus(tp.StatusScheduled, "queued by manager"),
 	}, nil
 }
 
@@ -40,8 +41,8 @@ func (s *Scheduler) CancelJob(ctx context.Context, jobID uuid.UUID) error {
 	if !ok {
 		return fmt.Errorf("job with ID %s not found", jobID)
 	}
-	j.SetStatus(tp.StatusCanceled, "canceled by manager")
-	delete(s.jobs, jobID.String())
+	// j.SetStatus(tp.StatusCanceled, "canceled by manager")
+	delete(s.jobs, j.Ref().ID.String())
 	return nil
 }
 
@@ -49,18 +50,19 @@ func (s *Scheduler) GetJobStatus(ctx context.Context, jobID uuid.UUID) (tp.JobSt
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	job, exists := s.jobs[jobID.String()]
-	if !exists {
-		return tp.JobStatus{}, fmt.Errorf("job with ID %s not found", jobID)
-	}
-	return job.GetStatus(), nil
+	// job, exists := s.jobs[jobID.String()]
+	// if !exists {
+	// 	return tp.JobStatus{}, fmt.Errorf("job with ID %s not found", jobID)
+	// }
+	// return job.GetStatus(), nil
+	return tp.NewStatus(tp.StatusUnknown, "unknown job status"), nil
 }
 
-func (s *Scheduler) ListScheduledJobs(ctx context.Context) ([]*tp.JobImpl, error) {
+func (s *Scheduler) ListScheduledJobs(ctx context.Context) ([]tp.Job, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	jobs := make([]*tp.JobImpl, 0, len(s.jobs))
+	jobs := make([]tp.Job, 0, len(s.jobs))
 	for _, job := range s.jobs {
 		jobs = append(jobs, job)
 	}
@@ -71,12 +73,12 @@ func (s *Scheduler) RescheduleJob(ctx context.Context, jobID string, newSchedule
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	job, exists := s.jobs[jobID]
-	if !exists {
-		return fmt.Errorf("job with ID %s not found", jobID)
-	}
-	job.Schedule = newSchedule
-	job.SetStatus(tp.StatusRescheduled, "rescheduled by manager")
+	// job, exists := s.jobs[jobID]
+	// if !exists {
+	// 	return fmt.Errorf("job with ID %s not found", jobID)
+	// }
+	// job.Schedule = newSchedule
+	// job.SetStatus(tp.StatusRescheduled, "rescheduled by manager")
 	return nil
 }
 

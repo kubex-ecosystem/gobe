@@ -12,6 +12,7 @@ const (
 	StatusCompleted   JobStatusType = "completed"
 	StatusFailed      JobStatusType = "failed"
 	StatusCanceled    JobStatusType = "canceled"
+	StatusUnknown     JobStatusType = "unknown"
 	StatusRescheduled JobStatusType = "rescheduled"
 )
 
