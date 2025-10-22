@@ -35,8 +35,13 @@ require (
 
 require (
 	cloud.google.com/go v0.123.0 // indirect
+	cloud.google.com/go/aiplatform v1.90.0 // indirect
 	cloud.google.com/go/auth v0.17.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
+	cloud.google.com/go/iam v1.5.2 // indirect
+	cloud.google.com/go/longrunning v0.6.7 // indirect
+	cloud.google.com/go/vertexai v0.15.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
@@ -73,8 +78,12 @@ require (
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.63.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/oauth2 v0.31.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
+	google.golang.org/api v0.250.0 // indirect
+	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251020155222-88f65dc88635 // indirect
 	gorm.io/driver/sqlserver v1.6.1 // indirect
 )
@@ -191,6 +200,6 @@ require (
 
 replace github.com/kubex-ecosystem/gdbase => ../gdbase
 
-replace github.com/kubex-ecosystem/analyzer => ../analyzer
+// replace github.com/kubex-ecosystem/analyzer => ../analyzer
 
 // replace github.com/kubex-ecosystem/logz => ../logz
