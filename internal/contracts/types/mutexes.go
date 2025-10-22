@@ -1,7 +1,7 @@
 package types
 
 import (
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 
 	"sync"
 	"time"

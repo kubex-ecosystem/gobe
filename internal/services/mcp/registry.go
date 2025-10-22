@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // ToolSpec defines the specification for an MCP tool

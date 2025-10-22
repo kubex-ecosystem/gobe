@@ -3,7 +3,7 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // DiscordCORSMiddleware configures CORS for Discord Activity/iframe embedding

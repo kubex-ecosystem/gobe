@@ -6,7 +6,7 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // IOAuthService defines the OAuth2/PKCE service interface

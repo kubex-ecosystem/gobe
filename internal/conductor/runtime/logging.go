@@ -6,9 +6,10 @@ import (
 	"os"
 	"time"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	logzprom "github.com/kubex-ecosystem/logz/api/integrations"
 	logz "github.com/kubex-ecosystem/logz/api/notifiers"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // prom is a tiny shim over your PrometheusManager.
@@ -100,9 +101,9 @@ func EventLog(ev Event) {
 			AddMetadata("host", hostname).
 			AddMetadata("pid", pid).
 			AddMetadata("app", "conductor").
-			AddMetadata("env", gl.GetEnvOrDefault("APP_ENV", "development")).
-			AddMetadata("version", gl.GetEnvOrDefault("APP_VERSION", "unknown")).
-			AddMetadata("instance_id", gl.GetEnvOrDefault("INSTANCE_ID", "local")).
+			AddMetadata("env", kbx.GetEnvOrDefault("APP_ENV", "development")).
+			AddMetadata("version", kbx.GetEnvOrDefault("APP_VERSION", "unknown")).
+			AddMetadata("instance_id", kbx.GetEnvOrDefault("INSTANCE_ID", "local")).
 			WithMessage(msg)
 
 		notifier.Notify(entry)

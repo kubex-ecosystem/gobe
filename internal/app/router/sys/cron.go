@@ -8,8 +8,9 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type CronRoutes struct {
@@ -36,7 +37,7 @@ func NewCronRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 
 	cronJobController := c.NewCronJobController(bridge)

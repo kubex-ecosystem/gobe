@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // ExternalToolsConfig holds configuration for external Kubex ecosystem tools

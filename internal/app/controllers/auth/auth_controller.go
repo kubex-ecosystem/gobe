@@ -10,7 +10,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	gl "github.com/kubex-ecosystem/logz/logger"
 
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"golang.org/x/crypto/bcrypt"
@@ -24,7 +25,7 @@ type (
 // AuthController handles authentication routes
 type AuthController struct {
 	authMiddleware *middlewares.WebAuthMiddleware
-	users          map[string]User // In-memory for now - use DB in production
+	users          map[string]svc.UserModelImpl // In-memory for now - use DB in production
 }
 
 // User represents a user account
@@ -41,7 +42,7 @@ type User struct {
 func NewAuthController(authMiddleware *middlewares.WebAuthMiddleware) *AuthController {
 	controller := &AuthController{
 		authMiddleware: authMiddleware,
-		users:          make(map[string]User),
+		users:          make(map[string]svc.UserModelImpl),
 	}
 
 	// Create default admin user (for demo/dev)
@@ -54,12 +55,12 @@ func NewAuthController(authMiddleware *middlewares.WebAuthMiddleware) *AuthContr
 func (ac *AuthController) createDefaultUser() {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("admin"), bcrypt.DefaultCost)
 
-	ac.users["admin"] = User{
-		ID:           "1",
-		Username:     "admin",
-		PasswordHash: string(hash),
-		Email:        "admin@kubex.io",
-		CreatedAt:    time.Now(),
+	ac.users["admin"] = svc.UserModelImpl{
+		ID:        "1",
+		Username:  "admin",
+		Password:  string(hash),
+		Email:     "admin@kubex.io",
+		CreatedAt: time.Now(),
 	}
 
 	gl.Log("info", "Default admin user created", "username", "admin", "password", "admin")
@@ -103,7 +104,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	}
 
 	// Verify password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		gl.Log("warn", "Failed login attempt", "username", req.Username, "ip", c.ClientIP())
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":   "Authentication failed",
@@ -297,12 +298,12 @@ func (ac *AuthController) Register(c *gin.Context) {
 	}
 
 	// Create user
-	user := User{
-		ID:           generateUserID(),
-		Username:     req.Username,
-		PasswordHash: string(hash),
-		Email:        req.Email,
-		CreatedAt:    time.Now(),
+	user := svc.UserModelImpl{
+		ID:        generateUserID(),
+		Username:  req.Username,
+		Password:  string(hash),
+		Email:     req.Email,
+		CreatedAt: time.Now(),
 	}
 
 	ac.users[req.Username] = user

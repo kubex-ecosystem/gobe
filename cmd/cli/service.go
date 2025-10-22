@@ -10,8 +10,9 @@ import (
 	"time"
 
 	gb "github.com/kubex-ecosystem/gobe"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	gl "github.com/kubex-ecosystem/logz/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -43,7 +44,7 @@ func ServiceCmd() *cobra.Command {
 }
 
 func startCommand() *cobra.Command {
-	var initArgs gl.InitArgs
+	var initArgs kbx.InitArgs
 
 	shortDesc := "Start a minimal backend service"
 	longDesc := "Start a minimal backend service with GoBE"
@@ -103,7 +104,7 @@ func stopCommand() *cobra.Command {
 }
 
 func restartCommand() *cobra.Command {
-	var initArgs gl.InitArgs
+	var initArgs kbx.InitArgs
 
 	shortDesc := "Restart a running backend service"
 	longDesc := "Restart a running backend service with GoBE"
@@ -758,7 +759,7 @@ func formatLogOutput(output string, timestamps bool) string {
 	return strings.Join(lines, "\n")
 }
 
-func getComandWithFlags(cmdToAddFlags *cobra.Command, initArgs *gl.InitArgs) (*cobra.Command, *gl.InitArgs) {
+func getComandWithFlags(cmdToAddFlags *cobra.Command, initArgs *kbx.InitArgs) (*cobra.Command, *kbx.InitArgs) {
 	cmdToAddFlags.Flags().StringVarP(&initArgs.Name, "name", "n", "GoBE", "Name of the process")
 	cmdToAddFlags.Flags().StringVarP(&initArgs.Port, "port", "p", "8088", "Port to listen on")
 	cmdToAddFlags.Flags().StringVarP(&initArgs.Bind, "bind", "b", "0.0.0.0", "Bind address")

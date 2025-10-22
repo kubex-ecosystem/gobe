@@ -9,8 +9,9 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // NewWhatsAppRoutes registers WhatsApp related endpoints.
@@ -26,12 +27,12 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	initArgs := rtl.GetInitArgs()
-	if !gl.IsObjValid(initArgs) {
+	if !kbx.IsObjValid(initArgs) {
 		gl.Log("error", "InitArgs is nil for WhatsAppRoutes")
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = gl.GetEnvOrDefault("WHATSAPP_CONFIG_FILE", os.ExpandEnv("./support/whatsapp_config.yaml"))
+		initArgs.ConfigFile = kbx.GetEnvOrDefault("WHATSAPP_CONFIG_FILE", os.ExpandEnv("./support/whatsapp_config.yaml"))
 	}
 
 	cfg, configErr := bootstrap.Load[*bootstrap.Config](initArgs)

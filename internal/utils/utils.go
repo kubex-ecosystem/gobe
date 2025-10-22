@@ -11,7 +11,7 @@ import (
 	"time"
 	"unicode"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 	"github.com/spf13/viper"
 )
 

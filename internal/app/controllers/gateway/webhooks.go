@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	webhooks "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // WebhookController proxies webhook notifications into the GoBE event bus.

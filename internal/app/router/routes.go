@@ -11,6 +11,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/router/gateway"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/mcp"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/oauth"
+	"github.com/kubex-ecosystem/gobe/internal/app/router/registration"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/sys"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/user"
@@ -34,9 +35,10 @@ func GetDefaultRouteMap(rtr ci.IRouter) map[string]map[string]ci.IRoute {
 		"productRoutes": app.NewProductRoutes(&rtr),
 		// "customerRoutes": app.NewCustomerRoutes(&rtr),
 
-		"authRoutes":  user.NewAuthRoutes(&rtr),
-		"userRoutes":  user.NewUserRoutes(&rtr),
-		"oauthRoutes": oauth.NewOAuthRoutes(&rtr),
+		"authRoutes":         user.NewAuthRoutes(&rtr),
+		"userRoutes":         user.NewUserRoutes(&rtr),
+		"oauthRoutes":        oauth.NewOAuthRoutes(&rtr),
+		"registrationRoutes": registration.NewRegistrationRoutes(&rtr),
 
 		"discordRoutes":  cbot.NewDiscordRoutes(&rtr),
 		"whatsappRoutes": cbot.NewWhatsAppRoutes(&rtr),

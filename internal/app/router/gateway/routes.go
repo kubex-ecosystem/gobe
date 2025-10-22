@@ -15,10 +15,10 @@ import (
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 	webhooksvc "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
 	messagery "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type GatewayRoutes struct {

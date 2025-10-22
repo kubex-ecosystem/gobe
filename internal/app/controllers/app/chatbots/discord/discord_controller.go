@@ -17,6 +17,7 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
@@ -26,7 +27,7 @@ import (
 	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type HubInterface interface {
@@ -868,7 +869,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 	if dc.config != nil {
 		cfg = dc.config
 	} else {
-		cfg, err = bootstrap.Load[*bootstrap.Config](&gl.InitArgs{
+		cfg, err = bootstrap.Load[*bootstrap.Config](&kbx.InitArgs{
 			ConfigFile: "./config/discord.json",
 		})
 		if err != nil {

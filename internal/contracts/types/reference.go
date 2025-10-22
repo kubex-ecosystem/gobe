@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type IReference interface {

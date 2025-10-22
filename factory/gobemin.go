@@ -9,7 +9,9 @@ import (
 	gb "github.com/kubex-ecosystem/gobe"
 	s "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
+
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -23,12 +25,12 @@ var (
 	dbService s.DBService
 )
 
-func NewGoBE(args gl.InitArgs) (ci.IGoBE, error) {
+func NewGoBE(args kbx.InitArgs) (ci.IGoBE, error) {
 	err := initRabbitMQ()
 	if err != nil {
 		return nil, err
 	}
-	goBe, err := gb.NewGoBE(&args, gl.GetLogger("GoBE"))
+	goBe, err := gb.NewGoBE(&args, gl.LoggerG.GetLogger())
 	if err != nil {
 		return nil, err
 	}

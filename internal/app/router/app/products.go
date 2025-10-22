@@ -6,13 +6,14 @@ import (
 	"net/http"
 
 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	"github.com/gin-gonic/gin"
 	products_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/products"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type ProductRoutes struct {
@@ -38,7 +39,7 @@ func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 
 	productController := products_controller.NewProductController(bridge)

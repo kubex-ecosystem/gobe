@@ -11,7 +11,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type JobImpl = types.JobImpl

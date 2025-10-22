@@ -5,10 +5,11 @@ import (
 	"fmt"
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
-// NewBridgeFromService validates dbService, injects dbName in the context (under gl.ContextDBNameKey)
+// NewBridgeFromService validates dbService, injects dbName in the context (under kbx.ContextDBNameKey)
 // and returns the updated context and a *Bridge instance. It centralizes the repeated logic
 // used across routes/controllers that need a Bridge constructed from a DBService.
 func NewBridgeFromService(ctx context.Context, dbService *svc.DBServiceImpl) (context.Context, *Bridge, error) {
@@ -31,7 +32,7 @@ func NewBridgeFromService(ctx context.Context, dbService *svc.DBServiceImpl) (co
 		gl.Log("warn", "Database name is empty in DBConfig in NewBridgeFromService")
 	}
 
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 
 	bridge := NewBridge(ctx, dbService, dbName)
 	return ctx, bridge, nil

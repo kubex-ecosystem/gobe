@@ -12,7 +12,7 @@ import (
 
 	manage "github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/manage"
 	services "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // RegisterBuiltinTools registers all built-in MCP tools

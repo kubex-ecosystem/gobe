@@ -8,7 +8,8 @@ import (
 
 	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // TLSConfig is a struct that holds the TLS configuration for the GoBE instance.
@@ -136,7 +137,7 @@ func NewGoBEConfig(name, filePath, configFormat, bind, port string) *GoBEConfig 
 		configFormat = "yaml"
 	}
 	if filePath == "" {
-		filePath = os.ExpandEnv(gl.DefaultGoBEConfigPath)
+		filePath = os.ExpandEnv(kbx.DefaultGoBEConfigPath)
 	}
 	if bind == "" {
 		bind = "0.0.0.0"

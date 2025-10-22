@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/logz/logger"
 )
 
 type AuthManager struct {

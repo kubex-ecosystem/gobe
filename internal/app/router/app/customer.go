@@ -10,7 +10,7 @@ package app
 // 	customers_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/customers"
 // 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 // 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-// 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+// 	gl "github.com/kubex-ecosystem/logz/logger"
 // )
 
 // type CustomerRoutes struct {
@@ -48,7 +48,7 @@ package app
 // 		return nil
 // 	}
 // 	dbName := dbCfg.GetDBName()
-// 	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+// 	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 // 	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 // 	customerController := customers_controller.NewCustomerController(bridge)
 

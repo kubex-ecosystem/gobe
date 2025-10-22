@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type Stream struct {

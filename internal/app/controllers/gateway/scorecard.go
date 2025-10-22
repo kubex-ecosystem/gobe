@@ -13,8 +13,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // ScorecardController exposes real scorecard and metrics endpoints.

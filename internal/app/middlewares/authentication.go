@@ -19,7 +19,8 @@ import (
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	srv "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type AuthenticationMiddleware struct {
@@ -30,7 +31,7 @@ type AuthenticationMiddleware struct {
 
 func NewTokenService(dbService *srv.DBServiceImpl) (sci.TokenService, sci.ICertService, error) {
 	var err error
-	crtService := crt.NewCertService(os.ExpandEnv(gl.DefaultGoBEKeyPath), os.ExpandEnv(gl.DefaultGoBECertPath))
+	crtService := crt.NewCertService(os.ExpandEnv(kbx.DefaultGoBEKeyPath), os.ExpandEnv(kbx.DefaultGoBECertPath))
 	// Inicializa o TokenClient
 	tkClient := sau.NewTokenClient(crtService, dbService)
 	if tkClient == nil {

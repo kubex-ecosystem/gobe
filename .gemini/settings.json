@@ -1,0 +1,9 @@
+{
+  "ui": {
+    "showStatusInTitle": true,
+    "hideBanner": true,
+    "showCitations": true,
+    "showLineNumbers": false,
+    "showMemoryUsage": true
+  }
+}

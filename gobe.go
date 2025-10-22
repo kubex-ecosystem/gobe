@@ -19,6 +19,7 @@ import (
 	cf "github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 
 	"github.com/kubex-ecosystem/gobe/internal/utils"
@@ -28,7 +29,7 @@ import (
 
 	is "github.com/kubex-ecosystem/gdbase/factory"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type GoBECertData struct {
@@ -37,7 +38,7 @@ type GoBECertData struct {
 }
 
 type GoBE struct {
-	InitArgs    *gl.InitArgs
+	InitArgs    *kbx.InitArgs
 	Logger      l.Logger
 	environment *is.EnvironmentType
 
@@ -76,9 +77,9 @@ type GoBE struct {
 	Routes      map[string]map[string]any
 }
 
-func NewGoBE(args *gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
+func NewGoBE(args *kbx.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 	if logger == nil {
-		logger = gl.GetLogger("GoBE")
+		logger = gl.LoggerG.GetLogger()
 	}
 
 	chanCtl := make(chan string, 3)
@@ -94,7 +95,7 @@ func NewGoBE(args *gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		return nil, fmt.Errorf("main config is nil")
 	}
 
-	dbName := gl.GetEnvOrDefault("GOBE_DB_NAME", "kubex_db")
+	dbName := kbx.GetEnvOrDefault("GOBE_DB_NAME", "kubex_db")
 
 	gbm := &GoBE{
 		InitArgs:  args,
@@ -133,11 +134,11 @@ func NewGoBE(args *gl.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 	args.Address = net.JoinHostPort(args.Bind, args.Port)
 	pubCertKeyPath := gbm.environment.Getenv("CERT_FILE_PATH")
 	if pubCertKeyPath == "" {
-		pubCertKeyPath = os.ExpandEnv(gl.DefaultGoBECertPath)
+		pubCertKeyPath = os.ExpandEnv(kbx.DefaultGoBECertPath)
 	}
 	pubKeyPath := gbm.environment.Getenv("KEY_FILE_PATH")
 	if pubKeyPath == "" {
-		pubKeyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
+		pubKeyPath = os.ExpandEnv(kbx.DefaultGoBEKeyPath)
 	}
 
 	var pwd string
@@ -296,13 +297,13 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	rateLimitBurst := gobeminConfig.RateLimitBurst
 	requestWindow := gobeminConfig.RequestWindow
 	if rateLimitLimit <= 0 {
-		rateLimitLimit = gl.DefaultRateLimitLimit
+		rateLimitLimit = kbx.DefaultRateLimitLimit
 	}
 	if rateLimitBurst <= 0 {
-		rateLimitBurst = gl.DefaultRateLimitBurst
+		rateLimitBurst = kbx.DefaultRateLimitBurst
 	}
 	if requestWindow <= 0 {
-		requestWindow = time.Duration(gl.DefaultRequestWindow) * time.Millisecond
+		requestWindow = time.Duration(kbx.DefaultRequestWindow) * time.Millisecond
 	}
 	gobeminConfig.SetRateLimitLimit(rateLimitLimit)
 	gobeminConfig.SetRateLimitBurst(rateLimitBurst)
@@ -326,7 +327,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	}
 	gl.Log("info", "✅ Database service is ready")
 
-	_, kubexErr := crt.GetOrGenPasswordKeyringPass(gl.KeyringService)
+	_, kubexErr := crt.GetOrGenPasswordKeyringPass(kbx.KeyringService)
 	if kubexErr != nil {
 		gl.Log("error", fmt.Sprintf("Error reading kubex keyring password: %v", kubexErr))
 		return nil, kubexErr
@@ -477,21 +478,21 @@ func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	return nil, errors.New("logger is nil")
 }
 
-func validateInitArgs(args *gl.InitArgs) (*cf.Config, error) {
+func validateInitArgs(args *kbx.InitArgs) (*cf.Config, error) {
 	if args == nil {
-		args = &gl.InitArgs{}
+		args = &kbx.InitArgs{}
 	}
 
 	if args.Debug {
 		gl.SetDebugMode(args.Debug)
 	}
 	if args.ReleaseMode {
-		os.Setenv("GIN_MODE", gl.GetEnvOrDefault("GIN_MODE", "release"))
+		os.Setenv("GIN_MODE", kbx.GetEnvOrDefault("GIN_MODE", "release"))
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	// Ensure default config directory exists
-	kubexDefaultDir := os.ExpandEnv(gl.DefaultKubexConfigDir)
+	kubexDefaultDir := os.ExpandEnv(kbx.DefaultKubexConfigDir)
 	if _, err := os.Stat(kubexDefaultDir); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(kubexDefaultDir, 0755); err != nil {
@@ -505,10 +506,10 @@ func validateInitArgs(args *gl.InitArgs) (*cf.Config, error) {
 	}
 
 	if args.PubCertKeyPath == "" {
-		args.PubCertKeyPath = os.ExpandEnv(gl.DefaultGoBECertPath)
+		args.PubCertKeyPath = os.ExpandEnv(kbx.DefaultGoBECertPath)
 	}
 	if args.PubKeyPath == "" {
-		args.PubKeyPath = os.ExpandEnv(gl.DefaultGoBEKeyPath)
+		args.PubKeyPath = os.ExpandEnv(kbx.DefaultGoBEKeyPath)
 	}
 
 	cfg, err := cf.BootstrapMainConfig[*cf.Config](args)

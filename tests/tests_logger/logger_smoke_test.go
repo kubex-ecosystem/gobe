@@ -4,8 +4,7 @@ package testlogger
 import (
 	"testing"
 
-	logger "github.com/kubex-ecosystem/gobe/internal/module/logger"
-	l "github.com/kubex-ecosystem/logz"
+	logger "github.com/kubex-ecosystem/logz/logger"
 )
 
 // helper para detectar panic sem falhar o processo
@@ -45,13 +44,9 @@ func TestLogObjLogger_NoLoggerField_NoPanic(t *testing.T) {
 }
 
 func TestNewLogger_Wrapper_NoPanic(t *testing.T) {
-	l := logger.NewLogger[l.Logger]("test")
-	if l == nil {
-		t.Fatalf("expected NewLogger to return instance")
-	}
-	noPanic(t, func() { l.Log("Info", "info") })
-	noPanic(t, func() { l.Log("Debug", "debug") })
-	noPanic(t, func() { l.Log("Warn", "warn") })
-	noPanic(t, func() { l.Log("Error", "error") })
-	noPanic(t, func() { l.Log("Notice", "notice") })
+	noPanic(t, func() { logger.Log("Info", "info") })
+	noPanic(t, func() { logger.Log("Debug", "debug") })
+	noPanic(t, func() { logger.Log("Warn", "warn") })
+	noPanic(t, func() { logger.Log("Error", "error") })
+	noPanic(t, func() { logger.Log("Notice", "notice") })
 }

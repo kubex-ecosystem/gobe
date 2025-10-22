@@ -68,6 +68,10 @@ type (
 	AuthCodeRepo    = fscm.AuthCodeRepo
 	AuthCodeService = fscm.AuthCodeService
 
+	RegistrationTokenModel   = fscm.RegistrationTokenModel
+	RegistrationTokenRepo    = fscm.IRegistrationTokenRepo
+	RegistrationTokenService = fscm.IRegistrationTokenService
+
 	// OrderModel   = fscm.OrderModel
 	// OrderRepo    = fscm.OrderRepo
 	// OrderService = fscm.OrderService

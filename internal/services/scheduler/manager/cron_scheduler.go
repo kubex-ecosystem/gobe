@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	pl "github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // CronJobScheduler gerencia a execução de cronjobs usando o GoroutinePool.

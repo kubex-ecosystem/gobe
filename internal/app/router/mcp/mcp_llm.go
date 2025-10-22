@@ -9,7 +9,8 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type MCPLLMRoutes struct {
@@ -35,7 +36,7 @@ func NewMCPLLMRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 	mcpLLMController := mcp_llm_controller.NewLLMController(bridge)
 

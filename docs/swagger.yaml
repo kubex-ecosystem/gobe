@@ -1263,6 +1263,24 @@ definitions:
       username:
         type: string
     type: object
+  RegisterUserRequest:
+    properties:
+      name:
+        type: string
+        example: "Test User"
+      email:
+        type: string
+        format: email
+        example: "test@example.com"
+      password:
+        type: string
+        format: password
+        example: "password123"
+    required:
+      - name
+      - email
+      - password
+    type: object
   whatsapp.ErrorResponse:
     properties:
       message:
@@ -3261,17 +3279,17 @@ paths:
   /api/v1/sign-up:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Cria um novo usuário no sistema. [Em desenvolvimento]
       parameters:
-      - description: Dados do usuário
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/users.CreateUserRequest'
+        - description: Dados do usuário
+          in: body
+          name: payload
+          required: true
+          schema:
+            $ref: '#/definitions/users.CreateUserRequest'
       produces:
-      - application/json
+        - application/json
       responses:
         "201":
           description: Created
@@ -3285,9 +3303,74 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/users.ErrorResponse'
-      summary: Registrar usuário
       tags:
       - users beta
+  /api/v1/register:
+    post:
+      tags:
+      - "users"
+      summary: "Initiate user registration"
+      description: "Starts the user registration process by creating an inactive user and sending a verification email."
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User registration details"
+        required: true
+        schema:
+          $ref: "#/definitions/RegisterUserRequest"
+      responses:
+        "200":
+          description: "Registration initiated"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Registration initiated. Please check your email to complete the process."
+        "400":
+          description: "Invalid input"
+          schema:
+            $ref: "#/definitions/users.ErrorResponse"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/users.ErrorResponse"
+  /api/v1/verify-email:
+    get:
+      tags:
+      - "users"
+      summary: "Verify user email"
+      description: "Completes the registration process by verifying the user's email with a token."
+      produces:
+      - "application/json"
+      parameters:
+      - name: "token"
+        in: "query"
+        description: "The verification token sent to the user's email."
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Email verified successfully"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Email verified successfully. You can now log in."
+        "400":
+          description: "Invalid or missing token"
+          schema:
+            $ref: "#/definitions/users.ErrorResponse"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/users.ErrorResponse"
+
   /api/v1/start:
     post:
       description: Dispara processo de inicialização do serviço GoBE. [Em desenvolvimento]

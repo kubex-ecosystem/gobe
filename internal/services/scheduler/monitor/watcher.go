@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"time"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 func watchGoroutines() {

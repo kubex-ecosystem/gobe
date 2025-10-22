@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	prv "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	gateway "github.com/kubex-ecosystem/gobe/internal/services/gateway"
+	gl "github.com/kubex-ecosystem/logz/logger"
 
 	"github.com/kubex-ecosystem/gobe/internal/services/gateway/providers"
 )

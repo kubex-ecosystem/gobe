@@ -13,7 +13,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // WebAuthConfig holds configuration for web authentication
@@ -39,8 +40,8 @@ func NewWebAuthMiddleware(config WebAuthConfig) *WebAuthMiddleware {
 
 	certService := config.CertService
 	if certService == nil {
-		defaultKeyPath := os.ExpandEnv(gl.DefaultGoBEKeyPath)
-		defaultCertPath := os.ExpandEnv(gl.DefaultGoBECertPath)
+		defaultKeyPath := os.ExpandEnv(kbx.DefaultGoBEKeyPath)
+		defaultCertPath := os.ExpandEnv(kbx.DefaultGoBECertPath)
 		certService = crt.NewCertService(defaultKeyPath, defaultCertPath)
 	}
 

@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	sch "github.com/kubex-ecosystem/gobe/internal/services/scheduler"
 
 	mcp_scheduler_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/scheduler"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type MCPSchedulerRoutes struct {
@@ -25,7 +25,7 @@ func NewMCPSchedulerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 	rtl := *rtr
 
-	dbService := rtl.GetDatabaseService().(*svc.DBServiceImpl)
+	dbService := rtl.GetDatabaseService().(*gdbasez.DBServiceImpl)
 	if dbService == nil {
 		gl.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
@@ -37,7 +37,7 @@ func NewMCPSchedulerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 	gorPool := sch.NewGoroutinePool(100)
 	cronSvc := sch.NewCronService(dbService)

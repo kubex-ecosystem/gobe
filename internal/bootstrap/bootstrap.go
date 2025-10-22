@@ -11,7 +11,8 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // BootstrapMainConfig garante que o arquivo principal de configuração exista
@@ -23,16 +24,16 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 	*IntegrationConfig | *WhatsAppConfig |
 	*MCPServerConfig | *TelegramConfig |
 	*IConfig](
-	args *gl.InitArgs,
+	args *kbx.InitArgs,
 ) (C, error) {
-	if gl.IsObjValid(args) {
+	if kbx.IsObjValid(args) {
 		if args.ConfigFile != "" {
 			args.ConfigFile = os.ExpandEnv(args.ConfigFile)
 		}
 	} else {
-		args = &gl.InitArgs{
+		args = &kbx.InitArgs{
 			ConfigFile:     args.ConfigFile,
-			IsConfidential: gl.GetEnvOrDefault("IS_CONFIDENTIAL", "false") == "true",
+			IsConfidential: kbx.GetEnvOrDefault("IS_CONFIDENTIAL", "false") == "true",
 			Port:           "8088",
 			Bind:           "0.0.0.0",
 		}
@@ -40,7 +41,7 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 
 	// Configure config file path
 	envVars := make(map[string]string)
-	args.EnvFile, _ = gl.GetValueOrDefault(os.ExpandEnv(args.EnvFile), os.ExpandEnv(filepath.Join("$PWD", ".env")))
+	args.EnvFile, _ = kbx.GetValueOrDefault(os.ExpandEnv(args.EnvFile), os.ExpandEnv(filepath.Join("$PWD", ".env")))
 	if _, err := os.Stat(args.EnvFile); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(args.EnvFile), 0755); err != nil {
@@ -68,7 +69,7 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 		}
 	}
 
-	args.ConfigFile, _ = gl.GetValueOrDefault(os.ExpandEnv(args.ConfigFile), os.ExpandEnv(gl.DefaultGoBEConfigPath))
+	args.ConfigFile, _ = kbx.GetValueOrDefault(os.ExpandEnv(args.ConfigFile), os.ExpandEnv(kbx.DefaultGoBEConfigPath))
 	if _, err := os.Stat(filepath.Dir(args.ConfigFile)); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(args.ConfigFile), 0755); err != nil {
@@ -81,7 +82,7 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 			}
 		}
 	}
-	args.ConfigDBFile, _ = gl.GetValueOrDefault(os.ExpandEnv(args.ConfigDBFile), os.ExpandEnv(gl.DefaultGDBaseConfigPath))
+	args.ConfigDBFile, _ = kbx.GetValueOrDefault(os.ExpandEnv(args.ConfigDBFile), os.ExpandEnv(kbx.DefaultGDBaseConfigPath))
 	if _, err := os.Stat(filepath.Dir(args.ConfigDBFile)); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(args.ConfigDBFile), 0755); err != nil {
@@ -109,7 +110,7 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 
 	if reflect.TypeFor[C]() == reflect.TypeFor[*Config]() {
 		cfgMain, oks := any(cfg).(*Config)
-		if !oks || !gl.IsObjValid(cfgMain) {
+		if !oks || !kbx.IsObjValid(cfgMain) {
 			gl.Log("warn", fmt.Sprintf("Config file at %s is invalid. Hydrating defaults.", args.ConfigFile))
 			return writeDefaultConfig[C](args)
 		}
@@ -180,7 +181,7 @@ func writeDefaultConfig[C *Config | *DiscordConfig |
 	*ServerConfig | *GoBeConfig | *GobeCtlConfig |
 	*IntegrationConfig | *WhatsAppConfig |
 	*MCPServerConfig | *TelegramConfig |
-	*IConfig](args *gl.InitArgs) (C, error) {
+	*IConfig](args *kbx.InitArgs) (C, error) {
 	cfg := defaultConfig[C](args)
 
 	payload, err := json.MarshalIndent(cfg, "", "  ")
@@ -201,9 +202,9 @@ func defaultConfig[C *Config | *DiscordConfig |
 	*ServerConfig | *GoBeConfig | *GobeCtlConfig |
 	*IntegrationConfig | *WhatsAppConfig |
 	*MCPServerConfig | *TelegramConfig |
-	*IConfig](args *gl.InitArgs) C {
+	*IConfig](args *kbx.InitArgs) C {
 	cfg, err := Load[C](args)
-	if err == nil && gl.IsObjValid(cfg) {
+	if err == nil && kbx.IsObjValid(cfg) {
 		return cfg
 	}
 	config := any(&Config{
@@ -311,7 +312,7 @@ func defaultConfig[C *Config | *DiscordConfig |
 	return config
 }
 
-func hydrateConfigDefaults(cfg *Config, args *gl.InitArgs) error {
+func hydrateConfigDefaults(cfg *Config, args *kbx.InitArgs) error {
 	updated := false
 	if cfg.Server.Port == "" {
 		cfg.Server.Port = args.Port

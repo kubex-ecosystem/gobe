@@ -2,7 +2,7 @@ package utils
 
 import (
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 
 	"fmt"
 	"reflect"

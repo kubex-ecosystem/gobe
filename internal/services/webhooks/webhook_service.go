@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	messagery "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // WebhookEvent represents a webhook event received from external services

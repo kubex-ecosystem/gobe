@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	gui "github.com/kubex-ecosystem/gobe/internal/app/web"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // WebUIController serves the embedded web UI, if bundled.

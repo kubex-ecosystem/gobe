@@ -9,7 +9,7 @@ import (
 
 type UserService = user.UserService
 type UserModel = user.UserModel
-type UserModelType = user.UserModel
+type UserModelImpl = user.UserModelImpl
 type UserRepo = user.UserRepo
 
 func NewUserService(db user.UserRepo) UserService {

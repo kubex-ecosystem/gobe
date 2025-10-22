@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // Client represents a client for the GemX Analyzer service

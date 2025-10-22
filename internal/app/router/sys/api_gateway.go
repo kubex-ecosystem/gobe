@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	apia "github.com/kubex-ecosystem/gobe/internal/app/security/authentication"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	"github.com/kubex-ecosystem/logz/logger"
 )
 
 type APIGateway struct {

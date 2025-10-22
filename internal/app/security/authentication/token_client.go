@@ -11,9 +11,10 @@ import (
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	kri "github.com/kubex-ecosystem/gobe/internal/app/security/external"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type TokenClientImpl struct {
@@ -46,7 +47,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	}
 	if t.crtSrv == nil {
 		gl.Log("error", "crtService is nil, trying to create a new one")
-		t.crtSrv = crt.NewCertService(gl.DefaultGoBEKeyPath, gl.DefaultGoBECertPath) // pragma: allowlist secret
+		t.crtSrv = crt.NewCertService(kbx.DefaultGoBEKeyPath, kbx.DefaultGoBECertPath) // pragma: allowlist secret
 		if t.crtSrv == nil {
 			gl.Log("fatal", "crtService is nil, unable to create a new one") // pragma: allowlist secret
 		}
@@ -76,7 +77,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 
 	// Setup keyring service
 	if t.keyringService == nil {
-		t.keyringService = kri.NewKeyringService(gl.KeyringService, fmt.Sprintf("gobe-%s", "jwt_secret"))
+		t.keyringService = kri.NewKeyringService(kbx.KeyringService, fmt.Sprintf("gobe-%s", "jwt_secret"))
 		if t.keyringService == nil {
 			gl.Log("error", fmt.Sprintf("Error creating keyring service: %v", err))
 			return nil, 0, 0, err

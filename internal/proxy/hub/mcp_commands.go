@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // RegisterMCPCommands registers Discord command handlers for MCP tools

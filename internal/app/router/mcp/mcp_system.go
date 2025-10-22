@@ -8,7 +8,7 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type MCPSystemRoutes struct {

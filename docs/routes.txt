@@ -1,3 +1,5 @@
+ '/api/v1/register':'POST'
+ '/api/v1/verify-email':'GET'
  '/api/v1/telegram/webhook':'POST'
  '/api/v1/telegram/send':'POST'
  '/api/v1/telegram/ping':'GET'

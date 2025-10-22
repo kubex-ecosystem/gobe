@@ -9,7 +9,8 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/oauth"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 
 	// svc "github.com/kubex-ecosystem/gdbase/factory"
 	sau "github.com/kubex-ecosystem/gobe/factory/security"
@@ -43,7 +44,7 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 
 	// Create bridge to gdbase (clean abstraction)
 	bridge := svc.NewBridge(ctx, dbService, dbName)
@@ -62,8 +63,8 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	// Create TokenService (same pattern as user routes)
 	certService := crt.NewCertService(
-		os.ExpandEnv(gl.DefaultGoBEKeyPath),
-		os.ExpandEnv(gl.DefaultGoBECertPath),
+		os.ExpandEnv(kbx.DefaultGoBEKeyPath),
+		os.ExpandEnv(kbx.DefaultGoBECertPath),
 	)
 	tokenClient := sau.NewTokenClient(certService, dbService)
 	tokenService, _, _, err := tokenClient.LoadTokenCfg()

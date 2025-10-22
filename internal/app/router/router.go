@@ -11,11 +11,12 @@ import (
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
+	gl "github.com/kubex-ecosystem/logz/logger"
 	"github.com/spf13/viper"
 	"golang.org/x/time/rate"
 
@@ -44,12 +45,12 @@ type Router struct {
 	*gin.Engine
 	*t.Mutexes
 	*RouterConfigImpl
-	InitArgs *gl.InitArgs
+	InitArgs *kbx.InitArgs
 	Logger   l.Logger
 }
 
 // NewRouterImpl initializes a new Router instance with the provided configuration.
-func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *gl.InitArgs, logger l.Logger, debug bool) (*Router, error) {
+func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *kbx.InitArgs, logger l.Logger, debug bool) (*Router, error) {
 	if logger == nil {
 		logger = l.GetLogger("GoBE")
 	}
@@ -95,7 +96,7 @@ func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, in
 }
 
 // NewRouter creates a new Router instance and returns it as an IRouter interface.
-func NewRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *gl.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
+func NewRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *kbx.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
 	return NewRouterImpl(serverConfig, databaseService, initArgs, logger, debug)
 }
 
@@ -564,7 +565,7 @@ func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 	}
 }
 
-func (rtr *Router) GetInitArgs() *gl.InitArgs {
+func (rtr *Router) GetInitArgs() *kbx.InitArgs {
 	if err := rtr.ValidateRouter(); err != nil {
 		gl.Log("error", err.Error())
 		return nil

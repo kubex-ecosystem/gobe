@@ -8,7 +8,7 @@ import (
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	models "github.com/kubex-ecosystem/gdbase/factory/models"
 	mcpmodels "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // Bridge provides a clean interface to gdbase services without exposing *gorm.DB
@@ -349,4 +349,18 @@ func (b *Bridge) ProvidersRepo(ctx context.Context, dbService svc.DBService) Pro
 }
 func (b *Bridge) ProvidersService(repo ProvidersRepo) ProvidersService {
 	return mcpmodels.NewProvidersService(repo)
+}
+
+func (b *Bridge) RegistrationTokenModel(userID, token string, expiresAt time.Time) RegistrationTokenModel {
+	return *models.NewRegistrationToken(userID, token, expiresAt)
+}
+func (b *Bridge) RegistrationTokenRepo(ctx context.Context, dbService svc.DBService) (RegistrationTokenRepo, error) {
+	var dbSvc *svc.DBServiceImpl
+	if dbService != nil {
+		dbSvc = dbService.(*svc.DBServiceImpl)
+	}
+	return models.NewRegistrationTokenRepo(ctx, dbSvc)
+}
+func (b *Bridge) RegistrationTokenService(repo RegistrationTokenRepo) RegistrationTokenService {
+	return models.NewRegistrationTokenService(repo)
 }

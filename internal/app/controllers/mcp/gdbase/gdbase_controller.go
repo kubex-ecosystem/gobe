@@ -11,9 +11,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
+	"github.com/kubex-ecosystem/logz/logger"
 
 	l "github.com/kubex-ecosystem/logz"
 )

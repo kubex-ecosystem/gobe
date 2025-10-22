@@ -19,9 +19,9 @@ import (
 	mcp "github.com/kubex-ecosystem/gobe/internal/services/mcp"
 
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
+	"github.com/kubex-ecosystem/logz/logger"
 
 	l "github.com/kubex-ecosystem/logz"
 )

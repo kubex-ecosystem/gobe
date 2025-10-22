@@ -10,7 +10,7 @@
   "repository": "https://github.com/kubex-ecosystem/gobe",
   "homepage": "https://github.com/kubex-ecosystem/gobe",
   "description": "Kubex GoBE: A complete backend with MCP, CLI, GUI, API, and more for help you managing your technology stack.",
-  "go_version": "1.25.1",
+  "go_version": "1.25.3",
   "main": "cmd/main.go",
   "bin": "gobe",
   "author": "Rafael Mori <faelmori@gmail.com>",

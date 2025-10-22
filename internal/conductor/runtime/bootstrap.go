@@ -10,9 +10,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler"
 	logz "github.com/kubex-ecosystem/logz/api/notifiers"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 var wsNotifierConfig *logz.NotifierWebSocketConfig
@@ -50,7 +51,7 @@ func Init(router *gin.Engine, s scheduler.IScheduler) {
 
 	if notifier.EnabledFlag {
 		notifier.Enable()
-		notifier.AuthToken = gl.GetEnvOrDefault("LOGZ_AUTH_TOKEN", "")
+		notifier.AuthToken = kbx.GetEnvOrDefault("LOGZ_AUTH_TOKEN", "")
 		gl.Log("info", "[Conductor] WebSocket notifier enabled.")
 	}
 

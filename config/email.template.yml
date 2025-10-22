@@ -1,0 +1,20 @@
+# Email Service Configuration Template
+#
+# This file provides a template for configuring the email service.
+# Copy this file to .notes/email.yml and fill in the actual credentials.
+
+# Default provider to use (e.g., "gmail", "locaweb")
+default_provider: "gmail"
+
+providers:
+  gmail:
+    host: "smtp.gmail.com"
+    port: 587
+    username: "your-email@gmail.com"
+    password: "your-gmail-app-password" # pragma: allowlist secret
+
+  locaweb:
+    host: "smtp.locaweb.com.br"
+    port: 587
+    username: "your-email@yourdomain.com"
+    password: "your-locaweb-password" # pragma: allowlist secret

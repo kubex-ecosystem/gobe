@@ -10,8 +10,9 @@ import (
 	"strings"
 
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *MCPServerConfig | any](configType string) (T, bool) {
@@ -349,7 +350,7 @@ func Load[C *Config | *DiscordConfig |
 	*IntegrationConfig | *WhatsAppConfig |
 	*MCPServerConfig | *TelegramConfig |
 	*IConfig](
-	initArgs *gl.InitArgs,
+	initArgs *kbx.InitArgs,
 ) (C, error) {
 	var err error
 

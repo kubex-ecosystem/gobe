@@ -9,7 +9,8 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 
 	"net/http"
 )
@@ -37,7 +38,7 @@ func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 	userController := users.NewUserController(bridge)
 
@@ -76,7 +77,7 @@ func NewUserRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
-	ctx = context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 
 	bridge := gdbasez.NewBridge(ctx, dbService, dbName)
 	userController := users.NewUserController(bridge)

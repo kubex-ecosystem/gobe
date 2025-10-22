@@ -10,8 +10,9 @@ import (
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/oauth"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // OAuthController handles OAuth2/PKCE endpoints
@@ -236,7 +237,7 @@ func (c *OAuthController) RegisterClient(ctx *gin.Context) {
 		return
 	}
 	dbName := dbCfg.GetDBName()
-	ctxB := context.WithValue(ctx, gl.ContextDBNameKey, dbName)
+	ctxB := context.WithValue(ctx, kbx.ContextDBNameKey, dbName)
 	clientRepo := mdl.NewOAuthClientRepo(ctxB, dbService)
 
 	// Create OAuth client service

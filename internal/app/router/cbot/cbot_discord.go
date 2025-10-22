@@ -14,8 +14,9 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 type DiscordRoutes struct {
@@ -55,12 +56,12 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	gl.Log("info", fmt.Sprintf("Reading config for DiscordRoute at %s", rtl.GetConfigPath()))
 	initArgs := rtl.GetInitArgs()
-	if !gl.IsObjValid(initArgs) {
+	if !kbx.IsObjValid(initArgs) {
 		gl.Log("error", "InitArgs is nil for DiscordRoutes")
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = gl.GetEnvOrDefault("DISCORD_CONFIG_FILE", os.ExpandEnv(gl.DefaultGoBEConfigPath)) //./config/social_discord.yaml"
+		initArgs.ConfigFile = kbx.GetEnvOrDefault("DISCORD_CONFIG_FILE", os.ExpandEnv(kbx.DefaultGoBEConfigPath)) //./config/social_discord.yaml"
 	}
 	cfg, configErr := bootstrap.Load[*bootstrap.Config](initArgs)
 	if configErr != nil {

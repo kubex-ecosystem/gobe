@@ -9,8 +9,9 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/telegram"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // NewTelegramRoutes registers Telegram related endpoints.
@@ -26,12 +27,12 @@ func NewTelegramRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		return nil
 	}
 	initArgs := rtl.GetInitArgs()
-	if !gl.IsObjValid(initArgs) {
+	if !kbx.IsObjValid(initArgs) {
 		gl.Log("error", "InitArgs is nil for TelegramRoutes")
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
-		initArgs.ConfigFile = gl.GetEnvOrDefault("TELEGRAM_CONFIG_FILE", os.ExpandEnv("./config/social_meta.yaml"))
+		initArgs.ConfigFile = kbx.GetEnvOrDefault("TELEGRAM_CONFIG_FILE", os.ExpandEnv("./config/social_meta.yaml"))
 	}
 
 	cfg, configErr := bootstrap.Load[*bootstrap.Config](initArgs)

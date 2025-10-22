@@ -12,7 +12,7 @@ import (
 	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	gl "github.com/kubex-ecosystem/logz/logger"
 )
 
 // JWTService handles JWT token generation and validation using GDBase repositories

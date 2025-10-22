@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	l "github.com/kubex-ecosystem/logz"
 )
 
@@ -37,7 +37,7 @@ type IRouter interface {
 	ShutdownServerGracefully()
 	MonitorServer()
 	ValidateRouter() error
-	GetInitArgs() *gl.InitArgs
+	GetInitArgs() *kbx.InitArgs
 	DummyHandler(_ chan interface{}) gin.HandlerFunc
 }
 

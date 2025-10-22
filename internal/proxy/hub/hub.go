@@ -11,7 +11,6 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/gobe"
@@ -20,6 +19,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
 	"github.com/kubex-ecosystem/gobe/internal/services/webhooks"
+	gl "github.com/kubex-ecosystem/logz/logger"
 	"github.com/spf13/viper"
 )
 

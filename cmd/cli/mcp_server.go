@@ -12,8 +12,9 @@ import (
 
 	f "github.com/kubex-ecosystem/gobe/factory"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
+	gl "github.com/kubex-ecosystem/logz/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -70,7 +71,7 @@ func MCPServerCmd() *cobra.Command {
 }
 
 func startMCPServer() {
-	initArgs := gl.InitArgs{
+	initArgs := kbx.InitArgs{
 		ConfigFile:     mcpServerConfigFile,
 		ConfigType:     "yaml",
 		LogFile:        mcpServerLogFile,
