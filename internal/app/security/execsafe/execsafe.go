@@ -64,7 +64,7 @@ func shlexSplit(s string) ([]string, error) {
 func ExtractShellCommand(content string) string {
 	s := norm.NFKC.String(content)
 	low := strings.ToLower(s)
-	triggers := []string{"executar ", "execute ", "rodar ", "run ", "exec ", "executa "}
+	triggers := []string{"executar ", "execute ", "rodar ", "run ", "exec ", "executa ", "exe ", "do ", "faça ", "init ", "inicie ", "get "}
 	idx := -1
 	for _, t := range triggers {
 		if j := strings.Index(low, t); j != -1 {

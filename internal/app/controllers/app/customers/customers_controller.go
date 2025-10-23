@@ -8,7 +8,7 @@ package customers
 
 // 	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 // 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-// 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+// 	gl "github.com/kubex-ecosystem/logz/logger"
 
 // 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 // )

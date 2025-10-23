@@ -463,7 +463,7 @@ gobe/
 - Use interfaces for dependency injection
 - Always validate nil pointers before dereferencing
 - Use descriptive error messages with context
-- Import global logger as `gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"`
+- Import global logger as `gl "github.com/kubex-ecosystem/logz/logger"`
 - Follow table-driven testing patterns
 - Use `context.Context` for cancellation and timeouts
 - All modules follow universal interface pattern with methods: `Alias()`, `ShortDescription()`, `LongDescription()`, `Usage()`, `Examples()`, `Active()`, `Module()`, `Execute()`, `Command()`

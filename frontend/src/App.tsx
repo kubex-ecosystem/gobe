@@ -18,6 +18,8 @@ const routes: RouteObject[] = [
   { path: "/app/manifesto", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
   { path: "/app/about", element: <PageShell withBackgroundPattern={false}><ManifestoPage /></PageShell> },
   { path: "/app/dashboard", element: <PageShell withBackgroundPattern={false}><DashboardPage /></PageShell> },
+  //atlassian-domain-verification-d03d0d7f-07d1-450b-96d1-38fc9c54f2e9.html
+
 ];
 
 function NotFound() {

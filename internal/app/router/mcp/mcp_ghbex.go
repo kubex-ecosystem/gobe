@@ -7,7 +7,7 @@ package mcp
 // 	mcp_ghbex_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/ghbexz"
 // 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 // 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-// 	gl "github.com/kubex-ecosystem/gobe/internal/module/kbx"
+// 	gl "github.com/kubex-ecosystem/logz/logger"
 // )
 
 // type MCPGHbexRoutes struct {
