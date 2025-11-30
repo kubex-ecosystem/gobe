@@ -539,7 +539,7 @@ func (g *GoBE) initializeAllServices() (is.DBService, error) {
 	}
 
 	// 2. Initialize Docker service with existing DBConfig (legacy flow)
-	dockerService, err := is.NewDockerService(dbConfig, logz.GetLoggerZ("DockerService"))
+	dockerService, err := is.NewDockerService(logz.GetLoggerZ("DockerService"))
 	if err != nil {
 		logz.Log("error", fmt.Sprintf("❌ Erro ao criar DockerService: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao criar DockerService: %w", err)
@@ -576,7 +576,7 @@ func (g *GoBE) initializeAllServices() (is.DBService, error) {
 			return nil, fmt.Errorf("❌ PostgreSQL não está pronto: %w", err)
 		}
 
-		results, err := migrationMgr.RunMigrations(ctx)
+		results, err := migrationMgr.RunMigrations(ctx, nil)
 		if err != nil {
 			logz.Log("warn", fmt.Sprintf("⚠️ Erro parcial nas migrations: %v", err))
 		} else {
