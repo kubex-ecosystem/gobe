@@ -12,7 +12,7 @@ import (
 	mcp_preferences_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/preferences"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type MCPPreferencesRoutes struct {
@@ -21,20 +21,20 @@ type MCPPreferencesRoutes struct {
 
 func NewMCPPreferencesRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil for MCPPreferencesRoute")
+		logz.Log("error", "Router is nil for MCPPreferencesRoute")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	dbName := dbCfg.GetDBName()

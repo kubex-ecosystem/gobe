@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	pl "github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // CronJobScheduler gerencia a execução de cronjobs usando o GoroutinePool.
@@ -34,7 +34,7 @@ func (s *CronJobScheduler) StartScheduler(ctx context.Context) error {
 		for range ticker.C {
 			cronJobs, err := s.ICronService.GetScheduledCronJobs(ctx)
 			if err != nil {
-				gl.Log("error", "Error fetching scheduled cronjobs: %v", err)
+				logz.Log("error", "Error fetching scheduled cronjobs: %v", err)
 				continue
 			}
 			for _, job := range cronJobs {

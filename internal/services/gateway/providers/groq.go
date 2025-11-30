@@ -267,4 +267,3 @@ type groqStreamChunk struct {
 		TotalTokens      int `json:"total_tokens"`
 	} `json:"usage,omitempty"`
 }
-

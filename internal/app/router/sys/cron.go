@@ -9,8 +9,7 @@ import (
 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type CronRoutes struct {
@@ -20,20 +19,20 @@ type CronRoutes struct {
 // NewCronRoutes cria novas rotas para o serviço de cron jobs.
 func NewCronRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		l.ErrorCtx("Router is nil for CronRoute", nil)
+		// l.ErrorCtx("Router is nil for CronRoute", nil)
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	dbName := dbCfg.GetDBName()

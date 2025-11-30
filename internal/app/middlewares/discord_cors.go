@@ -3,7 +3,7 @@ package middlewares
 
 import (
 	"github.com/gin-gonic/gin"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // DiscordCORSMiddleware configures CORS for Discord Activity/iframe embedding
@@ -45,7 +45,7 @@ func DiscordCORSMiddleware() gin.HandlerFunc {
 			c.Writer.Header().Set("Content-Security-Policy",
 				"frame-ancestors 'self' https://discord.com https://*.discord.com https://discordapp.com")
 
-			gl.Log("debug", "Discord CORS applied", "origin", origin)
+			logz.Log("debug", "Discord CORS applied", "origin", origin)
 		} else {
 			// Default restrictive CORS for non-Discord origins
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "https://gobe.kubex.io")

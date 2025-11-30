@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type Stream struct {
@@ -120,7 +120,7 @@ func (s *Stream) handleClient(client *Client) {
 	for event := range client.Send {
 		client.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 		if err := client.Conn.WriteJSON(event); err != nil {
-			gl.Log("error", "WebSocket write error: "+err.Error())
+			logz.Log("error", "WebSocket write error: "+err.Error())
 			return
 		}
 	}

@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 const (
@@ -38,7 +38,7 @@ func DiscordWebhookGuard(cfg bootstrap.DiscordConfig) gin.HandlerFunc {
 
 		bodyBytes, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			gl.Log("error", "discord webhook guard: failed to read body", err)
+			logz.Log("error", "discord webhook guard: failed to read body", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid_body"})
 			return
 		}
@@ -51,18 +51,18 @@ func DiscordWebhookGuard(cfg bootstrap.DiscordConfig) gin.HandlerFunc {
 
 		if !verify {
 			c.Set(DiscordVerifiedContextKey, false)
-			gl.Log("debug", "discord webhook guard bypass (verify_signatures=false)")
+			logz.Log("debug", "discord webhook guard bypass (verify_signatures=false)")
 			c.Next()
 			return
 		}
 
 		if signature == "" || timestamp == "" {
-			gl.Log("warn", "discord webhook guard: missing signature headers with verification enabled")
+			logz.Log("warn", "discord webhook guard: missing signature headers with verification enabled")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing_signature"})
 			return
 		}
 		if len(publicKeyHex) == 0 {
-			gl.Log("warn", "discord webhook guard: verification enabled without public key, bypassing")
+			logz.Log("warn", "discord webhook guard: verification enabled without public key, bypassing")
 			c.Set(DiscordVerifiedContextKey, false)
 			c.Next()
 			return
@@ -70,20 +70,20 @@ func DiscordWebhookGuard(cfg bootstrap.DiscordConfig) gin.HandlerFunc {
 
 		pkBytes, err := hex.DecodeString(publicKeyHex)
 		if err != nil {
-			gl.Log("error", "discord webhook guard: invalid public key hex", err)
+			logz.Log("error", "discord webhook guard: invalid public key hex", err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "invalid_public_key"})
 			return
 		}
 		sigBytes, err := hex.DecodeString(signature)
 		if err != nil {
-			gl.Log("warn", "discord webhook guard: invalid signature hex", err)
+			logz.Log("warn", "discord webhook guard: invalid signature hex", err)
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid_signature"})
 			return
 		}
 
 		payload := append([]byte(timestamp), bodyBytes...)
 		if !ed25519.Verify(pkBytes, payload, sigBytes) {
-			gl.Log("warn", "discord webhook guard: signature verification failed")
+			logz.Log("warn", "discord webhook guard: signature verification failed")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "signature_mismatch"})
 			return
 		}

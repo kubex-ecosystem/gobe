@@ -8,7 +8,7 @@ import (
 	mcp "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,7 +29,7 @@ func NewProvidersController(bridge *svc.Bridge) *ProvidersController {
 func (pc *ProvidersController) GetAllProviders(c *gin.Context) {
 	providers, err := pc.providersService.ListProviders()
 	if err != nil {
-		gl.Log("error", "Failed to get providers", err)
+		logz.Log("error", "Failed to get providers", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get providers"})
 		return
 	}
@@ -41,7 +41,7 @@ func (pc *ProvidersController) GetProviderByID(c *gin.Context) {
 	id := c.Param("id")
 	provider, err := pc.providersService.GetProviderByID(id)
 	if err != nil {
-		gl.Log("error", "Failed to get provider by ID", err)
+		logz.Log("error", "Failed to get provider by ID", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Provider not found"})
 		return
 	}
@@ -57,7 +57,7 @@ func (pc *ProvidersController) CreateProvider(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
-		gl.Log("error", "Failed to bind provider request", err)
+		logz.Log("error", "Failed to bind provider request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
@@ -71,7 +71,7 @@ func (pc *ProvidersController) CreateProvider(c *gin.Context) {
 
 	createdProvider, err := pc.providersService.CreateProvider(newProvider)
 	if err != nil {
-		gl.Log("error", "Failed to create provider", err)
+		logz.Log("error", "Failed to create provider", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create provider"})
 		return
 	}
@@ -88,7 +88,7 @@ func (pc *ProvidersController) UpdateProvider(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
-		gl.Log("error", "Failed to bind provider update request", err)
+		logz.Log("error", "Failed to bind provider update request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
@@ -96,7 +96,7 @@ func (pc *ProvidersController) UpdateProvider(c *gin.Context) {
 	// Get existing provider
 	existingProvider, err := pc.providersService.GetProviderByID(id)
 	if err != nil {
-		gl.Log("error", "Failed to get provider for update", err)
+		logz.Log("error", "Failed to get provider for update", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Provider not found"})
 		return
 	}
@@ -114,7 +114,7 @@ func (pc *ProvidersController) UpdateProvider(c *gin.Context) {
 
 	updatedProvider, err := pc.providersService.UpdateProvider(existingProvider)
 	if err != nil {
-		gl.Log("error", "Failed to update provider", err)
+		logz.Log("error", "Failed to update provider", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update provider"})
 		return
 	}
@@ -126,7 +126,7 @@ func (pc *ProvidersController) DeleteProvider(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := pc.providersService.DeleteProvider(id); err != nil {
-		gl.Log("error", "Failed to delete provider", err)
+		logz.Log("error", "Failed to delete provider", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete provider"})
 		return
 	}
@@ -138,7 +138,7 @@ func (pc *ProvidersController) GetProvidersByProvider(c *gin.Context) {
 	provider := c.Param("provider")
 	providers, err := pc.providersService.GetProviderByName(provider)
 	if err != nil {
-		gl.Log("error", "Failed to get providers by provider", err)
+		logz.Log("error", "Failed to get providers by provider", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get providers by provider"})
 		return
 	}
@@ -150,7 +150,7 @@ func (pc *ProvidersController) GetProvidersByOrgOrGroup(c *gin.Context) {
 	orgOrGroup := c.Param("org_or_group")
 	providers, err := pc.providersService.GetProviderByOrgOrGroup(orgOrGroup)
 	if err != nil {
-		gl.Log("error", "Failed to get providers by org or group", err)
+		logz.Log("error", "Failed to get providers by org or group", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get providers by org or group"})
 		return
 	}
@@ -162,7 +162,7 @@ func (pc *ProvidersController) GetActiveProviders(c *gin.Context) {
 	// Como não existe um método específico para ativos, vamos retornar todos
 	providers, err := pc.providersService.ListProviders()
 	if err != nil {
-		gl.Log("error", "Failed to get active providers", err)
+		logz.Log("error", "Failed to get active providers", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get active providers"})
 		return
 	}
@@ -178,7 +178,7 @@ func (pc *ProvidersController) UpsertProviderByNameAndOrg(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&providerRequest); err != nil {
-		gl.Log("error", "Failed to bind provider upsert request", err)
+		logz.Log("error", "Failed to bind provider upsert request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
@@ -191,7 +191,7 @@ func (pc *ProvidersController) UpsertProviderByNameAndOrg(c *gin.Context) {
 		"admin", // userID temporário
 	)
 	if err != nil {
-		gl.Log("error", "Failed to upsert provider", err)
+		logz.Log("error", "Failed to upsert provider", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upsert provider"})
 		return
 	}

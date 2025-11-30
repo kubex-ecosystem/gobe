@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"golang.org/x/crypto/bcrypt"
@@ -63,7 +63,7 @@ func (ac *AuthController) createDefaultUser() {
 		CreatedAt: time.Now(),
 	}
 
-	gl.Log("info", "Default admin user created", "username", "admin", "password", "admin")
+	logz.Log("info", "Default admin user created", "username", "admin", "password", "admin")
 }
 
 // Login endpoint handles POST /auth/login
@@ -95,7 +95,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	// Find user
 	user, exists := ac.users[req.Username]
 	if !exists {
-		gl.Log("warn", "Login attempt for non-existent user", "username", req.Username, "ip", c.ClientIP())
+		logz.Log("warn", "Login attempt for non-existent user", "username", req.Username, "ip", c.ClientIP())
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":   "Authentication failed",
 			"message": "Invalid username or password",
@@ -105,7 +105,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 
 	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		gl.Log("warn", "Failed login attempt", "username", req.Username, "ip", c.ClientIP())
+		logz.Log("warn", "Failed login attempt", "username", req.Username, "ip", c.ClientIP())
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":   "Authentication failed",
 			"message": "Invalid username or password",
@@ -116,7 +116,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 	// Generate JWT token
 	token, err := ac.authMiddleware.GenerateToken(user.ID, user.Username)
 	if err != nil {
-		gl.Log("error", "Failed to generate token", "error", err)
+		logz.Log("error", "Failed to generate token", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Token generation failed",
 			"message": "Please try again",
@@ -124,7 +124,7 @@ func (ac *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	gl.Log("info", "User logged in successfully", "username", user.Username, "ip", c.ClientIP())
+	logz.Log("info", "User logged in successfully", "username", user.Username, "ip", c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
@@ -308,7 +308,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 
 	ac.users[req.Username] = user
 
-	gl.Log("info", "New user registered", "username", user.Username, "email", user.Email)
+	logz.Log("info", "New user registered", "username", user.Username, "email", user.Email)
 
 	// Generate token
 	token, err := ac.authMiddleware.GenerateToken(user.ID, user.Username)

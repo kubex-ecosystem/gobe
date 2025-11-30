@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // Client represents a client for the GemX Analyzer service
@@ -142,7 +142,7 @@ func (c *Client) GetRepositoryScorecard(ctx context.Context, req ScorecardReques
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
-	gl.Log("info", "Repository scorecard obtained", "repo_url", req.RepoURL, "chi_score", scorecard.CHI.Score)
+	logz.Log("info", "Repository scorecard obtained", "repo_url", req.RepoURL, "chi_score", scorecard.CHI.Score)
 	return &scorecard, nil
 }
 
@@ -220,7 +220,7 @@ func (c *Client) makeRequest(ctx context.Context, method, endpoint string, paylo
 	// Add user agent
 	req.Header.Set("User-Agent", "GoBE-MCP-Analyzer/1.3.5")
 
-	gl.Log("debug", "Making request to analyzer", "method", method, "url", url)
+	logz.Log("debug", "Making request to analyzer", "method", method, "url", url)
 
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
@@ -234,7 +234,7 @@ func (c *Client) makeRequest(ctx context.Context, method, endpoint string, paylo
 	}
 
 	if resp.StatusCode >= 400 {
-		gl.Log("error", "Analyzer request failed", "status", resp.StatusCode, "response", string(respBody))
+		logz.Log("error", "Analyzer request failed", "status", resp.StatusCode, "response", string(respBody))
 		return nil, fmt.Errorf("request failed with status %d: %s", resp.StatusCode, string(respBody))
 	}
 

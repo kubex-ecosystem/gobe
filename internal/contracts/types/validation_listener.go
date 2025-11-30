@@ -3,7 +3,7 @@ package types
 import (
 	"reflect"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type ValidationListenerType string
@@ -42,7 +42,7 @@ func NewValidationListener() *ValidationListener {
 
 func (vl *ValidationListener) AddFilter(filterType ValidationFilterType, filter func(*ValidationResult) bool) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 	vl.Mutexes.MuLock()
@@ -52,7 +52,7 @@ func (vl *ValidationListener) AddFilter(filterType ValidationFilterType, filter 
 		vl.Filters = make(map[ValidationFilterType]func(*ValidationResult) bool)
 	}
 	if filter == nil {
-		gl.Log("error", "RegisterListener: filter is nil")
+		logz.Log("error", "RegisterListener: filter is nil")
 		return
 	}
 
@@ -61,7 +61,7 @@ func (vl *ValidationListener) AddFilter(filterType ValidationFilterType, filter 
 
 func (vl *ValidationListener) RemoveFilter(filterType ValidationFilterType) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 	vl.Mutexes.MuLock()
@@ -72,7 +72,7 @@ func (vl *ValidationListener) RemoveFilter(filterType ValidationFilterType) {
 
 func (vl *ValidationListener) AddHandler(handler func(*ValidationResult)) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 	vl.Mutexes.MuLock()
@@ -83,7 +83,7 @@ func (vl *ValidationListener) AddHandler(handler func(*ValidationResult)) {
 
 func (vl *ValidationListener) RemoveHandler(handler func(*ValidationResult)) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 	vl.Mutexes.MuLock()
@@ -99,7 +99,7 @@ func (vl *ValidationListener) RemoveHandler(handler func(*ValidationResult)) {
 
 func (vl *ValidationListener) AddListener(reference Reference, listenerType ValidationListenerType, handler func(*ValidationResult)) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 	vl.Mutexes.MuLock()
@@ -113,7 +113,7 @@ func (vl *ValidationListener) AddListener(reference Reference, listenerType Vali
 
 func (vl *ValidationListener) RemoveListener(reference Reference, listenerType ValidationListenerType) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 	vl.Mutexes.MuLock()
@@ -129,7 +129,7 @@ func (vl *ValidationListener) RemoveListener(reference Reference, listenerType V
 
 func (vl *ValidationListener) GetFilters() map[string]func(*ValidationResult) bool {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return nil
 	}
 	vl.Mutexes.MuLock()
@@ -138,7 +138,7 @@ func (vl *ValidationListener) GetFilters() map[string]func(*ValidationResult) bo
 	filters := make(map[string]func(*ValidationResult) bool)
 	for k, v := range vl.Filters {
 		if v == nil {
-			gl.Log("error", "RegisterListener: filter is nil")
+			logz.Log("error", "RegisterListener: filter is nil")
 			continue
 		}
 		filters[string(k)] = v
@@ -148,7 +148,7 @@ func (vl *ValidationListener) GetFilters() map[string]func(*ValidationResult) bo
 
 func (vl *ValidationListener) GetHandlersByName(name string) []func(*ValidationResult) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return nil
 	}
 	vl.Mutexes.MuLock()
@@ -156,7 +156,7 @@ func (vl *ValidationListener) GetHandlersByName(name string) []func(*ValidationR
 
 	for _, handler := range vl.Handlers {
 		if name == "" {
-			gl.Log("error", "RegisterListener: name is empty")
+			logz.Log("error", "RegisterListener: name is empty")
 			continue
 		}
 		return []func(*ValidationResult){handler}
@@ -166,7 +166,7 @@ func (vl *ValidationListener) GetHandlersByName(name string) []func(*ValidationR
 
 func (vl *ValidationListener) GetHandlers() []func(*ValidationResult) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return nil
 	}
 	vl.Mutexes.MuLock()
@@ -179,7 +179,7 @@ func (vl *ValidationListener) GetHandlers() []func(*ValidationResult) {
 
 func (vl *ValidationListener) GetListeners() map[Reference]map[ValidationListenerType]func(*ValidationResult) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return nil
 	}
 	vl.Mutexes.MuLock()
@@ -194,7 +194,7 @@ func (vl *ValidationListener) GetListeners() map[Reference]map[ValidationListene
 
 func (vl *ValidationListener) GetListenersByName(name string) map[ValidationListenerType]func(*ValidationResult) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return nil
 	}
 	vl.Mutexes.MuLock()
@@ -210,7 +210,7 @@ func (vl *ValidationListener) GetListenersByName(name string) map[ValidationList
 
 func (vl *ValidationListener) GetListenersKeys() map[string]Reference {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return nil
 	}
 	vl.Mutexes.MuLock()
@@ -225,14 +225,14 @@ func (vl *ValidationListener) GetListenersKeys() map[string]Reference {
 
 func (vl *ValidationListener) RegisterListener(reference Reference, handler func(*ValidationResult)) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 	vl.Mutexes.MuLock()
 	defer vl.Mutexes.MuUnlock()
 
 	if handler == nil {
-		gl.Log("error", "RegisterListener: handler is nil")
+		logz.Log("error", "RegisterListener: handler is nil")
 		return
 	}
 
@@ -244,7 +244,7 @@ func (vl *ValidationListener) RegisterListener(reference Reference, handler func
 
 func (vl *ValidationListener) Trigger(event string, result *ValidationResult) {
 	if vl == nil {
-		gl.Log("error", "RegisterListener: ValidationListener is nil")
+		logz.Log("error", "RegisterListener: ValidationListener is nil")
 		return
 	}
 
@@ -252,11 +252,11 @@ func (vl *ValidationListener) Trigger(event string, result *ValidationResult) {
 	defer vl.Mutexes.MuRUnlock()
 
 	if result == nil {
-		gl.Log("error", "RegisterListener: result is nil")
+		logz.Log("error", "RegisterListener: result is nil")
 		return
 	}
 	if event == "" {
-		gl.Log("error", "RegisterListener: event is empty")
+		logz.Log("error", "RegisterListener: event is empty")
 		return
 	}
 
@@ -264,27 +264,27 @@ func (vl *ValidationListener) Trigger(event string, result *ValidationResult) {
 		// Check event filters
 		for _, filter := range vl.Filters {
 			if filter == nil {
-				gl.Log("error", "RegisterListener: filter is nil")
+				logz.Log("error", "RegisterListener: filter is nil")
 				continue
 			}
 			if !filter(result) {
-				gl.Log("info", "RegisterListener: filter failed")
+				logz.Log("info", "RegisterListener: filter failed")
 				return
 			}
 		}
 		for _, listener := range listenerZ {
 			if listener == nil {
-				gl.Log("error", "RegisterListener: listener is nil")
+				logz.Log("error", "RegisterListener: listener is nil")
 				continue
 			}
 			// Check listener filters
 			for _, filter := range vl.Filters {
 				if filter == nil {
-					gl.Log("error", "RegisterListener: filter is nil")
+					logz.Log("error", "RegisterListener: filter is nil")
 					continue
 				}
 				if !filter(result) {
-					gl.Log("info", "RegisterListener: filter failed")
+					logz.Log("info", "RegisterListener: filter failed")
 					return
 				}
 			}

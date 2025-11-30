@@ -8,7 +8,7 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type MCPSystemRoutes struct {
@@ -17,14 +17,14 @@ type MCPSystemRoutes struct {
 
 func NewMCPSystemRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil, cannot create MCP System routes")
+		logz.Log("error", "Router is nil, cannot create MCP System routes")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for MCPSystemRoutes")
+		logz.Log("error", "Database service is nil for MCPSystemRoutes")
 		return nil
 	}
 	mcpSystemController := mcp_system_controller.NewMetricsController(context.Background(), dbService.(*svc.DBServiceImpl))

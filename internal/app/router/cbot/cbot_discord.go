@@ -16,7 +16,7 @@ import (
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type DiscordRoutes struct {
@@ -26,14 +26,14 @@ type DiscordRoutes struct {
 
 func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil for DiscordRoute")
+		logz.Log("error", "Router is nil for DiscordRoute")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for DiscordRoute")
+		logz.Log("error", "Database service is nil for DiscordRoute")
 		return nil
 	}
 
@@ -41,7 +41,7 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	middlewaresMap := rtl.GetMiddlewares()
 	if len(middlewaresMap) == 0 {
-		gl.Log("error", "Middlewares map is empty for DiscordRoute")
+		logz.Log("error", "Middlewares map is empty for DiscordRoute")
 		return nil
 	}
 
@@ -54,10 +54,10 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	secureProperties["validateAndSanitize"] = false
 	secureProperties["validateAndSanitizeBody"] = false
 
-	gl.Log("info", fmt.Sprintf("Reading config for DiscordRoute at %s", rtl.GetConfigPath()))
+	logz.Log("info", fmt.Sprintf("Reading config for DiscordRoute at %s", rtl.GetConfigPath()))
 	initArgs := rtl.GetInitArgs()
 	if !kbx.IsObjValid(initArgs) {
-		gl.Log("error", "InitArgs is nil for DiscordRoutes")
+		logz.Log("error", "InitArgs is nil for DiscordRoutes")
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
@@ -65,18 +65,18 @@ func NewDiscordRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	}
 	cfg, configErr := bootstrap.Load[*bootstrap.Config](initArgs)
 	if configErr != nil {
-		gl.Log("error", "Failed to load config for DiscordRoutes", configErr)
+		logz.Log("error", "Failed to load config for DiscordRoutes", configErr)
 		return nil
 	}
 	h, err := hub.NewDiscordMCPHub(cfg)
 	if err != nil {
-		gl.Log("error", "Failed to create Discord hub", err)
+		logz.Log("error", "Failed to create Discord hub", err)
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	discordController := discord_controller.NewDiscordController(dbService.(*gdbasez.DBServiceImpl), h, cfg)

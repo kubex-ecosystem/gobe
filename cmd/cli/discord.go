@@ -9,7 +9,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ checking status, and listing channels.`
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+				logz.Log("error", fmt.Sprintf("Failed to display help: %v", err))
 			}
 		},
 	}
@@ -69,7 +69,7 @@ Supports both text messages and file attachments.`
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Sending Discord message...")
+			logz.Log("info", "Sending Discord message...")
 
 			if discordMessage == "" && len(args) == 0 {
 				return fmt.Errorf("no message provided")
@@ -97,7 +97,7 @@ Supports both text messages and file attachments.`
 				return fmt.Errorf("failed to send message: %w", err)
 			}
 
-			gl.Log("info", "Message sent successfully")
+			logz.Log("info", "Message sent successfully")
 			return nil
 		},
 	}
@@ -127,7 +127,7 @@ func discordStatusCmd() *cobra.Command {
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Checking Discord bot status...")
+			logz.Log("info", "Checking Discord bot status...")
 
 			adapter, err := createDiscordAdapter()
 			if err != nil {
@@ -186,7 +186,7 @@ func discordChannelsCmd() *cobra.Command {
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Listing Discord channels...")
+			logz.Log("info", "Listing Discord channels...")
 
 			adapter, err := createDiscordAdapter()
 			if err != nil {
@@ -249,7 +249,7 @@ including connection and basic operations.`
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Testing Discord bot functionality...")
+			logz.Log("info", "Testing Discord bot functionality...")
 
 			adapter, err := createDiscordAdapter()
 			if err != nil {

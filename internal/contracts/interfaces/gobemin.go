@@ -4,7 +4,7 @@ import (
 	"io"
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 )
 
 type ContactForm struct {
@@ -20,7 +20,7 @@ type IGoBE interface {
 	Environment() svc.Environment
 	InitializeResources() error
 	InitializeServer() (IRouter, error)
-	GetLogger() l.Logger
+	GetLogger() *logz.LoggerZ
 	StartGoBE()
 	StopGoBE()
 	GetChanCtl() chan string

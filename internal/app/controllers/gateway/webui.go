@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	gui "github.com/kubex-ecosystem/gobe/internal/app/web"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // WebUIController serves the embedded web UI, if bundled.
@@ -19,7 +19,7 @@ var (
 )
 
 func NewWebUIController() *WebUIController {
-	gl.Log("info", "WebUIController initialized")
+	logz.Log("info", "WebUIController initialized")
 	return &WebUIController{}
 }
 
@@ -30,7 +30,7 @@ func (wc *WebUIController) ServeRoot(c *gin.Context) {
 	}
 	urlPath, err := url.JoinPath("./", path)
 	if err != nil {
-		gl.Log("error", "Failed to join URL path for web UI", "error", err)
+		logz.Log("error", "Failed to join URL path for web UI", "error", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -39,7 +39,7 @@ func (wc *WebUIController) ServeRoot(c *gin.Context) {
 	}
 	urlPath, err = url.JoinPath("./assets", path)
 	if err != nil {
-		gl.Log("error", "Failed to join URL path for web UI assets", "error", err)
+		logz.Log("error", "Failed to join URL path for web UI assets", "error", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -69,7 +69,7 @@ func (wc *WebUIController) ServeAssets(c *gin.Context) {
 	}
 	urlPath, err := url.JoinPath("assets", path)
 	if err != nil {
-		gl.Log("error", "Failed to join URL path for web UI assets", "error", err)
+		logz.Log("error", "Failed to join URL path for web UI assets", "error", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -93,7 +93,7 @@ func (wc *WebUIController) ServeApp(c *gin.Context) {
 	}
 	urlPath, err := url.JoinPath("assets", path)
 	if err != nil {
-		gl.Log("error", "Failed to join URL path for web UI assets", "error", err)
+		logz.Log("error", "Failed to join URL path for web UI assets", "error", err)
 		c.Status(http.StatusInternalServerError)
 		return
 	}
@@ -111,14 +111,14 @@ func (wc *WebUIController) serveFile(c *gin.Context, relative string) bool {
 	clean := filepath.Clean(relative)
 	// Prevent directory traversal
 	if strings.Contains(clean, "..") {
-		gl.Log("warn", "Attempted directory traversal in web UI path:", relative)
+		logz.Log("warn", "Attempted directory traversal in web UI path:", relative)
 		c.Status(http.StatusBadRequest)
 		return true
 	}
 	// Serve embedded file if available
 	data, err := webGUIFiles.ReadFile(clean)
 	if err != nil {
-		gl.Log("debug", "Web UI file not found:", clean)
+		logz.Log("debug", "Web UI file not found:", clean)
 		return false
 	}
 	contentType := mimeTypeByExtension(filepath.Ext(clean))

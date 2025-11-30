@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	messagery "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // WebhookEvent represents a webhook event received from external services
@@ -51,7 +51,7 @@ func NewWebhookService(amqp *messagery.AMQP) *WebhookService {
 	// Start background processor
 	go service.processWebhooksWorker()
 
-	gl.Log("info", "Webhook service initialized successfully")
+	logz.Log("info", "Webhook service initialized successfully")
 	return service
 }
 
@@ -78,18 +78,18 @@ func (ws *WebhookService) ReceiveWebhook(source, eventType string, payload map[s
 	if ws.amqp != nil && ws.amqp.IsReady() {
 		eventBytes, err := json.Marshal(event)
 		if err != nil {
-			gl.Log("error", "Failed to marshal webhook event", err)
+			logz.Log("error", "Failed to marshal webhook event", err)
 		} else {
 			err = ws.amqp.Publish("gobe.events", "webhook.received", eventBytes)
 			if err != nil {
-				gl.Log("error", "Failed to publish webhook event to AMQP", err)
+				logz.Log("error", "Failed to publish webhook event to AMQP", err)
 			} else {
-				gl.Log("info", "Webhook event published to AMQP", event.ID.String())
+				logz.Log("info", "Webhook event published to AMQP", event.ID.String())
 			}
 		}
 	}
 
-	gl.Log("info", "Webhook received", "source", source, "type", eventType, "id", event.ID.String())
+	logz.Log("info", "Webhook received", "source", source, "type", eventType, "id", event.ID.String())
 	return &event, nil
 }
 
@@ -152,7 +152,7 @@ func (ws *WebhookService) processWebhooksWorker() {
 	for {
 		select {
 		case <-ws.ctx.Done():
-			gl.Log("info", "Webhook processor worker shutting down")
+			logz.Log("info", "Webhook processor worker shutting down")
 			return
 		case <-ticker.C:
 			ws.processQueuedWebhooks()
@@ -186,13 +186,13 @@ func (ws *WebhookService) processQueuedWebhooks() {
 	}
 
 	if processed > 0 {
-		gl.Log("info", "Processed webhook events", "count", processed)
+		logz.Log("info", "Processed webhook events", "count", processed)
 	}
 }
 
 // processWebhookEvent processes a single webhook event
 func (ws *WebhookService) processWebhookEvent(event *WebhookEvent) bool {
-	gl.Log("info", "Processing webhook event", "id", event.ID.String(), "source", event.Source, "type", event.EventType)
+	logz.Log("info", "Processing webhook event", "id", event.ID.String(), "source", event.Source, "type", event.EventType)
 
 	// Simulate processing based on event type
 	switch event.EventType {
@@ -207,14 +207,14 @@ func (ws *WebhookService) processWebhookEvent(event *WebhookEvent) bool {
 	case "user.created":
 		return ws.processUserCreated(event)
 	default:
-		gl.Log("info", "Generic webhook processing", "type", event.EventType)
+		logz.Log("info", "Generic webhook processing", "type", event.EventType)
 		return true // Default to success for unknown types
 	}
 }
 
 // processGitHubPush handles GitHub push events
 func (ws *WebhookService) processGitHubPush(event *WebhookEvent) bool {
-	gl.Log("info", "Processing GitHub push webhook", "repo", event.Payload["repository"])
+	logz.Log("info", "Processing GitHub push webhook", "repo", event.Payload["repository"])
 
 	// Publish notification about the push
 	if ws.amqp != nil && ws.amqp.IsReady() {
@@ -234,7 +234,7 @@ func (ws *WebhookService) processGitHubPush(event *WebhookEvent) bool {
 
 // processDiscordMessage handles Discord message events
 func (ws *WebhookService) processDiscordMessage(event *WebhookEvent) bool {
-	gl.Log("info", "Processing Discord message webhook", "channel", event.Payload["channel_id"])
+	logz.Log("info", "Processing Discord message webhook", "channel", event.Payload["channel_id"])
 
 	// Could trigger bot responses or logging
 	return true
@@ -242,7 +242,7 @@ func (ws *WebhookService) processDiscordMessage(event *WebhookEvent) bool {
 
 // processDiscordWebhook handles generic Discord webhook envelopes.
 func (ws *WebhookService) processDiscordWebhook(event *WebhookEvent) bool {
-	gl.Log("info", "Processing Discord webhook", "verified", event.Headers["x-discord-verified"])
+	logz.Log("info", "Processing Discord webhook", "verified", event.Headers["x-discord-verified"])
 
 	if ws.amqp != nil && ws.amqp.IsReady() {
 		notification := map[string]interface{}{
@@ -255,7 +255,7 @@ func (ws *WebhookService) processDiscordWebhook(event *WebhookEvent) bool {
 
 		notifBytes, _ := json.Marshal(notification)
 		if err := ws.amqp.Publish("gobe.discord", "webhook.received", notifBytes); err != nil {
-			gl.Log("error", "Failed to publish Discord webhook notification", err)
+			logz.Log("error", "Failed to publish Discord webhook notification", err)
 		}
 	}
 
@@ -264,7 +264,7 @@ func (ws *WebhookService) processDiscordWebhook(event *WebhookEvent) bool {
 
 // processStripePayment handles Stripe payment events
 func (ws *WebhookService) processStripePayment(event *WebhookEvent) bool {
-	gl.Log("info", "Processing Stripe payment webhook", "amount", event.Payload["amount"])
+	logz.Log("info", "Processing Stripe payment webhook", "amount", event.Payload["amount"])
 
 	// Update user billing, send emails, etc.
 	return true
@@ -272,7 +272,7 @@ func (ws *WebhookService) processStripePayment(event *WebhookEvent) bool {
 
 // processUserCreated handles user creation events
 func (ws *WebhookService) processUserCreated(event *WebhookEvent) bool {
-	gl.Log("info", "Processing user created webhook", "user_id", event.Payload["user_id"])
+	logz.Log("info", "Processing user created webhook", "user_id", event.Payload["user_id"])
 
 	// Send welcome email, create profile, etc.
 	return true
@@ -311,7 +311,7 @@ func (ws *WebhookService) GetStats() map[string]interface{} {
 
 // Close gracefully shuts down the webhook service
 func (ws *WebhookService) Close() error {
-	gl.Log("info", "Shutting down webhook service")
+	logz.Log("info", "Shutting down webhook service")
 	ws.cancel()
 	return nil
 }
@@ -331,6 +331,6 @@ func (ws *WebhookService) RetryFailedWebhooks() (int, error) {
 		}
 	}
 
-	gl.Log("info", "Retried failed webhook events", "count", retried)
+	logz.Log("info", "Retried failed webhook events", "count", retried)
 	return retried, nil
 }

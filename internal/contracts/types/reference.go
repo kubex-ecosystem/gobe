@@ -6,7 +6,7 @@ import (
 	"runtime"
 
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type IReference interface {
@@ -55,7 +55,7 @@ func (r *Reference) String() string {
 // GetID is a method that returns the ID of the reference.
 func (r *Reference) GetID() uuid.UUID {
 	if r == nil {
-		gl.Log("error", "GetID: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
+		logz.Log("error", "GetID: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
 		return uuid.Nil
 	}
 	return r.ID
@@ -64,7 +64,7 @@ func (r *Reference) GetID() uuid.UUID {
 // GetName is a method that returns the name of the reference.
 func (r *Reference) GetName() string {
 	if r == nil {
-		gl.Log("error", "GetName: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
+		logz.Log("error", "GetName: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
 		return ""
 	}
 	return r.Name
@@ -73,7 +73,7 @@ func (r *Reference) GetName() string {
 // SetName is a method that sets the name of the reference.
 func (r *Reference) SetName(name string) {
 	if r == nil {
-		gl.Log("error", "SetName: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
+		logz.Log("error", "SetName: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
 		return
 	}
 	r.Name = name
@@ -82,7 +82,7 @@ func (r *Reference) SetName(name string) {
 // GetReference is a method that returns the reference struct (non-interface).
 func (r *Reference) GetReference() *Reference {
 	if r == nil {
-		gl.Log("error", "GetReference: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
+		logz.Log("error", "GetReference: reference does not exist (", reflect.TypeFor[Reference]().String(), ")")
 		return nil
 	}
 	return r

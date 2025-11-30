@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	"github.com/kubex-ecosystem/gobe/internal/app/router/proxy"
@@ -19,12 +19,12 @@ var (
 
 // SetupWebRoutes configures all web UI routes with OAuth 2.1 authentication
 func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error {
-	gl.Log("info", "Setting up web routes with OAuth 2.1 authentication")
+	logz.Log("info", "Setting up web routes with OAuth 2.1 authentication")
 
 	// Initialize OAuth-based authentication middleware
 	tokenService, certService, err := middlewares.NewTokenService(dbService)
 	if err != nil {
-		gl.Log("error", "Failed to initialize token service for web routes", err)
+		logz.Log("error", "Failed to initialize token service for web routes", err)
 		return err
 	}
 
@@ -37,7 +37,7 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 	// serveIndex := func(c *gin.Context) {
 	// 	data, err := webGUIFiles.ReadFile("index.html")
 	// 	if err != nil {
-	// 		gl.Log("error", "Failed to read index.html", err)
+	// 		logz.Log("error", "Failed to read index.html", err)
 	// 		c.String(http.StatusInternalServerError, "Internal Server Error")
 	// 		return
 	// 	}
@@ -57,7 +57,7 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 
 	// 	file, err := webGUIFiles.OpenFile(requestedPath)
 	// 	if err != nil {
-	// 		gl.Log("error", "Failed to open asset file", "file", requestedPath, "error", err)
+	// 		logz.Log("error", "Failed to open asset file", "file", requestedPath, "error", err)
 	// 		c.String(http.StatusInternalServerError, "Internal Server Error")
 	// 		return
 	// 	}
@@ -65,7 +65,7 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 
 	// 	content, err := io.ReadAll(file)
 	// 	if err != nil {
-	// 		gl.Log("error", "Failed to read asset file", "file", requestedPath, "error", err)
+	// 		logz.Log("error", "Failed to read asset file", "file", requestedPath, "error", err)
 	// 		c.String(http.StatusInternalServerError, "Internal Server Error")
 	// 		return
 	// 	}
@@ -106,14 +106,14 @@ func SetupWebRoutes(router *gin.RouterGroup, dbService *svc.DBServiceImpl) error
 	proxyConfig := getProxyConfig()
 	_, err = proxy.NewWebProxyRouter(proxyConfig)
 	if err != nil {
-		gl.Log("error", "Failed to initialize proxy router", err)
+		logz.Log("error", "Failed to initialize proxy router", err)
 		return err
 	}
 
 	// // Register proxy routes (Grompt, Analyzer, GemX)
 	// proxyRouter.RegisterRoutes(webGroup)
 
-	gl.Log("info", "Web routes configured successfully",
+	logz.Log("info", "Web routes configured successfully",
 		"grompt_url", proxyConfig.GromptURL,
 		"analyzer_url", proxyConfig.AnalyzerURL,
 		"gemx_url", proxyConfig.GemXURL)

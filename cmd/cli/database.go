@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ migrations, seeding, backups, and restores.`
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+				logz.Log("error", fmt.Sprintf("Failed to display help: %v", err))
 			}
 		},
 	}
@@ -67,7 +67,7 @@ func dbHealthCmd() *cobra.Command {
 			longDesc,
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Checking database health...")
+			logz.Log("info", "Checking database health...")
 
 			baseURL := getDatabaseBaseURL()
 			url := fmt.Sprintf("%s/admin/health", baseURL)
@@ -136,7 +136,7 @@ func dbMigrateCmd() *cobra.Command {
 			longDesc,
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Running database migrations...")
+			logz.Log("info", "Running database migrations...")
 
 			baseURL := getDatabaseBaseURL()
 			url := fmt.Sprintf("%s/admin/db/migrate", baseURL)
@@ -196,7 +196,7 @@ func dbSeedCmd() *cobra.Command {
 			longDesc,
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Seeding database...")
+			logz.Log("info", "Seeding database...")
 
 			baseURL := getDatabaseBaseURL()
 			url := fmt.Sprintf("%s/admin/db/seed", baseURL)
@@ -257,7 +257,7 @@ func dbResetCmd() *cobra.Command {
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("warn", "Resetting database (this will delete all data)...")
+			logz.Log("warn", "Resetting database (this will delete all data)...")
 
 			baseURL := getDatabaseBaseURL()
 			url := fmt.Sprintf("%s/admin/db/reset", baseURL)
@@ -327,7 +327,7 @@ func dbBackupCmd() *cobra.Command {
 				backupFile = fmt.Sprintf("db_backup_%d.sql", time.Now().Unix())
 			}
 
-			gl.Log("info", fmt.Sprintf("Creating database backup: %s", backupFile))
+			logz.Log("info", fmt.Sprintf("Creating database backup: %s", backupFile))
 
 			baseURL := getDatabaseBaseURL()
 			url := fmt.Sprintf("%s/admin/db/backup", baseURL)
@@ -400,7 +400,7 @@ func dbRestoreCmd() *cobra.Command {
 				return fmt.Errorf("backup file is required")
 			}
 
-			gl.Log("info", fmt.Sprintf("Restoring database from: %s", restoreFile))
+			logz.Log("info", fmt.Sprintf("Restoring database from: %s", restoreFile))
 
 			// Check if backup file exists
 			if _, err := os.Stat(restoreFile); os.IsNotExist(err) {
@@ -468,7 +468,7 @@ func dbStatusCmd() *cobra.Command {
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Getting database status...")
+			logz.Log("info", "Getting database status...")
 
 			baseURL := getDatabaseBaseURL()
 			url := fmt.Sprintf("%s/admin/db/status", baseURL)

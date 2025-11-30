@@ -12,7 +12,7 @@ import (
 	"time"
 
 	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 func TestProperty_GetSetSerialize(t *testing.T) {
@@ -28,7 +28,7 @@ func TestProperty_GetSetSerialize(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected PropertyValBase[int], got %T", p.Prop())
 	}
-	gl.Log("info", "Property ID:", pp.GetID().String(), "Name:", pp.GetName(), "Type:", reflect.TypeOf(pp).Name())
+	logz.Log("info", "Property ID:", pp.GetID().String(), "Name:", pp.GetName(), "Type:", reflect.TypeOf(pp).Name())
 	val = 42
 	pp.Set(&val) // Usando Prop().Set() em vez de p.SetValue(&val)
 
@@ -37,18 +37,18 @@ func TestProperty_GetSetSerialize(t *testing.T) {
 	var v int
 
 	if v = pt.GetValue(); v != 42 {
-		// gl.Log("error", "Value from Property:", v, "Type:", reflect.TypeOf(v).Name())
+		// logz.Log("error", "Value from Property:", v, "Type:", reflect.TypeOf(v).Name())
 		if v = *pt.Prop().Get(true).(*int); v != 42 {
-			// gl.Log("error", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
+			// logz.Log("error", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
 			if v = *pt.Prop().Value(); v != 42 {
 				t.Fatalf("expected 42, got %d", v)
 			} else {
-				gl.Log("success", "Value from Prop().Value():", v, "Type:", reflect.TypeOf(v).Name())
+				logz.Log("success", "Value from Prop().Value():", v, "Type:", reflect.TypeOf(v).Name())
 				goto successfully
 			}
 			t.Fatalf("expected 42, got %d", v)
 		} else {
-			gl.Log("success", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
+			logz.Log("success", "Value from Prop().Get(true):", v, "Type:", reflect.TypeOf(v).Name())
 			goto successfully
 		}
 		t.Fatalf("expected 42, got %d", v)
@@ -84,13 +84,13 @@ func TestProperty_SaveLoadFile(t *testing.T) {
 	if info, err := os.Stat(file); err != nil {
 		t.Fatalf("file should exist after SaveToFile, got error: %v", err)
 	} else {
-		gl.Log("info", "Got values from file:", info.Sys())
-		gl.Log("info", "File info:", info.Size(), "bytes")
+		logz.Log("info", "Got values from file:", info.Sys())
+		logz.Log("info", "File info:", info.Size(), "bytes")
 		content, err := os.ReadFile(file)
 		if err != nil {
 			t.Fatalf("failed to read file: %v", err)
 		}
-		gl.Log("info", "File content:", string(content))
+		logz.Log("info", "File content:", string(content))
 	}
 	v := ""
 	p2 := types.NewProperty("name", &v, false, nil)
@@ -101,14 +101,14 @@ func TestProperty_SaveLoadFile(t *testing.T) {
 	got := p2.GetValue()
 	got2 := string(*p2.Prop().Get(true).(*string))
 
-	gl.Log("info", "Got from Prop().Get(true):", got, "Type:", reflect.TypeOf(got).Name())
-	gl.Log("info", "Got from Prop().Value():", got2, "Type:", reflect.TypeOf(got2).Name())
+	logz.Log("info", "Got from Prop().Get(true):", got, "Type:", reflect.TypeOf(got).Name())
+	logz.Log("info", "Got from Prop().Value():", got2, "Type:", reflect.TypeOf(got2).Name())
 
 	if got != expected {
 		if got2 != expected {
 			t.Fatalf("expected %q after LoadFromFile, got %q and %q", expected, got, got2)
 		} else {
-			gl.Log("success", "Got from Prop().Value():", got2, "Type:", reflect.TypeOf(got2).Name())
+			logz.Log("success", "Got from Prop().Value():", got2, "Type:", reflect.TypeOf(got2).Name())
 		}
 	}
 }
@@ -184,7 +184,7 @@ func TestProperty_ConcurrentSetGet(t *testing.T) {
 					default:
 						// fallback: usa Scan pro tipo string
 						if err := p.Deserialize([]byte(`"`+s+`"`), "json", ""); err != nil {
-							gl.Log("error", fmt.Sprintf("Deserialize error: %v", err))
+							logz.Log("error", fmt.Sprintf("Deserialize error: %v", err))
 						}
 						if s != "" {
 							v2 = Name(s)
@@ -195,16 +195,16 @@ func TestProperty_ConcurrentSetGet(t *testing.T) {
 
 					// 3) via Scan em string (coerência de snapshot)
 					if err := p.Deserialize([]byte(`"`+s+`"`), "json", ""); err != nil {
-						gl.Log("error", fmt.Sprintf("Deserialize error: %v", err))
+						logz.Log("error", fmt.Sprintf("Deserialize error: %v", err))
 					}
 					s = string(p.GetValue())
 
 					// Verifica se todos os valores lidos são iguais
 					if v1 != v2 {
-						gl.Log("error", fmt.Sprintf("Mismatched values: GetValue()=%q, Prop().Get(true)=%q, Scan()=%q", v1, v2, s))
+						logz.Log("error", fmt.Sprintf("Mismatched values: GetValue()=%q, Prop().Get(true)=%q, Scan()=%q", v1, v2, s))
 						mismatch.Add(1)
 					} else {
-						// gl.Log("info", fmt.Sprintf("Consistent values: GetValue()=%q, Prop().Get(true)=%q, Scan()=%q", v1, v2, s))
+						// logz.Log("info", fmt.Sprintf("Consistent values: GetValue()=%q, Prop().Get(true)=%q, Scan()=%q", v1, v2, s))
 						// Verifica se o valor lido bate com o valor do scan
 						// (pode ser diferente se houver uma escrita concorrente entre as leituras)
 						// Mas não deve ser diferente de ambos
@@ -217,7 +217,7 @@ func TestProperty_ConcurrentSetGet(t *testing.T) {
 						// Exemplo: v1 == v2 == "kubex-5", s == "kubex-7" => mismatch
 						// Exemplo: v1 == v2 == "kubex-5", s == "" => mismatch
 						if s != string(v1) {
-							gl.Log("error", fmt.Sprintf("Mismatched values: GetValue()=%q, Prop().Get(true)=%q, Scan()=%q", v1, v2, s))
+							logz.Log("error", fmt.Sprintf("Mismatched values: GetValue()=%q, Prop().Get(true)=%q, Scan()=%q", v1, v2, s))
 							mismatch.Add(1)
 						}
 					}

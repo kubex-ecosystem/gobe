@@ -14,7 +14,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type TokenClientImpl struct {
@@ -31,7 +31,7 @@ type TokenClientImpl struct {
 func (t *TokenClientImpl) LoadPublicKey() *rsa.PublicKey {
 	pubKey, err := t.crtSrv.GetPublicKey()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error reading public key file: %v", err))
+		logz.Log("error", fmt.Sprintf("Error reading public key file: %v", err))
 		return nil
 	}
 	return pubKey
@@ -42,26 +42,26 @@ func (t *TokenClientImpl) LoadPrivateKey() (*rsa.PrivateKey, error) {
 }
 func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error) {
 	if t == nil {
-		gl.Log("error", "TokenClient is nil, trying to create a new one")
+		logz.Log("error", "TokenClient is nil, trying to create a new one")
 		t = &TokenClientImpl{}
 	}
 	if t.crtSrv == nil {
-		gl.Log("error", "crtService is nil, trying to create a new one")
+		logz.Log("error", "crtService is nil, trying to create a new one")
 		t.crtSrv = crt.NewCertService(kbx.DefaultGoBEKeyPath, kbx.DefaultGoBECertPath) // pragma: allowlist secret
 		if t.crtSrv == nil {
-			gl.Log("fatal", "crtService is nil, unable to create a new one") // pragma: allowlist secret
+			logz.Log("fatal", "crtService is nil, unable to create a new one") // pragma: allowlist secret
 		}
 	}
 
 	// Get RSA keys
 	privKey, err := t.crtSrv.GetPrivateKey() // pragma: allowlist secret
 	if err != nil {
-		gl.Log("fatal", fmt.Sprintf("Error reading private key file: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Error reading private key file: %v", err))
 		return nil, 0, 0, err
 	}
 	pubKey, pubKeyErr := t.crtSrv.GetPublicKey() // pragma: allowlist secret
 	if pubKeyErr != nil {
-		gl.Log("error", fmt.Sprintf("Error reading public key file: %v", pubKeyErr))
+		logz.Log("error", fmt.Sprintf("Error reading public key file: %v", pubKeyErr))
 		return nil, 0, 0, pubKeyErr
 	}
 
@@ -79,7 +79,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	if t.keyringService == nil {
 		t.keyringService = kri.NewKeyringService(kbx.KeyringService, fmt.Sprintf("gobe-%s", "jwt_secret"))
 		if t.keyringService == nil {
-			gl.Log("error", fmt.Sprintf("Error creating keyring service: %v", err))
+			logz.Log("error", fmt.Sprintf("Error creating keyring service: %v", err))
 			return nil, 0, 0, err
 		}
 	}
@@ -87,7 +87,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	// Get or generate JWT secret
 	jwtSecret, jwtSecretErr := crt.GetOrGenPasswordKeyringPass("jwt_secret") // pragma: allowlist secret
 	if jwtSecretErr != nil {                                                 // pragma: allowlist secret
-		gl.Log("fatal", fmt.Sprintf("Error retrieving JWT secret key: %v", jwtSecretErr))
+		logz.Log("fatal", fmt.Sprintf("Error retrieving JWT secret key: %v", jwtSecretErr))
 		return nil, 0, 0, jwtSecretErr
 	}
 
@@ -95,7 +95,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	if t.tokenRepo == nil {
 		t.tokenRepo = mdl.NewTokenRepo(ctx, t.dbSrv)
 		if t.tokenRepo == nil {
-			gl.Log("error", "Failed to create token repository")
+			logz.Log("error", "Failed to create token repository")
 			return nil, 0, 0, fmt.Errorf("failed to create token repository")
 		}
 	}
@@ -111,7 +111,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 	)
 
 	if jwtService == nil {
-		gl.Log("error", "Failed to create JWT service")
+		logz.Log("error", "Failed to create JWT service")
 		return nil, 0, 0, fmt.Errorf("failed to create JWT service")
 	}
 
@@ -123,7 +123,7 @@ func (t *TokenClientImpl) LoadTokenCfg() (sci.TokenService, int64, int64, error)
 
 func NewTokenClient(crtService sci.ICertService, dbService svc.DBService) *TokenClientImpl {
 	if crtService == nil {
-		gl.Log("error", fmt.Sprintf("error reading private key file: %v", "crtService is nil"))
+		logz.Log("error", fmt.Sprintf("error reading private key file: %v", "crtService is nil"))
 		return nil
 	}
 	tokenClient := &TokenClientImpl{

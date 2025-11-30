@@ -8,12 +8,12 @@ import (
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 )
 
 type IRouter interface {
 	GetDebug() bool
-	GetLogger() l.Logger
+	GetLogger() *logz.LoggerZ
 	GetContext(c *gin.Context) context.Context
 	GetConfigPath() string
 	GetBindingAddress() string

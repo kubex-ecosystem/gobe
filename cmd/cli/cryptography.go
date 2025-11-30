@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -265,7 +265,7 @@ func encodeData(input, inputFile, outputFile, encoding string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
-		gl.Log("success", fmt.Sprintf("Encoded data written to %s", outputFile))
+		logz.Log("success", fmt.Sprintf("Encoded data written to %s", outputFile))
 	} else {
 		fmt.Println(encoded)
 	}
@@ -321,7 +321,7 @@ func decodeData(input, inputFile, outputFile, encoding string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
-		gl.Log("success", fmt.Sprintf("Decoded data written to %s", outputFile))
+		logz.Log("success", fmt.Sprintf("Decoded data written to %s", outputFile))
 	} else {
 		fmt.Print(string(decoded))
 	}
@@ -403,9 +403,9 @@ func verifyHash(input, inputFile, expectedHash, algorithm string) error {
 	fmt.Printf("Calculated: %s\n", calculatedHash)
 
 	if strings.EqualFold(expectedHash, calculatedHash) {
-		gl.Log("success", "✅ Hash verification PASSED")
+		logz.Log("success", "✅ Hash verification PASSED")
 	} else {
-		gl.Log("error", "❌ Hash verification FAILED")
+		logz.Log("error", "❌ Hash verification FAILED")
 		return fmt.Errorf("hash mismatch")
 	}
 
@@ -437,7 +437,7 @@ func generateKey(length int, outputFile string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write key file: %w", err)
 		}
-		gl.Log("success", fmt.Sprintf("Key generated and saved to %s", outputFile))
+		logz.Log("success", fmt.Sprintf("Key generated and saved to %s", outputFile))
 	} else {
 		fmt.Printf("Generated key (%d bytes): %s\n", len(key), keyHex)
 	}
@@ -502,7 +502,7 @@ func encryptData(input, inputFile, outputFile, key, keyFile string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
-		gl.Log("success", fmt.Sprintf("Encrypted data written to %s", outputFile))
+		logz.Log("success", fmt.Sprintf("Encrypted data written to %s", outputFile))
 	} else {
 		fmt.Print(result)
 	}
@@ -565,8 +565,8 @@ func decryptData(input, inputFile, outputFile, key, keyFile string) error {
 		if err != nil {
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
-		gl.Log("success", fmt.Sprintf("Decrypted data written to %s", outputFile))
-		gl.Log("info", fmt.Sprintf("Nonce used: %s", nonce))
+		logz.Log("success", fmt.Sprintf("Decrypted data written to %s", outputFile))
+		logz.Log("info", fmt.Sprintf("Nonce used: %s", nonce))
 	} else {
 		fmt.Printf("Decrypted: %s\n", decrypted)
 		fmt.Printf("Nonce: %s\n", nonce)
@@ -671,9 +671,9 @@ func verifySignature(input, inputFile, key, keyFile, expectedSignature, algorith
 	fmt.Printf("Calculated: %s\n", calculatedSignature)
 
 	if strings.EqualFold(expectedSignature, calculatedSignature) {
-		gl.Log("success", "✅ Signature verification PASSED")
+		logz.Log("success", "✅ Signature verification PASSED")
 	} else {
-		gl.Log("error", "❌ Signature verification FAILED")
+		logz.Log("error", "❌ Signature verification FAILED")
 		return fmt.Errorf("signature mismatch")
 	}
 

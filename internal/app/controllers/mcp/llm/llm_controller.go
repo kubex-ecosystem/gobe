@@ -7,7 +7,7 @@ import (
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
@@ -30,7 +30,7 @@ func NewLLMController(bridge *svc.Bridge) *LLMController {
 func (lc *LLMController) GetAllLLMModels(c *gin.Context) {
 	llmModels, err := lc.llmService.ListLLMModels()
 	if err != nil {
-		gl.Log("error", "Failed to get all LLM svc", err)
+		logz.Log("error", "Failed to get all LLM svc", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get LLM svc"})
 		return
 	}
@@ -41,7 +41,7 @@ func (lc *LLMController) GetLLMModelByID(c *gin.Context) {
 	id := c.Param("id")
 	model, err := lc.llmService.GetLLMModelByID(id)
 	if err != nil {
-		gl.Log("error", "Failed to get LLM model by ID", err)
+		logz.Log("error", "Failed to get LLM model by ID", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "LLM model not found"})
 		return
 	}
@@ -52,14 +52,14 @@ func (lc *LLMController) CreateLLMModel(c *gin.Context) {
 	var modelRequest svc.LLMModel
 
 	if err := c.ShouldBindJSON(&modelRequest); err != nil {
-		gl.Log("error", "Failed to bind LLM model request", err)
+		logz.Log("error", "Failed to bind LLM model request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
 	createdModel, err := lc.llmService.CreateLLMModel(modelRequest)
 	if err != nil {
-		gl.Log("error", "Failed to create LLM model", err)
+		logz.Log("error", "Failed to create LLM model", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create LLM model"})
 		return
 	}
@@ -70,7 +70,7 @@ func (lc *LLMController) UpdateLLMModel(c *gin.Context) {
 	id := c.Param("id")
 	var modelRequest svc.LLMModel
 	if err := c.ShouldBindJSON(&modelRequest); err != nil {
-		gl.Log("error", "Failed to bind LLM model update request", err)
+		logz.Log("error", "Failed to bind LLM model update request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
@@ -78,7 +78,7 @@ func (lc *LLMController) UpdateLLMModel(c *gin.Context) {
 	modelRequest.SetID(id)
 	updatedModel, err := lc.llmService.UpdateLLMModel(modelRequest)
 	if err != nil {
-		gl.Log("error", "Failed to update LLM model", err)
+		logz.Log("error", "Failed to update LLM model", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update LLM model"})
 		return
 	}
@@ -89,7 +89,7 @@ func (lc *LLMController) DeleteLLMModel(c *gin.Context) {
 	id := c.Param("id")
 	err := lc.llmService.DeleteLLMModel(id)
 	if err != nil {
-		gl.Log("error", "Failed to delete LLM model", err)
+		logz.Log("error", "Failed to delete LLM model", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete LLM model"})
 		return
 	}
@@ -100,7 +100,7 @@ func (lc *LLMController) GetLLMModelsByProvider(c *gin.Context) {
 	provider := c.Param("provider")
 	llmModels, err := lc.llmService.GetLLMModelByProvider(provider)
 	if err != nil {
-		gl.Log("error", "Failed to get LLM svc by provider", err)
+		logz.Log("error", "Failed to get LLM svc by provider", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get LLM svc"})
 		return
 	}
@@ -112,7 +112,7 @@ func (lc *LLMController) GetLLMModelByProviderAndModel(c *gin.Context) {
 	modelName := c.Param("model")
 	model, err := lc.llmService.GetLLMModelByProviderAndModel(provider, modelName)
 	if err != nil {
-		gl.Log("error", "Failed to get LLM model by provider and model", err)
+		logz.Log("error", "Failed to get LLM model by provider and model", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "LLM model not found"})
 		return
 	}
@@ -122,7 +122,7 @@ func (lc *LLMController) GetLLMModelByProviderAndModel(c *gin.Context) {
 func (lc *LLMController) GetEnabledLLMModels(c *gin.Context) {
 	llmModels, err := lc.llmService.GetEnabledLLMModels()
 	if err != nil {
-		gl.Log("error", "Failed to get enabled LLM svc", err)
+		logz.Log("error", "Failed to get enabled LLM svc", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get enabled LLM svc"})
 		return
 	}

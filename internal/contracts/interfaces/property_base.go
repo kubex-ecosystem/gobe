@@ -1,14 +1,15 @@
 package interfaces
 
 import (
-	"github.com/google/uuid"
-	l "github.com/kubex-ecosystem/logz"
 	"reflect"
+
+	"github.com/google/uuid"
+	"github.com/kubex-ecosystem/logz"
 )
 
 // IPropertyValBase is an interface that defines the methods for a property value.
 type IPropertyValBase[T any] interface {
-	GetLogger() l.Logger
+	GetLogger() *logz.LoggerZ
 	GetID() uuid.UUID
 	GetName() string
 	Value() *T

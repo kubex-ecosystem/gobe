@@ -11,24 +11,24 @@ import (
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // NewWhatsAppRoutes registers WhatsApp related endpoints.
 func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil for WhatsAppRoutes")
+		logz.Log("error", "Router is nil for WhatsAppRoutes")
 		return nil
 	}
 	rtl := *rtr
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for WhatsAppRoutes")
+		logz.Log("error", "Database service is nil for WhatsAppRoutes")
 		return nil
 	}
 	initArgs := rtl.GetInitArgs()
 	if !kbx.IsObjValid(initArgs) {
-		gl.Log("error", "InitArgs is nil for WhatsAppRoutes")
+		logz.Log("error", "InitArgs is nil for WhatsAppRoutes")
 		return nil
 	}
 	if initArgs.ConfigFile == "" {
@@ -37,7 +37,7 @@ func NewWhatsAppRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	cfg, configErr := bootstrap.Load[*bootstrap.Config](initArgs)
 	if configErr != nil {
-		gl.Log("error", "Failed to load config for WhatsAppRoutes", configErr)
+		logz.Log("error", "Failed to load config for WhatsAppRoutes", configErr)
 		return nil
 	}
 	svc := whatsapp.NewService(cfg.Integrations.WhatsApp)

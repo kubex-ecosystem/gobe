@@ -2,12 +2,12 @@
 package utils_test
 
 import (
-	"testing"
 	utils "github.com/kubex-ecosystem/gobe/internal/utils"
+	"testing"
 )
 
 func TestIsBase64ByteSlice(t *testing.T) {
-	tests := []struct{
+	tests := []struct {
 		name string
 		in   []byte
 		want bool
@@ -27,7 +27,7 @@ func TestIsBase64ByteSlice(t *testing.T) {
 }
 
 func TestIsBase64ByteSliceString(t *testing.T) {
-	tests := []struct{
+	tests := []struct {
 		name string
 		in   string
 		want bool
@@ -46,7 +46,7 @@ func TestIsBase64ByteSliceString(t *testing.T) {
 }
 
 func TestIsBase64ByteSliceStringWithPadding(t *testing.T) {
-	tests := []struct{
+	tests := []struct {
 		name string
 		in   string
 		want bool

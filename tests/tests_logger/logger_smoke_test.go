@@ -4,7 +4,7 @@ package testlogger
 import (
 	"testing"
 
-	logger "github.com/kubex-ecosystem/logz/logger"
+	logger "github.com/kubex-ecosystem/logz"
 )
 
 // helper para detectar panic sem falhar o processo

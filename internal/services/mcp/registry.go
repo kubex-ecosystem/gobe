@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // ToolSpec defines the specification for an MCP tool
@@ -38,7 +38,7 @@ type registry struct {
 
 // NewRegistry creates a new MCP tools registry
 func NewRegistry() Registry {
-	gl.Log("debug", "Creating new MCP registry")
+	logz.Log("debug", "Creating new MCP registry")
 	return &registry{
 		tools: make(map[string]ToolSpec),
 	}
@@ -58,11 +58,11 @@ func (r *registry) Register(spec ToolSpec) error {
 	defer r.mu.Unlock()
 
 	if _, exists := r.tools[spec.Name]; exists {
-		gl.Log("warn", "Tool already exists, overwriting", spec.Name)
+		logz.Log("warn", "Tool already exists, overwriting", spec.Name)
 	}
 
 	r.tools[spec.Name] = spec
-	gl.Log("info", "Tool registered successfully", spec.Name, spec.Description)
+	logz.Log("info", "Tool registered successfully", spec.Name, spec.Description)
 
 	return nil
 }
@@ -80,7 +80,7 @@ func (r *registry) List() []ToolSpec {
 		tools = append(tools, toolCopy)
 	}
 
-	gl.Log("debug", "Listing tools", len(tools))
+	logz.Log("debug", "Listing tools", len(tools))
 	return tools
 }
 
@@ -98,15 +98,15 @@ func (r *registry) Exec(ctx context.Context, toolName string, args map[string]in
 		return nil, fmt.Errorf("tool not found: %s", toolName)
 	}
 
-	gl.Log("info", "Executing tool", toolName, len(args))
+	logz.Log("info", "Executing tool", toolName, len(args))
 
 	result, err := tool.Handler(ctx, args)
 	if err != nil {
-		gl.Log("error", "Tool execution failed", toolName, err)
+		logz.Log("error", "Tool execution failed", toolName, err)
 		return nil, fmt.Errorf("tool execution failed: %w", err)
 	}
 
-	gl.Log("debug", "Tool executed successfully", toolName)
+	logz.Log("debug", "Tool executed successfully", toolName)
 	return result, nil
 }
 

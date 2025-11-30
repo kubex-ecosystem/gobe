@@ -12,7 +12,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // BootstrapMainConfig garante que o arquivo principal de configuração exista
@@ -45,27 +45,27 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 	if _, err := os.Stat(args.EnvFile); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(args.EnvFile), 0755); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
 			}
 		}
 		if _, err := os.Stat(args.EnvFile); err != nil {
 			if err := os.WriteFile(args.EnvFile, []byte(""), 0644); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
 			}
 		}
 	} else if os.IsPermission(err) {
-		gl.Log("fatal", fmt.Sprintf("permission denied to read %s file: %v", args.EnvFile, err))
+		logz.Log("fatal", fmt.Sprintf("permission denied to read %s file: %v", args.EnvFile, err))
 	} else {
-		gl.Log("debug", "Loading settings from .env file")
+		logz.Log("debug", "Loading settings from .env file")
 		if err := godotenv.Load(args.EnvFile); err != nil {
 			// return nil, fmt.Errorf("error loading %s file: %w", envFilePath, err)
-			gl.Log("fatal", fmt.Sprintf("error loading %s file: %v", args.EnvFile, err))
+			logz.Log("fatal", fmt.Sprintf("error loading %s file: %v", args.EnvFile, err))
 		}
 		// .env file not found, skipping loading environment variables from file, reading from user/process environment
-		gl.Log("debug", ".env file not found, skipping loading environment variables from file")
+		logz.Log("debug", ".env file not found, skipping loading environment variables from file")
 		envVars, err = godotenv.Read()
 		if err != nil {
-			gl.Log("fatal", fmt.Sprintf("error reading %s file: %v", args.EnvFile, err))
+			logz.Log("fatal", fmt.Sprintf("error reading %s file: %v", args.EnvFile, err))
 		}
 	}
 
@@ -73,12 +73,12 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 	if _, err := os.Stat(filepath.Dir(args.ConfigFile)); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(args.ConfigFile), 0755); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
 			}
 		}
 		if _, err := os.Stat(args.ConfigFile); err != nil {
 			if err := os.WriteFile(args.ConfigFile, []byte(""), 0644); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
 			}
 		}
 	}
@@ -86,12 +86,12 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 	if _, err := os.Stat(filepath.Dir(args.ConfigDBFile)); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(args.ConfigDBFile), 0755); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error creating default config directory: %v", err))
 			}
 		}
 		if _, err := os.Stat(args.ConfigDBFile); err != nil {
 			if err := os.WriteFile(args.ConfigDBFile, []byte(""), 0644); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error creating config file: %v", err))
 			}
 		}
 	}
@@ -101,17 +101,17 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 	if err != nil {
 		wasEOF = strings.Contains(err.Error(), "objeto: EOF")
 		if wasEOF {
-			gl.Log("warn", fmt.Sprintf("Config file at %s is empty. Hydrating defaults.", args.ConfigFile))
+			logz.Log("warn", fmt.Sprintf("Config file at %s is empty. Hydrating defaults.", args.ConfigFile))
 			return writeDefaultConfig[C](args)
 		} else {
-			gl.Log("fatal", fmt.Sprintf("Error loading config from %s: %v", args.ConfigFile, err))
+			logz.Log("fatal", fmt.Sprintf("Error loading config from %s: %v", args.ConfigFile, err))
 		}
 	}
 
 	if reflect.TypeFor[C]() == reflect.TypeFor[*Config]() {
 		cfgMain, oks := any(cfg).(*Config)
 		if !oks || !kbx.IsObjValid(cfgMain) {
-			gl.Log("warn", fmt.Sprintf("Config file at %s is invalid. Hydrating defaults.", args.ConfigFile))
+			logz.Log("warn", fmt.Sprintf("Config file at %s is invalid. Hydrating defaults.", args.ConfigFile))
 			return writeDefaultConfig[C](args)
 		}
 
@@ -134,11 +134,11 @@ func BootstrapMainConfig[C *Config | *DiscordConfig |
 			updated = true
 		}
 		if updated {
-			gl.Log("info", fmt.Sprintf("Updating config file at %s with missing default values.", args.ConfigFile))
+			logz.Log("info", fmt.Sprintf("Updating config file at %s with missing default values.", args.ConfigFile))
 			return writeDefaultConfig[C](args)
 		}
 
-		gl.Log("info", fmt.Sprintf("Config loaded from %s", args.ConfigFile))
+		logz.Log("info", fmt.Sprintf("Config loaded from %s", args.ConfigFile))
 		// Hydrate any missing default values
 		if err := hydrateConfigDefaults(cfgMain, args); err != nil {
 			return nil, fmt.Errorf("failed to hydrate config defaults: %w", err)
@@ -193,7 +193,7 @@ func writeDefaultConfig[C *Config | *DiscordConfig |
 		return nil, fmt.Errorf("failed to write default config: %w", err)
 	}
 
-	gl.Log("notice", fmt.Sprintf("Default config stored at %s", args.ConfigFile))
+	logz.Log("notice", fmt.Sprintf("Default config stored at %s", args.ConfigFile))
 	return cfg, nil
 }
 
@@ -340,7 +340,7 @@ func hydrateConfigDefaults(cfg *Config, args *kbx.InitArgs) error {
 			return fmt.Errorf("failed to write updated config: %w", err)
 		}
 
-		gl.Log("info", fmt.Sprintf("Updated config stored at %s", args.ConfigFile))
+		logz.Log("info", fmt.Sprintf("Updated config stored at %s", args.ConfigFile))
 	}
 	return nil
 }

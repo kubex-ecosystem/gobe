@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/pelletier/go-toml/v2"
 	"gopkg.in/yaml.v3"
 )
@@ -106,28 +106,28 @@ func (m *Mapper[T]) SerializeToFile(format string) {
 	}
 	data, err := m.Serialize(format)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error serializing object: %v", err))
+		logz.Log("error", fmt.Sprintf("Error serializing object: %v", err))
 		return
 	}
 	if err := ensureParentDir(m.filePath); err != nil {
-		gl.Log("error", fmt.Sprintf("Error creating parent dir: %v", err))
+		logz.Log("error", fmt.Sprintf("Error creating parent dir: %v", err))
 		return
 	}
 	f, err := os.OpenFile(m.filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error opening file: %v", err))
+		logz.Log("error", fmt.Sprintf("Error opening file: %v", err))
 		return
 	}
 	defer func() {
 		if cerr := f.Close(); cerr != nil {
-			gl.Log("error", fmt.Sprintf("Error closing file: %v", cerr))
+			logz.Log("error", fmt.Sprintf("Error closing file: %v", cerr))
 		}
 	}()
 	if _, err := f.Write(data); err != nil {
-		gl.Log("error", fmt.Sprintf("Error writing file: %v", err))
+		logz.Log("error", fmt.Sprintf("Error writing file: %v", err))
 		return
 	}
-	gl.Log("debug", fmt.Sprintf("Serialized to %s (%s) [%d bytes]", m.filePath, strings.ToUpper(format), len(data)))
+	logz.Log("debug", fmt.Sprintf("Serialized to %s (%s) [%d bytes]", m.filePath, strings.ToUpper(format), len(data)))
 }
 
 // -------------------- Deserialize (streaming) --------------------
@@ -162,18 +162,18 @@ func (m *Mapper[T]) DeserializeFromFile(format string) (*T, error) {
 		return nil, errors.New("mapper: ponteiro de destino nil")
 	}
 	if _, err := os.Stat(m.filePath); err != nil {
-		gl.Log("error", fmt.Sprintf("File does not exist: %v", err))
+		logz.Log("error", fmt.Sprintf("File does not exist: %v", err))
 		return nil, err
 	}
 	f, err := os.Open(m.filePath)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error opening file: %v", err))
+		logz.Log("error", fmt.Sprintf("Error opening file: %v", err))
 		return nil, err
 	}
 	defer func() {
-		gl.Log("debug", "Closing input file")
+		logz.Log("debug", "Closing input file")
 		if cerr := f.Close(); cerr != nil {
-			gl.Log("error", fmt.Sprintf("Error closing file: %v", cerr))
+			logz.Log("error", fmt.Sprintf("Error closing file: %v", cerr))
 		}
 	}()
 

@@ -10,7 +10,7 @@ import (
 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"net/http"
 )
@@ -21,20 +21,20 @@ type AuthRoutes struct {
 
 func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("Router is nil for AuthRoute")
+		logz.Log("Router is nil for AuthRoute")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
@@ -60,20 +60,20 @@ func NewAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 func NewUserRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil for UserRoute")
+		logz.Log("error", "Router is nil for UserRoute")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	dbName := dbCfg.GetDBName()

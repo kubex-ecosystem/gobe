@@ -14,7 +14,7 @@ import (
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // ScorecardController exposes real scorecard and metrics endpoints.
@@ -76,7 +76,7 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 	// Get recent completed scorecard analysis jobs
 	jobs, err := sc.analysisJobService.ListJobsByStatus(c.Request.Context(), "COMPLETED")
 	if err != nil {
-		gl.Log("error", "Failed to get scorecard jobs", "error", err)
+		logz.Log("error", "Failed to get scorecard jobs", "error", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Status:  "error",
 			Message: "Failed to retrieve scorecard data",
@@ -145,7 +145,7 @@ func (sc *ScorecardController) GetScorecard(c *gin.Context) {
 		filteredEntries = filteredEntries[:limit]
 	}
 
-	gl.Log("info", "Scorecard data retrieved", "count", len(filteredEntries), "total_jobs", len(analysisJobs))
+	logz.Log("info", "Scorecard data retrieved", "count", len(filteredEntries), "total_jobs", len(analysisJobs))
 
 	c.JSON(http.StatusOK, ScorecardResponse{
 		Items:   filteredEntries,
@@ -172,7 +172,7 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 	// Get recent completed analysis jobs for advice analysis
 	allJobs, err := sc.analysisJobService.ListJobsByStatus(c.Request.Context(), "COMPLETED")
 	if err != nil {
-		gl.Log("error", "Failed to get jobs for advice", "error", err)
+		logz.Log("error", "Failed to get jobs for advice", "error", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Status:  "error",
 			Message: "Failed to generate advice",
@@ -233,7 +233,7 @@ func (sc *ScorecardController) GetScorecardAdvice(c *gin.Context) {
 	// Generate advice based on analysis job results
 	advice := generateAdviceFromAnalysisJobs(analysisJobs, repoURL)
 
-	gl.Log("info", "Scorecard advice generated", "repo_url", repoURL, "jobs_analyzed", len(analysisJobs))
+	logz.Log("info", "Scorecard advice generated", "repo_url", repoURL, "jobs_analyzed", len(analysisJobs))
 
 	c.JSON(http.StatusOK, ScorecardAdviceResponse{
 		Advice:      advice.Message,
@@ -276,7 +276,7 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 	// Get all analysis jobs for metrics calculation
 	allJobs, err := sc.analysisJobService.ListJobs(c.Request.Context())
 	if err != nil {
-		gl.Log("error", "Failed to get jobs for metrics", "error", err)
+		logz.Log("error", "Failed to get jobs for metrics", "error", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Status:  "error",
 			Message: "Failed to calculate metrics",
@@ -336,7 +336,7 @@ func (sc *ScorecardController) GetMetrics(c *gin.Context) {
 		metrics["analyzer_error"] = "Service disabled"
 	}
 
-	gl.Log("info", "System metrics calculated", "period", period, "jobs_analyzed", len(allJobs))
+	logz.Log("info", "System metrics calculated", "period", period, "jobs_analyzed", len(allJobs))
 
 	c.JSON(http.StatusOK, ScorecardMetricsResponse{
 		Metrics: metrics,

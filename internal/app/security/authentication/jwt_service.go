@@ -12,7 +12,7 @@ import (
 	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // JWTService handles JWT token generation and validation using GDBase repositories
@@ -47,15 +47,15 @@ type jwtRefreshTokenData struct {
 // NewJWTService creates a new JWT service instance using GDBase token repository
 func NewJWTService(tokenRepo mdl.ITokenRepo, privKey *rsa.PrivateKey, pubKey *rsa.PublicKey, refreshSecret string, idExpSecs, refreshExpSecs int64) *JWTService {
 	if tokenRepo == nil {
-		gl.Log("error", "TokenRepo cannot be nil") // pragma: allowlist secret // pragma: allowlist secret
+		logz.Log("error", "TokenRepo cannot be nil") // pragma: allowlist secret // pragma: allowlist secret
 		return nil
 	}
 	if privKey == nil { // pragma: allowlist secret
-		gl.Log("error", "Private key cannot be nil") // pragma: allowlist secret
+		logz.Log("error", "Private key cannot be nil") // pragma: allowlist secret
 		return nil
 	}
 	if pubKey == nil { // pragma: allowlist secret
-		gl.Log("error", "Public key cannot be nil") // pragma: allowlist secret
+		logz.Log("error", "Public key cannot be nil") // pragma: allowlist secret
 		return nil
 	}
 
@@ -82,7 +82,7 @@ func (s *JWTService) NewPairFromUser(ctx context.Context, u mdl.UserModel, prevT
 	// Delete previous refresh token if provided
 	if prevTokenID != "" {
 		if err := s.tokenRepo.DeleteRefreshToken(ctx, u.GetID(), prevTokenID); err != nil {
-			gl.Log("error", fmt.Sprintf("could not delete previous refresh token for uid: %v, tokenID: %v: %v", u.GetID(), prevTokenID, err))
+			logz.Log("error", fmt.Sprintf("could not delete previous refresh token for uid: %v, tokenID: %v: %v", u.GetID(), prevTokenID, err))
 			return nil, fmt.Errorf("could not delete previous refresh token: %w", err)
 		}
 	}
@@ -90,7 +90,7 @@ func (s *JWTService) NewPairFromUser(ctx context.Context, u mdl.UserModel, prevT
 	// Generate ID token
 	idToken, err := s.generateIDToken(u)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error generating id token for uid: %v: %v", u.GetID(), err))
+		logz.Log("error", fmt.Sprintf("error generating id token for uid: %v: %v", u.GetID(), err))
 		return nil, fmt.Errorf("error generating id token: %w", err)
 	}
 
@@ -98,7 +98,7 @@ func (s *JWTService) NewPairFromUser(ctx context.Context, u mdl.UserModel, prevT
 	if s.refreshSecret == "" {
 		jwtSecret, jwtSecretErr := crt.GetOrGenPasswordKeyringPass("jwt_secret") // pragma: allowlist secret
 		if jwtSecretErr != nil {                                                 // pragma: allowlist secret
-			gl.Log("fatal", fmt.Sprintf("Error retrieving JWT secret key: %v", jwtSecretErr)) // pragma: allowlist secret
+			logz.Log("fatal", fmt.Sprintf("Error retrieving JWT secret key: %v", jwtSecretErr)) // pragma: allowlist secret
 			return nil, jwtSecretErr
 		}
 		s.refreshSecret = jwtSecret // pragma: allowlist secret
@@ -107,13 +107,13 @@ func (s *JWTService) NewPairFromUser(ctx context.Context, u mdl.UserModel, prevT
 	// Generate refresh token
 	refreshToken, err := s.generateRefreshToken(u.GetID())
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error generating refresh token for uid: %v: %v", u.GetID(), err))
+		logz.Log("error", fmt.Sprintf("error generating refresh token for uid: %v: %v", u.GetID(), err))
 		return nil, fmt.Errorf("error generating refresh token: %w", err)
 	}
 
 	// Store refresh token in database via GDBase repo
 	if err := s.tokenRepo.SetRefreshToken(ctx, u.GetID(), refreshToken.ID, refreshToken.ExpiresIn); err != nil {
-		gl.Log("error", fmt.Sprintf("error storing token ID for uid: %v: %v", u.GetID(), err))
+		logz.Log("error", fmt.Sprintf("error storing token ID for uid: %v: %v", u.GetID(), err))
 		return nil, fmt.Errorf("error storing token: %w", err)
 	}
 

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 )
 
 // Cron keeps track of any number of entries, invoking the associated func as
@@ -20,7 +20,7 @@ type Cron struct {
 	remove    chan EntryID
 	snapshot  chan chan []Entry
 	running   bool
-	logger    l.Logger
+	logger    *logz.LoggerZ
 	runningMu sync.Mutex
 	location  *time.Location
 	parser    ScheduleParser
@@ -122,7 +122,7 @@ func New(opts ...Option) *Cron {
 		remove:    make(chan EntryID),
 		running:   false,
 		runningMu: sync.Mutex{},
-		logger:    l.GetLogger("cron"),
+		logger:    logz.GetLoggerZ("cron"),
 		location:  time.Local,
 		parser:    standardParser,
 	}
@@ -239,13 +239,13 @@ func (c *Cron) Run() {
 // run the scheduler.. this is private just due to the need to synchronize
 // access to the 'running' state variable.
 func (c *Cron) run() {
-	c.logger.InfoCtx("start", nil)
+	c.logger.Info("start", nil)
 
 	// Figure out the next activation times for each entry.
 	now := c.now()
 	for _, entry := range c.entries {
 		entry.Next = entry.Schedule.Next(now)
-		c.logger.InfoCtx("schedule", map[string]any{
+		c.logger.Info("schedule", map[string]any{
 			"now":   now,
 			"entry": entry.ID,
 			"next":  entry.Next,
@@ -269,7 +269,7 @@ func (c *Cron) run() {
 			select {
 			case now = <-timer.C:
 				now = now.In(c.location)
-				c.logger.InfoCtx("wake", map[string]any{
+				c.logger.Info("wake", map[string]any{
 					"now": now,
 				})
 
@@ -281,7 +281,7 @@ func (c *Cron) run() {
 					c.startJob(e.WrappedJob)
 					e.Prev = e.Next
 					e.Next = e.Schedule.Next(now)
-					c.logger.InfoCtx("run", map[string]any{
+					c.logger.Info("run", map[string]any{
 						"now":   now,
 						"entry": e.ID,
 						"next":  e.Next,
@@ -293,7 +293,7 @@ func (c *Cron) run() {
 				now = c.now()
 				newEntry.Next = newEntry.Schedule.Next(now)
 				c.entries = append(c.entries, newEntry)
-				c.logger.InfoCtx("added", map[string]any{
+				c.logger.Info("added", map[string]any{
 					"now":   now,
 					"entry": newEntry.ID,
 					"next":  newEntry.Next,
@@ -305,14 +305,14 @@ func (c *Cron) run() {
 
 			case <-c.stop:
 				timer.Stop()
-				c.logger.InfoCtx("stop", nil)
+				c.logger.Info("stop", nil)
 				return
 
 			case id := <-c.remove:
 				timer.Stop()
 				now = c.now()
 				c.removeEntry(id)
-				c.logger.InfoCtx("removed", map[string]any{
+				c.logger.Info("removed", map[string]any{
 					"entry": id,
 				})
 			}

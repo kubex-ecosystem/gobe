@@ -5,8 +5,7 @@ import (
 	"reflect"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
 
 	"github.com/google/uuid"
 )
@@ -52,7 +51,7 @@ func (p *Property[T]) SetValue(v *T) {
 	p.Prop().Set(v)
 	if p.cb != nil {
 		if _, err := p.cb(v); err != nil {
-			gl.Log("error", "Callback function returned an error:", err.Error())
+			logz.Log("error", "Callback function returned an error:", err.Error())
 			//p.metrics.Log("error", "Error in callback function: "+err.Error())
 		}
 	}
@@ -72,7 +71,7 @@ func (p *Property[T]) Prop() ci.IPropertyValBase[T] {
 }
 
 // GetLogger returns the logger of the property.
-func (p *Property[T]) GetLogger() l.Logger {
+func (p *Property[T]) GetLogger() *logz.LoggerZ {
 	return p.Prop().GetLogger()
 }
 
@@ -95,7 +94,7 @@ func (p *Property[T]) Deserialize(data []byte, format, filePath string) error {
 	var v T
 	mapper := NewMapper(&v, filePath)
 	if v, vErr := mapper.Deserialize(data, format); vErr != nil {
-		gl.Log("error", "Failed to deserialize data:", vErr.Error())
+		logz.Log("error", "Failed to deserialize data:", vErr.Error())
 		return vErr
 	} else {
 		p.SetValue(v)
@@ -108,7 +107,7 @@ func (p *Property[T]) SaveToFile(filePath string, format string) error {
 	m := NewMapper(p.Prop().Value(), filePath)
 	m.SerializeToFile(format)
 	// if _, err := os.Stat(filePath); os.IsNotExist(err) {
-	// 	gl.Log("error", "File was not created:", filePath)
+	// 	logz.Log("error", "File was not created:", filePath)
 	// 	return err
 	// }
 	// return nil
@@ -118,7 +117,7 @@ func (p *Property[T]) SaveToFile(filePath string, format string) error {
 // LoadFromFile loads the property from a file in the specified format.
 func (p *Property[T]) LoadFromFile(filename, format string) error {
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		gl.Log("error", "File does not exist:", filename)
+		logz.Log("error", "File does not exist:", filename)
 		return err
 	}
 	// Create a new mapper instance
@@ -130,18 +129,18 @@ func (p *Property[T]) LoadFromFile(filename, format string) error {
 	data, err := m.DeserializeFromFile(format)
 	if data == nil {
 		if err != nil && os.IsPermission(err) {
-			gl.Log("error", "Permission denied to read file:", filename)
+			logz.Log("error", "Permission denied to read file:", filename)
 			return err
 		}
 		// We already checked if the file exists, so let's read it
 		var v []byte
 		if v, err = os.ReadFile(filename); err != nil {
-			gl.Log("error", "Failed to read file:", err.Error())
+			logz.Log("error", "Failed to read file:", err.Error())
 			return err
 		} else {
 			data, err = m.Deserialize(v, format)
 			if err != nil {
-				gl.Log("error", "Failed to deserialize file content:", err.Error())
+				logz.Log("error", "Failed to deserialize file content:", err.Error())
 				return err
 			}
 			p.Prop().Set((*T)(data))

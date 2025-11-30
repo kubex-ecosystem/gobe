@@ -6,7 +6,7 @@ import (
 	"os"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 func IsShellSpecialVar(c uint8) bool {
@@ -24,7 +24,7 @@ func screeningByRAMSize(env ci.IEnvironment, filePath string) string {
 
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao obter tamanho do arquivo: %v", err))
+		logz.Log("error", fmt.Sprintf("Erro ao obter tamanho do arquivo: %v", err))
 		return "fallback"
 	}
 

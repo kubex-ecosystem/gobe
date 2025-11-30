@@ -218,4 +218,3 @@ func estimateOpenAICost(model string, tokens int) float64 {
 	}
 	return float64(tokens) * costPerToken
 }
-

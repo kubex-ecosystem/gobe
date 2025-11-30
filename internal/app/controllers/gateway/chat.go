@@ -10,7 +10,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
 	gatewayService "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type ChatController struct {
@@ -19,7 +19,7 @@ type ChatController struct {
 
 func NewChatController(service *gatewaysvc.Service) *ChatController {
 	if service == nil {
-		gl.Log("warn", "chat controller created without gateway service")
+		logz.Log("warn", "chat controller created without gateway service")
 	}
 	return &ChatController{service: service}
 }
@@ -49,7 +49,7 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 
 	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		gl.Log("warn", fmt.Sprintf("invalid chat payload: %v", err))
+		logz.Log("warn", fmt.Sprintf("invalid chat payload: %v", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		return
 	}
@@ -101,7 +101,7 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 	ctx := c.Request.Context()
 	stream, config, err := cc.service.Chat(ctx, svcReq)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("chat service failed: %v", err))
+		logz.Log("error", fmt.Sprintf("chat service failed: %v", err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -116,11 +116,11 @@ func (cc *ChatController) ChatSSE(c *gin.Context) {
 	sendEvent := func(payload interface{}) {
 		bytes, err := json.Marshal(payload)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("failed to marshal SSE payload: %v", err))
+			logz.Log("error", fmt.Sprintf("failed to marshal SSE payload: %v", err))
 			return
 		}
 		if _, err := fmt.Fprintf(c.Writer, "data: %s\n\n", bytes); err != nil {
-			gl.Log("error", fmt.Sprintf("failed to write SSE payload: %v", err))
+			logz.Log("error", fmt.Sprintf("failed to write SSE payload: %v", err))
 			return
 		}
 		if flusher != nil {
@@ -138,7 +138,7 @@ streamLoop:
 	for {
 		select {
 		case <-ctx.Done():
-			gl.Log("warn", "chat stream cancelled by client")
+			logz.Log("warn", "chat stream cancelled by client")
 			sendEvent(gin.H{"done": true, "cancelled": true})
 			return
 		case chunk, ok := <-stream:
@@ -154,7 +154,7 @@ streamLoop:
 
 			if chunk.Content != "" {
 				if err := coalescer.Add(chunk.Content); err != nil {
-					gl.Log("warn", fmt.Sprintf("chat coalescer failed: %v", err))
+					logz.Log("warn", fmt.Sprintf("chat coalescer failed: %v", err))
 				}
 			}
 

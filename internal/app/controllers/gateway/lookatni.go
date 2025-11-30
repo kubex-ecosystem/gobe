@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // LookAtniController manages LookAtni automation operations with real job processing.
@@ -91,7 +91,7 @@ func (lc *LookAtniController) Extract(c *gin.Context) {
 	// Save job to database
 	createdJob, err := lc.analysisJobService.CreateJob(c.Request.Context(), job)
 	if err != nil {
-		gl.Log("error", "Failed to create extraction job", "error", err, "source_url", sourceURL)
+		logz.Log("error", "Failed to create extraction job", "error", err, "source_url", sourceURL)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "Failed to queue extraction job"})
 		return
 	}
@@ -99,7 +99,7 @@ func (lc *LookAtniController) Extract(c *gin.Context) {
 	// Start job processing asynchronously
 	go lc.processExtractionJob(context.Background(), createdJob)
 
-	gl.Log("info", "Extraction job queued", "job_id", createdJob.GetID(), "source_url", sourceURL)
+	logz.Log("info", "Extraction job queued", "job_id", createdJob.GetID(), "source_url", sourceURL)
 
 	c.JSON(http.StatusAccepted, LookAtniActionResponse{
 		Status:    "queued",
@@ -162,7 +162,7 @@ func (lc *LookAtniController) Archive(c *gin.Context) {
 	// Save job to database
 	createdJob, err := lc.analysisJobService.CreateJob(c.Request.Context(), job)
 	if err != nil {
-		gl.Log("error", "Failed to create archive job", "error", err, "project_id", projectID)
+		logz.Log("error", "Failed to create archive job", "error", err, "project_id", projectID)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "Failed to queue archive job"})
 		return
 	}
@@ -170,7 +170,7 @@ func (lc *LookAtniController) Archive(c *gin.Context) {
 	// Start job processing asynchronously
 	go lc.processArchiveJob(context.Background(), createdJob)
 
-	gl.Log("info", "Archive job queued", "job_id", createdJob.GetID(), "project_id", projectID)
+	logz.Log("info", "Archive job queued", "job_id", createdJob.GetID(), "project_id", projectID)
 
 	c.JSON(http.StatusAccepted, LookAtniActionResponse{
 		Status:    "queued",
@@ -211,7 +211,7 @@ func (lc *LookAtniController) Download(c *gin.Context) {
 	// Find the completed analysis job
 	job, err := lc.analysisJobService.GetJobByID(c.Request.Context(), jobID)
 	if err != nil {
-		gl.Log("error", "Failed to find job for download", "error", err, "job_id", jobID)
+		logz.Log("error", "Failed to find job for download", "error", err, "job_id", jobID)
 		c.JSON(http.StatusNotFound, ErrorResponse{Status: "error", Message: "resource not found"})
 		return
 	}
@@ -225,7 +225,7 @@ func (lc *LookAtniController) Download(c *gin.Context) {
 	// Generate temporary download URL
 	downloadURL := lc.generateDownloadURL(jobID.String(), job.GetOutputData())
 
-	gl.Log("info", "Download URL generated", "job_id", jobID, "source_url", job.GetSourceURL())
+	logz.Log("info", "Download URL generated", "job_id", jobID, "source_url", job.GetSourceURL())
 
 	c.JSON(http.StatusOK, LookAtniDownloadResponse{
 		DownloadURL: downloadURL,
@@ -248,7 +248,7 @@ func (lc *LookAtniController) Projects(c *gin.Context) {
 	// Get all analysis jobs to extract unique projects
 	allJobs, err := lc.analysisJobService.ListJobs(c.Request.Context())
 	if err != nil {
-		gl.Log("error", "Failed to get jobs for projects", "error", err)
+		logz.Log("error", "Failed to get jobs for projects", "error", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "Failed to retrieve projects"})
 		return
 	}
@@ -290,7 +290,7 @@ func (lc *LookAtniController) Projects(c *gin.Context) {
 		})
 	}
 
-	gl.Log("info", "Projects listed", "count", len(projects), "total_jobs", len(allJobs))
+	logz.Log("info", "Projects listed", "count", len(projects), "total_jobs", len(allJobs))
 
 	c.JSON(http.StatusOK, LookAtniProjectsResponse{
 		Projects: projects,
@@ -302,11 +302,11 @@ func (lc *LookAtniController) Projects(c *gin.Context) {
 func (lc *LookAtniController) processExtractionJob(ctx context.Context, job svc.AnalysisJobModel) {
 	// Mark job as started
 	if err := lc.analysisJobService.StartJob(ctx, job.GetID()); err != nil {
-		gl.Log("error", "Failed to mark extraction job as started", "error", err, "job_id", job.GetID())
+		logz.Log("error", "Failed to mark extraction job as started", "error", err, "job_id", job.GetID())
 		return
 	}
 
-	gl.Log("info", "Starting extraction job processing", "job_id", job.GetID(), "source_url", job.GetSourceURL())
+	logz.Log("info", "Starting extraction job processing", "job_id", job.GetID(), "source_url", job.GetSourceURL())
 
 	// Update progress periodically
 	go lc.updateJobProgress(ctx, job.GetID(), "extract")
@@ -327,23 +327,23 @@ func (lc *LookAtniController) processExtractionJob(ctx context.Context, job svc.
 
 	// Complete the job with output data
 	if err := lc.analysisJobService.CompleteJob(ctx, job.GetID(), outputData); err != nil {
-		gl.Log("error", "Failed to complete extraction job", "error", err, "job_id", job.GetID())
+		logz.Log("error", "Failed to complete extraction job", "error", err, "job_id", job.GetID())
 		lc.analysisJobService.FailJob(ctx, job.GetID(), fmt.Sprintf("Failed to complete extraction: %v", err))
 		return
 	}
 
-	gl.Log("info", "Extraction job completed successfully", "job_id", job.GetID(), "source_url", job.GetSourceURL())
+	logz.Log("info", "Extraction job completed successfully", "job_id", job.GetID(), "source_url", job.GetSourceURL())
 }
 
 // processArchiveJob handles asynchronous archive job processing
 func (lc *LookAtniController) processArchiveJob(ctx context.Context, job svc.AnalysisJobModel) {
 	// Mark job as started
 	if err := lc.analysisJobService.StartJob(ctx, job.GetID()); err != nil {
-		gl.Log("error", "Failed to mark archive job as started", "error", err, "job_id", job.GetID())
+		logz.Log("error", "Failed to mark archive job as started", "error", err, "job_id", job.GetID())
 		return
 	}
 
-	gl.Log("info", "Starting archive job processing", "job_id", job.GetID(), "source_url", job.GetSourceURL())
+	logz.Log("info", "Starting archive job processing", "job_id", job.GetID(), "source_url", job.GetSourceURL())
 
 	// Update progress periodically
 	go lc.updateJobProgress(ctx, job.GetID(), "archive")
@@ -365,12 +365,12 @@ func (lc *LookAtniController) processArchiveJob(ctx context.Context, job svc.Ana
 
 	// Complete the job with output data
 	if err := lc.analysisJobService.CompleteJob(ctx, job.GetID(), outputData); err != nil {
-		gl.Log("error", "Failed to complete archive job", "error", err, "job_id", job.GetID())
+		logz.Log("error", "Failed to complete archive job", "error", err, "job_id", job.GetID())
 		lc.analysisJobService.FailJob(ctx, job.GetID(), fmt.Sprintf("Failed to complete archive: %v", err))
 		return
 	}
 
-	gl.Log("info", "Archive job completed successfully", "job_id", job.GetID(), "project_id", job.GetInputData()["project_id"])
+	logz.Log("info", "Archive job completed successfully", "job_id", job.GetID(), "project_id", job.GetInputData()["project_id"])
 }
 
 // updateJobProgress simulates progress updates during job processing
@@ -380,9 +380,9 @@ func (lc *LookAtniController) updateJobProgress(ctx context.Context, jobID uuid.
 	for _, progress := range progressSteps {
 		time.Sleep(500 * time.Millisecond)
 		if err := lc.analysisJobService.UpdateJobProgress(ctx, jobID, progress); err != nil {
-			gl.Log("error", "Failed to update job progress", "error", err, "job_id", jobID, "progress", progress)
+			logz.Log("error", "Failed to update job progress", "error", err, "job_id", jobID, "progress", progress)
 		} else {
-			gl.Log("debug", "Job progress updated", "job_id", jobID, "operation", operation, "progress", progress)
+			logz.Log("debug", "Job progress updated", "job_id", jobID, "operation", operation, "progress", progress)
 		}
 	}
 }

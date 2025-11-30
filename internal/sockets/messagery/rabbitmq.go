@@ -11,7 +11,7 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	crtSvc "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 
@@ -62,7 +62,7 @@ func (a *AMQP) Connect(ctx context.Context, url string, logf func(string, ...any
 					_ = ch.Close()
 					_ = conn.Close()
 					last = err
-					gl.Log("error", fmt.Sprintf("Failed to declare AMQP topology: %v", last))
+					logz.Log("error", fmt.Sprintf("Failed to declare AMQP topology: %v", last))
 					continue
 				}
 				a.ready.Store(true)
@@ -199,7 +199,7 @@ func (a *AMQP) declareTopology() error {
 		if err != nil {
 			return fmt.Errorf("failed to declare exchange %s: %w", exchange.name, err)
 		}
-		gl.Log("info", "Declared AMQP exchange", exchange.name, exchange.kind)
+		logz.Log("info", "Declared AMQP exchange", exchange.name, exchange.kind)
 	}
 
 	// Declare default queues
@@ -226,7 +226,7 @@ func (a *AMQP) declareTopology() error {
 		if err != nil {
 			return fmt.Errorf("failed to declare queue %s: %w", queue.name, err)
 		}
-		gl.Log("info", "Declared AMQP queue", queue.name)
+		logz.Log("info", "Declared AMQP queue", queue.name)
 	}
 
 	// Bind queues to exchanges
@@ -251,7 +251,7 @@ func (a *AMQP) declareTopology() error {
 		if err != nil {
 			return fmt.Errorf("failed to bind queue %s to exchange %s: %w", binding.queue, binding.exchange, err)
 		}
-		gl.Log("info", "Bound AMQP queue", binding.queue, "to exchange", binding.exchange, "with key", binding.key)
+		logz.Log("info", "Bound AMQP queue", binding.queue, "to exchange", binding.exchange, "with key", binding.key)
 	}
 
 	return nil
@@ -331,7 +331,7 @@ func GetRabbitMQURL(dbService svc.DBService) string {
 	dbConfig := dbService.GetConfig(context.Background())
 	// dbConfig is now an interface, use reflection to check nil
 	// if dbConfig == nil {
-	// 	gl.Log("error", "DBConfig is nil, cannot get RabbitMQ URL")
+	// 	logz.Log("error", "DBConfig is nil, cannot get RabbitMQ URL")
 	// 	return ""
 	// }
 	rabbitConfig := dbConfig.GetRabbitMQConfig()
@@ -345,7 +345,7 @@ func GetRabbitMQURL(dbService svc.DBService) string {
 		if ok {
 			port = strPort
 		} else {
-			gl.Log("error", "RabbitMQ port is not a string")
+			logz.Log("error", "RabbitMQ port is not a string")
 			port = "5672"
 		}
 	} else {
@@ -361,8 +361,8 @@ func GetRabbitMQURL(dbService svc.DBService) string {
 	} else {
 		rabbitPassKey, rabbitPassErr := crtSvc.GetOrGenPasswordKeyringPass("rabbitmq")
 		if rabbitPassErr != nil {
-			gl.Log("error", "Skipping RabbitMQ setup due to error generating password")
-			gl.Log("debug", fmt.Sprintf("Error generating key: %v", rabbitPassErr))
+			logz.Log("error", "Skipping RabbitMQ setup due to error generating password")
+			logz.Log("debug", fmt.Sprintf("Error generating key: %v", rabbitPassErr))
 			goto postRabbit
 		}
 		password = string(rabbitPassKey)

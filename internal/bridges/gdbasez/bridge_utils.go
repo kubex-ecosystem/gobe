@@ -6,7 +6,7 @@ import (
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // NewBridgeFromService validates dbService, injects dbName in the context (under kbx.ContextDBNameKey)
@@ -14,7 +14,7 @@ import (
 // used across routes/controllers that need a Bridge constructed from a DBService.
 func NewBridgeFromService(ctx context.Context, dbService *svc.DBServiceImpl) (context.Context, *Bridge, error) {
 	if dbService == nil {
-		gl.Log("error", "Database service is nil in NewBridgeFromService")
+		logz.Log("error", "Database service is nil in NewBridgeFromService")
 		return nil, nil, fmt.Errorf("database service is nil")
 	}
 	if ctx == nil {
@@ -23,13 +23,13 @@ func NewBridgeFromService(ctx context.Context, dbService *svc.DBServiceImpl) (co
 
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil in NewBridgeFromService")
+		logz.Log("error", "Database config is nil in NewBridgeFromService")
 		return nil, nil, fmt.Errorf("database config is nil")
 	}
 
 	dbName := dbCfg.GetDBName()
 	if dbName == "" {
-		gl.Log("warn", "Database name is empty in DBConfig in NewBridgeFromService")
+		logz.Log("warn", "Database name is empty in DBConfig in NewBridgeFromService")
 	}
 
 	ctx = context.WithValue(ctx, kbx.ContextDBNameKey, dbName)

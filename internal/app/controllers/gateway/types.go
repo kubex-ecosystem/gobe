@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	ErrorResponse  = t.ErrorResponse
+	ErrorResponse   = t.ErrorResponse
 	MessageResponse = t.MessageResponse
 )
 

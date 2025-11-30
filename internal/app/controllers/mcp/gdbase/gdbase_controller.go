@@ -13,13 +13,11 @@ import (
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
-	"github.com/kubex-ecosystem/logz/logger"
-
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 )
 
 var (
-	gl = logger.GetLogger[l.Logger](nil)
+	gl = logz.GetLoggerZ("GDBaseController")
 )
 
 // TunnelStatus represents the current tunnel state
@@ -56,7 +54,7 @@ func NewGDBaseController(dbService *svc.Bridge) *GDBaseController {
 	// Initialize Docker client
 	dockerCli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		gl.Log("error", "Failed to create Docker client", err)
+		logz.Log("error", "Failed to create Docker client", err)
 		dockerCli = nil
 	}
 
@@ -161,7 +159,7 @@ func (g *GDBaseController) PostGDBaseTunnelDown(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	if err := g.activeHandle.Stop(ctx); err != nil {
-		gl.Log("error", "Failed to stop tunnel", err)
+		logz.Log("error", "Failed to stop tunnel", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":   "Internal Server Error",
 			"message": "Failed to stop tunnel: " + err.Error(),
@@ -173,7 +171,7 @@ func (g *GDBaseController) PostGDBaseTunnelDown(c *gin.Context) {
 	g.tunnelState = &TunnelStatus{Running: false}
 	g.activeHandle = nil
 
-	gl.Log("info", "Tunnel stopped successfully")
+	logz.Log("info", "Tunnel stopped successfully")
 	c.Status(http.StatusNoContent)
 }
 
@@ -231,7 +229,7 @@ func (g *GDBaseController) handleQuickTunnel(ctx context.Context, req *TunnelReq
 		Target:  req.Target + ":" + strconv.Itoa(req.Port),
 	}
 
-	gl.Log("info", "Quick tunnel started successfully", "url", publicURL)
+	logz.Log("info", "Quick tunnel started successfully", "url", publicURL)
 	return nil
 }
 
@@ -272,14 +270,14 @@ func (g *GDBaseController) handleNamedTunnel(ctx context.Context, req *TunnelReq
 		Network: networkName,
 	}
 
-	gl.Log("info", "Named tunnel started successfully")
+	logz.Log("info", "Named tunnel started successfully")
 	return nil
 }
 
 func (g *GDBaseController) ProcessDBMigration(c *gin.Context) {
 
 	// if err := g.bridge.Migrate(); err != nil {
-	// 	gl.Log("error", "Database migration failed", err)
+	// 	logz.Log("error", "Database migration failed", err)
 	// 	c.JSON(http.StatusInternalServerError, gin.H{
 	// 		"error":   "Internal Server Error",
 	// 		"message": "Database migration failed: " + err.Error(),
@@ -287,7 +285,7 @@ func (g *GDBaseController) ProcessDBMigration(c *gin.Context) {
 	// 	return
 	// }
 
-	gl.Log("info", "Database migration completed successfully")
+	logz.Log("info", "Database migration completed successfully")
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Database migration completed successfully",
 	})

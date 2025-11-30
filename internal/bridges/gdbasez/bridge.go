@@ -8,7 +8,7 @@ import (
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	models "github.com/kubex-ecosystem/gdbase/factory/models"
 	mcpmodels "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // Bridge provides a clean interface to gdbase services without exposing *gorm.DB
@@ -22,7 +22,7 @@ type Bridge struct {
 // This is the ONLY function in gobe that should accept *gorm.DB
 func NewBridge(ctx context.Context, dbService svc.DBService, dbName string) *Bridge {
 	if dbService == nil {
-		gl.Log("error", "Bridge: dbService is nil")
+		logz.Log("error", "Bridge: dbService is nil")
 		return nil
 	}
 

@@ -20,7 +20,7 @@ import (
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	srv "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type AuthenticationMiddleware struct {
@@ -35,12 +35,12 @@ func NewTokenService(dbService *srv.DBServiceImpl) (sci.TokenService, sci.ICertS
 	// Inicializa o TokenClient
 	tkClient := sau.NewTokenClient(crtService, dbService)
 	if tkClient == nil {
-		gl.Log("error", "❌ Erro ao inicializar TokenClient")
+		logz.Log("error", "❌ Erro ao inicializar TokenClient")
 		return nil, nil, fmt.Errorf("❌ Erro ao inicializar TokenClient")
 	}
 	tkService, _, _, err := tkClient.LoadTokenCfg()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar TokenService: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Erro ao inicializar TokenService: %v", err))
 		return nil, nil, fmt.Errorf("❌ Erro ao inicializar TokenService: %v", err)
 	}
 	return tkService, crtService, err
@@ -59,7 +59,7 @@ func NewAuthenticationMiddleware(tokenService sci.TokenService, certService sci.
 				c.Abort()
 				return
 			} else {
-				gl.Log("error", "❌ Erro ao inicializar AuthenticationMiddleware: CertService or TokenService is nil")
+				logz.Log("error", "❌ Erro ao inicializar AuthenticationMiddleware: CertService or TokenService is nil")
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to authenticate. Please try again later."})
 				c.Next()
 			}
@@ -112,13 +112,13 @@ func (a *AuthenticationMiddleware) ValidateJWT(next gin.HandlerFunc) gin.Handler
 func (a *AuthenticationMiddleware) validateToken(tokenString string) (*jwt.RegisteredClaims, error) {
 	publicK, err := a.CertService.GetPublicKey()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error getting public key: %v", err))
+		logz.Log("error", fmt.Sprintf("Error getting public key: %v", err))
 		return nil, err
 	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-			gl.Log("error", fmt.Sprintf("Unexpected signing method: %v", token.Header["alg"]))
+			logz.Log("error", fmt.Sprintf("Unexpected signing method: %v", token.Header["alg"]))
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return publicK, nil

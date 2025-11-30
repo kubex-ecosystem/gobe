@@ -15,8 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
 )
 
 const (
@@ -83,7 +82,7 @@ func defaultFileIfEmpty(p string) string {
 	}
 	abs, err := filepath.Abs(filepath.Join(".", "requests_tracer.json"))
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error resolving default path: %v", err))
+		logz.Log("error", fmt.Sprintf("error resolving default path: %v", err))
 		return ""
 	}
 	return abs
@@ -109,7 +108,7 @@ func newRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePa
 
 	// estado default
 	if requestTracers == nil {
-		gl.Log("error", "global registry not initialized (unexpected)")
+		logz.Log("error", "global registry not initialized (unexpected)")
 	}
 
 	reg.mu.Lock()
@@ -119,7 +118,7 @@ func newRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePa
 		// update existente
 		tracer, ok2 := t.(*RequestsTracer)
 		if !ok2 {
-			gl.Log("error", fmt.Sprintf("cast to *RequestsTracer failed for ip=%s", ip))
+			logz.Log("error", fmt.Sprintf("cast to *RequestsTracer failed for ip=%s", ip))
 			return nil
 		}
 
@@ -132,7 +131,7 @@ func newRequestsTracer(g ci.IGoBE, ip, port, endpoint, method, userAgent, filePa
 		if tracer.Count > tracer.requestLimit {
 			tracer.Valid = false
 			tracer.Error = fmt.Errorf("request limit exceeded for IP %s: %d>%d", ip, tracer.Count, tracer.requestLimit)
-			gl.Log("info", tracer.Error.Error())
+			logz.Log("info", tracer.Error.Error())
 		} else {
 			tracer.Valid = true
 			tracer.Error = nil
@@ -213,7 +212,7 @@ func (r *RequestsTracer) SetFilePath(filePath string) {
 func (r *RequestsTracer) GetMapper() ci.IMapper[ci.IRequestsTracer] { return r.Mapper }
 func (r *RequestsTracer) SetMapper(mapper ci.IMapper[ci.IRequestsTracer]) {
 	if mapper == nil {
-		gl.Log("error", "Mapper cannot be nil")
+		logz.Log("error", "Mapper cannot be nil")
 		return
 	}
 	r.Mapper = mapper
@@ -221,7 +220,7 @@ func (r *RequestsTracer) SetMapper(mapper ci.IMapper[ci.IRequestsTracer]) {
 func (r *RequestsTracer) GetRequestWindow() time.Duration { return r.requestWindow }
 func (r *RequestsTracer) SetRequestWindow(window time.Duration) {
 	if window <= 0 {
-		gl.Log("error", "Request window cannot be <= 0")
+		logz.Log("error", "Request window cannot be <= 0")
 		return
 	}
 	r.requestWindow = window
@@ -229,7 +228,7 @@ func (r *RequestsTracer) SetRequestWindow(window time.Duration) {
 func (r *RequestsTracer) GetRequestLimit() int { return r.requestLimit }
 func (r *RequestsTracer) SetRequestLimit(limit int) {
 	if limit <= 0 {
-		gl.Log("error", "Request limit cannot be <= 0")
+		logz.Log("error", "Request limit cannot be <= 0")
 		return
 	}
 	r.requestLimit = limit
@@ -266,7 +265,7 @@ func LoadRequestsTracerFromFile(g ci.IGoBE) (ci.IRequestTracers, error) {
 		}
 		var rt RequestsTracer
 		if err := json.Unmarshal([]byte(line), &rt); err != nil {
-			gl.Log("warn", fmt.Sprintf("invalid line (ignored): %v", err))
+			logz.Log("warn", fmt.Sprintf("invalid line (ignored): %v", err))
 			continue
 		}
 		reg.mu.Lock()
@@ -278,7 +277,7 @@ func LoadRequestsTracerFromFile(g ci.IGoBE) (ci.IRequestTracers, error) {
 		return nil, err
 	}
 
-	gl.Log("info", fmt.Sprintf("Loaded %d request tracers", loaded))
+	logz.Log("info", fmt.Sprintf("Loaded %d request tracers", loaded))
 	return reg, nil
 }
 
@@ -349,11 +348,11 @@ func updateRequestTracer(g ci.IGoBE, updatedTracer ci.IRequestsTracer) error {
 	return nil
 }
 
-func isDuplicateRequest(g ci.IGoBE, rt ci.IRequestsTracer, logger l.Logger) bool {
+func isDuplicateRequest(g ci.IGoBE, rt ci.IRequestsTracer, logger *logz.LoggerZ) bool {
 	path := defaultFileIfEmpty(rt.GetFilePath())
 	f, err := os.Open(path)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("open file: %v", err))
+		logz.Log("error", fmt.Sprintf("open file: %v", err))
 		return false
 	}
 	defer f.Close()
@@ -452,14 +451,14 @@ func (r *RequestTracers) RequestsTracerMiddleware() gin.HandlerFunc {
 		// filePath := r.gobe.GetLogFilePath()
 		//
 		// if ip == "" || endpoint == "" || method == "" || userAgent == "" {
-		// 	gl.Log("error", "invalid request data for RequestTracerMiddleware")
+		// 	logz.Log("error", "invalid request data for RequestTracerMiddleware")
 		// 	c.Next()
 		// 	return
 		// }
 		//
 		// tracer := NewRequestsTracerType(r.gobe, ip, port, endpoint, method, userAgent, filePath)
-		// if isDuplicateRequest(r.gobe, tracer, logger.GetLogger[*RequestsTracer](nil).GetLogger()) {
-		// 	gl.Log("info", fmt.Sprintf("duplicate request detected ip=%s port=%s", ip, port))
+		// if isDuplicateRequest(r.gobe, tracer, logger.GetLogger[*RequestsTracer](nil).GetLoggerZ(")) {
+		// 	logz.Log("info", fmt.Sprintf("duplicate request detected ip=%s port=%s", ip, port))
 		// 	c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{"error": "Too many requests"})
 		// 	return
 		// }
@@ -468,7 +467,7 @@ func (r *RequestTracers) RequestsTracerMiddleware() gin.HandlerFunc {
 		// c.Next()
 		//
 		// if err := updateRequestTracer(r.gobe, tracer); err != nil {
-		// 	gl.Log("error", fmt.Sprintf("update tracer: %v", err))
+		// 	logz.Log("error", fmt.Sprintf("update tracer: %v", err))
 		// }
 
 		c.Next()

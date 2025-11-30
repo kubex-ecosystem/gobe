@@ -6,7 +6,7 @@ import (
 
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +24,7 @@ func CertificatesCmdList() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
 			if err != nil {
-				gl.Log("error", fmt.Sprintf("Error displaying help: %v", err))
+				logz.Log("error", fmt.Sprintf("Error displaying help: %v", err))
 				return
 			}
 		},
@@ -54,9 +54,9 @@ func generateCommand() *cobra.Command {
 			crtS := crt.NewCertService(keyPath, certFilePath)
 			_, _, err := crtS.GenerateCertificate(certFilePath, keyPath, []byte(certPass))
 			if err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error generating certificate: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error generating certificate: %v", err))
 			}
-			gl.Log("success", "Certificate generated successfully")
+			logz.Log("success", "Certificate generated successfully")
 		},
 	}
 
@@ -84,9 +84,9 @@ func verifyCert() *cobra.Command {
 			crtS := crt.NewCertService(keyPath, certFilePath)
 			err := crtS.VerifyCert()
 			if err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error verifying certificate: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error verifying certificate: %v", err))
 			}
-			gl.Log("success", "Certificate verified successfully")
+			logz.Log("success", "Certificate verified successfully")
 		},
 	}
 
@@ -120,22 +120,22 @@ func generateRandomKey() *cobra.Command {
 				bts, btsErr = crtS.GenerateKey()
 			}
 			if btsErr != nil {
-				gl.Log("fatal", fmt.Sprintf("Error generating random key: %v", btsErr))
+				logz.Log("fatal", fmt.Sprintf("Error generating random key: %v", btsErr))
 			}
 			key := string(bts)
 			if keyPath != "" {
 				// File cannot exist, because this method will truncate the file
 				if f, err := os.Stat(keyPath); f != nil && !os.IsNotExist(err) {
-					gl.Log("error", fmt.Sprintf("File already exists: %s", keyPath))
+					logz.Log("error", fmt.Sprintf("File already exists: %s", keyPath))
 					return
 				}
 				writeErr := os.WriteFile(keyPath, bts, 0644)
 				if writeErr != nil {
-					gl.Log("fatal", fmt.Sprintf("Error writing random key to file: %v", writeErr))
+					logz.Log("fatal", fmt.Sprintf("Error writing random key to file: %v", writeErr))
 					return
 				}
 			}
-			gl.Log("success", fmt.Sprintf("Random key generated successfully: %s", key))
+			logz.Log("success", fmt.Sprintf("Random key generated successfully: %s", key))
 		},
 	}
 

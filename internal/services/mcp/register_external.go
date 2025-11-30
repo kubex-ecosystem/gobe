@@ -11,7 +11,7 @@ import (
 	"net/http"
 	"time"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // ExternalToolsConfig holds configuration for external Kubex ecosystem tools
@@ -33,7 +33,7 @@ func DefaultExternalConfig() ExternalToolsConfig {
 // RegisterExternalTools registers all external Kubex ecosystem tools
 func RegisterExternalTools(registry Registry, config ExternalToolsConfig) error {
 	if registry == nil {
-		gl.Log("error", "Registry is nil, cannot register external tools")
+		logz.Log("error", "Registry is nil, cannot register external tools")
 		return fmt.Errorf("registry cannot be nil")
 	}
 
@@ -50,17 +50,17 @@ func RegisterExternalTools(registry Registry, config ExternalToolsConfig) error 
 
 	// Register Grompt tools
 	if err := registerGromptTools(registry, config); err != nil {
-		gl.Log("error", "Failed to register Grompt tools", err)
+		logz.Log("error", "Failed to register Grompt tools", err)
 		return fmt.Errorf("failed to register Grompt tools: %w", err)
 	}
 
 	// Register Analyzer tools
 	if err := registerAnalyzerTools(registry, config); err != nil {
-		gl.Log("error", "Failed to register Analyzer tools", err)
+		logz.Log("error", "Failed to register Analyzer tools", err)
 		return fmt.Errorf("failed to register Analyzer tools: %w", err)
 	}
 
-	gl.Log("info", "External MCP tools registered successfully")
+	logz.Log("info", "External MCP tools registered successfully")
 	return nil
 }
 
@@ -151,7 +151,7 @@ func registerGromptTools(registry Registry, config ExternalToolsConfig) error {
 		return fmt.Errorf("failed to register grompt.direct: %w", err)
 	}
 
-	gl.Log("info", "Grompt tools registered successfully")
+	logz.Log("info", "Grompt tools registered successfully")
 	return nil
 }
 
@@ -212,14 +212,14 @@ func registerAnalyzerTools(registry Registry, config ExternalToolsConfig) error 
 		return fmt.Errorf("failed to register analyzer.security: %w", err)
 	}
 
-	gl.Log("info", "Analyzer tools registered successfully")
+	logz.Log("info", "Analyzer tools registered successfully")
 	return nil
 }
 
 // createGromptGenerateHandler creates handler for grompt.generate tool
 func createGromptGenerateHandler(config ExternalToolsConfig) ToolHandler {
 	return func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-		gl.Log("info", "Executing grompt.generate tool")
+		logz.Log("info", "Executing grompt.generate tool")
 
 		// Extract and validate ideas
 		ideasInterface, ok := args["ideas"]
@@ -273,7 +273,7 @@ func createGromptGenerateHandler(config ExternalToolsConfig) ToolHandler {
 		// Call Grompt API
 		result, err := callGromptAPI(ctx, config, "/api/unified", payload, apiKey)
 		if err != nil {
-			gl.Log("error", "Grompt API call failed", err)
+			logz.Log("error", "Grompt API call failed", err)
 			return map[string]interface{}{
 				"status":  "error",
 				"message": fmt.Sprintf("Failed to generate prompt: %v", err),
@@ -287,7 +287,7 @@ func createGromptGenerateHandler(config ExternalToolsConfig) ToolHandler {
 // createGromptDirectHandler creates handler for grompt.direct tool
 func createGromptDirectHandler(config ExternalToolsConfig) ToolHandler {
 	return func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-		gl.Log("info", "Executing grompt.direct tool")
+		logz.Log("info", "Executing grompt.direct tool")
 
 		// Extract prompt
 		prompt, ok := args["prompt"].(string)
@@ -315,7 +315,7 @@ func createGromptDirectHandler(config ExternalToolsConfig) ToolHandler {
 		// Call Grompt API
 		result, err := callGromptAPI(ctx, config, "/api/unified", payload, apiKey)
 		if err != nil {
-			gl.Log("error", "Grompt API call failed", err)
+			logz.Log("error", "Grompt API call failed", err)
 			return map[string]interface{}{
 				"status":  "error",
 				"message": fmt.Sprintf("Failed to execute prompt: %v", err),
@@ -329,7 +329,7 @@ func createGromptDirectHandler(config ExternalToolsConfig) ToolHandler {
 // createAnalyzerProjectHandler creates handler for analyzer.project tool
 func createAnalyzerProjectHandler(config ExternalToolsConfig) ToolHandler {
 	return func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-		gl.Log("info", "Executing analyzer.project tool")
+		logz.Log("info", "Executing analyzer.project tool")
 
 		// Extract project_path
 		projectPath, ok := args["project_path"].(string)
@@ -351,7 +351,7 @@ func createAnalyzerProjectHandler(config ExternalToolsConfig) ToolHandler {
 		// Call Analyzer API
 		result, err := callAnalyzerAPI(ctx, config, "/api/analyze/project", payload)
 		if err != nil {
-			gl.Log("error", "Analyzer API call failed", err)
+			logz.Log("error", "Analyzer API call failed", err)
 			return map[string]interface{}{
 				"status":  "error",
 				"message": fmt.Sprintf("Failed to analyze project: %v", err),
@@ -365,7 +365,7 @@ func createAnalyzerProjectHandler(config ExternalToolsConfig) ToolHandler {
 // createAnalyzerSecurityHandler creates handler for analyzer.security tool
 func createAnalyzerSecurityHandler(config ExternalToolsConfig) ToolHandler {
 	return func(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-		gl.Log("info", "Executing analyzer.security tool")
+		logz.Log("info", "Executing analyzer.security tool")
 
 		// Extract project_path
 		projectPath, ok := args["project_path"].(string)
@@ -385,7 +385,7 @@ func createAnalyzerSecurityHandler(config ExternalToolsConfig) ToolHandler {
 		// Call Analyzer API
 		result, err := callAnalyzerAPI(ctx, config, "/api/analyze/security", payload)
 		if err != nil {
-			gl.Log("error", "Analyzer API call failed", err)
+			logz.Log("error", "Analyzer API call failed", err)
 			return map[string]interface{}{
 				"status":  "error",
 				"message": fmt.Sprintf("Failed to perform security analysis: %v", err),
@@ -417,7 +417,7 @@ func callGromptAPI(ctx context.Context, config ExternalToolsConfig, endpoint str
 	// BYOK Support: Add API key if provided
 	if apiKey != "" {
 		req.Header.Set("X-API-Key", apiKey)
-		gl.Log("debug", "Using external API key (BYOK) for Grompt request")
+		logz.Log("debug", "Using external API key (BYOK) for Grompt request")
 	}
 
 	// Create HTTP client with timeout

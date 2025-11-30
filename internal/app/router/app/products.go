@@ -12,8 +12,7 @@ import (
 	products_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/products"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type ProductRoutes struct {
@@ -22,20 +21,20 @@ type ProductRoutes struct {
 
 func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		l.ErrorCtx("Router is nil for ProductRoute", nil)
+		// l.ErrorCtx("Router is nil for ProductRoute", nil)
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	dbName := dbCfg.GetDBName()

@@ -10,7 +10,7 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	// svc "github.com/kubex-ecosystem/gdbase/factory"
 	sau "github.com/kubex-ecosystem/gobe/factory/security"
@@ -27,20 +27,20 @@ type OAuthRoutes struct {
 // NewOAuthRoutes creates and returns OAuth2/PKCE routes
 func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil for OAuthRoutes")
+		logz.Log("error", "Router is nil for OAuthRoutes")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	dbName := dbCfg.GetDBName()
@@ -69,7 +69,7 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	tokenClient := sau.NewTokenClient(certService, dbService)
 	tokenService, _, _, err := tokenClient.LoadTokenCfg()
 	if err != nil {
-		gl.Log("error", "Failed to load token config for OAuthRoutes", err)
+		logz.Log("error", "Failed to load token config for OAuthRoutes", err)
 		return nil
 	}
 
@@ -123,6 +123,6 @@ func NewOAuthRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		nil,
 	)
 
-	gl.Log("info", "OAuth routes registered successfully")
+	logz.Log("info", "OAuth routes registered successfully")
 	return routesMap
 }

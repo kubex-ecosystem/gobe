@@ -14,7 +14,7 @@ import (
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // WebAuthConfig holds configuration for web authentication
@@ -50,37 +50,37 @@ func NewWebAuthMiddleware(config WebAuthConfig) *WebAuthMiddleware {
 	if certService != nil {
 		privKey, err := certService.GetPrivateKey() // pragma: allowlist secret
 		if err != nil {
-			gl.Log("error", "Failed to load RSA private key for web auth", "error", err)
+			logz.Log("error", "Failed to load RSA private key for web auth", "error", err)
 		} else {
 			middleware.privateKey = privKey // pragma: allowlist secret
 		}
 
 		pubKey, err := certService.GetPublicKey() // pragma: allowlist secret
 		if err != nil {
-			gl.Log("error", "Failed to load RSA public key for web auth", "error", err)
+			logz.Log("error", "Failed to load RSA public key for web auth", "error", err)
 		} else {
 			middleware.publicKey = pubKey
 		}
 	} else {
-		gl.Log("warn", "Certificate service not configured for web auth; falling back to HMAC secret")
+		logz.Log("warn", "Certificate service not configured for web auth; falling back to HMAC secret")
 	}
 
 	if middleware.privateKey != nil && middleware.publicKey != nil { // pragma: allowlist secret
-		gl.Log("info", "Web auth middleware configured to validate JWT using RSA keys")
+		logz.Log("info", "Web auth middleware configured to validate JWT using RSA keys")
 	} else {
 		if config.JWTSecret == "" {
 			keyringSecret, err := crt.GetOrGenPasswordKeyringPass("jwt_secret") // pragma: allowlist secret
 			if err != nil {
 				config.JWTSecret = "gobe-default-secret-change-in-production" // pragma: allowlist secret
-				gl.Log("warn", "Using default JWT secret fallback - RSA keys unavailable", "error", err)
+				logz.Log("warn", "Using default JWT secret fallback - RSA keys unavailable", "error", err)
 			} else {
-				config.JWTSecret = keyringSecret                                                     // pragma: allowlist secret
-				gl.Log("info", "Web auth middleware using keyring-managed secret for HMAC fallback") // pragma: allowlist secret
+				config.JWTSecret = keyringSecret                                                       // pragma: allowlist secret
+				logz.Log("info", "Web auth middleware using keyring-managed secret for HMAC fallback") // pragma: allowlist secret
 			}
 		}
 
 		if config.JWTSecret == "gobe-default-secret-change-in-production" { // pragma: allowlist secret
-			gl.Log("warn", "Default JWT secret is active; configure RSA certificates or custom secret for production")
+			logz.Log("warn", "Default JWT secret is active; configure RSA certificates or custom secret for production")
 		}
 	}
 
@@ -110,7 +110,7 @@ func (m *WebAuthMiddleware) RequireAuth() gin.HandlerFunc {
 		// Validate token
 		claims, err := m.validateToken(token)
 		if err != nil {
-			gl.Log("warn", "Invalid auth token", "error", err, "ip", c.ClientIP())
+			logz.Log("warn", "Invalid auth token", "error", err, "ip", c.ClientIP())
 			m.serveLoginPage(c)
 			c.Abort()
 			return
@@ -125,7 +125,7 @@ func (m *WebAuthMiddleware) RequireAuth() gin.HandlerFunc {
 		if !strings.HasPrefix(c.Request.URL.Path, "/health") &&
 			!strings.HasPrefix(c.Request.URL.Path, "/api/v1/health") &&
 			!strings.HasPrefix(c.Request.URL.Path, "/status") {
-			gl.Log("debug", "User authenticated", "user", claims["username"])
+			logz.Log("debug", "User authenticated", "user", claims["username"])
 		}
 
 		c.Next()

@@ -6,7 +6,7 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // IOAuthService defines the OAuth2/PKCE service interface
@@ -70,7 +70,7 @@ func (s *OAuthService) GenerateAuthorizationCode(
 		return "", fmt.Errorf("failed to generate authorization code: %w", err)
 	}
 
-	gl.Log("info", fmt.Sprintf("OAuth: generated authorization code for user %s, client %s", userID, clientID))
+	logz.Log("info", fmt.Sprintf("OAuth: generated authorization code for user %s, client %s", userID, clientID))
 	return authCode.GetCode(), nil
 }
 
@@ -111,7 +111,7 @@ func (s *OAuthService) ExchangeCodeForTokens(
 		return nil, fmt.Errorf("failed to generate tokens: %w", err)
 	}
 
-	gl.Log("info", fmt.Sprintf("OAuth: exchanged code for tokens for user %s", authCode.GetUserID()))
+	logz.Log("info", fmt.Sprintf("OAuth: exchanged code for tokens for user %s", authCode.GetUserID()))
 	return tokenPair, nil
 }
 

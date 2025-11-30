@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,7 @@ checking health, and retrying failed events.`
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+				logz.Log("error", fmt.Sprintf("Failed to display help: %v", err))
 			}
 		},
 	}
@@ -58,7 +58,7 @@ func webhookListCmd() *cobra.Command {
 		Aliases:     []string{"ls", "events", "show"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Listing webhook events...")
+			logz.Log("info", "Listing webhook events...")
 
 			baseURL := getWebhookBaseURL()
 			url := fmt.Sprintf("%s/v1/webhooks/events?page=%d&limit=%d", baseURL, webhookPage, webhookLimit)
@@ -113,7 +113,7 @@ func webhookHealthCmd() *cobra.Command {
 		Aliases:     []string{"status", "check", "ping"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Checking webhook system health...")
+			logz.Log("info", "Checking webhook system health...")
 
 			baseURL := getWebhookBaseURL()
 			url := fmt.Sprintf("%s/v1/webhooks/health", baseURL)
@@ -167,7 +167,7 @@ func webhookEventCmd() *cobra.Command {
 		Args:        cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			eventID := args[0]
-			gl.Log("info", fmt.Sprintf("Getting webhook event details: %s", eventID))
+			logz.Log("info", fmt.Sprintf("Getting webhook event details: %s", eventID))
 
 			baseURL := getWebhookBaseURL()
 			url := fmt.Sprintf("%s/v1/webhooks/events/%s", baseURL, eventID)
@@ -226,7 +226,7 @@ func webhookRetryCmd() *cobra.Command {
 		Args:        cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			eventID := args[0]
-			gl.Log("info", fmt.Sprintf("Retrying webhook event: %s", eventID))
+			logz.Log("info", fmt.Sprintf("Retrying webhook event: %s", eventID))
 
 			baseURL := getWebhookBaseURL()
 			url := fmt.Sprintf("%s/v1/webhooks/retry", baseURL)

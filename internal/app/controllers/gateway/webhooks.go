@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	webhooks "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // WebhookController proxies webhook notifications into the GoBE event bus.
@@ -69,7 +69,7 @@ func (wc *WebhookController) Handle(c *gin.Context) {
 	if wc.webhookService != nil {
 		event, err := wc.webhookService.ReceiveWebhook(source, eventType, payload, headers)
 		if err != nil {
-			gl.Log("error", "Failed to process webhook", err)
+			logz.Log("error", "Failed to process webhook", err)
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to process webhook"})
 			return
 		}
@@ -159,7 +159,7 @@ func (wc *WebhookController) ListEvents(c *gin.Context) {
 
 	events, total, err := wc.webhookService.ListWebhookEvents(limit, offset, source)
 	if err != nil {
-		gl.Log("error", "Failed to list webhook events", err)
+		logz.Log("error", "Failed to list webhook events", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to list events"})
 		return
 	}
@@ -230,7 +230,7 @@ func (wc *WebhookController) RetryFailedEvents(c *gin.Context) {
 
 	retried, err := wc.webhookService.RetryFailedWebhooks()
 	if err != nil {
-		gl.Log("error", "Failed to retry webhook events", err)
+		logz.Log("error", "Failed to retry webhook events", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to retry events"})
 		return
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // NewServerRoutes cria rotas básicas de gestão da aplicação.
@@ -24,7 +24,7 @@ func NewServerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)
-	middlewaresMap["logging"] = middlewares.Logger(l.GetLogger("GoBE-ServerRoutes"))
+	middlewaresMap["logging"] = middlewares.Logger(logz.GetLoggerZ("GoBE-ServerRoutes"))
 	middlewaresMap["rateLimit"] = middlewares.RateLimiter(5, 10)
 	middlewaresMap["sanitize"] = middlewares.ValidateAndSanitize()
 

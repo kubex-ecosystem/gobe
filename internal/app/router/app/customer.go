@@ -10,7 +10,7 @@ package app
 // 	customers_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/customers"
 // 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 // 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-// 	gl "github.com/kubex-ecosystem/logz/logger"
+// 	gl "github.com/kubex-ecosystem/logz"
 // )
 
 // type CustomerRoutes struct {
@@ -31,20 +31,20 @@ package app
 
 // func NewCustomerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 // 	if rtr == nil {
-// 		gl.Log("error", "Router is nil for CustomerRoute")
+// 		logz.Log("error", "Router is nil for CustomerRoute")
 // 		return nil
 // 	}
 // 	rtl := *rtr
 
 // 	dbService := rtl.GetDatabaseService()
 // 	if dbService == nil {
-// 		gl.Log("error", "Database service is nil for OAuthRoutes")
+// 		logz.Log("error", "Database service is nil for OAuthRoutes")
 // 		return nil
 // 	}
 // 	ctx := context.Background()
 // 	dbCfg := dbService.GetConfig(ctx)
 // 	if dbCfg == nil {
-// 		gl.Log("error", "Database config is nil for OAuthRoutes")
+// 		logz.Log("error", "Database config is nil for OAuthRoutes")
 // 		return nil
 // 	}
 // 	dbName := dbCfg.GetDBName()
@@ -72,7 +72,7 @@ package app
 // 		return nil
 // 	}
 // 	return func(c *gin.Context) {
-// 		gl.Log("info", "Sending Dummy PlaceHolder context to data Channel")
+// 		logz.Log("info", "Sending Dummy PlaceHolder context to data Channel")
 // 		c.JSON(http.StatusOK, gin.H{"message": "Dummy PlaceHolder"})
 // 	}
 // }

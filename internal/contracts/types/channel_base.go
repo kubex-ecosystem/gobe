@@ -5,32 +5,31 @@ import (
 	"reflect"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
 )
 
 // ChannelBase is a struct that holds the base properties for a channel.
 type ChannelBase[T any] struct {
-	l.Logger              // Logger for this ChannelBase instance
-	*Mutexes              // Mutexes for this Channel instance
-	Name     string       // The name of the channel.
-	Channel  any          // The channel for the value. Main channel for this struct.
-	Type     reflect.Type // The type of the channel.
-	Buffers  int          // The number of buffers for the channel.
-	Shared   interface{}  // Shared data for many purposes
+	*logz.LoggerZ              // Logger for this ChannelBase instance
+	*Mutexes                   // Mutexes for this Channel instance
+	Name          string       // The name of the channel.
+	Channel       any          // The channel for the value. Main channel for this struct.
+	Type          reflect.Type // The type of the channel.
+	Buffers       int          // The number of buffers for the channel.
+	Shared        interface{}  // Shared data for many purposes
 }
 
 // NewChannelBase creates a new ChannelBase instance with the provided name and type.
-func NewChannelBase[T any](name string, buffers int, logger l.Logger) ci.IChannelBase[any] {
+func NewChannelBase[T any](name string, buffers int, logger *logz.LoggerZ) ci.IChannelBase[any] {
 	if logger == nil {
-		logger = l.GetLogger("GoLife")
+		logger = logz.GetLoggerZ("GoLife")
 	}
 	mu := NewMutexesType()
 	if buffers <= 0 {
 		buffers = lgBuf
 	}
 	return &ChannelBase[any]{
-		Logger:  logger,
+		LoggerZ: logger,
 		Mutexes: mu,
 		Name:    name,
 		Channel: make(chan T, buffers),
@@ -97,7 +96,7 @@ func (cb *ChannelBase[T]) Close() error {
 	cb.MuLock()
 	defer cb.MuUnlock()
 	if cb.Channel != nil {
-		gl.Log("info", "Closing channel for:", cb.Name)
+		logz.Log("info", "Closing channel for:", cb.Name)
 
 		ch := reflect.ValueOf(cb.Channel)
 		if ch.Kind() == reflect.Chan {
@@ -112,7 +111,7 @@ func (cb *ChannelBase[T]) Clear() error {
 	cb.MuLock()
 	defer cb.MuUnlock()
 	if cb.Channel != nil {
-		gl.Log("info", "Clearing channel for:", cb.Name)
+		logz.Log("info", "Clearing channel for:", cb.Name)
 		close(cb.Channel.(chan T))
 		cb.Channel = make(chan T, cb.Buffers)
 	}

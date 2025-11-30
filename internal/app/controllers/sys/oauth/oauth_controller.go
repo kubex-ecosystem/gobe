@@ -12,7 +12,7 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/oauth"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // OAuthController handles OAuth2/PKCE endpoints
@@ -30,7 +30,7 @@ func NewOAuthController(dbService svc.DBService, oauthService oauth.IOAuthServic
 		}
 	}
 	if oauthService == nil {
-		gl.Log("error", "OAuthService is nil in NewOAuthController")
+		logz.Log("error", "OAuthService is nil in NewOAuthController")
 		return nil
 	}
 
@@ -107,7 +107,7 @@ func (c *OAuthController) Authorize(ctx *gin.Context) {
 		scope,
 	)
 	if err != nil {
-		gl.Log("error", "OAuth Authorize error: "+err.Error())
+		logz.Log("error", "OAuth Authorize error: "+err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error":             "server_error",
 			"error_description": err.Error(),
@@ -171,7 +171,7 @@ func (c *OAuthController) Token(ctx *gin.Context) {
 	// Exchange code for tokens
 	tokenPair, err := c.oauthService.ExchangeCodeForTokens(ctx, code, codeVerifier, clientID)
 	if err != nil {
-		gl.Log("error", "OAuth Token error: "+err.Error())
+		logz.Log("error", "OAuth Token error: "+err.Error())
 
 		// Determine error type
 		if strings.Contains(err.Error(), "invalid") || strings.Contains(err.Error(), "expired") {
@@ -226,13 +226,13 @@ func (c *OAuthController) RegisterClient(ctx *gin.Context) {
 
 	dbService := c.dbService
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
@@ -252,7 +252,7 @@ func (c *OAuthController) RegisterClient(ctx *gin.Context) {
 	// Save to database
 	created, err := clientService.CreateClient(client)
 	if err != nil {
-		gl.Log("error", "Failed to register client: "+err.Error())
+		logz.Log("error", "Failed to register client: "+err.Error())
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

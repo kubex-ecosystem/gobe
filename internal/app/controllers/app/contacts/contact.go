@@ -9,7 +9,7 @@ import (
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type SMTPConfig struct {
@@ -59,7 +59,7 @@ func (c *ContactController) HandleContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
-		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
 
@@ -69,18 +69,18 @@ func (c *ContactController) HandleContact(ctx *gin.Context) {
 
 	if form.Token != secretToken {
 		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
-		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
+		logz.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
-		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
-	gl.Log("success", "Message sent successfully!")
+	logz.Log("success", "Message sent successfully!")
 }
 
 // GetContact retorna o status do fluxo de contato validando o token informado.
@@ -102,7 +102,7 @@ func (c *ContactController) GetContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
-		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
 
@@ -112,18 +112,18 @@ func (c *ContactController) GetContact(ctx *gin.Context) {
 
 	if form.Token != secretToken {
 		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
-		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
+		logz.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
-		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
-	gl.Log("success", "Message sent successfully!")
+	logz.Log("success", "Message sent successfully!")
 }
 
 // PostContact cria um novo contato seguindo as mesmas validações do fluxo padrão.
@@ -145,7 +145,7 @@ func (c *ContactController) PostContact(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
-		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
 
@@ -155,18 +155,18 @@ func (c *ContactController) PostContact(ctx *gin.Context) {
 
 	if form.Token != secretToken {
 		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
-		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
+		logz.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
-		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
-	gl.Log("success", "Message sent successfully!")
+	logz.Log("success", "Message sent successfully!")
 }
 
 // GetContactForm retorna dados enviados em versões anteriores do formulário.
@@ -188,7 +188,7 @@ func (c *ContactController) GetContactForm(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
-		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
 
@@ -198,18 +198,18 @@ func (c *ContactController) GetContactForm(ctx *gin.Context) {
 
 	if form.Token != secretToken {
 		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
-		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
+		logz.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
-		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
-	gl.Log("success", "Message sent successfully!")
+	logz.Log("success", "Message sent successfully!")
 }
 
 // GetContactFormByID busca um formulário específico pelo identificador.
@@ -233,7 +233,7 @@ func (c *ContactController) GetContactFormByID(ctx *gin.Context) {
 	var form t.ContactForm
 	if err := ctx.ShouldBindJSON(&form); err != nil {
 		ctx.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "error processing data"})
-		gl.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error processing data: %v", err.Error()))
 		return
 	}
 
@@ -243,16 +243,16 @@ func (c *ContactController) GetContactFormByID(ctx *gin.Context) {
 
 	if form.Token != secretToken {
 		ctx.JSON(http.StatusForbidden, ErrorResponse{Status: "error", Message: "invalid token"})
-		gl.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
+		logz.Log("warn", fmt.Sprintf("Invalid token: %s", form.Token))
 		return
 	}
 
 	if err := sendEmailWithRetry(c, form, 2); err != nil {
 		ctx.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "error sending email"})
-		gl.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
+		logz.Log("debug", fmt.Sprintf("Error sending email: %v", err.Error()))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, MessageResponse{Status: "ok", Message: "Message sent successfully!"})
-	gl.Log("success", "Message sent successfully!")
+	logz.Log("success", "Message sent successfully!")
 }

@@ -14,8 +14,7 @@ import (
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -26,7 +25,7 @@ type WebhookRoutes struct {
 
 func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 	if rtr == nil {
-		l.ErrorCtx("Router is nil for WebhookRoutes", nil)
+		// l.ErrorCtx("Router is nil for WebhookRoutes", nil)
 		return nil
 	}
 	rtl := *rtr
@@ -34,7 +33,7 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 	// Obtenha o dbService já configurado no router
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for WebhookRoutes")
+		logz.Log("error", "Database service is nil for WebhookRoutes")
 		return nil
 	}
 
@@ -45,24 +44,24 @@ func NewWebhookRoutes(rtr *ci.IRouter) map[string]ci.IRoute {
 	// Configuração do RabbitMQ
 	dbService = rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for RabbitMQ configuration")
+		logz.Log("error", "Database service is nil for RabbitMQ configuration")
 		return nil
 	}
 	url := msg.GetRabbitMQURL(dbService)
-	gl.Log("debug", fmt.Sprintf("RabbitMQ URL: %s", url))
+	logz.Log("debug", fmt.Sprintf("RabbitMQ URL: %s", url))
 	var rabbitMQConn *amqp.Connection
 	var err error
 	if url != "" {
-		gl.Log("debug", fmt.Sprintf("Connecting to RabbitMQ at %s", url))
+		logz.Log("debug", fmt.Sprintf("Connecting to RabbitMQ at %s", url))
 		rabbitMQConn, err = amqp.Dial(url)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Connection failed: %v", err))
+			logz.Log("error", fmt.Sprintf("Connection failed: %v", err))
 			rabbitMQConn = nil // Continue sem RabbitMQ
 		}
 	}
 	// Configuração do RabbitMQ
 	if rabbitMQConn == nil {
-		gl.Log("error", "Failed to connect to RabbitMQ")
+		logz.Log("error", "Failed to connect to RabbitMQ")
 		rabbitMQConn = nil // Continue sem RabbitMQ
 	}
 

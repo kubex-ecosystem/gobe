@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // ProxyConfig holds configuration for web proxies
@@ -64,7 +64,7 @@ func NewWebProxyRouter(config ProxyConfig) (*WebProxyRouter, error) {
 	analyzerProxy.ErrorHandler = createErrorHandler("Analyzer")
 	gemxProxy.ErrorHandler = createErrorHandler("GemX")
 
-	gl.Log("info", "Web proxy router initialized",
+	logz.Log("info", "Web proxy router initialized",
 		"grompt", config.GromptURL,
 		"analyzer", config.AnalyzerURL,
 		"gemx", config.GemXURL)
@@ -91,12 +91,12 @@ func (w *WebProxyRouter) RegisterRoutes(router *gin.RouterGroup) {
 	router.Any("/gemx", w.handleGemXRoot)
 	router.Any("/gemx/*path", w.handleGemX)
 
-	gl.Log("info", "Web proxy routes registered: /web/grompt, /web/analyzer, /web/gemx")
+	logz.Log("info", "Web proxy routes registered: /web/grompt, /web/analyzer, /web/gemx")
 }
 
 // handleGromptRoot handles /web/grompt
 func (w *WebProxyRouter) handleGromptRoot(c *gin.Context) {
-	gl.Log("debug", "Proxying Grompt root", "path", c.Request.URL.Path)
+	logz.Log("debug", "Proxying Grompt root", "path", c.Request.URL.Path)
 
 	// Rewrite path
 	c.Request.URL.Path = "/"
@@ -112,7 +112,7 @@ func (w *WebProxyRouter) handleGromptRoot(c *gin.Context) {
 // handleGrompt handles /web/grompt/*
 func (w *WebProxyRouter) handleGrompt(c *gin.Context) {
 	path := c.Param("path")
-	gl.Log("debug", "Proxying Grompt", "path", path)
+	logz.Log("debug", "Proxying Grompt", "path", path)
 
 	// Rewrite path: /web/grompt/api/config → /api/config
 	c.Request.URL.Path = path
@@ -127,7 +127,7 @@ func (w *WebProxyRouter) handleGrompt(c *gin.Context) {
 
 // handleAnalyzerRoot handles /web/analyzer
 func (w *WebProxyRouter) handleAnalyzerRoot(c *gin.Context) {
-	gl.Log("debug", "Proxying Analyzer root", "path", c.Request.URL.Path)
+	logz.Log("debug", "Proxying Analyzer root", "path", c.Request.URL.Path)
 
 	c.Request.URL.Path = "/"
 	c.Request.Host = w.config.AnalyzerURL
@@ -139,7 +139,7 @@ func (w *WebProxyRouter) handleAnalyzerRoot(c *gin.Context) {
 // handleAnalyzer handles /web/analyzer/*
 func (w *WebProxyRouter) handleAnalyzer(c *gin.Context) {
 	path := c.Param("path")
-	gl.Log("debug", "Proxying Analyzer", "path", path)
+	logz.Log("debug", "Proxying Analyzer", "path", path)
 
 	c.Request.URL.Path = path
 	c.Request.Host = w.config.AnalyzerURL
@@ -150,7 +150,7 @@ func (w *WebProxyRouter) handleAnalyzer(c *gin.Context) {
 
 // handleGemXRoot handles /web/gemx
 func (w *WebProxyRouter) handleGemXRoot(c *gin.Context) {
-	gl.Log("debug", "Proxying GemX root", "path", c.Request.URL.Path)
+	logz.Log("debug", "Proxying GemX root", "path", c.Request.URL.Path)
 
 	c.Request.URL.Path = "/"
 	c.Request.Host = w.config.GemXURL
@@ -162,7 +162,7 @@ func (w *WebProxyRouter) handleGemXRoot(c *gin.Context) {
 // handleGemX handles /web/gemx/*
 func (w *WebProxyRouter) handleGemX(c *gin.Context) {
 	path := c.Param("path")
-	gl.Log("debug", "Proxying GemX", "path", path)
+	logz.Log("debug", "Proxying GemX", "path", path)
 
 	c.Request.URL.Path = path
 	c.Request.Host = w.config.GemXURL
@@ -194,7 +194,7 @@ func addProxyHeaders(c *gin.Context, service string) {
 // createErrorHandler creates a custom error handler for proxies
 func createErrorHandler(serviceName string) func(http.ResponseWriter, *http.Request, error) {
 	return func(w http.ResponseWriter, r *http.Request, err error) {
-		gl.Log("error", "Proxy error", "service", serviceName, "error", err, "path", r.URL.Path)
+		logz.Log("error", "Proxy error", "service", serviceName, "error", err, "path", r.URL.Path)
 
 		// Check if service is down
 		if strings.Contains(err.Error(), "connection refused") {

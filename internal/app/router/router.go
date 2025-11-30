@@ -12,11 +12,11 @@ import (
 	svc "github.com/kubex-ecosystem/gdbase/factory"
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
+	"github.com/kubex-ecosystem/logz"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+
 	"github.com/spf13/viper"
 	"golang.org/x/time/rate"
 
@@ -46,13 +46,13 @@ type Router struct {
 	*t.Mutexes
 	*RouterConfigImpl
 	InitArgs *kbx.InitArgs
-	Logger   l.Logger
+	Logger   *logz.LoggerZ
 }
 
 // NewRouterImpl initializes a new Router instance with the provided configuration.
-func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *kbx.InitArgs, logger l.Logger, debug bool) (*Router, error) {
+func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *kbx.InitArgs, logger *logz.LoggerZ, debug bool) (*Router, error) {
 	if logger == nil {
-		logger = l.GetLogger("GoBE")
+		logger = logz.GetLoggerZ("GoBE")
 	}
 
 	var dbService *svc.DBServiceImpl
@@ -96,7 +96,7 @@ func NewRouterImpl(serverConfig *t.GoBEConfig, databaseService svc.DBService, in
 }
 
 // NewRouter creates a new Router instance and returns it as an IRouter interface.
-func NewRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *kbx.InitArgs, logger l.Logger, debug bool) (ci.IRouter, error) {
+func NewRouter(serverConfig *t.GoBEConfig, databaseService svc.DBService, initArgs *kbx.InitArgs, logger *logz.LoggerZ, debug bool) (ci.IRouter, error) {
 	return NewRouterImpl(serverConfig, databaseService, initArgs, logger, debug)
 }
 
@@ -111,7 +111,7 @@ func (rtr *Router) GetDebug() bool {
 }
 
 // GetLogger returns the logger instance associated with the router.
-func (rtr *Router) GetLogger() l.Logger {
+func (rtr *Router) GetLogger() *logz.LoggerZ {
 	return rtr.Logger
 }
 
@@ -159,7 +159,7 @@ func (rtr *Router) InitializeResources() error {
 	// Ensure database is fully ready before initializing resources that depend on it
 	ctx := context.Background()
 	if rtr.DatabaseService != nil && !rtr.DatabaseService.IsReady(ctx) {
-		gl.Log("error", "❌ Database service is not ready - waiting for initialization")
+		logz.Log("error", "❌ Database service is not ready - waiting for initialization")
 		return fmt.Errorf("database service is not ready")
 	}
 
@@ -167,7 +167,7 @@ func (rtr *Router) InitializeResources() error {
 	if rtr.DatabaseService != nil {
 		tokenService, certService, err := mdw.NewTokenService(rtr.DatabaseService)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
+			logz.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
 			return err
 		}
 		autenticationMiddleware = &mdw.AuthenticationMiddleware{
@@ -176,7 +176,7 @@ func (rtr *Router) InitializeResources() error {
 		}
 
 	} else {
-		gl.Log("warn", "Database service not available, skipping authentication middleware setup")
+		logz.Log("warn", "Database service not available, skipping authentication middleware setup")
 	}
 
 	defaultMiddlewares := map[string]gin.HandlerFunc{
@@ -216,13 +216,13 @@ func (rtr *Router) InitializeResources() error {
 	fullBindAddress := net.JoinHostPort(rtr.Settings["bindingAddress"], rtr.Settings["port"])
 
 	if err := SecureServerInit(rtr.Engine, fullBindAddress); err != nil {
-		gl.Log("error", "Failed to initialize secure server: "+err.Error())
+		logz.Log("error", "Failed to initialize secure server: "+err.Error())
 		return err
 	}
-	gl.Log("debug", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
+	logz.Log("debug", fmt.Sprintf("Server security policies initialized at %s", fullBindAddress))
 
 	if err := web.SetupWebRoutes(rtr.Engine.Group(""), rtr.DatabaseService); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to setup web routes: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to setup web routes: %v", err))
 	}
 
 	for groupName, routeGroup := range GetDefaultRouteMap(rtr) {
@@ -232,7 +232,7 @@ func (rtr *Router) InitializeResources() error {
 			}
 		}
 	}
-	gl.Log("debug", fmt.Sprintf("Default routes registered: %d groups", len(rtr.RoutesKbx)))
+	logz.Log("debug", fmt.Sprintf("Default routes registered: %d groups", len(rtr.RoutesKbx)))
 
 	// TODO: Enable custom routes registration from config file or other source
 	// Custom routes need to be added programmatically as needed.
@@ -244,9 +244,9 @@ func (rtr *Router) InitializeResources() error {
 	// 			}
 	// 		}
 	// 	}
-	// 	gl.Log("debug", fmt.Sprintf("Custom routes registered: %d groups", len(rtr.RoutesKbx)))
+	// 	logz.Log("debug", fmt.Sprintf("Custom routes registered: %d groups", len(rtr.RoutesKbx)))
 	// } else {
-	// 	gl.Log("warn", "No custom routes to register")
+	// 	logz.Log("warn", "No custom routes to register")
 	// }
 
 	return nil
@@ -255,14 +255,14 @@ func (rtr *Router) InitializeResources() error {
 // Start starts the server with the configured settings.
 func (rtr *Router) Start() error {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 
 	fullBindAddress := net.JoinHostPort(rtr.Settings["bindingAddress"], rtr.Settings["port"])
 
 	if err := rtr.Engine.Run(fullBindAddress); err != nil {
-		gl.Log("error", "Failed to start server: "+err.Error())
+		logz.Log("error", "Failed to start server: "+err.Error())
 		return err
 	}
 	return nil
@@ -271,7 +271,7 @@ func (rtr *Router) Start() error {
 // Stop stops the server gracefully.
 func (rtr *Router) Stop() error {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 
@@ -283,7 +283,7 @@ func (rtr *Router) Stop() error {
 // SetProperty sets a property in the router's properties map.
 func (rtr *Router) SetProperty(key string, value any) {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return
 	}
 	if rtr.Properties == nil {
@@ -296,7 +296,7 @@ func (rtr *Router) SetProperty(key string, value any) {
 func (rtr *Router) GetProperty(key string) any {
 	if err := rtr.ValidateRouter(); err != nil {
 		// Log the error using the logger
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 	if rtr.Properties == nil {
@@ -319,7 +319,7 @@ func (rtr *Router) GetProperty(key string) any {
 func (rtr *Router) GetProperties() map[string]any {
 	if err := rtr.ValidateRouter(); err != nil {
 		// Log the error using the logger
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 
@@ -334,7 +334,7 @@ func (rtr *Router) GetProperties() map[string]any {
 // SetProperties sets multiple properties in the router's properties map.
 func (rtr *Router) SetProperties(properties map[string]any) {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return
 	}
 	if rtr.Properties == nil {
@@ -348,7 +348,7 @@ func (rtr *Router) SetProperties(properties map[string]any) {
 // GetRoutes returns all registered routes in the router.
 func (rtr *Router) GetRoutes() map[string]map[string]ci.IRoute {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 	if rtr.RoutesKbx == nil {
@@ -360,7 +360,7 @@ func (rtr *Router) GetRoutes() map[string]map[string]ci.IRoute {
 // GetMiddlewares returns all registered middlewares in the router.
 func (rtr *Router) GetMiddlewares() map[string]gin.HandlerFunc {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 	if rtr.Middlewares == nil {
@@ -372,7 +372,7 @@ func (rtr *Router) GetMiddlewares() map[string]gin.HandlerFunc {
 // RegisterMiddleware registers a middleware with the router.
 func (rtr *Router) RegisterMiddleware(name string, middleware gin.HandlerFunc, global bool) {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return
 	}
 	if rtr.Middlewares == nil {
@@ -382,10 +382,10 @@ func (rtr *Router) RegisterMiddleware(name string, middleware gin.HandlerFunc, g
 		rtr.Engine.Use(middleware)
 	} else {
 		if _, ok := rtr.Middlewares[name]; ok {
-			gl.Log("warn", fmt.Sprintf("Middleware %s already registered", name))
+			logz.Log("warn", fmt.Sprintf("Middleware %s already registered", name))
 		} else {
 			rtr.Middlewares[name] = middleware
-			gl.Log("debug", fmt.Sprintf("Middleware %s registered", name))
+			logz.Log("debug", fmt.Sprintf("Middleware %s registered", name))
 		}
 	}
 }
@@ -393,15 +393,15 @@ func (rtr *Router) RegisterMiddleware(name string, middleware gin.HandlerFunc, g
 // RegisterRoute registers a route with the router.
 func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, middlewares []string) {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return
 	}
 	if route == nil {
-		gl.Log("error", "Route is nil")
+		logz.Log("error", "Route is nil")
 		return
 	}
 	if groupName == "" {
-		gl.Log("error", "Group name is empty")
+		logz.Log("error", "Group name is empty")
 		return
 	}
 	if routeName == "" {
@@ -411,7 +411,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 		rtr.RoutesKbx[groupName] = make(map[string]ci.IRoute)
 	}
 	if _, ok := rtr.RoutesKbx[groupName][routeName]; ok {
-		gl.Log("warn", fmt.Sprintf("Route %s already registered in group %s", routeName, groupName))
+		logz.Log("warn", fmt.Sprintf("Route %s already registered in group %s", routeName, groupName))
 		return
 	}
 
@@ -423,7 +423,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 			if middleware, ok := rtr.Middlewares[middlewareName]; ok {
 				middlewaresStack = append(middlewaresStack, middleware)
 			} else {
-				gl.Log("warn", fmt.Sprintf("Middleware %s not found", middlewareName))
+				logz.Log("warn", fmt.Sprintf("Middleware %s not found", middlewareName))
 			}
 		}
 	}
@@ -433,7 +433,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 		if authMdw, ok := rtr.Middlewares["authentication"]; ok {
 			middlewaresStack = append(middlewaresStack, authMdw)
 		} else {
-			gl.Log("warn", "Global Authentication middleware not found")
+			logz.Log("warn", "Global Authentication middleware not found")
 		}
 	}
 
@@ -441,7 +441,7 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 		if validateMdw, ok := rtr.Middlewares["validateAndSanitize"]; ok {
 			middlewaresStack = append(middlewaresStack, validateMdw)
 		} else {
-			gl.Log("warn", "Global Validate and sanitize middleware not found")
+			logz.Log("warn", "Global Validate and sanitize middleware not found")
 		}
 	}
 
@@ -463,36 +463,36 @@ func (rtr *Router) RegisterRoute(groupName, routeName string, route ci.IRoute, m
 
 	rtr.RoutesKbx[groupName][routeName] = route
 
-	gl.Log("debug", fmt.Sprintf("Route registered: [%s] %s", route.Method(), route.Path()))
+	logz.Log("debug", fmt.Sprintf("Route registered: [%s] %s", route.Method(), route.Path()))
 }
 
 // StartServer starts the server and logs its status.
 func (rtr *Router) StartServer() {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return
 	}
 
 	if err := rtr.InitializeResources(); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to initialize resources: %s", err.Error()))
+		logz.Log("error", fmt.Sprintf("Failed to initialize resources: %s", err.Error()))
 		return
 	}
 
 	fullBindAddress := net.JoinHostPort(rtr.Settings["bindingAddress"], rtr.Settings["port"])
-	gl.Log("info", fmt.Sprintf("Starting server at %s", fullBindAddress))
+	logz.Log("info", fmt.Sprintf("Starting server at %s", fullBindAddress))
 
 	if err := rtr.Engine.Run(fullBindAddress); err != nil {
-		gl.Log("error", fmt.Sprintf("Server failed to start: %s", err.Error()))
+		logz.Log("error", fmt.Sprintf("Server failed to start: %s", err.Error()))
 		return
 	}
 
-	gl.Log("info", "Server started successfully")
+	logz.Log("info", "Server started successfully")
 }
 
 // ShutdownServerGracefully shuts down the server gracefully.
 func (rtr *Router) ShutdownServerGracefully() {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return
 	}
 
@@ -506,15 +506,15 @@ func (rtr *Router) ShutdownServerGracefully() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	gl.Log("debug", "Initiating graceful shutdown...")
+	logz.Log("debug", "Initiating graceful shutdown...")
 
 	// Perform graceful shutdown
 	if err := server.Shutdown(ctx); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to gracefully shutdown server: %s", err.Error()))
+		logz.Log("error", fmt.Sprintf("Failed to gracefully shutdown server: %s", err.Error()))
 		return
 	}
 
-	gl.Log("info", "Server shut down gracefully.")
+	logz.Log("info", "Server shut down gracefully.")
 
 	os.Exit(0)
 }
@@ -522,7 +522,7 @@ func (rtr *Router) ShutdownServerGracefully() {
 // MonitorServer monitors the server's health and logs its status periodically.
 func (rtr *Router) MonitorServer() {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return
 	}
 
@@ -533,7 +533,7 @@ func (rtr *Router) MonitorServer() {
 	go func() {
 		for range ticker.C {
 			connections := len(rtr.Engine.Routes())
-			gl.Log("debug", fmt.Sprintf("Server running at %s | Active connections: %d", rtr.GetBindingAddress(), connections))
+			logz.Log("debug", fmt.Sprintf("Server running at %s | Active connections: %d", rtr.GetBindingAddress(), connections))
 		}
 	}()
 }
@@ -555,11 +555,11 @@ func (rtr *Router) ValidateRouter() error {
 // DummyHandler returns a dummy handler function for testing purposes.
 func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 	return func(c *gin.Context) {
-		gl.Log("debug", "Dummy Placeholder")
+		logz.Log("debug", "Dummy Placeholder")
 
 		c.JSON(http.StatusOK, gin.H{"message": "Dummy Placeholder"})
 	}
@@ -567,7 +567,7 @@ func (rtr *Router) DummyHandler(_ chan interface{}) gin.HandlerFunc {
 
 func (rtr *Router) GetInitArgs() *kbx.InitArgs {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 	return rtr.InitArgs
@@ -575,7 +575,7 @@ func (rtr *Router) GetInitArgs() *kbx.InitArgs {
 
 func (rtr *Router) GetContext(c *gin.Context) context.Context {
 	if err := rtr.ValidateRouter(); err != nil {
-		gl.Log("error", err.Error())
+		logz.Log("error", err.Error())
 		return nil
 	}
 	return c.Request.Context()
@@ -650,7 +650,7 @@ func GetTrustedProxies() ([]string, error) {
 		}
 	}
 
-	gl.Log("notice", "Trusted Proxies: %v", trustedProxies)
+	logz.Log("notice", "Trusted Proxies: %v", trustedProxies)
 
 	return trustedProxies, nil
 }

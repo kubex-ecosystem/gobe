@@ -18,7 +18,7 @@ import (
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 	webhooksvc "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
 	messagery "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type GatewayRoutes struct {
@@ -27,14 +27,14 @@ type GatewayRoutes struct {
 
 func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil for GatewayRoutes")
+		logz.Log("error", "Router is nil for GatewayRoutes")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("warn", "Database service is nil for GatewayRoutes")
+		logz.Log("warn", "Database service is nil for GatewayRoutes")
 		return nil
 	}
 
@@ -44,7 +44,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	providersSvc := svc.NewProvidersService(svc.NewProvidersRepo(context.Background(), dbService.(*gdbasez.DBServiceImpl)))
 	gw, err := gatewaysvc.NewService(providersSvc)
 	if err != nil {
-		gl.Log("error", "failed to initialize gateway service", err)
+		logz.Log("error", "failed to initialize gateway service", err)
 	} else {
 		gatewayService = gw
 	}
@@ -149,13 +149,13 @@ func initializeAnalyzerHandler() http.Handler {
 		EnableCORS:      false,
 	})
 	if err != nil {
-		gl.Log("error", "Failed to initialize analyzer gateway server", err)
+		logz.Log("error", "Failed to initialize analyzer gateway server", err)
 		return nil
 	}
 
 	handler, err := server.Handler()
 	if err != nil {
-		gl.Log("error", "Failed to build analyzer gateway handler", err)
+		logz.Log("error", "Failed to build analyzer gateway handler", err)
 		return nil
 	}
 
@@ -176,6 +176,6 @@ func analyzerProvidersConfigPath() string {
 		}
 	}
 
-	gl.Log("warn", "Analyzer providers config not found; skip analyzer integration")
+	logz.Log("warn", "Analyzer providers config not found; skip analyzer integration")
 	return ""
 }

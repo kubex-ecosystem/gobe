@@ -11,7 +11,7 @@ import (
 	"time"
 	"unicode"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/viper"
 )
 
@@ -30,7 +30,7 @@ func ValidateWorkerLimit(value any) error {
 func generateProcessFileName(processName string, pid int) string {
 	bootID, err := GetBootID()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to get boot ID: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to get boot ID: %v", err))
 		return ""
 	}
 	return fmt.Sprintf("%s_%d_%s.pid", processName, pid, bootID)
@@ -63,9 +63,9 @@ func removeProcessFile(file *os.File) {
 
 	// Apagar o arquivo temporário
 	if err := os.Remove(fileName); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to remove process file %s: %v", fileName, err))
+		logz.Log("error", fmt.Sprintf("Failed to remove process file %s: %v", fileName, err))
 	} else {
-		gl.Log("debug", fmt.Sprintf("Successfully removed process file: %s", fileName))
+		logz.Log("debug", fmt.Sprintf("Successfully removed process file: %s", fileName))
 	}
 }
 
@@ -157,7 +157,7 @@ func GetDefaultConfigPath() (string, error) {
 	if strings.TrimSpace(configPath) == "" || configPath == "." {
 		configPath, err = os.UserHomeDir()
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Failed to get user home directory: %v", err))
+			logz.Log("error", fmt.Sprintf("Failed to get user home directory: %v", err))
 			return fallbackTempDir()
 		}
 		configPath = filepath.Join(configPath, ".kubex")
@@ -169,7 +169,7 @@ func GetDefaultConfigPath() (string, error) {
 	}
 
 	if err = os.MkdirAll(realPath, 0o755); err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to create directory %s: %v", realPath, err))
+		logz.Log("error", fmt.Sprintf("Failed to create directory %s: %v", realPath, err))
 		return fallbackTempDir()
 	}
 
@@ -180,9 +180,9 @@ func fallbackTempDir() (string, error) {
 	base := os.TempDir()
 	tmpDir, err := os.MkdirTemp(base, "kubex_gobe_")
 	if err != nil {
-		gl.Log("fatal", fmt.Sprintf("Failed to create temp dir for fallback: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Failed to create temp dir for fallback: %v", err))
 		return "", err
 	}
-	gl.Log("warn", fmt.Sprintf("Using temporary directory for config fallback: %s", tmpDir))
+	logz.Log("warn", fmt.Sprintf("Using temporary directory for config fallback: %s", tmpDir))
 	return tmpDir, nil
 }

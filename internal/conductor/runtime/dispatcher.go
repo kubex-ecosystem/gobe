@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	scheduler "github.com/kubex-ecosystem/gobe/internal/services/scheduler"
-	l "github.com/kubex-ecosystem/logz/api"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type State string
@@ -21,10 +21,14 @@ const (
 	StateFailed   State = "failed"
 )
 
-type Entry = l.LogzEntry
+type Entry = logz.Entry
 
-func NewEntry() Entry {
-	return l.NewLogEntry()
+func NewEntry(prefix string) Entry {
+	entry, err := logz.NewEntry("dispatcher")
+	if err != nil {
+		return nil
+	}
+	return entry
 }
 
 type Event struct {

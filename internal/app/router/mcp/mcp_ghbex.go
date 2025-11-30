@@ -7,7 +7,7 @@ package mcp
 // 	mcp_ghbex_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/ghbexz"
 // 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 // 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-// 	gl "github.com/kubex-ecosystem/logz/logger"
+// 	gl "github.com/kubex-ecosystem/logz"
 // )
 
 // type MCPGHbexRoutes struct {
@@ -16,19 +16,19 @@ package mcp
 
 // func NewMCPGHbexRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 // 	if rtr == nil {
-// 		gl.Log("error", "Router is nil, cannot create MCP GHbex routes")
+// 		logz.Log("error", "Router is nil, cannot create MCP GHbex routes")
 // 		return nil
 // 	}
 // 	rtl := *rtr
 
 // 	dbService := rtl.GetDatabaseService()
 // 	if dbService == nil {
-// 		gl.Log("error", "Database service is nil for MCP GHbex routes")
+// 		logz.Log("error", "Database service is nil for MCP GHbex routes")
 // 		return nil
 // 	}
 // 	dbGorm, err := dbService.GetDB(nil, gdbasez.DefaultDBName)
 // 	if err != nil {
-// 		gl.Log("error", "Failed to get DB from service", err)
+// 		logz.Log("error", "Failed to get DB from service", err)
 // 		return nil
 // 	}
 // 	mcpGHbexController := mcp_ghbex_controller.NewGHbexController(dbGorm)

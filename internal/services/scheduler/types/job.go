@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type Job interface {
@@ -55,17 +55,17 @@ func (j *JobImpl) GetUserID() uuid.UUID {
 	return j.userID
 }
 func (j *JobImpl) Run() error {
-	gl.Log("info", fmt.Sprintf("Running job: %s (ID: %d)", j.Name, j.ID))
+	logz.Log("info", fmt.Sprintf("Running job: %s (ID: %d)", j.Name, j.ID))
 	// Implement the logic to execute the command.
 	return nil
 }
 func (j *JobImpl) Retry() error {
-	gl.Log("info", fmt.Sprintf("Retrying job: %s (ID: %d)", j.Name, j.ID))
+	logz.Log("info", fmt.Sprintf("Retrying job: %s (ID: %d)", j.Name, j.ID))
 
 	return nil
 }
 func (j *JobImpl) Cancel() error {
-	gl.Log("info", fmt.Sprintf("Cancelling job: %s (ID: %d)", j.Name, j.ID))
+	logz.Log("info", fmt.Sprintf("Cancelling job: %s (ID: %d)", j.Name, j.ID))
 	// Implement cancel logic.
 	return nil
 }

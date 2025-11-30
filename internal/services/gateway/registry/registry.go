@@ -9,7 +9,7 @@ import (
 
 	prv "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	gateway "github.com/kubex-ecosystem/gobe/internal/services/gateway"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"github.com/kubex-ecosystem/gobe/internal/services/gateway/providers"
 )
@@ -57,7 +57,7 @@ func (r *Registry) Reload() error {
 		if len(configMap) > 0 {
 			if raw, err := json.Marshal(configMap); err == nil {
 				if err := json.Unmarshal(raw, &payload); err != nil {
-					gl.Log("warn", "gateway registry unable to parse provider config", record.GetProvider(), err)
+					logz.Log("warn", "gateway registry unable to parse provider config", record.GetProvider(), err)
 				}
 			}
 		}
@@ -74,13 +74,13 @@ func (r *Registry) Reload() error {
 		}
 
 		if cfg.Type == "" {
-			gl.Log("warn", "gateway registry skipping provider without type", cfg.Name)
+			logz.Log("warn", "gateway registry skipping provider without type", cfg.Name)
 			continue
 		}
 
 		prov, err := providers.New(cfg)
 		if err != nil {
-			gl.Log("error", "gateway registry failed to instantiate provider", cfg.Name, err)
+			logz.Log("error", "gateway registry failed to instantiate provider", cfg.Name, err)
 			continue
 		}
 

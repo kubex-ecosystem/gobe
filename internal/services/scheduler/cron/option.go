@@ -3,7 +3,7 @@ package cron
 import (
 	"time"
 
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 )
 
 // Option represents a modification to the default behavior of a Cron.
@@ -40,7 +40,7 @@ func WithChain(wrappers ...JobWrapper) Option {
 }
 
 // WithLogger uses the provided logger.
-func WithLogger(logger l.Logger) Option {
+func WithLogger(logger *logz.LoggerZ) Option {
 	return func(c *Cron) {
 		c.logger = logger
 	}

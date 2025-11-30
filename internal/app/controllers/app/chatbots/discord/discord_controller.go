@@ -27,7 +27,7 @@ import (
 	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type HubInterface interface {
@@ -126,11 +126,11 @@ func NewDiscordController(db *svc.DBServiceImpl, hub *hub.DiscordMCPHub, config 
 			CheckOrigin: func(r *http.Request) bool {
 				// Permitir origens do Discord durante desenvolvimento
 				origin := r.Header.Get("Origin")
-				gl.Log("info", fmt.Sprintf("WebSocket origin: %s", origin))
+				logz.Log("info", fmt.Sprintf("WebSocket origin: %s", origin))
 
 				// ✅ Para desenvolvimento, ser mais permissivo
 				if config.DevMode {
-					gl.Log("info", "🔧 Dev mode: allowing all WebSocket origins")
+					logz.Log("info", "🔧 Dev mode: allowing all WebSocket origins")
 					return true
 				}
 
@@ -156,7 +156,7 @@ func NewDiscordController(db *svc.DBServiceImpl, hub *hub.DiscordMCPHub, config 
 					return true
 				}
 
-				gl.Log("warn", fmt.Sprintf("🚫 WebSocket origin rejected: %s", origin))
+				logz.Log("warn", fmt.Sprintf("🚫 WebSocket origin rejected: %s", origin))
 				return false
 			},
 			ReadBufferSize:  1024,
@@ -176,12 +176,12 @@ func NewDiscordController(db *svc.DBServiceImpl, hub *hub.DiscordMCPHub, config 
 // @Success     200 {string} string "HTML da activity"
 // @Router      /api/v1/discord [get]
 func (dc *DiscordController) HandleDiscordApp(c *gin.Context) {
-	gl.Log("info", "🎮 Discord App request received")
+	logz.Log("info", "🎮 Discord App request received")
 
 	// Log all query parameters
 	for key, values := range c.Request.URL.Query() {
 		for _, value := range values {
-			gl.Log("info", fmt.Sprintf("  %s: %s", key, value))
+			logz.Log("info", fmt.Sprintf("  %s: %s", key, value))
 		}
 	}
 
@@ -193,13 +193,13 @@ func (dc *DiscordController) HandleDiscordApp(c *gin.Context) {
 	frameID := c.Query("frame_id")
 	platform := c.Query("platform")
 
-	gl.Log("info", "📋 Discord Activity parameters:")
-	gl.Log("info", fmt.Sprintf("  instance_id: %s", instanceID))
-	gl.Log("info", fmt.Sprintf("  location_id: %s", locationID))
-	gl.Log("info", fmt.Sprintf("  launch_id: %s", launchID))
-	gl.Log("info", fmt.Sprintf("  channel_id: %s", channelID))
-	gl.Log("info", fmt.Sprintf("  frame_id: %s", frameID))
-	gl.Log("info", fmt.Sprintf("  platform: %s", platform))
+	logz.Log("info", "📋 Discord Activity parameters:")
+	logz.Log("info", fmt.Sprintf("  instance_id: %s", instanceID))
+	logz.Log("info", fmt.Sprintf("  location_id: %s", locationID))
+	logz.Log("info", fmt.Sprintf("  launch_id: %s", launchID))
+	logz.Log("info", fmt.Sprintf("  channel_id: %s", channelID))
+	logz.Log("info", fmt.Sprintf("  frame_id: %s", frameID))
+	logz.Log("info", fmt.Sprintf("  platform: %s", platform))
 
 	c.Header("Content-Type", "text/html; charset=utf-8")
 
@@ -209,7 +209,7 @@ func (dc *DiscordController) HandleDiscordApp(c *gin.Context) {
 	// Alternatively, if you want to return the HTML as a string: (Discord does not support this method pretty well)
 	// htmlFile, err := os.ReadFile("./web/index.html")
 	// if err != nil {
-	// 	gl.Log("error", fmt.Sprintf("❌ Failed to read HTML file: %v", err))
+	// 	logz.Log("error", fmt.Sprintf("❌ Failed to read HTML file: %v", err))
 	// 	c.String(http.StatusInternalServerError, "Internal Server Error")
 	// 	return
 	// }
@@ -229,19 +229,19 @@ func (dc *DiscordController) HandleDiscordApp(c *gin.Context) {
 // @Router      /api/v1/discord/oauth2/authorize [get]
 // @Router      /api/v1/discord/oauth2/authorize [post]
 func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
-	gl.Log("info", "🔐 Discord OAuth2 authorize request received")
+	logz.Log("info", "🔐 Discord OAuth2 authorize request received")
 
 	// Log all query parameters
 	for key, values := range c.Request.URL.Query() {
 		for _, value := range values {
-			gl.Log("info", fmt.Sprintf("  %s: %s", key, value))
+			logz.Log("info", fmt.Sprintf("  %s: %s", key, value))
 		}
 	}
 
 	// Check for error in query params (Discord sends errors here)
 	if errorType := c.Query("error"); errorType != "" {
 		errorDesc := c.Query("error_description")
-		gl.Log("error", fmt.Sprintf("❌ Discord OAuth2 error: %s - %s", errorType, errorDesc))
+		logz.Log("error", fmt.Sprintf("❌ Discord OAuth2 error: %s - %s", errorType, errorDesc))
 
 		// Return a proper HTML page instead of JSON for browser display
 		html := fmt.Sprintf(`
@@ -292,8 +292,8 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	state := c.Query("state")
 
 	if code != "" {
-		gl.Log("info", fmt.Sprintf("✅ Authorization code received: %s", code))
-		gl.Log("info", fmt.Sprintf("📦 State: %s", state))
+		logz.Log("info", fmt.Sprintf("✅ Authorization code received: %s", code))
+		logz.Log("info", fmt.Sprintf("📦 State: %s", state))
 
 		// In a real app, you'd exchange this code for a token
 		// For now, we'll just return success
@@ -311,11 +311,11 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 	responseType := c.Query("response_type")
 	scope := c.Query("scope")
 
-	gl.Log("info", "📋 OAuth2 parameters:")
-	gl.Log("info", fmt.Sprintf("  client_id: %s", clientID))
-	gl.Log("info", fmt.Sprintf("  redirect_uri: %s", redirectURI))
-	gl.Log("info", fmt.Sprintf("  response_type: %s", responseType))
-	gl.Log("info", fmt.Sprintf("  scope: %s", scope))
+	logz.Log("info", "📋 OAuth2 parameters:")
+	logz.Log("info", fmt.Sprintf("  client_id: %s", clientID))
+	logz.Log("info", fmt.Sprintf("  redirect_uri: %s", redirectURI))
+	logz.Log("info", fmt.Sprintf("  response_type: %s", responseType))
+	logz.Log("info", fmt.Sprintf("  scope: %s", scope))
 
 	// Return authorization page or redirect to Discord
 	c.JSON(http.StatusOK, DiscordOAuthAuthorizeResponse{
@@ -337,15 +337,15 @@ func (dc *DiscordController) HandleDiscordOAuth2Authorize(c *gin.Context) {
 // @Failure     500 {object} ErrorResponse
 // @Router      /api/v1/discord/websocket [get]
 func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
-	gl.Log("info", "🔌 WebSocket upgrade attempt")
-	gl.Log("info", fmt.Sprintf("  Origin: %s", c.GetHeader("Origin")))
-	gl.Log("info", fmt.Sprintf("  User-Agent: %s", c.GetHeader("User-Agent")))
-	gl.Log("info", fmt.Sprintf("  Upgrade: %s", c.GetHeader("Upgrade")))
-	gl.Log("info", fmt.Sprintf("  Connection: %s", c.GetHeader("Connection")))
+	logz.Log("info", "🔌 WebSocket upgrade attempt")
+	logz.Log("info", fmt.Sprintf("  Origin: %s", c.GetHeader("Origin")))
+	logz.Log("info", fmt.Sprintf("  User-Agent: %s", c.GetHeader("User-Agent")))
+	logz.Log("info", fmt.Sprintf("  Upgrade: %s", c.GetHeader("Upgrade")))
+	logz.Log("info", fmt.Sprintf("  Connection: %s", c.GetHeader("Connection")))
 
 	// ✅ Verificar headers WebSocket
 	if c.GetHeader("Upgrade") != "websocket" {
-		gl.Log("error", "❌ Missing or invalid Upgrade header")
+		logz.Log("error", "❌ Missing or invalid Upgrade header")
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Status:  "error",
 			Message: "invalid websocket upgrade request",
@@ -355,7 +355,7 @@ func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 
 	conn, err := dc.upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ WebSocket upgrade error: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ WebSocket upgrade error: %v", err))
 		// ✅ Não retornar JSON após upgrade failure
 		return
 	}
@@ -369,20 +369,20 @@ func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 
 	// Verificar se o hub está disponível
 	if dc.hub == nil {
-		gl.Log("error", "❌ Discord hub is not initialized")
+		logz.Log("error", "❌ Discord hub is not initialized")
 		conn.WriteMessage(websocket.TextMessage, []byte(`{"error": "hub not initialized"}`))
 		return
 	}
 
 	eventStream := dc.hub.GetEventStream()
 	if eventStream == nil {
-		gl.Log("error", "❌ Event stream is not available")
+		logz.Log("error", "❌ Event stream is not available")
 		conn.WriteMessage(websocket.TextMessage, []byte(`{"error": "event stream not available"}`))
 		return
 	}
 
 	eventStream.RegisterClient(client)
-	gl.Log("info", fmt.Sprintf("✅ WebSocket client connected: %s", client.ID))
+	logz.Log("info", fmt.Sprintf("✅ WebSocket client connected: %s", client.ID))
 
 	// Enviar mensagem de confirmação
 	welcomeMsg := map[string]interface{}{
@@ -413,12 +413,12 @@ func (dc *DiscordController) HandleWebSocket(c *gin.Context) {
 	for {
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
-			gl.Log("info", fmt.Sprintf("WebSocket client %s disconnected: %v", client.ID, err))
+			logz.Log("info", fmt.Sprintf("WebSocket client %s disconnected: %v", client.ID, err))
 			break
 		}
 
 		if messageType == websocket.TextMessage {
-			gl.Log("info", fmt.Sprintf("📨 WebSocket message from %s: %s", client.ID, string(message)))
+			logz.Log("info", fmt.Sprintf("📨 WebSocket message from %s: %s", client.ID, string(message)))
 
 			// ✅ Processar mensagem recebida
 			var msgData map[string]interface{}
@@ -484,7 +484,7 @@ func (dc *DiscordController) ApproveRequest(c *gin.Context) {
 	}
 
 	// Mock approval - implement with your approval manager
-	gl.Log("info", fmt.Sprintf("Approving request: %s", requestID))
+	logz.Log("info", fmt.Sprintf("Approving request: %s", requestID))
 
 	c.JSON(http.StatusOK, DiscordActionResponse{Message: "Request approved", RequestID: requestID})
 }
@@ -510,7 +510,7 @@ func (dc *DiscordController) RejectRequest(c *gin.Context) {
 	}
 
 	// Mock rejection - implement with your approval manager
-	gl.Log("info", fmt.Sprintf("Rejecting request: %s", requestID))
+	logz.Log("info", fmt.Sprintf("Rejecting request: %s", requestID))
 
 	c.JSON(http.StatusOK, DiscordActionResponse{Message: "Request rejected", RequestID: requestID})
 }
@@ -543,7 +543,7 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 		testMsg.Username = "TestUser"
 	}
 
-	gl.Log("info", fmt.Sprintf("🧪 Test message received: %s from %s", testMsg.Content, testMsg.Username))
+	logz.Log("info", fmt.Sprintf("🧪 Test message received: %s from %s", testMsg.Content, testMsg.Username))
 
 	// Create a mock message object
 	mockMessage := map[string]interface{}{
@@ -557,7 +557,7 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 	ctx := context.Background()
 	err := dc.hub.ProcessMessageWithLLM(ctx, mockMessage)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Error processing test message: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Error processing test message: %v", err))
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "processing failed"})
 		return
 	}
@@ -581,11 +581,11 @@ func (dc *DiscordController) HandleTestMessage(c *gin.Context) {
 // @Router      /api/v1/discord/oauth2/token [get]
 // @Router      /api/v1/discord/oauth2/token [post]
 func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
-	gl.Log("info", "🎫 Discord OAuth2 token request received")
+	logz.Log("info", "🎫 Discord OAuth2 token request received")
 
 	// Parse form data
 	if err := c.Request.ParseForm(); err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Error parsing form: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Error parsing form: %v", err))
 		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_request"})
 		return
 	}
@@ -596,12 +596,12 @@ func (dc *DiscordController) HandleDiscordOAuth2Token(c *gin.Context) {
 	clientID := c.PostForm("client_id")
 	clientSecret := c.PostForm("client_secret")
 
-	gl.Log("info", "📋 Token request parameters:")
-	gl.Log("info", fmt.Sprintf("  grant_type: %s", grantType))
-	gl.Log("info", fmt.Sprintf("  code: %s", code))
-	gl.Log("info", fmt.Sprintf("  redirect_uri: %s", redirectURI))
-	gl.Log("info", fmt.Sprintf("  client_id: %s", clientID))
-	gl.Log("info", fmt.Sprintf("  client_secret: %s", strings.Repeat("*", len(clientSecret))))
+	logz.Log("info", "📋 Token request parameters:")
+	logz.Log("info", fmt.Sprintf("  grant_type: %s", grantType))
+	logz.Log("info", fmt.Sprintf("  code: %s", code))
+	logz.Log("info", fmt.Sprintf("  redirect_uri: %s", redirectURI))
+	logz.Log("info", fmt.Sprintf("  client_id: %s", clientID))
+	logz.Log("info", fmt.Sprintf("  client_secret: %s", strings.Repeat("*", len(clientSecret))))
 
 	// In a real app, you'd validate these and return a real token
 	// For now, return a mock token response
@@ -631,22 +631,22 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 	webhookID := c.Param("webhookId")
 	webhookToken := c.Param("webhookToken")
 
-	gl.Log("info", "🪝 Discord webhook received:")
-	gl.Log("info", fmt.Sprintf("  Webhook ID: %s", webhookID))
-	gl.Log("info", fmt.Sprintf("  Webhook Token: %s", truncateSecret(webhookToken)))
+	logz.Log("info", "🪝 Discord webhook received:")
+	logz.Log("info", fmt.Sprintf("  Webhook ID: %s", webhookID))
+	logz.Log("info", fmt.Sprintf("  Webhook Token: %s", truncateSecret(webhookToken)))
 
 	signature := getContextString(c, middlewares.DiscordSignatureContextKey)
 	timestamp := getContextString(c, middlewares.DiscordTimestampContextKey)
 	verified := getContextBool(c, middlewares.DiscordVerifiedContextKey)
-	gl.Log("info", fmt.Sprintf("  Signature provided: %t (verified=%v)", signature != "", verified))
-	gl.Log("info", fmt.Sprintf("  Timestamp header: %s", timestamp))
+	logz.Log("info", fmt.Sprintf("  Signature provided: %t (verified=%v)", signature != "", verified))
+	logz.Log("info", fmt.Sprintf("  Timestamp header: %s", timestamp))
 
 	body, ok := getDiscordRequestBody(c)
 	if !ok {
 		var err error
 		body, err = io.ReadAll(c.Request.Body)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Error reading webhook body: %v", err))
+			logz.Log("error", fmt.Sprintf("❌ Error reading webhook body: %v", err))
 			c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
 			return
 		}
@@ -655,12 +655,12 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 
 	var webhookData map[string]interface{}
 	if err := json.Unmarshal(body, &webhookData); err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Error parsing webhook JSON: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Error parsing webhook JSON: %v", err))
 		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_json"})
 		return
 	}
 
-	gl.Log("info", fmt.Sprintf("📦 Webhook data: %+v", webhookData))
+	logz.Log("info", fmt.Sprintf("📦 Webhook data: %+v", webhookData))
 
 	if dc.hub != nil {
 		envelope := hub.DiscordWebhookPayload{
@@ -674,7 +674,7 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 			Data:         webhookData,
 		}
 		if err := dc.hub.ProcessDiscordWebhook(c.Request.Context(), envelope); err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Failed to process webhook via hub: %v", err))
+			logz.Log("error", fmt.Sprintf("❌ Failed to process webhook via hub: %v", err))
 		}
 	}
 
@@ -696,22 +696,22 @@ func (dc *DiscordController) HandleDiscordWebhook(c *gin.Context) {
 // @Failure     400 {object} ErrorResponse
 // @Router      /api/v1/discord/interactions [post]
 func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
-	gl.Log("info", "⚡ Discord interaction received")
+	logz.Log("info", "⚡ Discord interaction received")
 
 	signature := getContextString(c, middlewares.DiscordSignatureContextKey)
 	timestamp := getContextString(c, middlewares.DiscordTimestampContextKey)
 	verified := getContextBool(c, middlewares.DiscordVerifiedContextKey)
-	gl.Log("info", "📋 Headers:")
-	gl.Log("info", fmt.Sprintf("  X-Signature-Ed25519: %s", signature))
-	gl.Log("info", fmt.Sprintf("  X-Signature-Timestamp: %s", timestamp))
-	gl.Log("info", fmt.Sprintf("  Guard verified: %v", verified))
+	logz.Log("info", "📋 Headers:")
+	logz.Log("info", fmt.Sprintf("  X-Signature-Ed25519: %s", signature))
+	logz.Log("info", fmt.Sprintf("  X-Signature-Timestamp: %s", timestamp))
+	logz.Log("info", fmt.Sprintf("  Guard verified: %v", verified))
 
 	body, ok := getDiscordRequestBody(c)
 	if !ok {
 		var err error
 		body, err = io.ReadAll(c.Request.Body)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Error reading interaction body: %v", err))
+			logz.Log("error", fmt.Sprintf("❌ Error reading interaction body: %v", err))
 			c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_body"})
 			return
 		}
@@ -721,16 +721,16 @@ func (dc *DiscordController) HandleDiscordInteractions(c *gin.Context) {
 	// Parse interaction
 	var interaction map[string]interface{}
 	if err := json.Unmarshal(body, &interaction); err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Error parsing interaction JSON: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Error parsing interaction JSON: %v", err))
 		c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "invalid_json"})
 		return
 	}
 
-	gl.Log("info", fmt.Sprintf("📦 Interaction data: %+v", interaction))
+	logz.Log("info", fmt.Sprintf("📦 Interaction data: %+v", interaction))
 
 	// Handle ping interactions (Discord requires this)
 	if interactionType, ok := interaction["type"].(float64); ok && interactionType == 1 {
-		gl.Log("info", "🏓 Ping interaction - responding with pong")
+		logz.Log("info", "🏓 Ping interaction - responding with pong")
 
 		c.JSON(http.StatusOK, DiscordInteractionResponse{
 			Type: 1, // PONG response
@@ -787,17 +787,17 @@ func (dc *DiscordController) InitiateBotMCP() {
 	if dc.hub == nil {
 		h, err = hub.NewDiscordMCPHub(dc.config)
 		if err != nil {
-			gl.Log("error", "Failed to create Discord hub", err)
+			logz.Log("error", "Failed to create Discord hub", err)
 			return
 		}
 		dc.hub = h
-		gl.Log("info", "Discord MCP Hub created successfully")
+		logz.Log("info", "Discord MCP Hub created successfully")
 	} else {
 		var ok bool
 		if h, ok = dc.hub.(*hub.DiscordMCPHub); ok {
-			gl.Log("info", "Discord MCP Hub started successfully")
+			logz.Log("info", "Discord MCP Hub started successfully")
 		} else {
-			gl.Log("error", "Discord hub is not of type DiscordMCPHub")
+			logz.Log("error", "Discord hub is not of type DiscordMCPHub")
 			return
 		}
 	}
@@ -805,26 +805,26 @@ func (dc *DiscordController) InitiateBotMCP() {
 	go func() {
 		defer func() {
 			if recErr := recover(); recErr != nil {
-				gl.Log("error", "Recovered from panic in Discord hub", recErr)
+				logz.Log("error", "Recovered from panic in Discord hub", recErr)
 				events := dc.hub.GetEventStream()
 				if events != nil {
 					events.Close()
-					gl.Log("info", "Discord hub stopped gracefully")
+					logz.Log("info", "Discord hub stopped gracefully")
 				}
-				gl.Log("info", "Restarting Discord hub...")
+				logz.Log("info", "Restarting Discord hub...")
 				dc.InitiateBotMCP()
 			}
 		}()
 		// Start the Discord bot connection (if applicable)
 		if h == nil {
-			gl.Log("error", "Discord hub is nil, cannot start bot")
+			logz.Log("error", "Discord hub is nil, cannot start bot")
 			return
 		}
 		// Note: Starting the bot connection is handled inside StartMCPServer now
 		// to avoid multiple connections in case of restarts.
 		// Uncomment if you want to start the bot separately.
 		if err := h.StartDiscordBot(); err != nil {
-			gl.Log("error", "Failed to start Discord hub", err)
+			logz.Log("error", "Failed to start Discord hub", err)
 			return
 		}
 		h.StartMCPServer()
@@ -845,11 +845,11 @@ func (dc *DiscordController) InitiateBotMCP() {
 func (dc *DiscordController) PingAdapter(c *gin.Context) {
 	hd := dc.hub
 	if hd == nil {
-		gl.Log("error", "Failed to ping Discord adapter")
+		logz.Log("error", "Failed to ping Discord adapter")
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to ping Discord adapter"})
 		return
 	}
-	gl.Log("info", "Discord adapter pinged successfully")
+	logz.Log("info", "Discord adapter pinged successfully")
 	c.JSON(http.StatusOK, DiscordPingResponse{Message: "Discord adapter pinged successfully"})
 }
 
@@ -873,7 +873,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 			ConfigFile: "./config/discord.json",
 		})
 		if err != nil {
-			gl.Log("error", "Failed to load config for Discord adapter", err)
+			logz.Log("error", "Failed to load config for Discord adapter", err)
 			c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to load config"})
 			return
 		}
@@ -881,7 +881,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 	// Create a new Discord adapter instance for oauth2/token or ping
 	adapter, adapterErr := discord.NewAdapter(cfg.Discord, "oauth2")
 	if adapterErr != nil {
-		gl.Log("error", "Failed to create Discord adapter", adapterErr)
+		logz.Log("error", "Failed to create Discord adapter", adapterErr)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to create Discord adapter"})
 		return
 	}
@@ -896,7 +896,7 @@ func (dc *DiscordController) PingDiscordAdapter(c *gin.Context) {
 
 	err = adapter.PingAdapter(msg)
 	if err != nil {
-		gl.Log("error", "Failed to ping Discord", err)
+		logz.Log("error", "Failed to ping Discord", err)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "failed to ping Discord"})
 		return
 	}

@@ -12,7 +12,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | *MCPServerConfig | any](configType string) (T, bool) {
@@ -361,7 +361,7 @@ func Load[C *Config | *DiscordConfig |
 
 	// Senão, tenta carregar do arquivo
 	if initArgs.ConfigFile == "" {
-		gl.Log("warn", "No config path provided, using default:", initArgs.ConfigFile)
+		logz.Log("warn", "No config path provided, using default:", initArgs.ConfigFile)
 		initArgs.ConfigFile = GetConfigFilePath()
 		initArgs.ConfigFile = filepath.Join(initArgs.ConfigFile, "gobe", "config.json")
 	}
@@ -399,7 +399,7 @@ func GetConfigFilePath() string {
 	if path, err := utils.GetDefaultConfigPath(); path != "" && err == nil {
 		cfgPath = path
 	} else {
-		gl.Log("fatal", "Failed to determine config path, using current directory:", err)
+		logz.Log("fatal", "Failed to determine config path, using current directory:", err)
 	}
 	return cfgPath
 }

@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
@@ -71,7 +71,7 @@ func (s *CryptoService) Encrypt(data []byte, key []byte) (string, string, error)
 	if isEncoded {
 		decodedBytes, decodedDataErr = DecodeBase64(string(copyData))
 		if decodedDataErr != nil {
-			gl.Log("error", fmt.Sprintf("failed to decode data: %v", decodedDataErr))
+			logz.Log("error", fmt.Sprintf("failed to decode data: %v", decodedDataErr))
 			return "", "", decodedDataErr
 		}
 	} else {
@@ -85,7 +85,7 @@ func (s *CryptoService) Encrypt(data []byte, key []byte) (string, string, error)
 	if isEncoded {
 		decodedKeyData, err := s.DecodeBase64(strKey)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("failed to decode key: %v", err))
+			logz.Log("error", fmt.Sprintf("failed to decode key: %v", err))
 			return "", "", err
 		}
 		decodedKey = decodedKeyData
@@ -95,7 +95,7 @@ func (s *CryptoService) Encrypt(data []byte, key []byte) (string, string, error)
 
 	block, err := chacha20poly1305.NewX(decodedKey)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("failed to create cipher: %v, %d", err, len(decodedKey)))
+		logz.Log("error", fmt.Sprintf("failed to create cipher: %v, %d", err, len(decodedKey)))
 		return "", "", fmt.Errorf("failed to create cipher: %w", err)
 	}
 
@@ -109,7 +109,7 @@ func (s *CryptoService) Encrypt(data []byte, key []byte) (string, string, error)
 	if !isEncoded {
 		encodedData = EncodeBase64(ciphertext)
 		if encodedData == "" {
-			gl.Log("error", fmt.Sprintf("failed to encode data: %v", encodedDataErr))
+			logz.Log("error", fmt.Sprintf("failed to encode data: %v", encodedDataErr))
 			return "", "", encodedDataErr
 		}
 	} else {
@@ -134,7 +134,7 @@ func (s *CryptoService) Decrypt(encrypted []byte, key []byte) (string, string, e
 	if isBase64String {
 		decodedData, err := s.DecodeBase64(encryptedEncoded)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("failed to decode data: %v", err))
+			logz.Log("error", fmt.Sprintf("failed to decode data: %v", err))
 			return "", "", err
 		}
 		stringData = string(decodedData)
@@ -144,7 +144,7 @@ func (s *CryptoService) Decrypt(encrypted []byte, key []byte) (string, string, e
 
 	// Validate if the data is empty
 	if len(stringData) == 0 {
-		gl.Log("error", "encrypted data is empty")
+		logz.Log("error", "encrypted data is empty")
 		return "", "", fmt.Errorf("encrypted data is empty")
 	}
 
@@ -154,7 +154,7 @@ func (s *CryptoService) Decrypt(encrypted []byte, key []byte) (string, string, e
 	if isBase64String {
 		decodedKeyData, err := s.DecodeBase64(strKey)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("failed to decode key: %v", err))
+			logz.Log("error", fmt.Sprintf("failed to decode key: %v", err))
 			return "", "", err
 		}
 		decodedKey = decodedKeyData
@@ -173,7 +173,7 @@ func (s *CryptoService) Decrypt(encrypted []byte, key []byte) (string, string, e
 	decrypted, err := block.Open(nil, []byte(nonce), []byte(ciphertext), nil)
 
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("failed to decrypt data: %v", err))
+		logz.Log("error", fmt.Sprintf("failed to decrypt data: %v", err))
 		return "", "", fmt.Errorf("failed to decrypt data: %w", err)
 	}
 
@@ -375,14 +375,14 @@ func DetectBase64InString(s string) []string {
 			if err != nil {
 				decoded, err = base64.StdEncoding.DecodeString(string(matchBytes)) // Alternativa Standard
 				if err != nil {
-					gl.Log("error", fmt.Sprintf("failed to decode base64 string: %v", err))
+					logz.Log("error", fmt.Sprintf("failed to decode base64 string: %v", err))
 					continue
 				}
 			}
 
 			decoded = bytes.TrimSpace(decoded)
 			if len(decoded) == 0 {
-				gl.Log("error", "decoded data is empty")
+				logz.Log("error", "decoded data is empty")
 				continue
 			}
 			uniqueMatches[string(matchBytes)] = struct{}{}
@@ -419,7 +419,7 @@ func DecodeBase64(encoded string) ([]byte, error) {
 		DecodeString(encoded)
 
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("failed to decode base64 string: %v", err))
+		logz.Log("error", fmt.Sprintf("failed to decode base64 string: %v", err))
 		return nil, err
 	}
 

@@ -7,7 +7,7 @@ import (
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -21,14 +21,14 @@ type SwaggerRoutes struct {
 
 func NewSwaggerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil for SwaggerRoute")
+		logz.Log("error", "Router is nil for SwaggerRoute")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for SwaggerRoute")
+		logz.Log("error", "Database service is nil for SwaggerRoute")
 		return nil
 	}
 
@@ -36,7 +36,7 @@ func NewSwaggerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 
 	middlewaresMap := rtl.GetMiddlewares()
 	if len(middlewaresMap) == 0 {
-		gl.Log("error", "Middlewares map is empty for SwaggerRoute")
+		logz.Log("error", "Middlewares map is empty for SwaggerRoute")
 		return nil
 	}
 

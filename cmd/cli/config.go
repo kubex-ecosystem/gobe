@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
@@ -40,7 +40,7 @@ listing, initializing, resetting, and validating configuration values.`
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				gl.Log("error", fmt.Sprintf("Failed to display help: %v", err))
+				logz.Log("error", fmt.Sprintf("Failed to display help: %v", err))
 			}
 		},
 	}
@@ -76,7 +76,7 @@ func configGetCmd() *cobra.Command {
 				key = args[0]
 			}
 
-			gl.Log("info", fmt.Sprintf("Getting configuration value: %s", key))
+			logz.Log("info", fmt.Sprintf("Getting configuration value: %s", key))
 
 			if err := loadConfig(); err != nil {
 				return err
@@ -136,7 +136,7 @@ func configSetCmd() *cobra.Command {
 			key := args[0]
 			value := args[1]
 
-			gl.Log("info", fmt.Sprintf("Setting configuration: %s = %s", key, value))
+			logz.Log("info", fmt.Sprintf("Setting configuration: %s = %s", key, value))
 
 			if err := loadConfig(); err != nil {
 				return err
@@ -188,7 +188,7 @@ func configListCmd() *cobra.Command {
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Listing all configuration values...")
+			logz.Log("info", "Listing all configuration values...")
 
 			if err := loadConfig(); err != nil {
 				return err
@@ -233,7 +233,7 @@ func configInitCmd() *cobra.Command {
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Initializing configuration...")
+			logz.Log("info", "Initializing configuration...")
 
 			configPath := getConfigPath()
 
@@ -299,7 +299,7 @@ func configValidateCmd() *cobra.Command {
 		}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Validating configuration...")
+			logz.Log("info", "Validating configuration...")
 
 			if err := loadConfig(); err != nil {
 				return fmt.Errorf("configuration validation failed: %w", err)
@@ -353,7 +353,7 @@ func configResetCmd() *cobra.Command {
 		Args: cobra.NoArgs,
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("warn", "Resetting configuration to defaults...")
+			logz.Log("warn", "Resetting configuration to defaults...")
 
 			configPath := getConfigPath()
 
@@ -361,7 +361,7 @@ func configResetCmd() *cobra.Command {
 			if _, err := os.Stat(configPath); err == nil {
 				backupPath := configPath + ".backup"
 				if err := os.Rename(configPath, backupPath); err != nil {
-					gl.Log("warn", fmt.Sprintf("Failed to create backup: %v", err))
+					logz.Log("warn", fmt.Sprintf("Failed to create backup: %v", err))
 				} else {
 					fmt.Printf("Existing configuration backed up to: %s\n", backupPath)
 				}
@@ -412,7 +412,7 @@ func loadConfig() error {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			gl.Log("warn", "Configuration file not found, using defaults")
+			logz.Log("warn", "Configuration file not found, using defaults")
 			return nil
 		}
 		return fmt.Errorf("failed to read configuration: %w", err)

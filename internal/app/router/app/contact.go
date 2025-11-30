@@ -5,7 +5,6 @@ import (
 	cts "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/contacts"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
 
 	"net/http"
 )
@@ -16,7 +15,7 @@ type ContactRoutes struct {
 
 func NewContactRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		l.ErrorCtx("Router is nil for ContactRoute", nil)
+		// logz.ErrorCtx("Router is nil for ContactRoute", nil)
 		return nil
 	}
 	rtl := *rtr

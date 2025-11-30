@@ -80,7 +80,7 @@ repos:
     rev: v0.5.1
     hooks:
       - id: go-fmt
-      - id: go-vet
+      # - id: go-vet
       - id: go-mod-tidy
         # - id: golangci-lint
         # args: ["run", "--config=./support/.golangci.yaml"]

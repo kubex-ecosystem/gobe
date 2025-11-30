@@ -21,13 +21,11 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/hooks"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp/system"
-	"github.com/kubex-ecosystem/logz/logger"
-
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 )
 
 var (
-	gl          = logger.GetLogger[l.Logger](nil)
+	gl          = logz.GetLoggerZ("GoBE-MetricsController")
 	sysServ     svc.ISystemService
 	mcpRegistry mcp.Registry
 )
@@ -44,12 +42,12 @@ func NewMetricsController(ctx context.Context, dbService *svc.DBServiceImpl) *Me
 	// Initialize registry if not already done
 	if mcpRegistry == nil {
 		mcpRegistry = mcp.NewRegistry()
-		gl.Log("info", "Initialized new MCP registry")
+		logz.Log("info", "Initialized new MCP registry")
 
 		// Register built-in tools
 		err := mcp.RegisterBuiltinTools(mcpRegistry)
 		if err != nil {
-			gl.Log("error", "Failed to register built-in tools", err)
+			logz.Log("error", "Failed to register built-in tools", err)
 		}
 
 		// Register external Kubex ecosystem tools (Grompt, Analyzer)
@@ -65,9 +63,9 @@ func NewMetricsController(ctx context.Context, dbService *svc.DBServiceImpl) *Me
 
 		err = mcp.RegisterExternalTools(mcpRegistry, externalConfig)
 		if err != nil {
-			gl.Log("warn", "Failed to register external tools (Grompt/Analyzer may not be available)", err)
+			logz.Log("warn", "Failed to register external tools (Grompt/Analyzer may not be available)", err)
 		} else {
-			gl.Log("info", "External Kubex ecosystem tools registered successfully",
+			logz.Log("info", "External Kubex ecosystem tools registered successfully",
 				"grompt", externalConfig.GromptURL,
 				"analyzer", externalConfig.AnalyzerURL)
 		}
@@ -87,7 +85,7 @@ func (c *MetricsController) GetGeneralSystemMetrics(ctx *gin.Context) {
 			sysServ = svc.NewSystemService()
 		}
 		if sysServ == nil {
-			gl.Log("error", "System service is nil")
+			logz.Log("error", "System service is nil")
 			return
 		}
 		c.systemService = sysServ
@@ -126,34 +124,34 @@ func (c *MetricsController) GetGeneralSystemMetrics(ctx *gin.Context) {
 // RegisterRoutes registers the routes for the MetricsController.
 func (c *MetricsController) RegisterRoutes(router *gin.RouterGroup) {
 	if router == nil {
-		gl.Log("error", "Router group is nil, cannot register routes")
+		logz.Log("error", "Router group is nil, cannot register routes")
 		return
 	}
 
-	gl.Log("info", "Routes registered for MetricsController")
+	logz.Log("info", "Routes registered for MetricsController")
 	if c.systemService == nil {
-		gl.Log("warn", "System service is nil, initializing a new instance")
+		logz.Log("warn", "System service is nil, initializing a new instance")
 		c.systemService = svc.NewSystemService()
 	}
 	if c.systemService == nil {
-		gl.Log("error", "Failed to initialize system service")
+		logz.Log("error", "Failed to initialize system service")
 		return
 	}
 	// Register the system service routes
 	ssrvc, ok := c.systemService.(*svc.SystemService)
 	if !ok {
-		gl.Log("error", "Failed to assert system service")
+		logz.Log("error", "Failed to assert system service")
 		return
 	}
 	ssrvc.RegisterRoutes(router)
-	gl.Log("info", "System service routes registered")
+	logz.Log("info", "System service routes registered")
 
 }
 
 // SetSystemService allows setting the system service externally.
 func SetSystemService(service svc.ISystemService) {
 	if service == nil {
-		gl.Log("warn", "Attempted to set a nil system service")
+		logz.Log("warn", "Attempted to set a nil system service")
 		return
 	}
 	sysServ = service
@@ -162,14 +160,14 @@ func SetSystemService(service svc.ISystemService) {
 // GetSystemService returns the current system service instance.
 func GetSystemService() svc.ISystemService {
 	if sysServ == nil {
-		gl.Log("warn", "System service is not initialized, creating a new instance")
+		logz.Log("warn", "System service is not initialized, creating a new instance")
 		sysServ = svc.NewSystemService()
 	}
 	return sysServ
 }
 
 func (c *MetricsController) SendMessage(ctx *gin.Context) {
-	gl.Log("info", "Sending message via AMQP")
+	logz.Log("info", "Sending message via AMQP")
 
 	var request struct {
 		Exchange string                 `json:"exchange" binding:"required"`
@@ -178,7 +176,7 @@ func (c *MetricsController) SendMessage(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		gl.Log("error", "Failed to bind send message request", err)
+		logz.Log("error", "Failed to bind send message request", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
 		return
 	}
@@ -189,14 +187,14 @@ func (c *MetricsController) SendMessage(ctx *gin.Context) {
 
 	messageBody, err := json.Marshal(request.Message)
 	if err != nil {
-		gl.Log("error", "Failed to marshal message", err)
+		logz.Log("error", "Failed to marshal message", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("failed to serialize message: %w", err))
 		return
 	}
 
 	// Note: In a real implementation, you would use the AMQP connection here
 	// For now, we'll simulate the message sending
-	gl.Log("info", "Message would be sent to exchange", request.Exchange, "with key", request.Key)
+	logz.Log("info", "Message would be sent to exchange", request.Exchange, "with key", request.Key)
 
 	c.apiWrapper.JSONResponseWithSuccess(ctx, "message queued successfully", "", map[string]interface{}{
 		"exchange":   request.Exchange,
@@ -208,7 +206,7 @@ func (c *MetricsController) SendMessage(ctx *gin.Context) {
 }
 
 func (c *MetricsController) SystemInfo(ctx *gin.Context) {
-	gl.Log("info", "Getting system information")
+	logz.Log("info", "Getting system information")
 
 	hostname, _ := os.Hostname()
 	wd, _ := os.Getwd()
@@ -229,7 +227,7 @@ func (c *MetricsController) SystemInfo(ctx *gin.Context) {
 }
 
 func (c *MetricsController) ShellCommand(ctx *gin.Context) {
-	gl.Log("info", "Executing shell command")
+	logz.Log("info", "Executing shell command")
 
 	var request struct {
 		Command string `json:"command" binding:"required"`
@@ -239,7 +237,7 @@ func (c *MetricsController) ShellCommand(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		gl.Log("error", "Failed to bind shell command request", err)
+		logz.Log("error", "Failed to bind shell command request", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
 		return
 	}
@@ -262,7 +260,7 @@ func (c *MetricsController) ShellCommand(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		gl.Log("warn", "Failed to parse command", err)
+		logz.Log("warn", "Failed to parse command", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("command parsing failed: %w", err))
 		return
 	}
@@ -306,7 +304,7 @@ func (c *MetricsController) ShellCommand(ctx *gin.Context) {
 			response["truncated"] = result.Truncated
 		}
 
-		gl.Log("warn", "Command execution failed", parsed.Name, err)
+		logz.Log("warn", "Command execution failed", parsed.Name, err)
 		response["error"] = err.Error()
 		response["status"] = "failed"
 
@@ -336,7 +334,7 @@ func (c *MetricsController) ShellCommand(ctx *gin.Context) {
 }
 
 func (c *MetricsController) GetCPUInfo(ctx *gin.Context) {
-	gl.Log("info", "Getting CPU information")
+	logz.Log("info", "Getting CPU information")
 
 	cpuInfo := map[string]interface{}{
 		"num_cpu":      runtime.NumCPU(),
@@ -352,7 +350,7 @@ func (c *MetricsController) GetCPUInfo(ctx *gin.Context) {
 }
 
 func (c *MetricsController) GetMemoryInfo(ctx *gin.Context) {
-	gl.Log("info", "Getting memory information")
+	logz.Log("info", "Getting memory information")
 
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
@@ -377,7 +375,7 @@ func (c *MetricsController) GetMemoryInfo(ctx *gin.Context) {
 }
 
 func (c *MetricsController) GetDiskInfo(ctx *gin.Context) {
-	gl.Log("info", "Getting disk information")
+	logz.Log("info", "Getting disk information")
 
 	diskInfo := map[string]interface{}{
 		"timestamp": time.Now().Unix(),
@@ -414,7 +412,7 @@ func (c *MetricsController) GetDiskInfo(ctx *gin.Context) {
 }
 
 func (c *MetricsController) RegisterTools(ctx *gin.Context) {
-	gl.Log("info", "Registering new MCP tool")
+	logz.Log("info", "Registering new MCP tool")
 
 	var request struct {
 		Name        string                 `json:"name" binding:"required"`
@@ -425,14 +423,14 @@ func (c *MetricsController) RegisterTools(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		gl.Log("error", "Failed to bind register tool request", err)
+		logz.Log("error", "Failed to bind register tool request", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
 		return
 	}
 
 	// Note: For security reasons, we cannot allow arbitrary tool registration with custom handlers
 	// This endpoint would be used for registering metadata of external tools
-	gl.Log("info", "Tool registration requested", request.Name, request.Title)
+	logz.Log("info", "Tool registration requested", request.Name, request.Title)
 
 	c.apiWrapper.JSONResponseWithSuccess(ctx, "tool registration completed", "", map[string]interface{}{
 		"name":        request.Name,
@@ -445,14 +443,14 @@ func (c *MetricsController) RegisterTools(ctx *gin.Context) {
 }
 
 func (c *MetricsController) RegisterResources(ctx *gin.Context) {
-	gl.Log("info", "Registering MCP resources")
+	logz.Log("info", "Registering MCP resources")
 
 	var request struct {
 		Resources []map[string]interface{} `json:"resources" binding:"required"`
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		gl.Log("error", "Failed to bind register resources request", err)
+		logz.Log("error", "Failed to bind register resources request", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
 		return
 	}
@@ -460,7 +458,7 @@ func (c *MetricsController) RegisterResources(ctx *gin.Context) {
 	registeredResources := make([]map[string]interface{}, 0)
 	for _, resource := range request.Resources {
 		if name, ok := resource["name"].(string); ok {
-			gl.Log("info", "Registering resource", name)
+			logz.Log("info", "Registering resource", name)
 			resource["status"] = "registered"
 			resource["timestamp"] = time.Now().Unix()
 			registeredResources = append(registeredResources, resource)
@@ -475,7 +473,7 @@ func (c *MetricsController) RegisterResources(ctx *gin.Context) {
 }
 
 func (c *MetricsController) HandleAnalyzeMessage(ctx *gin.Context) {
-	gl.Log("info", "Analyzing message")
+	logz.Log("info", "Analyzing message")
 
 	var request struct {
 		Message string                 `json:"message" binding:"required"`
@@ -483,7 +481,7 @@ func (c *MetricsController) HandleAnalyzeMessage(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		gl.Log("error", "Failed to bind analyze message request", err)
+		logz.Log("error", "Failed to bind analyze message request", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
 		return
 	}
@@ -511,7 +509,7 @@ func (c *MetricsController) HandleAnalyzeMessage(ctx *gin.Context) {
 }
 
 func (c *MetricsController) HandleCreateTask(ctx *gin.Context) {
-	gl.Log("info", "Creating new task")
+	logz.Log("info", "Creating new task")
 
 	var request struct {
 		Title       string                 `json:"title" binding:"required"`
@@ -523,7 +521,7 @@ func (c *MetricsController) HandleCreateTask(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		gl.Log("error", "Failed to bind create task request", err)
+		logz.Log("error", "Failed to bind create task request", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
 		return
 	}
@@ -562,7 +560,7 @@ func (c *MetricsController) HandleCreateTask(ctx *gin.Context) {
 	}
 
 	// Note: In a real implementation, this would be stored in a database
-	gl.Log("info", "Task created", taskID, request.Title)
+	logz.Log("info", "Task created", taskID, request.Title)
 
 	c.apiWrapper.JSONResponseWithSuccess(ctx, "task created successfully", "", task)
 }
@@ -570,7 +568,7 @@ func (c *MetricsController) HandleCreateTask(ctx *gin.Context) {
 // ListTools returns all registered MCP tools
 func (c *MetricsController) ListTools(ctx *gin.Context) {
 	if c.registry == nil {
-		gl.Log("error", "MCP registry is not initialized")
+		logz.Log("error", "MCP registry is not initialized")
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("registry not available"))
 		return
 	}
@@ -586,7 +584,7 @@ func (c *MetricsController) ListTools(ctx *gin.Context) {
 // ExecTool executes an MCP tool by name
 func (c *MetricsController) ExecTool(ctx *gin.Context) {
 	if c.registry == nil {
-		gl.Log("error", "MCP registry is not initialized")
+		logz.Log("error", "MCP registry is not initialized")
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("registry not available"))
 		return
 	}
@@ -597,7 +595,7 @@ func (c *MetricsController) ExecTool(ctx *gin.Context) {
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
-		gl.Log("error", "Failed to bind exec request", err)
+		logz.Log("error", "Failed to bind exec request", err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("invalid request format: %w", err))
 		return
 	}
@@ -608,7 +606,7 @@ func (c *MetricsController) ExecTool(ctx *gin.Context) {
 
 	result, err := c.registry.Exec(ctx.Request.Context(), request.Tool, request.Args)
 	if err != nil {
-		gl.Log("error", "Tool execution failed", request.Tool, err)
+		logz.Log("error", "Tool execution failed", request.Tool, err)
 		c.apiWrapper.JSONResponseWithError(ctx, fmt.Errorf("tool execution failed: %w", err))
 		return
 	}
@@ -727,7 +725,7 @@ func toJSON(v interface{}) string {
 // logAuditEntry logs audit information to the logger (placeholder for DB)
 func (c *MetricsController) logAuditEntry(entry map[string]interface{}) {
 	// TODO: Store in database when audit table is available
-	gl.Log("info", "AUDIT: cmd=%s user=%s channel=%s exit=%v duration=%vms",
+	logz.Log("info", "AUDIT: cmd=%s user=%s channel=%s exit=%v duration=%vms",
 		entry["command"],
 		entry["user_id"],
 		entry["channel"],

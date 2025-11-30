@@ -20,7 +20,7 @@ import (
 
 	m "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type AnalyzerController struct {
@@ -32,7 +32,7 @@ type AnalyzerController struct {
 
 func NewAnalyzerController(bridge *m.Bridge) *AnalyzerController {
 	if bridge == nil {
-		gl.Log("warn", "Bridge is nil for AnalyzerController")
+		logz.Log("warn", "Bridge is nil for AnalyzerController")
 		return &AnalyzerController{
 			APIWrapper: t.NewAPIWrapper[any](),
 		}
@@ -285,7 +285,7 @@ type NotificationRequest struct {
 func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 	var req RepositoryIntelligenceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		gl.Log("error", "Failed to bind analysis request", err)
+		logz.Log("error", "Failed to bind analysis request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
@@ -297,7 +297,7 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 
 	jobType, normalizedType, err := resolveAnalysisJobType(req.AnalysisType)
 	if err != nil {
-		gl.Log("warn", "Invalid analysis type", "value", req.AnalysisType, "error", err)
+		logz.Log("warn", "Invalid analysis type", "value", req.AnalysisType, "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":       "Invalid analysis type",
 			"valid_types": supportedAnalysisAliases(),
@@ -324,7 +324,7 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 	}
 
 	if userID == uuid.Nil {
-		gl.Log("warn", "Missing user identifier for analyzer schedule")
+		logz.Log("warn", "Missing user identifier for analyzer schedule")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID is required"})
 		return
 	}
@@ -391,7 +391,7 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 
 	createdJob, err := ac.analysisService.CreateJob(ctx, analysisJob)
 	if err != nil {
-		gl.Log("error", "Failed to create analysis job", "repo_url", req.RepoURL, "error", err)
+		logz.Log("error", "Failed to create analysis job", "repo_url", req.RepoURL, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to schedule repository analysis"})
 		return
 	}
@@ -402,7 +402,7 @@ func (ac *AnalyzerController) ScheduleAnalysis(c *gin.Context) {
 	}
 	response.Metadata = mergeMetadata(response.Metadata, metadata)
 
-	gl.Log("info", "Repository analysis scheduled",
+	logz.Log("info", "Repository analysis scheduled",
 		"job_id", response.ID,
 		"repo_url", response.RepoURL,
 		"job_type", response.JobType,
@@ -444,7 +444,7 @@ func (ac *AnalyzerController) GetAnalysisStatus(c *gin.Context) {
 
 	job, err := ac.analysisService.GetJobByID(c.Request.Context(), identifier)
 	if err != nil {
-		gl.Log("error", "Failed to get analysis job", "job_id", jobID, "error", err)
+		logz.Log("error", "Failed to get analysis job", "job_id", jobID, "error", err)
 		if isNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
 		} else {
@@ -454,7 +454,7 @@ func (ac *AnalyzerController) GetAnalysisStatus(c *gin.Context) {
 	}
 
 	response := convertModelToAnalysisJob(job)
-	gl.Log("info", "Analysis status retrieved", "job_id", jobID, "status", response.Status)
+	logz.Log("info", "Analysis status retrieved", "job_id", jobID, "status", response.Status)
 	c.JSON(http.StatusOK, response)
 }
 
@@ -493,7 +493,7 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 
 	job, err := ac.analysisService.GetJobByID(c.Request.Context(), identifier)
 	if err != nil {
-		gl.Log("error", "Failed to get analysis job for results", "job_id", jobID, "error", err)
+		logz.Log("error", "Failed to get analysis job for results", "job_id", jobID, "error", err)
 		if isNotFoundError(err) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Job not found"})
 		} else {
@@ -520,36 +520,36 @@ func (ac *AnalyzerController) GetAnalysisResults(c *gin.Context) {
 	switch strings.ToLower(format) {
 	case "scorecard":
 		if scorecard, ok := results["scorecard"]; ok {
-			gl.Log("info", "Scorecard results retrieved", "job_id", jobID)
+			logz.Log("info", "Scorecard results retrieved", "job_id", jobID)
 			c.JSON(http.StatusOK, scorecard)
 			return
 		}
-		gl.Log("info", "Returning raw results for scorecard format", "job_id", jobID)
+		logz.Log("info", "Returning raw results for scorecard format", "job_id", jobID)
 		c.JSON(http.StatusOK, results)
 	case "dora":
 		if section := nestedMapValue(results, "scorecard", "dora"); section != nil {
-			gl.Log("info", "DORA metrics retrieved", "job_id", jobID)
+			logz.Log("info", "DORA metrics retrieved", "job_id", jobID)
 			c.JSON(http.StatusOK, section)
 			return
 		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "DORA metrics not available"})
 	case "chi":
 		if section := nestedMapValue(results, "scorecard", "chi"); section != nil {
-			gl.Log("info", "CHI metrics retrieved", "job_id", jobID)
+			logz.Log("info", "CHI metrics retrieved", "job_id", jobID)
 			c.JSON(http.StatusOK, section)
 			return
 		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "CHI metrics not available"})
 	case "ai":
 		if section := nestedMapValue(results, "scorecard", "ai"); section != nil {
-			gl.Log("info", "AI metrics retrieved", "job_id", jobID)
+			logz.Log("info", "AI metrics retrieved", "job_id", jobID)
 			c.JSON(http.StatusOK, section)
 			return
 		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "AI metrics not available"})
 	case "summary":
 		if summary, ok := results["summary"]; ok {
-			gl.Log("info", "Summary results retrieved", "job_id", jobID)
+			logz.Log("info", "Summary results retrieved", "job_id", jobID)
 			c.JSON(http.StatusOK, summary)
 			return
 		}
@@ -626,7 +626,7 @@ func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 
 	jobs, err := ac.analysisService.ListJobs(c.Request.Context())
 	if err != nil {
-		gl.Log("error", "Failed to list analysis jobs", "error", err)
+		logz.Log("error", "Failed to list analysis jobs", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve jobs"})
 		return
 	}
@@ -687,7 +687,7 @@ func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 		responseJobs[i] = convertModelToAnalysisJob(job)
 	}
 
-	gl.Log("info", "Analysis jobs listed", "total", total, "returned", len(responseJobs))
+	logz.Log("info", "Analysis jobs listed", "total", total, "returned", len(responseJobs))
 
 	c.JSON(http.StatusOK, gin.H{
 		"jobs":   responseJobs,
@@ -713,7 +713,7 @@ func (ac *AnalyzerController) ListAnalysisJobs(c *gin.Context) {
 func (ac *AnalyzerController) SendNotification(c *gin.Context) {
 	var req NotificationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		gl.Log("error", "Failed to bind notification request", err)
+		logz.Log("error", "Failed to bind notification request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notification format"})
 		return
 	}
@@ -764,7 +764,7 @@ func (ac *AnalyzerController) SendNotification(c *gin.Context) {
 	}
 
 	if err != nil {
-		gl.Log("error", "Failed to send notification", "type", req.Type, "error", err)
+		logz.Log("error", "Failed to send notification", "type", req.Type, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "Failed to send notification",
 			"message_id": messageID,
@@ -772,7 +772,7 @@ func (ac *AnalyzerController) SendNotification(c *gin.Context) {
 		return
 	}
 
-	gl.Log("info", "Notification sent successfully",
+	logz.Log("info", "Notification sent successfully",
 		"type", req.Type,
 		"recipients", len(req.Recipients),
 		"subject", req.Subject,
@@ -833,12 +833,12 @@ func (ac *AnalyzerController) sendDiscordNotification(ctx context.Context, req N
 		req.Header.Set("X-Request-ID", requestID)
 		_, err := http.DefaultClient.Do(req)
 		if err != nil {
-			gl.Log("error", "Failed to send Discord notification", "webhook", recipient, "error", err)
+			logz.Log("error", "Failed to send Discord notification", "webhook", recipient, "error", err)
 			continue
 		}
 
 		// Log the sending action
-		gl.Log("info", "Discord notification sent", "webhook", recipient, "message_id", messageID)
+		logz.Log("info", "Discord notification sent", "webhook", recipient, "message_id", messageID)
 	}
 
 	return nil
@@ -861,7 +861,7 @@ func (ac *AnalyzerController) sendEmailNotification(ctx context.Context, req Not
 	for _, recipient := range req.Recipients {
 		// Here you would actually send email using SMTP
 		// For now, just log it
-		gl.Log("info", "Email notification sent", "email", recipient, "subject", req.Subject, "message_id", messageID)
+		logz.Log("info", "Email notification sent", "email", recipient, "subject", req.Subject, "message_id", messageID)
 	}
 
 	return nil
@@ -886,7 +886,7 @@ func (ac *AnalyzerController) sendWebhookNotification(ctx context.Context, req N
 	for _, recipient := range req.Recipients {
 		// Here you would actually send HTTP POST to webhook URL
 		// For now, just log it
-		gl.Log("info", "Webhook notification sent", "url", recipient, "payload_size", len(payloadJSON), "message_id", messageID)
+		logz.Log("info", "Webhook notification sent", "url", recipient, "payload_size", len(payloadJSON), "message_id", messageID)
 	}
 
 	return nil
@@ -913,7 +913,7 @@ func (ac *AnalyzerController) sendLogNotification(ctx context.Context, req Notif
 	}
 
 	// Send log with specified level
-	gl.Log(logLevel, logMessage, "message_id", messageID, "recipients", req.Recipients)
+	logz.Log(logLevel, logMessage, "message_id", messageID, "recipients", req.Recipients)
 
 	return nil
 }
@@ -953,7 +953,7 @@ func (ac *AnalyzerController) GetSystemHealth(c *gin.Context) {
 
 		err := ac.analyzerService.HealthCheck(ctx)
 		if err != nil {
-			gl.Log("warn", "GemX Analyzer health check failed", err)
+			logz.Log("warn", "GemX Analyzer health check failed", err)
 			health["status"] = "degraded"
 			health["analyzer_status"] = "unhealthy"
 			health["analyzer_error"] = err.Error()
@@ -978,7 +978,7 @@ func (ac *AnalyzerController) GetSystemHealth(c *gin.Context) {
 		health["analyzer_error"] = "GemX Analyzer service is not enabled"
 	}
 
-	gl.Log("info", "Analyzer system health retrieved", "status", health["status"])
+	logz.Log("info", "Analyzer system health retrieved", "status", health["status"])
 	c.JSON(http.StatusOK, health)
 }
 

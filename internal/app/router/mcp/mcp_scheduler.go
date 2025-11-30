@@ -11,7 +11,7 @@ import (
 	mcp_scheduler_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/mcp/scheduler"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type MCPSchedulerRoutes struct {
@@ -20,20 +20,20 @@ type MCPSchedulerRoutes struct {
 
 func NewMCPSchedulerRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		gl.Log("error", "Router is nil, cannot create MCP Scheduler routes")
+		logz.Log("error", "Router is nil, cannot create MCP Scheduler routes")
 		return nil
 	}
 	rtl := *rtr
 
 	dbService := rtl.GetDatabaseService().(*gdbasez.DBServiceImpl)
 	if dbService == nil {
-		gl.Log("error", "Database service is nil for OAuthRoutes")
+		logz.Log("error", "Database service is nil for OAuthRoutes")
 		return nil
 	}
 	ctx := context.Background()
 	dbCfg := dbService.GetConfig(ctx)
 	if dbCfg == nil {
-		gl.Log("error", "Database config is nil for OAuthRoutes")
+		logz.Log("error", "Database config is nil for OAuthRoutes")
 		return nil
 	}
 	dbName := dbCfg.GetDBName()

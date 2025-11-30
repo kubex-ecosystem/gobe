@@ -10,7 +10,7 @@ import (
 	s "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
 
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -30,7 +30,7 @@ func NewGoBE(args kbx.InitArgs) (ci.IGoBE, error) {
 	if err != nil {
 		return nil, err
 	}
-	goBe, err := gb.NewGoBE(&args, gl.LoggerG.GetLogger())
+	goBe, err := gb.NewGoBE(&args, logz.GetLoggerZ("GoBE"))
 	if err != nil {
 		return nil, err
 	}
@@ -58,13 +58,13 @@ func initRabbitMQ() error {
 	if url != "" {
 		rabbitMQConn, err = amqp.Dial(url)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
+			logz.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
 			return err
 		}
 		if rabbitMQConn == nil {
 			return fmt.Errorf("RabbitMQ connection is not initialized")
 		}
-		gl.Log("info", "Conexão com RabbitMQ estabelecida com sucesso.")
+		logz.Log("info", "Conexão com RabbitMQ estabelecida com sucesso.")
 	}
 	return nil
 }
@@ -72,19 +72,19 @@ func initRabbitMQ() error {
 func ConsumeMessages(queueName string) {
 	url := msg.GetRabbitMQURL(dbService)
 	if url == "" {
-		gl.Log("error", "RabbitMQ URL is not configured")
+		logz.Log("error", "RabbitMQ URL is not configured")
 		return
 	}
 	conn, err := amqp.Dial(url)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
+		logz.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
 		return
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao abrir um canal: %s", err))
+		logz.Log("error", fmt.Sprintf("Erro ao abrir um canal: %s", err))
 		return
 	}
 	defer ch.Close()
@@ -99,7 +99,7 @@ func ConsumeMessages(queueName string) {
 		nil,
 	)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao registrar um consumidor: %s", err))
+		logz.Log("error", fmt.Sprintf("Erro ao registrar um consumidor: %s", err))
 		return
 	}
 
@@ -107,19 +107,19 @@ func ConsumeMessages(queueName string) {
 
 	go func() {
 		for d := range msgs {
-			gl.Log("debug", fmt.Sprintf("Mensagem recebida: %s", d.Body))
+			logz.Log("debug", fmt.Sprintf("Mensagem recebida: %s", d.Body))
 			// Processar a mensagem aqui
 		}
 	}()
 
-	gl.Log("debug", fmt.Sprintf("Aguardando mensagens na fila %s. Para sair pressione CTRL+C", queueName))
+	logz.Log("debug", fmt.Sprintf("Aguardando mensagens na fila %s. Para sair pressione CTRL+C", queueName))
 	<-forever
 }
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {
 	for i := 0; i < attempts; i++ {
 		if err := fn(); err != nil {
-			gl.Log("error", fmt.Sprintf("Tentativa %d falhou: %v", i+1, err))
+			logz.Log("error", fmt.Sprintf("Tentativa %d falhou: %v", i+1, err))
 			time.Sleep(sleep)
 			continue
 		}
@@ -137,19 +137,19 @@ func PublishMessageWithRetry(queueName string, message string) error {
 func PublishMessage(queueName, message string) error {
 	url := msg.GetRabbitMQURL(dbService)
 	if url == "" {
-		gl.Log("error", "RabbitMQ URL is not configured")
+		logz.Log("error", "RabbitMQ URL is not configured")
 		return fmt.Errorf("RabbitMQ URL is not configured")
 	}
 	conn, err := amqp.Dial(url)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
+		logz.Log("error", fmt.Sprintf("Erro ao conectar ao RabbitMQ: %s", err))
 		return err
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao abrir um canal: %s", err))
+		logz.Log("error", fmt.Sprintf("Erro ao abrir um canal: %s", err))
 		return err
 	}
 	defer ch.Close()
@@ -165,11 +165,11 @@ func PublishMessage(queueName, message string) error {
 		},
 	)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao publicar mensagem: %s", err))
+		logz.Log("error", fmt.Sprintf("Erro ao publicar mensagem: %s", err))
 		return err
 	}
 
-	gl.Log("info", fmt.Sprintf("Mensagem publicada na fila %s: %s", queueName, message))
+	logz.Log("info", fmt.Sprintf("Mensagem publicada na fila %s: %s", queueName, message))
 	return nil
 }
 
@@ -179,7 +179,7 @@ func GetDatabaseService(goBE ci.IGoBE) (s.DBService, error) {
 	}
 	dbService := goBE.GetDatabaseService()
 	if dbService == nil {
-		gl.Log("error", "Database service is nil")
+		logz.Log("error", "Database service is nil")
 		return nil, nil
 	}
 	return dbService, nil

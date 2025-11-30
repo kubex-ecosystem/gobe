@@ -8,7 +8,7 @@ package customers
 
 // 	mdl "github.com/kubex-ecosystem/gdbase/factory/models"
 // 	gdbasez "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-// 	gl "github.com/kubex-ecosystem/logz/logger"
+// 	gl "github.com/kubex-ecosystem/logz"
 
 // 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 // )
@@ -26,7 +26,7 @@ package customers
 // func NewCustomerController(bridge *gdbasez.Bridge) *CustomerController {
 // 	clientRepo := mdl.NewClientRepo(context.Background(), bridge.DBService().(*gdbasez.DBServiceImpl))
 // 	if clientRepo == nil {
-// 		gl.Log("error", "Failed to create ClientRepo")
+// 		logz.Log("error", "Failed to create ClientRepo")
 // 		return nil
 // 	}
 // 	clientService := mdl.NewClientService(clientRepo)

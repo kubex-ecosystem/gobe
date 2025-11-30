@@ -18,7 +18,7 @@ import (
 	"google.golang.org/genai"
 
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type Client struct {
@@ -114,22 +114,22 @@ func NewClient(config bootstrap.LLMConfig) (*Client, error) {
 		apiKey = "dev_api_key"
 	}
 
-	gl.Log("info", "Initializing LLM Client with configuration:")
-	gl.Log("info", fmt.Sprintf("   Config Provider: %s", config.Provider))
-	gl.Log("info", fmt.Sprintf("   Detected Provider: %s", detectedProvider))
+	logz.Log("info", "Initializing LLM Client with configuration:")
+	logz.Log("info", fmt.Sprintf("   Config Provider: %s", config.Provider))
+	logz.Log("info", fmt.Sprintf("   Detected Provider: %s", detectedProvider))
 	if len(apiKey) > 10 && !devMode {
-		gl.Log("debug", fmt.Sprintf("   APIKey: %s... (len=%d)", apiKey[:10], len(apiKey)))
+		logz.Log("debug", fmt.Sprintf("   APIKey: %s... (len=%d)", apiKey[:10], len(apiKey)))
 	} else {
-		gl.Log("debug", fmt.Sprintf("   APIKey: '%s' (len=%d)", apiKey, len(apiKey)))
+		logz.Log("debug", fmt.Sprintf("   APIKey: '%s' (len=%d)", apiKey, len(apiKey)))
 	}
-	gl.Log("info", fmt.Sprintf("   Model: %s", config.Model))
-	gl.Log("info", fmt.Sprintf("   Temperature: %.2f", config.Temperature))
-	gl.Log("info", fmt.Sprintf("   MaxTokens: %d", config.MaxTokens))
-	gl.Log("info", fmt.Sprintf("   TopP: %.2f", config.TopP))
-	gl.Log("info", fmt.Sprintf("   FrequencyPenalty: %.2f", config.FrequencyPenalty))
-	gl.Log("info", fmt.Sprintf("   PresencePenalty: %.2f", config.PresencePenalty))
-	gl.Log("info", fmt.Sprintf("   StopSequences: %v", config.StopSequences))
-	gl.Log("info", fmt.Sprintf("   DevMode: %v", devMode))
+	logz.Log("info", fmt.Sprintf("   Model: %s", config.Model))
+	logz.Log("info", fmt.Sprintf("   Temperature: %.2f", config.Temperature))
+	logz.Log("info", fmt.Sprintf("   MaxTokens: %d", config.MaxTokens))
+	logz.Log("info", fmt.Sprintf("   TopP: %.2f", config.TopP))
+	logz.Log("info", fmt.Sprintf("   FrequencyPenalty: %.2f", config.FrequencyPenalty))
+	logz.Log("info", fmt.Sprintf("   PresencePenalty: %.2f", config.PresencePenalty))
+	logz.Log("info", fmt.Sprintf("   StopSequences: %v", config.StopSequences))
+	logz.Log("info", fmt.Sprintf("   DevMode: %v", devMode))
 
 	// Validate provider
 	validProviders := []string{"openai", "gemini", "groq", "dev"}
@@ -152,7 +152,7 @@ func NewClient(config bootstrap.LLMConfig) (*Client, error) {
 	switch detectedProvider {
 	case "openai":
 		openaiClient = openai.NewClient(apiKey)
-		gl.Log("info", "Initialized OpenAI client")
+		logz.Log("info", "Initialized OpenAI client")
 	case "gemini":
 		ctx := context.Background()
 		client, err := genai.NewClient(ctx, &genai.ClientConfig{
@@ -162,12 +162,12 @@ func NewClient(config bootstrap.LLMConfig) (*Client, error) {
 			return nil, fmt.Errorf("failed to create Gemini client: %w", err)
 		}
 		geminiClient = client
-		gl.Log("info", "Initialized Gemini client")
+		logz.Log("info", "Initialized Gemini client")
 	case "groq":
 		// Groq client will be created on-demand in analyzeWithGroq
-		gl.Log("info", "Groq client will be initialized on-demand")
+		logz.Log("info", "Groq client will be initialized on-demand")
 	case "dev":
-		gl.Log("info", "Running in development mode - using mock responses")
+		logz.Log("info", "Running in development mode - using mock responses")
 	}
 
 	// Cache for 5 minutes
@@ -402,7 +402,7 @@ func (c *Client) analyzeWithGemini(ctx context.Context, req AnalysisRequest) (*A
 		MaxOutputTokens: int32(c.config.MaxTokens),
 	}
 
-	gl.Log("debug", fmt.Sprintf("Calling Gemini API with model: %s", modelName))
+	logz.Log("debug", fmt.Sprintf("Calling Gemini API with model: %s", modelName))
 
 	// Use streaming to get response (adapted from Analyzer implementation)
 	iter := c.gemini.Models.GenerateContentStream(ctx, modelName, contents, config)
@@ -433,7 +433,7 @@ func (c *Client) analyzeWithGemini(ctx context.Context, req AnalysisRequest) (*A
 	}
 
 	responseText := fullContent.String()
-	gl.Log("debug", fmt.Sprintf("Gemini response: %s", responseText))
+	logz.Log("debug", fmt.Sprintf("Gemini response: %s", responseText))
 
 	return c.parseAnalysisResponse(responseText), nil
 }
@@ -458,7 +458,7 @@ func (c *Client) analyzeWithGroq(ctx context.Context, req AnalysisRequest) (*Ana
 		model = "llama3-8b-8192" // Default Groq model
 	}
 
-	gl.Log("debug", fmt.Sprintf("Calling Groq API with model: %s", model))
+	logz.Log("debug", fmt.Sprintf("Calling Groq API with model: %s", model))
 
 	resp, err := groqClient.CreateChatCompletion(ctx, openai.ChatCompletionRequest{
 		Model: model,
@@ -480,7 +480,7 @@ func (c *Client) analyzeWithGroq(ctx context.Context, req AnalysisRequest) (*Ana
 		return nil, fmt.Errorf("groq API error: %w", err)
 	}
 
-	gl.Log("debug", fmt.Sprintf("Groq response: %s", resp.Choices[0].Message.Content))
+	logz.Log("debug", fmt.Sprintf("Groq response: %s", resp.Choices[0].Message.Content))
 
 	return c.parseAnalysisResponse(resp.Choices[0].Message.Content), nil
 }

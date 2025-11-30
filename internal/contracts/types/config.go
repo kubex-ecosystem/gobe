@@ -9,7 +9,7 @@ import (
 	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // TLSConfig is a struct that holds the TLS configuration for the GoBE instance.
@@ -193,7 +193,7 @@ func NewGoBEConfig(name, filePath, configFormat, bind, port string) *GoBEConfig 
 		if errors.Is(statErr, os.ErrNotExist) {
 			gbmCfg.Mapper.SerializeToFile(configFormat)
 		} else {
-			gl.Log("error", fmt.Sprintf("Failed to stat config file: %v", statErr))
+			logz.Log("error", fmt.Sprintf("Failed to stat config file: %v", statErr))
 		}
 	} else {
 		gbmCfg.Mapper.DeserializeFromFile(configFormat)
@@ -251,15 +251,15 @@ func (c *GoBEConfig) SetMetricsEnabled(metricsEnabled bool) { c.MetricsEnabled =
 func (c *GoBEConfig) SetJWTSecretKey(jwtSecretKey string) {
 	cryptoService := crp.NewCryptoService()
 	if jwtSecretKey == "" {
-		gl.Log("error", "JWT secret key is empty")
+		logz.Log("error", "JWT secret key is empty")
 		jwtSecretKeyByte, jwtSecretKeyByteErr := cryptoService.GenerateKeyWithLength(32)
 		if jwtSecretKeyByteErr != nil {
 			jwtSecretKey = ""
-			gl.Log("fatal", fmt.Sprintf("Failed to generate JWT secret key: %v", jwtSecretKeyByteErr))
+			logz.Log("fatal", fmt.Sprintf("Failed to generate JWT secret key: %v", jwtSecretKeyByteErr))
 		} else {
 			jwtSecretKey = cryptoService.EncodeBase64(jwtSecretKeyByte)
 			if jwtSecretKey == "" {
-				gl.Log("fatal", "Failed to generate JWT secret key")
+				logz.Log("fatal", "Failed to generate JWT secret key")
 			}
 		}
 	}
@@ -312,7 +312,7 @@ func (c *GoBEConfig) Load() error {
 
 	_, err := c.Mapper.DeserializeFromFile(c.ConfigFormat)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to load config: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to load config: %v", err))
 	}
 	//c = *newCfg
 

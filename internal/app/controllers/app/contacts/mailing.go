@@ -11,22 +11,22 @@ import (
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 func enqueueEmail(cc *ContactController, emailQueue chan t.ContactForm) {
 	if cc.properties == nil {
-		gl.Log("error", "Properties not set in contact controller")
+		logz.Log("error", "Properties not set in contact controller")
 		return
 	}
 	formT, ok := cc.properties["contactForm"]
 	if !ok {
-		gl.Log("error", "Invalid contact form type")
+		logz.Log("error", "Invalid contact form type")
 		return
 	}
 	form, ok := formT.(*t.Property[t.ContactForm])
 	if !ok {
-		gl.Log("error", "Invalid contact form type")
+		logz.Log("error", "Invalid contact form type")
 		return
 	}
 	go func(form t.ContactForm) {
@@ -37,7 +37,7 @@ func processQueue(cc *ContactController, attempts int, emailQueue chan t.Contact
 	for form := range emailQueue {
 		go func(f t.ContactForm) {
 			if err := sendEmailWithRetry(cc, f, attempts); err != nil {
-				gl.Log("error", "Failed to send email after 3 attempts:", err.Error())
+				logz.Log("error", "Failed to send email after 3 attempts:", err.Error())
 			}
 		}(form)
 	}
@@ -64,18 +64,18 @@ func getSMTPConfig(env ci.IEnvironment) SMTPConfig {
 
 func sendEmail(cc *ContactController, form t.ContactForm) error {
 	if cc.properties == nil {
-		gl.Log("error", "Properties not set in contact controller")
+		logz.Log("error", "Properties not set in contact controller")
 		return errors.New("properties not set in contact controller")
 	}
 
 	env, ok := cc.properties["environment"]
 	if !ok {
-		gl.Log("error", "Environment not set in properties")
+		logz.Log("error", "Environment not set in properties")
 		return errors.New("environment not set in properties")
 	}
 	envT, ok := env.(*t.Property[ci.IEnvironment])
 	if !ok {
-		gl.Log("error", "Invalid environment type")
+		logz.Log("error", "Invalid environment type")
 		return errors.New("invalid environment type")
 	}
 	envF := envT.GetValue()
@@ -83,9 +83,9 @@ func sendEmail(cc *ContactController, form t.ContactForm) error {
 	// Obtém as configurações SMTP parametrizadas
 	smtpConfig := getSMTPConfig(envF)
 	if smtpConfig.User == "" || smtpConfig.Pass == "" {
-		gl.Log("error", "Email user or password not set in environment variables")
-		gl.Log("notice", fmt.Sprintf("User: %s", smtpConfig.User))
-		gl.Log("notice", fmt.Sprintf("Password: %s", smtpConfig.Pass))
+		logz.Log("error", "Email user or password not set in environment variables")
+		logz.Log("notice", fmt.Sprintf("User: %s", smtpConfig.User))
+		logz.Log("notice", fmt.Sprintf("Password: %s", smtpConfig.Pass))
 		return errors.New("email user or password not set in environment variables")
 	}
 
@@ -103,7 +103,7 @@ func sendEmail(cc *ContactController, form t.ContactForm) error {
 		"From: " + from + "\r\n" +
 		"To: " + strings.Join(to, ",") + "\r\n\r\n" + body)
 
-	gl.Log("info", fmt.Sprintf("Sending email contact from %s to %s", form.Email, smtpConfig.User))
+	logz.Log("info", fmt.Sprintf("Sending email contact from %s to %s", form.Email, smtpConfig.User))
 
 	// Autenticação SMTP Padrão:
 	auth := smtp.PlainAuth("", smtpConfig.User, smtpConfig.Pass, smtpConfig.Host)
@@ -112,11 +112,11 @@ func sendEmail(cc *ContactController, form t.ContactForm) error {
 	address := smtpConfig.Host + ":" + smtpConfig.Port
 	err := smtp.SendMail(address, auth, from, to, msg)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to send email via %s: %v", smtpConfig.Host, err.Error()))
+		logz.Log("error", fmt.Sprintf("Failed to send email via %s: %v", smtpConfig.Host, err.Error()))
 		return err
 	}
 
-	gl.Log("success", "Email sent successfully")
+	logz.Log("success", "Email sent successfully")
 	return nil
 }
 
@@ -132,17 +132,17 @@ func sendEmailWithTimeout(cc *ContactController, form t.ContactForm) error {
 	select {
 	case <-ctx.Done():
 		if ctx.Err() != nil {
-			gl.Log("error", fmt.Sprintf("Timeout error: %v", ctx.Err().Error()))
+			logz.Log("error", fmt.Sprintf("Timeout error: %v", ctx.Err().Error()))
 			return errors.New("error: " + ctx.Err().Error())
 		}
 	case err := <-errChan:
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error sending email: %v", err.Error()))
+			logz.Log("error", fmt.Sprintf("Error sending email: %v", err.Error()))
 			return err // Falha ao enviar
 		}
 	}
 
-	gl.Log("success", "Email sent successfully within timeout")
+	logz.Log("success", "Email sent successfully within timeout")
 	return nil // Sucesso no envio
 }
 
@@ -151,7 +151,7 @@ func sendEmailWithRetry(cc *ContactController, form t.ContactForm, attempts int)
 	for attemptsCounter := 0; attemptsCounter < attempts; attemptsCounter++ {
 		err = sendEmailWithTimeout(cc, form)
 		if err == nil {
-			gl.Log("success", fmt.Sprintf("Email sent successfully after %d attempt(s)", attemptsCounter+1))
+			logz.Log("success", fmt.Sprintf("Email sent successfully after %d attempt(s)", attemptsCounter+1))
 			return nil // Sucesso
 		}
 		// Implementa uma estratégia de retry exponencial:

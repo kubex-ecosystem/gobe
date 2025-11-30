@@ -2,8 +2,7 @@ package types
 
 import (
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
 
 	"fmt"
 	"reflect"
@@ -17,7 +16,7 @@ type Pointer[T any] = atomic.Pointer[T]
 // PropertyValBase is a type for the value.
 type PropertyValBase[T any] struct {
 	// Logger is the logger for this context.
-	Logger l.Logger `json:"-" yaml:"-" toml:"-" xml:"-"`
+	Logger *logz.LoggerZ `json:"-" yaml:"-" toml:"-" xml:"-"`
 
 	// v is the value.
 	*Pointer[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
@@ -57,7 +56,7 @@ func newVal[T any](name string, v *T) *PropertyValBase[T] {
 	for _, validator := range validators {
 		validation.RemoveValidator(validator.GetPriority())
 	}
-	gl.Log("debug", "Created new PropertyValBase instance for:", name, "ID:", ref.GetID().String())
+	logz.Log("debug", "Created new PropertyValBase instance for:", name, "ID:", ref.GetID().String())
 
 	return &PropertyValBase[T]{
 		Pointer:    &vv,
@@ -71,9 +70,9 @@ func newVal[T any](name string, v *T) *PropertyValBase[T] {
 func NewVal[T any](name string, v *T) ci.IPropertyValBase[T] { return newVal(name, v) }
 
 // GetLogger is a method that returns the logger for the value.
-func (v *PropertyValBase[T]) GetLogger() l.Logger {
+func (v *PropertyValBase[T]) GetLogger() *logz.LoggerZ {
 	if v == nil {
-		gl.Log("error", "GetLogger: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "GetLogger: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return nil
 	}
 	return v.Logger
@@ -82,7 +81,7 @@ func (v *PropertyValBase[T]) GetLogger() l.Logger {
 // GetName is a method that returns the name of the value.
 func (v *PropertyValBase[T]) GetName() string {
 	if v == nil {
-		gl.Log("error", "GetName: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "GetName: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return ""
 	}
 	return v.Name
@@ -91,7 +90,7 @@ func (v *PropertyValBase[T]) GetName() string {
 // GetID is a method that returns the ID of the value.
 func (v *PropertyValBase[T]) GetID() uuid.UUID {
 	if v == nil {
-		gl.Log("error", "GetID: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "GetID: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return uuid.Nil
 	}
 	return v.ID
@@ -100,7 +99,7 @@ func (v *PropertyValBase[T]) GetID() uuid.UUID {
 // Value is a method that returns the value.
 func (v *PropertyValBase[T]) Value() *T {
 	if v == nil {
-		gl.Log("error", "Value: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "Value: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return nil
 	}
 	return v.Pointer.Load()
@@ -109,11 +108,11 @@ func (v *PropertyValBase[T]) Value() *T {
 // StartCtl is a method that starts the control channel.
 func (v *PropertyValBase[T]) StartCtl() <-chan string {
 	if v == nil {
-		gl.Log("error", "StartCtl: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "StartCtl: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return nil
 	}
 	if v.channelCtl == nil {
-		gl.Log("error", "StartCtl: channel control is nil (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "StartCtl: channel control is nil (", reflect.TypeFor[T]().String(), ")")
 		return nil
 	}
 	return v.channelCtl.Channels["ctl"].(<-chan string)
@@ -125,13 +124,13 @@ func (v *PropertyValBase[T]) Type() reflect.Type { return reflect.TypeFor[T]() }
 // Get is a method that returns the value.
 func (v *PropertyValBase[T]) Get(async bool) any {
 	if v == nil {
-		gl.Log("error", "Get: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "Get: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return nil
 	}
 	vl := v.Pointer.Load()
 	if async {
 		if v.channelCtl != nil {
-			gl.Log("debug", "Getting value from channel for:", v.Name, "ID:", v.ID.String())
+			logz.Log("debug", "Getting value from channel for:", v.Name, "ID:", v.ID.String())
 			mCh := v.channelCtl.Channels["get"]
 			if mCh != nil {
 				ch := reflect.ValueOf(mCh)
@@ -140,7 +139,7 @@ func (v *PropertyValBase[T]) Get(async bool) any {
 		}
 		return vl
 	} else {
-		gl.Log("debug", "Getting value for:", v.Name, "ID:", v.ID.String())
+		logz.Log("debug", "Getting value for:", v.Name, "ID:", v.ID.String())
 		return v.Pointer.Load()
 	}
 }
@@ -148,28 +147,28 @@ func (v *PropertyValBase[T]) Get(async bool) any {
 // Set is a method that sets the value.
 func (v *PropertyValBase[T]) Set(t *T) bool {
 	if v == nil {
-		gl.Log("error", "Set: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "Set: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return false
 	}
 	// Deixa o nil entrar na validação, pra ter a tratativa que a pessoa inseriu na validação que
 	// pode ser customizada, etc...
 	// if v.Validation != nil {
 	// 	if v.CheckIfWillValidate() {
-	// 		gl.Log("warning", "Set: validation is disabled (", reflect.TypeFor[T]().String(), ")")
+	// 		logz.Log("warning", "Set: validation is disabled (", reflect.TypeFor[T]().String(), ")")
 	// 	} else {
 	// 		if ok := v.Validate(t); !ok.GetIsValid() {
-	// 			gl.Log("error", fmt.Sprintf("Set: validation error (%s): %v", reflect.TypeFor[T]().String(), v.Validation.GetResults()))
+	// 			logz.Log("error", fmt.Sprintf("Set: validation error (%s): %v", reflect.TypeFor[T]().String(), v.Validation.GetResults()))
 	// 			return false
 	// 		}
 	// 	}
 	// }
 	if t == nil {
-		gl.Log("error", "Set: value is nil (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "Set: value is nil (", reflect.TypeFor[T]().String(), ")")
 		return false
 	}
 	v.Store(t)
 	if v.channelCtl != nil {
-		gl.Log("debug", "Setting value for:", v.Name, "ID:", v.ID.String())
+		logz.Log("debug", "Setting value for:", v.Name, "ID:", v.ID.String())
 		v.channelCtl.Channels["set"].(chan T) <- *t
 	}
 	return true
@@ -178,11 +177,11 @@ func (v *PropertyValBase[T]) Set(t *T) bool {
 // Clear is a method that clears the value.
 func (v *PropertyValBase[T]) Clear() bool {
 	if v == nil {
-		gl.Log("error", "Clear: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "Clear: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return false
 	}
 	if v.channelCtl != nil {
-		gl.Log("debug", "Clearing value for:", v.Name, "ID:", v.ID.String())
+		logz.Log("debug", "Clearing value for:", v.Name, "ID:", v.ID.String())
 		v.channelCtl.Channels["clear"].(chan string) <- "clear"
 	}
 	return true
@@ -191,7 +190,7 @@ func (v *PropertyValBase[T]) Clear() bool {
 // IsNil is a method that checks if the value is nil.
 func (v *PropertyValBase[T]) IsNil() bool {
 	if v == nil {
-		gl.Log("error", "Get: property does not exist (", reflect.TypeFor[T]().String(), ")")
+		logz.Log("error", "Get: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return true
 	}
 	return v.Load() == nil
@@ -204,7 +203,7 @@ func (v *PropertyValBase[T]) Serialize(filePath, format string) ([]byte, error) 
 	} else {
 		mapper := NewMapper(value, filePath)
 		if data, err := mapper.Serialize(format); err != nil {
-			gl.Log("error", "Failed to serialize data:", err.Error())
+			logz.Log("error", "Failed to serialize data:", err.Error())
 			return nil, err
 		} else {
 			return data, nil
@@ -219,7 +218,7 @@ func (v *PropertyValBase[T]) Deserialize(data []byte, format, filePath string) e
 	} else {
 		mapper := NewMapper(value, filePath)
 		if vl, vErr := mapper.Deserialize(data, format); vErr != nil {
-			gl.Log("error", "Failed to deserialize data:", vErr.Error())
+			logz.Log("error", "Failed to deserialize data:", vErr.Error())
 			return vErr
 		} else {
 			v.Store(vl)

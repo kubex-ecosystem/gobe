@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // skipMeteringPaths are paths that should not log telemetry to reduce noise
@@ -56,7 +56,7 @@ func MeterMiddleware() gin.HandlerFunc {
 			duration := endTime.(time.Time).Sub(startTime.(time.Time))
 
 			// Log the duration
-			gl.Log("debug", fmt.Sprintf("%s: Request processed in %s", traceID, duration))
+			logz.Log("debug", fmt.Sprintf("%s: Request processed in %s", traceID, duration))
 		}
 	}
 }

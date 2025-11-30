@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	crt "github.com/kubex-ecosystem/gobe/internal/app/security/certificates"
-	"github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
 )
 
 type AuthManager struct {
@@ -24,13 +24,13 @@ type AuthManager struct {
 func NewAuthManager(certService crt.CertService) (*AuthManager, error) {
 	privKey, err := certService.GetPrivateKey()
 	if err != nil {
-		logger.Log("error", fmt.Sprintf("Failed to load private key: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to load private key: %v", err))
 		return nil, err
 	}
 
 	pubKey, err := certService.GetPublicKey()
 	if err != nil {
-		logger.Log("error", fmt.Sprintf("Failed to load public key: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to load public key: %v", err))
 		return nil, err
 	}
 

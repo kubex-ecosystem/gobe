@@ -6,7 +6,7 @@ import (
 	"reflect"
 
 	svc "github.com/kubex-ecosystem/gdbase/factory"
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 	_ "github.com/lib/pq"
 )
 
@@ -32,7 +32,7 @@ type Database = svc.Database
 type EnvironmentType = svc.EnvironmentType
 type Environment = svc.Environment
 
-func NewEnvironment(configFile string, isConfidential bool, logger l.Logger) (*EnvironmentType, error) {
+func NewEnvironment(configFile string, isConfidential bool, logger *logz.LoggerZ) (*EnvironmentType, error) {
 	return svc.NewEnvironment(configFile, isConfidential, logger)
 }
 
@@ -77,7 +77,7 @@ func JSONBToImpl(data interface{}) JSONBImpl {
 	return svc.NewJSONBData()
 }
 
-func NewDBService(ctx context.Context, config *DBConfigImpl, logger l.Logger) (DBService, error) {
+func NewDBService(ctx context.Context, config *DBConfigImpl, logger *logz.LoggerZ) (DBService, error) {
 	return svc.NewDatabaseService(ctx, config, logger)
 }
 

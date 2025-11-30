@@ -1,12 +1,7 @@
 package cron
 
 import (
-	"fmt"
-	"runtime"
-	"sync"
-	"time"
-
-	l "github.com/kubex-ecosystem/logz"
+	"github.com/kubex-ecosystem/logz"
 )
 
 // JobWrapper decorates the given Job with some behavior.
@@ -40,63 +35,66 @@ func (c Chain) Then(j Job) Job {
 }
 
 // Recover panics in wrapped jobs and log them with the provided logger.
-func Recover(logger l.Logger) JobWrapper {
-	return func(j Job) Job {
-		return FuncJob(func() {
-			defer func() {
-				if r := recover(); r != nil {
-					const size = 64 << 10
-					buf := make([]byte, size)
-					buf = buf[:runtime.Stack(buf, false)]
-					err, ok := r.(error)
-					if !ok {
-						err = fmt.Errorf("%v", r)
-					}
-					logger.ErrorCtx(err.Error(), map[string]any{
-						"stack": string(buf),
-						"job":   j,
-					})
-				}
-			}()
-			j.Run()
-		})
-	}
+func Recover(logger *logz.LoggerZ) JobWrapper {
+	// return func(j Job) Job {
+	// 	// return FuncJob(func() {
+	// 	// 	defer func() {
+	// 	// 		if r := recover(); r != nil {
+	// 	// 			const size = 64 << 10
+	// 	// 			buf := make([]byte, size)
+	// 	// 			buf = buf[:runtime.Stack(buf, false)]
+	// 	// 			err, ok := r.(error)
+	// 	// 			if !ok {
+	// 	// 				err = fmt.Errorf("%v", r)
+	// 	// 			}
+	// 	// 			logger.ErrorCtx(err.Error(), map[string]any{
+	// 	// 				"stack": string(buf),
+	// 	// 				"job":   j,
+	// 	// 			})
+	// 	// 		}
+	// 	// 	}()
+	// 	// 	j.Run()
+	// 	// })
+	// }
+	return nil
 }
 
 // DelayIfStillRunning serializes jobs, delaying subsequent runs until the
 // previous one is complete. Jobs running after a delay of more than a minute
 // have the delay logged at Info.
-func DelayIfStillRunning(logger l.Logger) JobWrapper {
-	return func(j Job) Job {
-		var mu sync.Mutex
-		return FuncJob(func() {
-			start := time.Now()
-			mu.Lock()
-			defer mu.Unlock()
-			if dur := time.Since(start); dur > time.Minute {
-				logger.InfoCtx("delay", map[string]any{
-					"duration": dur,
-				})
-			}
-			j.Run()
-		})
-	}
+func DelayIfStillRunning(logger *logz.LoggerZ) JobWrapper {
+	// return func(j Job) Job {
+	// 	var mu sync.Mutex
+	// 	return FuncJob(func() {
+	// 		start := time.Now()
+	// 		mu.Lock()
+	// 		defer mu.Unlock()
+	// 		if dur := time.Since(start); dur > time.Minute {
+	// 			logger.InfoCtx("delay", map[string]any{
+	// 				"duration": dur,
+	// 			})
+	// 		}
+	// 		j.Run()
+	// 	})
+	// }
+	return nil
 }
 
 // SkipIfStillRunning skips an invocation of the Job if a previous invocation is
 // still running. It logs skips to the given logger at Info level.
-func SkipIfStillRunning(logger l.Logger) JobWrapper {
-	return func(j Job) Job {
-		var ch = make(chan struct{}, 1)
-		ch <- struct{}{}
-		return FuncJob(func() {
-			select {
-			case v := <-ch:
-				defer func() { ch <- v }()
-				j.Run()
-			default:
-				logger.InfoCtx("skip", nil)
-			}
-		})
-	}
+func SkipIfStillRunning(logger *logz.LoggerZ) JobWrapper {
+	// return func(j Job) Job {
+	// 	var ch = make(chan struct{}, 1)
+	// 	ch <- struct{}{}
+	// 	return FuncJob(func() {
+	// 		select {
+	// 		case v := <-ch:
+	// 			defer func() { ch <- v }()
+	// 			j.Run()
+	// 		default:
+	// 			logger.InfoCtx("skip", nil)
+	// 		}
+	// 	})
+	// }
+	return nil
 }

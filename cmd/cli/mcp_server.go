@@ -14,7 +14,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -86,8 +86,8 @@ func startMCPServer() {
 		os.Exit(1)
 	}
 
-	gl.Log("notice", "Starting MCP Server...")
-	gl.Log("Configuration: %+v", cfg)
+	logz.Log("notice", "Starting MCP Server...")
+	logz.Log("Configuration: %+v", cfg)
 
 	// Initialize GoBE backend
 
@@ -161,7 +161,7 @@ You can chat with OpenAI GPT, Google Gemini, or Groq models.`
 		Aliases:     []string{"conversation", "talk", "dialogue"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Starting LLM chat session...")
+			logz.Log("info", "Starting LLM chat session...")
 
 			client, err := createLLMClient()
 			if err != nil {
@@ -211,7 +211,7 @@ Supports various generation tasks like creative writing, code generation, etc.`
 		Aliases:     []string{"gen", "textgen", "create"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Starting text generation...")
+			logz.Log("info", "Starting text generation...")
 
 			client, err := createLLMClient()
 			if err != nil {
@@ -258,7 +258,7 @@ Provides insights, sentiment analysis, classification, and other analytical task
 		Aliases:     []string{"analysis", "text-analysis", "nlp-analyze", "nlp"},
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Starting text analysis...")
+			logz.Log("info", "Starting text analysis...")
 
 			client, err := createLLMClient()
 			if err != nil {
@@ -316,7 +316,7 @@ func summarizeTextCmd() *cobra.Command {
 		Long: `Summarize long text content using an LLM.
 Provides concise summaries, key points extraction, and content condensation.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			gl.Log("info", "Starting text summarization...")
+			logz.Log("info", "Starting text summarization...")
 
 			client, err := createLLMClient()
 			if err != nil {

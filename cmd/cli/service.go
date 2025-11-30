@@ -12,7 +12,7 @@ import (
 	gb "github.com/kubex-ecosystem/gobe"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,7 @@ func ServiceCmd() *cobra.Command {
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
-				gl.Log("error", "Failed to display help: ", err.Error())
+				logz.Log("error", "Failed to display help: ", err.Error())
 			}
 		},
 	}
@@ -56,19 +56,19 @@ func startCommand() *cobra.Command {
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if initArgs.Debug {
-				gl.SetDebugMode(true)
+				logz.SetDebugMode(true)
 			}
 			gbm, gbmErr := gb.NewGoBE(&initArgs, nil)
 			if gbmErr != nil {
-				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
+				logz.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
 			}
 			if gbm == nil {
-				gl.Log("fatal", "Failed to create GoBE instance: ", "GoBE instance is nil")
+				logz.Log("fatal", "Failed to create GoBE instance: ", "GoBE instance is nil")
 				return
 			}
 			gbm.StartGoBE()
-			gl.Log("success", "GoBE started successfully")
+			logz.Log("success", "GoBE started successfully")
 		},
 	}
 
@@ -116,21 +116,21 @@ func restartCommand() *cobra.Command {
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if initArgs.Debug {
-				gl.SetDebugMode(true)
+				logz.SetDebugMode(true)
 			}
 			gbm, gbmErr := gb.NewGoBE(&initArgs, nil)
 			if gbmErr != nil {
-				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
+				logz.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
 			}
 			if gbm == nil {
-				gl.Log("fatal", "Failed to create GoBE instance: ", "GoBE instance is nil")
+				logz.Log("fatal", "Failed to create GoBE instance: ", "GoBE instance is nil")
 				return
 			}
 			gbm.StopGoBE()
-			gl.Log("success", "GoBE stopped successfully")
+			logz.Log("success", "GoBE stopped successfully")
 			gbm.StartGoBE()
-			gl.Log("success", "GoBE started successfully")
+			logz.Log("success", "GoBE started successfully")
 		},
 	}
 
@@ -208,7 +208,7 @@ type ServiceStatus struct {
 }
 
 func getServiceStatus(name, format string, detailed, jsonOutput bool) {
-	gl.Log("info", fmt.Sprintf("Checking status for service: %s", name))
+	logz.Log("info", fmt.Sprintf("Checking status for service: %s", name))
 
 	status := &ServiceStatus{
 		Name:         name,
@@ -366,7 +366,7 @@ func getVersion() string {
 func outputJSON(status *ServiceStatus) {
 	jsonData, err := json.MarshalIndent(status, "", "  ")
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error marshaling JSON: %v", err))
+		logz.Log("error", fmt.Sprintf("Error marshaling JSON: %v", err))
 		return
 	}
 
@@ -471,33 +471,33 @@ func getHealthIcon(health string) string {
 }
 
 func stopService(name string, force, graceful bool, timeout int) {
-	gl.Log("info", fmt.Sprintf("Stopping service: %s", name))
+	logz.Log("info", fmt.Sprintf("Stopping service: %s", name))
 
 	// Check if service is running
 	if !isServiceRunning(name) {
-		gl.Log("warn", "Service is not running")
+		logz.Log("warn", "Service is not running")
 		return
 	}
 
 	if force {
-		gl.Log("info", "Force stopping service...")
+		logz.Log("info", "Force stopping service...")
 		// In real implementation, this would send SIGKILL
 		forceStopService(name)
 	} else if graceful {
-		gl.Log("info", fmt.Sprintf("Gracefully stopping service (timeout: %ds)...", timeout))
+		logz.Log("info", fmt.Sprintf("Gracefully stopping service (timeout: %ds)...", timeout))
 		gracefulStopService(name, timeout)
 	} else {
 		// Normal stop
-		gl.Log("info", "Stopping service...")
+		logz.Log("info", "Stopping service...")
 		normalStopService(name)
 	}
 
 	// Verify service stopped
 	time.Sleep(1 * time.Second)
 	if !isServiceRunning(name) {
-		gl.Log("success", "Service stopped successfully")
+		logz.Log("success", "Service stopped successfully")
 	} else {
-		gl.Log("error", "Service may still be running")
+		logz.Log("error", "Service may still be running")
 	}
 }
 
@@ -512,7 +512,7 @@ func forceStopService(name string) {
 	// Try to send shutdown signal via API
 	_, err := client.Post(fmt.Sprintf("http://localhost:%s/admin/shutdown?force=true", port), "application/json", nil)
 	if err != nil {
-		gl.Log("warn", "Could not send shutdown signal via API")
+		logz.Log("warn", "Could not send shutdown signal via API")
 	}
 }
 
@@ -523,7 +523,7 @@ func gracefulStopService(name string, timeout int) {
 	// Send graceful shutdown signal
 	_, err := client.Post(fmt.Sprintf("http://localhost:%s/admin/shutdown?graceful=true&timeout=%d", port, timeout), "application/json", nil)
 	if err != nil {
-		gl.Log("warn", "Could not send graceful shutdown signal via API")
+		logz.Log("warn", "Could not send graceful shutdown signal via API")
 		normalStopService(name)
 		return
 	}
@@ -532,15 +532,15 @@ func gracefulStopService(name string, timeout int) {
 	for i := 0; i < timeout; i++ {
 		time.Sleep(1 * time.Second)
 		if !isServiceRunning(name) {
-			gl.Log("info", fmt.Sprintf("Service stopped gracefully after %d seconds", i+1))
+			logz.Log("info", fmt.Sprintf("Service stopped gracefully after %d seconds", i+1))
 			return
 		}
 		if i%5 == 0 {
-			gl.Log("info", fmt.Sprintf("Waiting for graceful shutdown... (%d/%d)", i, timeout))
+			logz.Log("info", fmt.Sprintf("Waiting for graceful shutdown... (%d/%d)", i, timeout))
 		}
 	}
 
-	gl.Log("warn", "Graceful shutdown timeout reached, forcing stop...")
+	logz.Log("warn", "Graceful shutdown timeout reached, forcing stop...")
 	forceStopService(name)
 }
 
@@ -551,12 +551,12 @@ func normalStopService(name string) {
 	// Send normal shutdown signal
 	_, err := client.Post(fmt.Sprintf("http://localhost:%s/admin/shutdown", port), "application/json", nil)
 	if err != nil {
-		gl.Log("warn", "Could not send shutdown signal via API")
+		logz.Log("warn", "Could not send shutdown signal via API")
 	}
 }
 
 func getLogs(name, level, format string, follow, timestamps bool, lines, tail int) {
-	gl.Log("info", fmt.Sprintf("Retrieving logs for service: %s", name))
+	logz.Log("info", fmt.Sprintf("Retrieving logs for service: %s", name))
 
 	// Try to get logs from running service first
 	if isServiceRunning(name) {
@@ -595,7 +595,7 @@ func getStaticLogsFromService(url string, timestamps bool) {
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to get logs from service: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to get logs from service: %v", err))
 		return
 	}
 	defer resp.Body.Close()
@@ -620,12 +620,12 @@ func getStaticLogsFromService(url string, timestamps bool) {
 }
 
 func followLogsFromService(url string, timestamps bool) {
-	gl.Log("info", "Following logs... Press Ctrl+C to stop")
+	logz.Log("info", "Following logs... Press Ctrl+C to stop")
 
 	client := &http.Client{Timeout: 0} // No timeout for following
 	resp, err := client.Get(url + "&follow=true")
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to follow logs: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to follow logs: %v", err))
 		return
 	}
 	defer resp.Body.Close()
@@ -648,15 +648,15 @@ func getLogsFromFile(name, level, format string, follow, timestamps bool, lines,
 	// Try to find log file
 	logFile := findLogFile(name)
 	if logFile == "" {
-		gl.Log("error", "No log file found and service is not running")
+		logz.Log("error", "No log file found and service is not running")
 		return
 	}
 
-	gl.Log("info", fmt.Sprintf("Reading logs from file: %s", logFile))
+	logz.Log("info", fmt.Sprintf("Reading logs from file: %s", logFile))
 
 	// Use tail command or read file directly
 	if follow {
-		gl.Log("info", "Following logs from file... Press Ctrl+C to stop")
+		logz.Log("info", "Following logs from file... Press Ctrl+C to stop")
 		// In real implementation, this would use tail -f equivalent
 		followLogFile(logFile, level, timestamps)
 	} else {
@@ -687,7 +687,7 @@ func followLogFile(filename, level string, timestamps bool) {
 	// Simple implementation - in real scenario would use file watcher
 	file, err := os.Open(filename)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to open log file: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to open log file: %v", err))
 		return
 	}
 	defer file.Close()
@@ -714,7 +714,7 @@ func followLogFile(filename, level string, timestamps bool) {
 func readLogFile(filename, level string, lines, tail int, timestamps bool) {
 	content, err := os.ReadFile(filename)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Failed to read log file: %v", err))
+		logz.Log("error", fmt.Sprintf("Failed to read log file: %v", err))
 		return
 	}
 

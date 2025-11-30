@@ -4,7 +4,7 @@ package module
 import (
 	cc "github.com/kubex-ecosystem/gobe/cmd/cli"
 	vs "github.com/kubex-ecosystem/gobe/internal/module/version"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 
 	"os"
@@ -48,7 +48,7 @@ func (m *GoBE) Execute() error {
 	return m.Command().Execute()
 }
 func (m *GoBE) Command() *cobra.Command {
-	gl.Log("debug", "Starting GoBE CLI...")
+	logz.Log("debug", "Starting GoBE CLI...")
 
 	var rtCmd = &cobra.Command{
 		Use:     m.Module(),

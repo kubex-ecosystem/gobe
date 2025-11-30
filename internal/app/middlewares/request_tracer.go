@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type RequestTracerMiddleware struct {
@@ -14,7 +14,7 @@ type RequestTracerMiddleware struct {
 func NewRequestTracerMiddlewareType(g ci.IGoBE) *RequestTracerMiddleware {
 	requestTracers, ok := t.NewRequestTracers(g).(*t.RequestTracers)
 	if !ok {
-		gl.Log("error", "Failed to create RequestTracers instance")
+		logz.Log("error", "Failed to create RequestTracers instance")
 		return nil
 	}
 

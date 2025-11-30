@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler"
@@ -22,7 +22,7 @@ type SchedulerController struct {
 
 func NewSchedulerController(b *gdbasez.Bridge, s scheduler.IScheduler) *SchedulerController {
 	if b == nil {
-		gl.Log("error", "Bridge is nil for SchedulerController")
+		logz.Log("error", "Bridge is nil for SchedulerController")
 		return nil
 	}
 	return &SchedulerController{
@@ -55,7 +55,7 @@ func (sc *SchedulerController) CreateJob(c *gin.Context) {
 
 	resp, err := sc.sched.ScheduleJob(ctx, job)
 	if err != nil {
-		gl.Log("error", "schedule job failed", err)
+		logz.Log("error", "schedule job failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -146,7 +146,7 @@ func (sc *SchedulerController) newSchedulerService(ctx context.Context) schedule
 	// pool := scheduler.NewGoroutinePool(10)
 
 	// if sc.bridge == nil {
-	// 	gl.Log("error", "Bridge is nil in SchedulerController")
+	// 	logz.Log("error", "Bridge is nil in SchedulerController")
 	// 	return nil
 	// }
 
@@ -156,7 +156,7 @@ func (sc *SchedulerController) newSchedulerService(ctx context.Context) schedule
 
 	// // sched := scheduler.NewSchedulerFunc(pool, service)
 	// // if err := sched.Start(); err != nil {
-	// // 	gl.Log("error", "failed to start scheduler service", err)
+	// // 	logz.Log("error", "failed to start scheduler service", err)
 	// // }
 	// 	return nil
 	// return sched

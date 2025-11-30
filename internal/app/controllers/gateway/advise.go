@@ -12,7 +12,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
 	gatewayService "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type AdviseController struct {
@@ -21,7 +21,7 @@ type AdviseController struct {
 
 func NewAdviseController(service *gatewaysvc.Service) *AdviseController {
 	if service == nil {
-		gl.Log("warn", "advise controller created without gateway service")
+		logz.Log("warn", "advise controller created without gateway service")
 	}
 	return &AdviseController{service: service}
 }
@@ -82,7 +82,7 @@ func (ac *AdviseController) respondJSON(c *gin.Context, req *AdviceRequest) {
 
 	stream, config, err := ac.service.Chat(ctx, svcReq)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("advise chat failed: %v", err))
+		logz.Log("error", fmt.Sprintf("advise chat failed: %v", err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -124,7 +124,7 @@ func (ac *AdviseController) streamSSE(c *gin.Context, req *AdviceRequest) {
 
 	stream, config, err := ac.service.Chat(ctx, svcReq)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("advise stream failed: %v", err))
+		logz.Log("error", fmt.Sprintf("advise stream failed: %v", err))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -139,11 +139,11 @@ func (ac *AdviseController) streamSSE(c *gin.Context, req *AdviceRequest) {
 	send := func(payload interface{}) {
 		bytes, err := json.Marshal(payload)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("advise SSE marshal error: %v", err))
+			logz.Log("error", fmt.Sprintf("advise SSE marshal error: %v", err))
 			return
 		}
 		if _, err := fmt.Fprintf(c.Writer, "data: %s\n\n", bytes); err != nil {
-			gl.Log("error", fmt.Sprintf("advise SSE write error: %v", err))
+			logz.Log("error", fmt.Sprintf("advise SSE write error: %v", err))
 			return
 		}
 		if flusher != nil {
@@ -174,7 +174,7 @@ streamLoop:
 			}
 			if chunk.Content != "" {
 				if err := coalescer.Add(chunk.Content); err != nil {
-					gl.Log("warn", fmt.Sprintf("advise coalescer add error: %v", err))
+					logz.Log("warn", fmt.Sprintf("advise coalescer add error: %v", err))
 				}
 			}
 			if chunk.ToolCall != nil {

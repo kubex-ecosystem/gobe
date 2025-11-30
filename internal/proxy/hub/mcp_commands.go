@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // RegisterMCPCommands registers Discord command handlers for MCP tools
 func (h *DiscordMCPHub) RegisterMCPCommands() {
-	gl.Log("info", "Registering Discord MCP command handlers")
+	logz.Log("info", "Registering Discord MCP command handlers")
 
 	// Register command handlers via Discord adapter
 	if h.discordAdapter != nil {
@@ -31,14 +31,14 @@ func (h *DiscordMCPHub) RegisterMCPCommands() {
 		// !mcp command - List/execute MCP tools
 		h.RegisterCommand("mcp", h.HandleMCPCommand)
 
-		gl.Log("info", "Discord MCP commands registered successfully")
+		logz.Log("info", "Discord MCP commands registered successfully")
 	}
 }
 
 // HandleGromptCommand processes !grompt command
 // Usage: !grompt <idea1>, <idea2>, <idea3> [--purpose=<purpose>] [--provider=<provider>]
 func (h *DiscordMCPHub) HandleGromptCommand(ctx context.Context, message string, args []string) (string, error) {
-	gl.Log("info", "Processing !grompt command", "args", args)
+	logz.Log("info", "Processing !grompt command", "args", args)
 
 	if len(args) == 0 {
 		return formatDiscordHelp("grompt"), nil
@@ -60,7 +60,7 @@ func (h *DiscordMCPHub) HandleGromptCommand(ctx context.Context, message string,
 	})
 
 	if err != nil {
-		gl.Log("error", "Grompt command failed", "error", err)
+		logz.Log("error", "Grompt command failed", "error", err)
 		return fmt.Sprintf("❌ **Failed to generate prompt:**\n```\n%v\n```", err), nil
 	}
 
@@ -71,7 +71,7 @@ func (h *DiscordMCPHub) HandleGromptCommand(ctx context.Context, message string,
 // HandleAskCommand processes !ask command for direct AI prompts
 // Usage: !ask <question> [--provider=<provider>]
 func (h *DiscordMCPHub) HandleAskCommand(ctx context.Context, message string, args []string) (string, error) {
-	gl.Log("info", "Processing !ask command", "args", args)
+	logz.Log("info", "Processing !ask command", "args", args)
 
 	if len(args) == 0 {
 		return formatDiscordHelp("ask"), nil
@@ -88,7 +88,7 @@ func (h *DiscordMCPHub) HandleAskCommand(ctx context.Context, message string, ar
 	})
 
 	if err != nil {
-		gl.Log("error", "Ask command failed", "error", err)
+		logz.Log("error", "Ask command failed", "error", err)
 		return fmt.Sprintf("❌ **Failed to get response:**\n```\n%v\n```", err), nil
 	}
 
@@ -99,7 +99,7 @@ func (h *DiscordMCPHub) HandleAskCommand(ctx context.Context, message string, ar
 // HandleAnalyzeCommand processes !analyze command
 // Usage: !analyze <path> [--depth=<1-5>]
 func (h *DiscordMCPHub) HandleAnalyzeCommand(ctx context.Context, message string, args []string) (string, error) {
-	gl.Log("info", "Processing !analyze command", "args", args)
+	logz.Log("info", "Processing !analyze command", "args", args)
 
 	if len(args) == 0 {
 		return formatDiscordHelp("analyze"), nil
@@ -116,7 +116,7 @@ func (h *DiscordMCPHub) HandleAnalyzeCommand(ctx context.Context, message string
 	})
 
 	if err != nil {
-		gl.Log("error", "Analyze command failed", "error", err)
+		logz.Log("error", "Analyze command failed", "error", err)
 		return fmt.Sprintf("❌ **Analysis failed:**\n```\n%v\n```", err), nil
 	}
 
@@ -127,7 +127,7 @@ func (h *DiscordMCPHub) HandleAnalyzeCommand(ctx context.Context, message string
 // HandleSecurityCommand processes !security command
 // Usage: !security <path> [--severity=<low|medium|high|critical>]
 func (h *DiscordMCPHub) HandleSecurityCommand(ctx context.Context, message string, args []string) (string, error) {
-	gl.Log("info", "Processing !security command", "args", args)
+	logz.Log("info", "Processing !security command", "args", args)
 
 	if len(args) == 0 {
 		return formatDiscordHelp("security"), nil
@@ -143,7 +143,7 @@ func (h *DiscordMCPHub) HandleSecurityCommand(ctx context.Context, message strin
 	})
 
 	if err != nil {
-		gl.Log("error", "Security command failed", "error", err)
+		logz.Log("error", "Security command failed", "error", err)
 		return fmt.Sprintf("❌ **Security audit failed:**\n```\n%v\n```", err), nil
 	}
 
@@ -154,7 +154,7 @@ func (h *DiscordMCPHub) HandleSecurityCommand(ctx context.Context, message strin
 // HandleMCPCommand processes !mcp command to list/execute MCP tools
 // Usage: !mcp list | !mcp exec <tool> <args>
 func (h *DiscordMCPHub) HandleMCPCommand(ctx context.Context, message string, args []string) (string, error) {
-	gl.Log("info", "Processing !mcp command", "args", args)
+	logz.Log("info", "Processing !mcp command", "args", args)
 
 	if len(args) == 0 {
 		return formatDiscordHelp("mcp"), nil
@@ -183,7 +183,7 @@ func (h *DiscordMCPHub) HandleMCPCommand(ctx context.Context, message string, ar
 func (h *DiscordMCPHub) RegisterCommand(name string, handler func(context.Context, string, []string) (string, error)) {
 	// This would integrate with your Discord adapter's command registration
 	// Implementation depends on your Discord library
-	gl.Log("debug", "Registered Discord command", "command", name)
+	logz.Log("debug", "Registered Discord command", "command", name)
 }
 
 // ========== Argument Parsers ==========

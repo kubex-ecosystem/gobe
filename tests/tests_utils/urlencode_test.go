@@ -2,12 +2,12 @@
 package utils_test
 
 import (
-	"testing"
 	utils "github.com/kubex-ecosystem/gobe/internal/utils"
+	"testing"
 )
 
 func TestIsURLEncodeValidators(t *testing.T) {
-	cases := []struct{
+	cases := []struct {
 		name string
 		inS  string
 		want bool

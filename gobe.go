@@ -20,7 +20,6 @@ import (
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	l "github.com/kubex-ecosystem/logz"
 
 	"github.com/kubex-ecosystem/gobe/internal/utils"
 
@@ -29,7 +28,7 @@ import (
 
 	is "github.com/kubex-ecosystem/gdbase/factory"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type GoBECertData struct {
@@ -39,7 +38,7 @@ type GoBECertData struct {
 
 type GoBE struct {
 	InitArgs    *kbx.InitArgs
-	Logger      l.Logger
+	Logger      *logz.LoggerZ
 	environment *is.EnvironmentType
 
 	*t.Mutexes
@@ -77,21 +76,21 @@ type GoBE struct {
 	Routes      map[string]map[string]any
 }
 
-func NewGoBE(args *kbx.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
+func NewGoBE(args *kbx.InitArgs, logger *logz.LoggerZ) (ci.IGoBE, error) {
 	if logger == nil {
-		logger = gl.LoggerG.GetLogger()
+		logger = logz.GetLoggerZ("GoBE")
 	}
 
 	chanCtl := make(chan string, 3)
-	signamManager := t.NewSignalManager(chanCtl, logger.GetLogger())
+	signamManager := t.NewSignalManager(chanCtl, logger)
 
 	cfg, err := validateInitArgs(args)
 	if err != nil {
-		gl.Log("fatal", fmt.Sprintf("Error validating init args: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Error validating init args: %v", err))
 		return nil, err
 	}
 	if cfg == nil {
-		gl.Log("fatal", "Main config is nil")
+		logz.Log("fatal", "Main config is nil")
 		return nil, fmt.Errorf("main config is nil")
 	}
 
@@ -99,7 +98,7 @@ func NewGoBE(args *kbx.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 
 	gbm := &GoBE{
 		InitArgs:  args,
-		Logger:    logger.GetLogger(),
+		Logger:    logger,
 		Mutexes:   t.NewMutexesType(),
 		Reference: t.NewReference(args.Name).GetReference(),
 
@@ -125,10 +124,10 @@ func NewGoBE(args *kbx.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 
 	gbm.environment, err = is.NewEnvironment(args.EnvFile, args.IsConfidential, nil)
 	if err != nil {
-		gl.Log("fatal", fmt.Sprintf("Error creating environment: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Error creating environment: %v", err))
 	}
 	if gbm.environment == nil {
-		gl.Log("fatal", fmt.Sprintf("Error creating environment: %v", fmt.Errorf("environment is nil")))
+		logz.Log("fatal", fmt.Sprintf("Error creating environment: %v", fmt.Errorf("environment is nil")))
 	}
 
 	args.Address = net.JoinHostPort(args.Bind, args.Port)
@@ -151,7 +150,7 @@ func NewGoBE(args *kbx.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		// FOR FUTURE USE. TO DECRYPT THE PRIVATE KEY, THE SAME PASSWORD MUST BE USED!
 		pwd, pwdErr = crt.GetOrGenPasswordKeyringPass("jwt_secret")
 		if pwdErr != nil {
-			gl.Log("fatal", fmt.Sprintf("Error reading keyring password: %v", pwdErr))
+			logz.Log("fatal", fmt.Sprintf("Error reading keyring password: %v", pwdErr))
 		}
 	}
 
@@ -160,12 +159,12 @@ func NewGoBE(args *kbx.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 	if _, err := os.Stat(pubKeyPath); err != nil {
 		decodedPwd, decodeErr := crptService.DecodeBase64(pwd)
 		if decodeErr != nil {
-			gl.Log("error", fmt.Sprintf("Error decoding keyring password: %v", decodeErr))
+			logz.Log("error", fmt.Sprintf("Error decoding keyring password: %v", decodeErr))
 			return nil, decodeErr
 		}
 		certBytes, keyBytes, err := crtService.GenerateCertificate(pubCertKeyPath, pubKeyPath, decodedPwd)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error generating certificate: %v", err))
+			logz.Log("error", fmt.Sprintf("Error generating certificate: %v", err))
 			return nil, err
 		}
 
@@ -182,23 +181,23 @@ func NewGoBE(args *kbx.InitArgs, logger gl.Logger) (ci.IGoBE, error) {
 		}
 		certObj := GoBECertData{Cert: certString, Key: keyString}
 
-		gl.Log("info", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
-		gl.Log("info", fmt.Sprintf("Private key generated at %s", pubKeyPath))
+		logz.Log("info", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
+		logz.Log("info", fmt.Sprintf("Private key generated at %s", pubKeyPath))
 		certObj.Cert = string(certEncodedBytes)
 		certObj.Key = string(keyEncodedBytes)
 		mapper := t.NewMapper(&certObj, filepath.Join(gbm.configDir, "cert.json"))
 		mapper.SerializeToFile("json")
-		gl.Log("debug", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
+		logz.Log("debug", fmt.Sprintf("Certificate generated at %s", pubCertKeyPath))
 	} else {
 		certObj := &GoBECertData{}
 		mapper := t.NewMapper(&certObj, filepath.Join(gbm.configDir, "cert.json"))
 		if _, err := mapper.DeserializeFromFile("json"); err != nil {
-			gl.Log("error", fmt.Sprintf("Error reading certificate: %v", err))
+			logz.Log("error", fmt.Sprintf("Error reading certificate: %v", err))
 			return nil, err
 		}
 	}
 	if _, err := os.Stat(pubKeyPath); err != nil {
-		gl.Log("error", fmt.Sprintf("Error generating certificate: %v", err))
+		logz.Log("error", fmt.Sprintf("Error generating certificate: %v", err))
 		return nil, err
 	}
 
@@ -212,10 +211,10 @@ func (g *GoBE) Environment() is.Environment {
 	return g.environment
 }
 func (g *GoBE) InitializeResources() error {
-	gl.Log("notice", "Initializing GoBE...")
+	logz.Log("notice", "Initializing GoBE...")
 
 	if g.Logger == nil {
-		g.Logger = l.GetLogger("GoBE")
+		g.Logger = logz.GetLoggerZ("GoBE")
 	}
 	// Initialize the environment
 	dbService, initResourcesErr := g.initializeAllServices()
@@ -224,7 +223,7 @@ func (g *GoBE) InitializeResources() error {
 	}
 
 	if dbService == nil {
-		gl.Log("error", "Database service is nil")
+		logz.Log("error", "Database service is nil")
 		return errors.New("database service is nil")
 	}
 	g.dbService = dbService.(*is.DBServiceImpl)
@@ -234,26 +233,26 @@ func (g *GoBE) InitializeResources() error {
 	return nil
 }
 func (g *GoBE) InitializeServer() (ci.IRouter, error) {
-	gl.Log("notice", "Initializing server...")
+	logz.Log("notice", "Initializing server...")
 
 	if g.InitArgs.Port == "" {
-		gl.Log("warn", "No port specified, using default port 8666")
+		logz.Log("warn", "No port specified, using default port 8666")
 		g.InitArgs.Port = "8666"
 	}
 	if g.InitArgs.Bind == "" {
-		gl.Log("warn", "Binding to all interfaces (default/IPv4)")
+		logz.Log("warn", "Binding to all interfaces (default/IPv4)")
 		g.InitArgs.Bind = "0.0.0.0"
 	}
 	if g.InitArgs.Address == "" {
 		g.InitArgs.Address = net.JoinHostPort(g.InitArgs.Bind, g.InitArgs.Port)
-		gl.Log("warn", "No address specified, using default address %s", g.InitArgs.Address)
+		logz.Log("warn", "No address specified, using default address %s", g.InitArgs.Address)
 	}
 
 	if g.configFile == "" {
 		var err error
 		g.configFile, err = utils.GetDefaultConfigPath()
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error getting default config path: %v", err))
+			logz.Log("error", fmt.Sprintf("Error getting default config path: %v", err))
 			return nil, err
 		}
 	}
@@ -262,32 +261,32 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	if _, err := os.Stat(g.configFile); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(g.configFile), 0755); err != nil {
-				gl.Log("error", fmt.Sprintf("Error creating directory: %v", err))
+				logz.Log("error", fmt.Sprintf("Error creating directory: %v", err))
 				return nil, err
 			}
 			if err := os.WriteFile(g.configFile, []byte(""), 0644); err != nil {
-				gl.Log("error", fmt.Sprintf("Error creating config file: %v", err))
+				logz.Log("error", fmt.Sprintf("Error creating config file: %v", err))
 				return nil, err
 			}
 			mapper := t.NewMapper(gobeminConfig, g.configFile)
 			mapper.SerializeToFile("json")
 		} else {
-			gl.Log("error", fmt.Sprintf("Error reading config file: %v", err))
+			logz.Log("error", fmt.Sprintf("Error reading config file: %v", err))
 			return nil, err
 		}
 	}
 	if gobeminConfig == nil {
-		gl.Log("error", "Failed to create config file")
+		logz.Log("error", "Failed to create config file")
 		return nil, fmt.Errorf("failed to create config file")
 	}
 
 	if gobeminConfig.GetJWTSecretKey() == "" {
 		jwtSecret, jwtSecretErr := crt.GetOrGenPasswordKeyringPass("jwt_secret")
 		if jwtSecretErr != nil {
-			gl.Log("fatal", fmt.Sprintf("Error reading JWT secret key: %v", jwtSecretErr))
+			logz.Log("fatal", fmt.Sprintf("Error reading JWT secret key: %v", jwtSecretErr))
 		}
 		if jwtSecret == "" {
-			gl.Log("error", "JWT secret key is empty")
+			logz.Log("error", "JWT secret key is empty")
 			return nil, fmt.Errorf("jwt secret key is empty")
 		}
 		gobeminConfig.SetJWTSecretKey(jwtSecret)
@@ -310,68 +309,68 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 	gobeminConfig.SetRequestWindow(requestWindow)
 
 	if g.dbService == nil {
-		gl.Log("error", "Database service is nil")
+		logz.Log("error", "Database service is nil")
 		return nil, errors.New("database service is nil")
 	}
 
 	// Ensure database is fully ready before proceeding
 	ctx := context.Background()
 	if !g.dbService.IsReady(ctx) {
-		gl.Log("warn", "⏳ Database service is initializing, waiting...")
+		logz.Log("warn", "⏳ Database service is initializing, waiting...")
 		// Wait a moment for DB to be ready
 		time.Sleep(1 * time.Second)
 		if !g.dbService.IsReady(ctx) {
-			gl.Log("error", "❌ Database service failed to become ready")
+			logz.Log("error", "❌ Database service failed to become ready")
 			return nil, errors.New("database service not ready")
 		}
 	}
-	gl.Log("info", "✅ Database service is ready")
+	logz.Log("info", "✅ Database service is ready")
 
 	_, kubexErr := crt.GetOrGenPasswordKeyringPass(kbx.KeyringService)
 	if kubexErr != nil {
-		gl.Log("error", fmt.Sprintf("Error reading kubex keyring password: %v", kubexErr))
+		logz.Log("error", fmt.Sprintf("Error reading kubex keyring password: %v", kubexErr))
 		return nil, kubexErr
 	}
 
-	router, err := rts.NewRouter(gobeminConfig, g.dbService, g.InitArgs, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	router, err := rts.NewRouter(gobeminConfig, g.dbService, g.InitArgs, logz.GetLoggerZ("gobe"), g.environment.Getenv("DEBUG") == "true")
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error initializing router: %v", err))
+		logz.Log("error", fmt.Sprintf("Error initializing router: %v", err))
 		return nil, err
 	}
 	g.router = router.(*rts.Router)
 	if g.router == nil {
-		gl.Log("error", "Router is nil")
+		logz.Log("error", "Router is nil")
 		return nil, errors.New("router is nil")
 	}
 	return g.router, nil
 }
-func (g *GoBE) GetLogger() l.Logger {
+func (g *GoBE) GetLogger() *logz.LoggerZ {
 	return g.Logger
 }
 func (g *GoBE) StartGoBE() {
-	gl.Log("info", "Starting server...")
+	logz.Log("info", "Starting server...")
 
 	if err := g.InitializeResources(); err != nil {
-		gl.Log("fatal", fmt.Sprintf("Error initializing GoBE: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Error initializing GoBE: %v", err))
 		return
 	}
 
-	gl.Log("debug", "Initializing server...")
+	logz.Log("debug", "Initializing server...")
 	router, err := g.InitializeServer()
 	if err != nil {
-		gl.Log("fatal", fmt.Sprintf("Error initializing server: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Error initializing server: %v", err))
 		return
 	}
 	if router == nil {
-		gl.Log("fatal", "Router is nil")
+		logz.Log("fatal", "Router is nil")
 		return
 	}
 
-	gl.Log("debug", "Loading request tracers...")
+	logz.Log("debug", "Loading request tracers...")
 	g.Mutexes.MuAdd(1)
 	go func(g *GoBE) {
 		if g == nil {
-			gl.Log("fatal", "GoBE instance is nil")
+			logz.Log("fatal", "GoBE instance is nil")
 			// g.Mutexes.MuDone()
 			return
 		}
@@ -380,20 +379,20 @@ func (g *GoBE) StartGoBE() {
 		var requestsTracers ci.IRequestTracers
 		requestsTracers, err = t.LoadRequestsTracerFromFile(g)
 		if requestsTracers == nil {
-			gl.Log("warn", "No persisted request tracers found, creating a new one")
+			logz.Log("warn", "No persisted request tracers found, creating a new one")
 			requestsTracers = t.NewRequestTracers(g)
 		}
 		g.requestsTracers = requestsTracers.GetRequestTracers()
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
-			gl.Log("error", fmt.Sprintf("Error loading request tracers: %v", err.Error()))
+			logz.Log("error", fmt.Sprintf("Error loading request tracers: %v", err.Error()))
 		} else if errors.Is(err, os.ErrNotExist) {
-			gl.Log("info", "No persisted request tracers found, starting fresh")
+			logz.Log("info", "No persisted request tracers found, starting fresh")
 			if g.configDir == "" {
 				g.configDir = filepath.Dir(g.configFile)
 			}
 			requestTracersDir := filepath.Join(filepath.Dir(g.configDir), "logs")
 			if err := os.MkdirAll(requestTracersDir, 0755); err != nil {
-				gl.Log("error", fmt.Sprintf("Error creating request tracers directory: %v", err))
+				logz.Log("error", fmt.Sprintf("Error creating request tracers directory: %v", err))
 			} else {
 				requestTracersMapper := t.NewMapper(
 					&requestsTracers,
@@ -403,29 +402,29 @@ func (g *GoBE) StartGoBE() {
 			}
 		}
 	}(g)
-	gl.Log("notice", "Waiting for persisted request tracers to load...")
+	logz.Log("notice", "Waiting for persisted request tracers to load...")
 	g.Mutexes.MuWait()
 
 	// Register routes and middlewares
 	if err := router.InitializeResources(); err != nil {
-		gl.Log("fatal", fmt.Sprintf("Error initializing router resources: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Error initializing router resources: %v", err))
 		return
 	}
 
-	gl.Log("debug", fmt.Sprintf("Server started on port %s", g.InitArgs.Port))
+	logz.Log("debug", fmt.Sprintf("Server started on port %s", g.InitArgs.Port))
 
 	if err := router.Start(); err != nil {
-		gl.Log("fatal", "Error starting server: %v", err.Error())
+		logz.Log("fatal", "Error starting server: %v", err.Error())
 	}
 }
 func (g *GoBE) StopGoBE() {
-	gl.Log("info", "Stopping server...")
+	logz.Log("info", "Stopping server...")
 
 	g.Mutexes.MuAdd(1)
 	defer g.Mutexes.MuDone()
 
 	if g.router == nil {
-		gl.Log("error", "Router is nil")
+		logz.Log("error", "Router is nil")
 		return
 	}
 
@@ -457,24 +456,24 @@ func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	//defer g.Mutexes.MuRUnlock()
 	logger := g.Logger
 	if logger == nil {
-		gl.Log("error", "Logger is nil")
+		logz.Log("error", "Logger is nil")
 		return nil, errors.New("logger is nil")
 	}
-	logsWriterInt := logger.GetWriter()
-	if logsWriterInt == nil {
-		gl.Log("error", "Logs writer is nil")
-		return nil, errors.New("logs writer is nil")
-	}
-	logsWriter, ok := logsWriterInt.(io.Writer)
-	if !ok {
-		gl.Log("error", "Logs writer is not an io.Writer")
-		return nil, errors.New("logs writer is not an io.Writer")
-	}
-	logsWriter.Write([]byte("Retrieving logs...\n"))
-	if offsetWriter, ok := logsWriter.(*io.OffsetWriter); ok {
-		return offsetWriter, nil
-	}
-	gl.Log("error", "Logger is nil")
+	// logsWriterInt := logger.Writer()
+	// if logsWriterInt == nil {
+	// 	logz.Log("error", "Logs writer is nil")
+	// 	return nil, errors.New("logs writer is nil")
+	// }
+	// logsWriter, ok := logsWriterInt.(io.Writer)
+	// if !ok {
+	// 	logz.Log("error", "Logs writer is not an io.Writer")
+	// 	return nil, errors.New("logs writer is not an io.Writer")
+	// }
+	// logsWriter.Write([]byte("Retrieving logs...\n"))
+	// if offsetWriter, ok := logsWriter.(*io.OffsetWriter); ok {
+	// 	return offsetWriter, nil
+	// }
+	logz.Log("error", "Logger is nil")
 	return nil, errors.New("logger is nil")
 }
 
@@ -484,7 +483,7 @@ func validateInitArgs(args *kbx.InitArgs) (*cf.Config, error) {
 	}
 
 	if args.Debug {
-		gl.SetDebugMode(args.Debug)
+		logz.SetDebugMode(args.Debug)
 	}
 	if args.ReleaseMode {
 		os.Setenv("GIN_MODE", kbx.GetEnvOrDefault("GIN_MODE", "release"))
@@ -496,7 +495,7 @@ func validateInitArgs(args *kbx.InitArgs) (*cf.Config, error) {
 	if _, err := os.Stat(kubexDefaultDir); err != nil {
 		if os.IsNotExist(err) {
 			if err := os.MkdirAll(kubexDefaultDir, 0755); err != nil {
-				gl.Log("fatal", fmt.Sprintf("Error creating default kubex config directory: %v", err))
+				logz.Log("fatal", fmt.Sprintf("Error creating default kubex config directory: %v", err))
 			}
 		}
 	}
@@ -514,11 +513,11 @@ func validateInitArgs(args *kbx.InitArgs) (*cf.Config, error) {
 
 	cfg, err := cf.BootstrapMainConfig[*cf.Config](args)
 	if err != nil {
-		gl.Log("fatal", fmt.Sprintf("Error loading main config: %v", err))
+		logz.Log("fatal", fmt.Sprintf("Error loading main config: %v", err))
 		return nil, err
 	}
 	if cfg == nil {
-		gl.Log("fatal", "Main config is nil")
+		logz.Log("fatal", "Main config is nil")
 		return nil, fmt.Errorf("main config is nil")
 	}
 
@@ -530,32 +529,32 @@ func (g *GoBE) initializeAllServices() (is.DBService, error) {
 	ctx := context.Background()
 
 	// 🎯 NOVO SISTEMA: Usar DockerStackProvider com migrations programáticas
-	gl.Log("info", "🚀 Initializing services with new DockerStackProvider...")
+	logz.Log("info", "🚀 Initializing services with new DockerStackProvider...")
 
 	// 1. Setup database config
 	dbConfig, err := g.setupDatabase()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBConfig: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Erro ao inicializar DBConfig: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig: %w", err)
 	}
 
 	// 2. Initialize Docker service with existing DBConfig (legacy flow)
-	dockerService, err := is.NewDockerService(dbConfig, g.Logger)
+	dockerService, err := is.NewDockerService(dbConfig, logz.GetLoggerZ("DockerService"))
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao criar DockerService: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Erro ao criar DockerService: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao criar DockerService: %w", err)
 	}
 
 	// 3. Initialize containers (this creates/starts containers if needed)
 	if err := dockerService.Initialize(); err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar Docker containers: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Erro ao inicializar Docker containers: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao inicializar Docker containers: %w", err)
 	}
 
 	// 4. 🎯 NOVO: Run migrations programmatically using existing DBConfig
 	pgConfig := dbConfig.Databases["kubex_db"]
 	if pgConfig != nil && pgConfig.Enabled {
-		gl.Log("info", "🎯 Running PostgreSQL migrations programmatically...")
+		logz.Log("info", "🎯 Running PostgreSQL migrations programmatically...")
 
 		var port int
 		switch p := pgConfig.Port.(type) {
@@ -571,55 +570,55 @@ func (g *GoBE) initializeAllServices() (is.DBService, error) {
 		dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", // pragma: allowlist secret
 			pgConfig.Username, pgConfig.Password, pgConfig.Host, port, pgConfig.Name) // pragma: allowlist secret
 
-		migrationMgr := is.NewMigrationManager(dsn, g.Logger)
+		migrationMgr := is.NewMigrationManager(dsn, logz.GetLoggerZ("MigrationManager"))
 		if err := migrationMgr.WaitForPostgres(ctx, 30*time.Second); err != nil {
-			gl.Log("error", fmt.Sprintf("❌ PostgreSQL não está pronto: %v", err))
+			logz.Log("error", fmt.Sprintf("❌ PostgreSQL não está pronto: %v", err))
 			return nil, fmt.Errorf("❌ PostgreSQL não está pronto: %w", err)
 		}
 
 		results, err := migrationMgr.RunMigrations(ctx)
 		if err != nil {
-			gl.Log("warn", fmt.Sprintf("⚠️ Erro parcial nas migrations: %v", err))
+			logz.Log("warn", fmt.Sprintf("⚠️ Erro parcial nas migrations: %v", err))
 		} else {
 			totalSuccess := 0
 			for _, r := range results {
 				totalSuccess += r.SuccessfulStmts
 			}
-			gl.Log("info", fmt.Sprintf("✅ Migrations executadas com sucesso! (%d statements)", totalSuccess))
+			logz.Log("info", fmt.Sprintf("✅ Migrations executadas com sucesso! (%d statements)", totalSuccess))
 		}
 	}
 
 	// 5. Create and initialize Database Service
-	dbService, err := is.NewDatabaseService(ctx, dbConfig, g.Logger)
+	dbService, err := is.NewDatabaseService(ctx, dbConfig, logz.GetLoggerZ("DatabaseService"))
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DatabapostgresqlseService: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Erro ao inicializar DatabapostgresqlseService: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao inicializar DatabaseService: %w", err)
 	}
 
 	// 6. Initialize Database Service connections
 	if err := dbService.Initialize(ctx); err != nil {
-		gl.Log("error", fmt.Sprintf("❌ Erro ao conectar ao banco: %v", err))
+		logz.Log("error", fmt.Sprintf("❌ Erro ao conectar ao banco: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao conectar ao banco: %w", err)
 	}
 
-	gl.Log("info", "✅ All services initialized successfully!")
+	logz.Log("info", "✅ All services initialized successfully!")
 	return dbService, nil
 }
 
 func (g *GoBE) setupDatabase() (*is.DBConfigImpl, error) {
 	if _, err := os.Stat(g.configDBFile); err != nil && os.IsNotExist(err) {
 		if err := os.MkdirAll(filepath.Dir(g.configDBFile), 0755); err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err))
+			logz.Log("error", fmt.Sprintf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err))
 			return nil, fmt.Errorf("❌ Erro ao criar o diretório do arquivo de configuração do banco de dados: %v", err)
 		}
 		if err := os.WriteFile(g.configDBFile, []byte(""), 0644); err != nil {
-			gl.Log("error", fmt.Sprintf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err))
+			logz.Log("error", fmt.Sprintf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err))
 			return nil, fmt.Errorf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err)
 		}
 	}
-	dbConfig := is.NewDBConfigWithArgs(context.Background(), g.dbName, g.configDBFile, true, g.Logger, g.environment.Getenv("DEBUG") == "true")
+	dbConfig := is.NewDBConfigWithArgs(context.Background(), g.dbName, g.configDBFile, true, logz.GetLoggerZ("DBConfig"), g.environment.Getenv("DEBUG") == "true")
 	// if dbConfig == nil {
-	// 	gl.Log("error", "❌ Erro ao inicializar DBConfig")
+	// 	logz.Log("error", "❌ Erro ao inicializar DBConfig")
 	// 	return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig")
 	// }
 	return dbConfig, nil

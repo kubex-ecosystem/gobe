@@ -8,7 +8,7 @@ import (
 	mdl "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"github.com/gin-gonic/gin"
 )
@@ -40,10 +40,10 @@ func NewTasksController(bridge *svc.Bridge) *TasksController {
 // @Router /mcp/tasks [get]
 func (tc *TasksController) GetAllTasks(c *gin.Context) {
 	// ListTasks(active, outOfDate, running bool) ([]ITasksModel, error)
-	gl.Log("info", "Fetching all tasks")
+	logz.Log("info", "Fetching all tasks")
 	tasks, err := tc.tasksService.ListTasks(nil)
 	if err != nil {
-		gl.Log("error", "Failed to get tasks", err)
+		logz.Log("error", "Failed to get tasks", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get tasks"})
 		return
 	}
@@ -64,7 +64,7 @@ func (tc *TasksController) GetTaskByID(c *gin.Context) {
 	id := c.Param("id")
 	task, err := tc.tasksService.GetTaskByID(id)
 	if err != nil {
-		gl.Log("error", "Failed to get task by ID", err)
+		logz.Log("error", "Failed to get task by ID", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Task not found"})
 		return
 	}
@@ -85,7 +85,7 @@ func (tc *TasksController) DeleteTask(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := tc.tasksService.DeleteTask(id); err != nil {
-		gl.Log("error", "Failed to delete task", err)
+		logz.Log("error", "Failed to delete task", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete task"})
 		return
 	}
@@ -106,7 +106,7 @@ func (tc *TasksController) GetTasksByProvider(c *gin.Context) {
 	provider := c.Param("provider")
 	tasks, err := tc.tasksService.GetTasksByProvider(provider)
 	if err != nil {
-		gl.Log("error", "Failed to get tasks by provider", err)
+		logz.Log("error", "Failed to get tasks by provider", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get tasks by provider"})
 		return
 	}
@@ -127,7 +127,7 @@ func (tc *TasksController) GetTasksByTarget(c *gin.Context) {
 	target := c.Param("target")
 	tasks, err := tc.tasksService.GetTasksByTarget(target)
 	if err != nil {
-		gl.Log("error", "Failed to get tasks by target", err)
+		logz.Log("error", "Failed to get tasks by target", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get tasks by target"})
 		return
 	}
@@ -147,7 +147,7 @@ func (tc *TasksController) GetTasksByTarget(c *gin.Context) {
 func (tc *TasksController) GetActiveTasks(c *gin.Context) {
 	tasks, err := tc.tasksService.GetActiveTasks()
 	if err != nil {
-		gl.Log("error", "Failed to get active tasks", err)
+		logz.Log("error", "Failed to get active tasks", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get active tasks"})
 		return
 	}
@@ -167,7 +167,7 @@ func (tc *TasksController) GetActiveTasks(c *gin.Context) {
 func (tc *TasksController) GetTasksDueForExecution(c *gin.Context) {
 	tasks, err := tc.tasksService.GetTasksDueForExecution()
 	if err != nil {
-		gl.Log("error", "Failed to get tasks due for execution", err)
+		logz.Log("error", "Failed to get tasks due for execution", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get tasks due for execution"})
 		return
 	}
@@ -188,7 +188,7 @@ func (tc *TasksController) MarkTaskAsRunning(c *gin.Context) {
 	id := c.Param("id")
 
 	if err := tc.tasksService.MarkTaskAsRunning(id); err != nil {
-		gl.Log("error", "Failed to mark task as running", err)
+		logz.Log("error", "Failed to mark task as running", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark task as running"})
 		return
 	}
@@ -214,7 +214,7 @@ func (tc *TasksController) MarkTaskAsCompleted(c *gin.Context) {
 	c.ShouldBindJSON(&req)
 
 	if err := tc.tasksService.MarkTaskAsCompleted(id, req.Message); err != nil {
-		gl.Log("error", "Failed to mark task as completed", err)
+		logz.Log("error", "Failed to mark task as completed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark task as completed"})
 		return
 	}
@@ -240,7 +240,7 @@ func (tc *TasksController) MarkTaskAsFailed(c *gin.Context) {
 	c.ShouldBindJSON(&req)
 
 	if err := tc.tasksService.MarkTaskAsFailed(id, req.Message); err != nil {
-		gl.Log("error", "Failed to mark task as failed", err)
+		logz.Log("error", "Failed to mark task as failed", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark task as failed"})
 		return
 	}
@@ -262,7 +262,7 @@ func (tc *TasksController) GetTaskCronJob(c *gin.Context) {
 
 	cronJob, err := tc.tasksService.ConvertTaskToCronJob(id)
 	if err != nil {
-		gl.Log("error", "Failed to convert task to CronJob", err)
+		logz.Log("error", "Failed to convert task to CronJob", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to convert task to CronJob"})
 		return
 	}

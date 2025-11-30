@@ -11,7 +11,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
 	"github.com/kubex-ecosystem/gobe/internal/services/scheduler/types"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type JobImpl = types.JobImpl
@@ -67,12 +67,12 @@ type SchedulerImpl = manager.Scheduler
 func NewScheduler(ctx context.Context, pool *services.GoroutinePool, cronService services.ICronService) *SchedulerImpl {
 	sched := NewSchedulerFunc(pool, cronService)
 	if err := sched.StartScheduler(ctx); err != nil {
-		gl.Log("error", "failed to start scheduler service", err)
+		logz.Log("error", "failed to start scheduler service", err)
 		return nil
 	}
 	sch, ok := sched.(*SchedulerImpl)
 	if !ok {
-		gl.Log("error", "failed to cast sched to SchedulerImpl")
+		logz.Log("error", "failed to cast sched to SchedulerImpl")
 		return nil
 	}
 	return sch
@@ -82,7 +82,7 @@ func NewSchedulerFunc(pool *services.GoroutinePool, cronService services.ICronSe
 	cronSchedulerManager := manager.NewCronJobScheduler(pool, cronService)
 	cjs, ok := any(cronSchedulerManager).(*manager.CronJobScheduler)
 	if !ok {
-		gl.Log("error", "failed to cast cronSchedulerManager to SchedulerImpl")
+		logz.Log("error", "failed to cast cronSchedulerManager to SchedulerImpl")
 		return nil
 	}
 	return cjs

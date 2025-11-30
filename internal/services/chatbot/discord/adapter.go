@@ -10,7 +10,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/kubex-ecosystem/gobe/internal/bootstrap"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type Adapter struct {
@@ -46,13 +46,13 @@ func NewAdapter(cfg bootstrap.DiscordConfig, purpose string) (interfaces.IAdapte
 
 func (a *Adapter) Connect() error {
 	if a.session == nil {
-		gl.Log("info", "Discord adapter in dev mode - not connecting")
+		logz.Log("info", "Discord adapter in dev mode - not connecting")
 		return nil
 	}
 	if err := a.session.Open(); err != nil {
 		return fmt.Errorf("open session: %w", err)
 	}
-	gl.Log("info", "Discord session opened")
+	logz.Log("info", "Discord session opened")
 	return nil
 }
 
@@ -69,12 +69,12 @@ func (a *Adapter) OnMessage(h func(interfaces.Message)) {
 
 func (a *Adapter) SendMessage(channelID, content string, opts ...interfaces.SendOptions) error {
 	if a.session == nil {
-		gl.Log("info", fmt.Sprintf("Dev mode - would send to %s: %s", channelID, content))
+		logz.Log("info", fmt.Sprintf("Dev mode - would send to %s: %s", channelID, content))
 		return nil
 	}
 	_, err := a.session.ChannelMessageSend(channelID, content)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("send message: %v", err))
+		logz.Log("error", fmt.Sprintf("send message: %v", err))
 		return err
 	}
 	return nil
@@ -102,7 +102,7 @@ func (a *Adapter) GetChannels(guildID string) ([]interfaces.Channel, error) {
 
 func (a *Adapter) PingAdapter(msg string) error {
 	if a.session == nil {
-		gl.Log("info", "Discord dev mode - ping skipped")
+		logz.Log("info", "Discord dev mode - ping skipped")
 		return nil
 	}
 	// ensure we have user, otherwise get it:
@@ -111,7 +111,7 @@ func (a *Adapter) PingAdapter(msg string) error {
 			return fmt.Errorf("ping: %w", err)
 		}
 	}
-	gl.Log("info", fmt.Sprintf("discord ping: %s", msg))
+	logz.Log("info", fmt.Sprintf("discord ping: %s", msg))
 	return nil
 }
 
@@ -127,9 +127,9 @@ func (a *Adapter) GetMessageHandler() func(interfaces.Message) {
 /* ---------- Private handlers ---------- */
 
 func (a *Adapter) readyHandler(_ *discordgo.Session, ev *discordgo.Ready) {
-	gl.Log("info", fmt.Sprintf("Discord logged as %s#%s, guilds: %d", ev.User.Username, ev.User.Discriminator, len(ev.Guilds)))
+	logz.Log("info", fmt.Sprintf("Discord logged as %s#%s, guilds: %d", ev.User.Username, ev.User.Discriminator, len(ev.Guilds)))
 	for _, g := range ev.Guilds {
-		gl.Log("info", fmt.Sprintf(" - %s (%s)", g.Name, g.ID))
+		logz.Log("info", fmt.Sprintf(" - %s (%s)", g.Name, g.ID))
 	}
 }
 

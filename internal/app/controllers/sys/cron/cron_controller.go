@@ -14,7 +14,7 @@ import (
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 type CronController struct {
@@ -72,12 +72,12 @@ func marshalToMapSlice(value any) ([]map[string]any, error) {
 func NewCronJobController(bridge *svc.Bridge) *CronController {
 	cronRepo, ok := bridge.CronJobRepo(context.Background(), bridge.DBService()).(*mdl.CronJobRepoImpl)
 	if !ok {
-		gl.Log("error", "Failed to create CronJobRepo")
+		logz.Log("error", "Failed to create CronJobRepo")
 		return nil
 	}
 	cronService, ok := bridge.CronJobService(cronRepo).(*mdl.CronJobServiceImpl)
 	if !ok {
-		gl.Log("error", "Failed to create CronJobService")
+		logz.Log("error", "Failed to create CronJobService")
 		return nil
 	}
 	return &CronController{
@@ -198,7 +198,7 @@ func (cc *CronController) CreateCronJob(c *gin.Context) {
 	}
 	identifier, err := uuid.NewRandom()
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("failed to generate uuid: %s", err))
+		logz.Log("error", fmt.Sprintf("failed to generate uuid: %s", err))
 		respondCronError(c, http.StatusInternalServerError, "failed to create cron job")
 		return
 	}

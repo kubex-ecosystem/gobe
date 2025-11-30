@@ -5,8 +5,9 @@ import (
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	tu "github.com/kubex-ecosystem/gobe/internal/utils"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
+
+	// logz "github.com/kubex-ecosystem/logz"
 
 	"reflect"
 
@@ -23,7 +24,7 @@ type ChannelCtl[T any] struct {
 	//ci.IChannelCtl[T] // Channel interface for this Channel instance
 
 	// Logger is the Logger instance for this Channel instance.
-	Logger l.Logger // Logger for this Channel instance
+	Logger *logz.LoggerZ // Logger for this Channel instance
 
 	// IMutexes is the interface for the mutexes in this Channel instance.
 	*Mutexes // Mutexes for this Channel instance
@@ -49,9 +50,9 @@ type ChannelCtl[T any] struct {
 }
 
 // NewChannelCtl creates a new ChannelCtl instance with the provided name.
-func NewChannelCtl[T any](name string, logger l.Logger) ci.IChannelCtl[T] {
+func NewChannelCtl[T any](name string, logger *logz.LoggerZ) ci.IChannelCtl[T] {
 	if logger == nil {
-		logger = l.GetLogger("GoLife")
+		logger = logz.GetLoggerZ("GoLife")
 	}
 	ref := NewReference(name)
 	mu := NewMutexesType()
@@ -69,9 +70,9 @@ func NewChannelCtl[T any](name string, logger l.Logger) ci.IChannelCtl[T] {
 }
 
 // NewChannelCtlWithProperty creates a new ChannelCtl instance with the provided name and type.
-func NewChannelCtlWithProperty[T any, P ci.IProperty[T]](name string, buffers *int, property P, withMetrics bool, logger l.Logger) ci.IChannelCtl[T] {
+func NewChannelCtlWithProperty[T any, P ci.IProperty[T]](name string, buffers *int, property P, withMetrics bool, logger *logz.LoggerZ) ci.IChannelCtl[T] {
 	if logger == nil {
-		logger = l.GetLogger("GoLife")
+		logger = logz.GetLoggerZ("GoLife")
 	}
 	ref := NewReference(name)
 	mu := NewMutexesType()
@@ -154,7 +155,7 @@ func (cCtl *ChannelCtl[T]) SetSubChannels(channels map[string]interface{}) map[s
 // GetSubChannelByName returns the sub-channel by name and its type.
 func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, bool) {
 	if cCtl.Channels == nil {
-		gl.Log("info", "Creating channels map for:", cCtl.Name, "ID:", cCtl.ID.String())
+		logz.Log("info", "Creating channels map for:", cCtl.Name, "ID:", cCtl.ID.String())
 		cCtl.Channels = initChannelsMap(cCtl)
 	}
 	cCtl.MuRLock()
@@ -163,11 +164,11 @@ func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, 
 		if channel, ok := rawChannel.(ci.IChannelBase[T]); ok {
 			return channel, channel.GetType(), true
 		} else {
-			gl.Log("error", fmt.Sprintf("Channel %s is not a valid channel type. Expected: %s, receive %s", name, reflect.TypeFor[ci.IChannelBase[T]]().String(), reflect.TypeOf(rawChannel)))
+			logz.Log("error", fmt.Sprintf("Channel %s is not a valid channel type. Expected: %s, receive %s", name, reflect.TypeFor[ci.IChannelBase[T]]().String(), reflect.TypeOf(rawChannel)))
 			return nil, nil, false
 		}
 	}
-	gl.Log("error", "Channel not found:", name, "ID:", cCtl.ID.String())
+	logz.Log("error", "Channel not found:", name, "ID:", cCtl.ID.String())
 	return nil, nil, false
 }
 
@@ -248,7 +249,7 @@ func (cCtl *ChannelCtl[T]) SetMainChannel(channel chan T) chan T {
 		defer cCtl.MuUnlock()
 		cCtl.ch = channel
 	} else {
-		gl.Log("warn", "SetMainChannel: provided channel is nil, keeping existing channel")
+		logz.Log("warn", "SetMainChannel: provided channel is nil, keeping existing channel")
 		cCtl.MuRLock()
 		defer cCtl.MuRUnlock()
 		cCtl.ch = nil
@@ -388,7 +389,7 @@ func (cCtl *ChannelCtl[T]) ProcessData(action string) error {
 	cCtl.MuRLock()
 	defer cCtl.MuRUnlock()
 	// Placeholder for processing data based on action
-	gl.Log("info", "ProcessData called with action:", action)
+	logz.Log("info", "ProcessData called with action:", action)
 	return nil
 }
 
@@ -407,40 +408,40 @@ func (cCtl *ChannelCtl[T]) StopMonitor() {
 	defer cCtl.MuUnlock()
 	if rawChCtl, chCtlType, chCtlOk := cCtl.GetSubChannelByName("ctl"); chCtlOk {
 		if chCtlType != reflect.TypeOf("string") {
-			gl.Log("error", "ChannelCtl: control channel is not a string channel")
+			logz.Log("error", "ChannelCtl: control channel is not a string channel")
 			return
 		}
 		chCtl := reflect.ValueOf(rawChCtl).Interface().(chan string)
 		chCtl <- "stop"
 	} else {
-		gl.Log("error", "ChannelCtl: no control channel found")
+		logz.Log("error", "ChannelCtl: no control channel found")
 	}
 }
 
 // initChannelsMap initializes the channels map for the ChannelCtl instance.
 func initChannelsMap[T any](v *ChannelCtl[T]) map[string]interface{} {
-	if v.Channels == nil {
-		v.MuLock()
-		defer v.MuUnlock()
-		gl.Log("info", "Creating channels map for:", v.Name, "ID:", v.ID.String())
-		v.Channels = make(map[string]interface{})
-		// done is a channel for the done signal.
-		v.Channels["done"] = NewChannelBase[bool]("done", smBuf, v.Logger)
-		// ctl is a channel for the internal control channel.
-		v.Channels["ctl"] = NewChannelBase[string]("ctl", mdBuf, v.Logger)
-		// condition is a channel for the condition signal.
-		v.Channels["condition"] = NewChannelBase[string]("cond", smBuf, v.Logger)
+	// if v.Channels == nil {
+	// 	v.MuLock()
+	// 	defer v.MuUnlock()
+	// 	logz.Log("info", "Creating channels map for:", v.Name, "ID:", v.ID.String())
+	// 	v.Channels = make(map[string]interface{})
+	// 	// done is a channel for the done signal.
+	// 	v.Channels["done"] = NewChannelBase[bool]("done", smBuf, *logz.LoggerZ)
+	// 	// ctl is a channel for the internal control channel.
+	// 	v.Channels["ctl"] = NewChannelBase[string]("ctl", mdBuf, *logz.LoggerZ)
+	// 	// condition is a channel for the condition signal.
+	// 	v.Channels["condition"] = NewChannelBase[string]("cond", smBuf, *logz.LoggerZ)
 
-		if v.withMetrics {
-			v.Channels["telemetry"] = NewChannelBase[string]("telemetry", mdBuf, v.Logger)
-			v.Channels["monitor"] = NewChannelBase[string]("monitor", mdBuf, v.Logger)
-		}
-	}
+	// 	if v.withMetrics {
+	// 		v.Channels["telemetry"] = NewChannelBase[string]("telemetry", mdBuf, *logz.LoggerZ)
+	// 		v.Channels["monitor"] = NewChannelBase[string]("monitor", mdBuf, *logz.LoggerZ)
+	// 	}
+	// }
 	return v.Channels
 }
 
 // getDefaultChannelsMap returns a map with default channels for the ChannelCtl instance.
-func getDefaultChannelsMap(withMetrics bool, logger l.Logger) map[string]any {
+func getDefaultChannelsMap(withMetrics bool, logger *logz.LoggerZ) map[string]any {
 	mp := map[string]any{
 		// done is a channel for the done signal.
 		"done": NewChannelBase[bool]("done", smBuf, logger),
@@ -466,7 +467,7 @@ func chanRoutineCtl[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
 	case msg := <-chCtl:
 		switch msg {
 		case "stop":
-			gl.Log("info", "Received stop signal for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
+			logz.Log("info", "Received stop signal for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
 			// When we receive a stop signal, we need to close the channels.
 			if ch != nil {
 				close(ch)
@@ -477,10 +478,10 @@ func chanRoutineCtl[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
 			ch = nil
 			chCtl = nil
 		case "status":
-			gl.Log("info", "Received status signal for:", v.GetName(), "ID:", v.GetID().String())
+			logz.Log("info", "Received status signal for:", v.GetName(), "ID:", v.GetID().String())
 			// Placeholder for status handling
 		default:
-			gl.Log("warn", "Received unknown signal for:", v.GetName(), "ID:", v.GetID().String(), "Signal:", msg)
+			logz.Log("warn", "Received unknown signal for:", v.GetName(), "ID:", v.GetID().String(), "Signal:", msg)
 		}
 	default:
 		// No control message received, continue processing
@@ -489,20 +490,20 @@ func chanRoutineCtl[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
 
 // chanRoutineDefer handles cleanup when the channel routine exits.
 func chanRoutineDefer[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) {
-	gl.Log("debug", "Defering monitor routine for:", v.GetName(), "ID:", v.GetID().String())
+	logz.Log("debug", "Defering monitor routine for:", v.GetName(), "ID:", v.GetID().String())
 	if ch != nil || chCtl != nil {
 		// If the channel is not nil, we need to close the channels.
 		// If the channel is not nil, close it.
-		gl.Log("debug", "Closing channels for:", v.GetName(), "ID:", v.GetID().String())
+		logz.Log("debug", "Closing channels for:", v.GetName(), "ID:", v.GetID().String())
 		// Always check if the channels are nil or not before closing them.
 		// If it is not nil, close it.
 		// If it is nil, we need to create a new channel.
 		if ch != nil {
-			gl.Log("debug", "Closing main channel for:", v.GetName(), "ID:", v.GetID().String())
+			logz.Log("debug", "Closing main channel for:", v.GetName(), "ID:", v.GetID().String())
 			close(ch)
 		}
 		if chCtl != nil {
-			gl.Log("debug", "Closing control channel for:", v.GetName(), "ID:", v.GetID().String())
+			logz.Log("debug", "Closing control channel for:", v.GetName(), "ID:", v.GetID().String())
 			close(chCtl)
 		}
 		ch = nil
@@ -512,13 +513,13 @@ func chanRoutineDefer[T any](v ci.IChannelCtl[T], chCtl chan string, ch chan T) 
 
 // chanRoutineWrapper wraps the channel routine for the channel control.
 func chanRoutineWrapper[T any](v ci.IChannelCtl[T]) {
-	gl.Log("debug", "Setting monitor routine for:", v.GetName(), "ID:", v.GetID().String())
+	logz.Log("debug", "Setting monitor routine for:", v.GetName(), "ID:", v.GetID().String())
 	if rawChCtl, chCtlType, chCtlOk := v.GetSubChannelByName("ctl"); !chCtlOk {
-		gl.Log("error", "ChannelCtl: no control channel found")
+		logz.Log("error", "ChannelCtl: no control channel found")
 		return
 	} else {
 		if chCtlType != reflect.TypeOf("string") {
-			gl.Log("error", "ChannelCtl: control channel is not a string channel")
+			logz.Log("error", "ChannelCtl: control channel is not a string channel")
 			return
 		}
 		chCtl := reflect.ValueOf(rawChCtl).Interface().(chan string)
@@ -529,11 +530,11 @@ func chanRoutineWrapper[T any](v ci.IChannelCtl[T]) {
 		for {
 			chanRoutineCtl[T](v, chCtl, ch)
 			if ch == nil {
-				gl.Log("debug", "Channel is nil for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
+				logz.Log("debug", "Channel is nil for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
 				break
 			}
 			if chCtl == nil {
-				gl.Log("debug", "Control channel is nil for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
+				logz.Log("debug", "Control channel is nil for:", v.GetName(), "ID:", v.GetID().String(), "Exiting monitor routine")
 				break
 			}
 		}

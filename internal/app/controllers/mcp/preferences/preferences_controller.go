@@ -7,7 +7,7 @@ import (
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
@@ -30,7 +30,7 @@ func NewPreferencesController(bridge *svc.Bridge) *PreferencesController {
 func (pc *PreferencesController) GetAllPreferences(c *gin.Context) {
 	preferences, err := pc.preferencesService.ListPreferences()
 	if err != nil {
-		gl.Log("error", "Failed to get all preferences", err)
+		logz.Log("error", "Failed to get all preferences", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get preferences"})
 		return
 	}
@@ -41,7 +41,7 @@ func (pc *PreferencesController) GetPreferencesByID(c *gin.Context) {
 	id := c.Param("id")
 	preferences, err := pc.preferencesService.GetPreferencesByID(id)
 	if err != nil {
-		gl.Log("error", "Failed to get preferences by ID", err)
+		logz.Log("error", "Failed to get preferences by ID", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Preferences not found"})
 		return
 	}
@@ -52,14 +52,14 @@ func (pc *PreferencesController) CreatePreferences(c *gin.Context) {
 	var preferencesRequest svc.PreferencesModel
 
 	if err := c.ShouldBindJSON(&preferencesRequest); err != nil {
-		gl.Log("error", "Failed to bind preferences request", err)
+		logz.Log("error", "Failed to bind preferences request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
 	createdPreferences, err := pc.preferencesService.CreatePreferences(preferencesRequest)
 	if err != nil {
-		gl.Log("error", "Failed to create preferences", err)
+		logz.Log("error", "Failed to create preferences", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create preferences"})
 		return
 	}
@@ -70,7 +70,7 @@ func (pc *PreferencesController) UpdatePreferences(c *gin.Context) {
 	id := c.Param("id")
 	var preferencesRequest svc.PreferencesModel
 	if err := c.ShouldBindJSON(&preferencesRequest); err != nil {
-		gl.Log("error", "Failed to bind preferences update request", err)
+		logz.Log("error", "Failed to bind preferences update request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
@@ -78,7 +78,7 @@ func (pc *PreferencesController) UpdatePreferences(c *gin.Context) {
 	preferencesRequest.SetID(id)
 	updatedPreferences, err := pc.preferencesService.UpdatePreferences(preferencesRequest)
 	if err != nil {
-		gl.Log("error", "Failed to update preferences", err)
+		logz.Log("error", "Failed to update preferences", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update preferences"})
 		return
 	}
@@ -89,7 +89,7 @@ func (pc *PreferencesController) DeletePreferences(c *gin.Context) {
 	id := c.Param("id")
 	err := pc.preferencesService.DeletePreferences(id)
 	if err != nil {
-		gl.Log("error", "Failed to delete preferences", err)
+		logz.Log("error", "Failed to delete preferences", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete preferences"})
 		return
 	}
@@ -100,7 +100,7 @@ func (pc *PreferencesController) GetPreferencesByScope(c *gin.Context) {
 	scope := c.Param("scope")
 	preferences, err := pc.preferencesService.GetPreferencesByScope(scope)
 	if err != nil {
-		gl.Log("error", "Failed to get preferences by scope", err)
+		logz.Log("error", "Failed to get preferences by scope", err)
 		c.JSON(http.StatusNotFound, gin.H{"error": "Preferences not found"})
 		return
 	}
@@ -111,7 +111,7 @@ func (pc *PreferencesController) GetPreferencesByUserID(c *gin.Context) {
 	userID := c.Param("userID")
 	preferences, err := pc.preferencesService.GetPreferencesByUserID(userID)
 	if err != nil {
-		gl.Log("error", "Failed to get preferences by user ID", err)
+		logz.Log("error", "Failed to get preferences by user ID", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get preferences"})
 		return
 	}
@@ -127,14 +127,14 @@ func (pc *PreferencesController) UpsertPreferencesByScope(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		gl.Log("error", "Failed to bind upsert preferences request", err)
+		logz.Log("error", "Failed to bind upsert preferences request", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
 	preferences, err := pc.preferencesService.UpsertPreferencesByScope(scope, svc.MapToJSONB(requestBody.Config), requestBody.UserID)
 	if err != nil {
-		gl.Log("error", "Failed to upsert preferences by scope", err)
+		logz.Log("error", "Failed to upsert preferences by scope", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upsert preferences"})
 		return
 	}

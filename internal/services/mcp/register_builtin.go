@@ -12,13 +12,13 @@ import (
 
 	manage "github.com/kubex-ecosystem/gobe/internal/app/controllers/sys/manage"
 	services "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 )
 
 // RegisterBuiltinTools registers all built-in MCP tools
 func RegisterBuiltinTools(registry Registry) error {
 	if registry == nil {
-		gl.Log("error", "Registry is nil, cannot register builtin tools")
+		logz.Log("error", "Registry is nil, cannot register builtin tools")
 		return fmt.Errorf("registry cannot be nil")
 	}
 
@@ -40,7 +40,7 @@ func RegisterBuiltinTools(registry Registry) error {
 
 	err := registry.Register(statusSpec)
 	if err != nil {
-		gl.Log("error", "Failed to register system.status tool", err)
+		logz.Log("error", "Failed to register system.status tool", err)
 		return fmt.Errorf("failed to register system.status: %w", err)
 	}
 
@@ -67,17 +67,17 @@ func RegisterBuiltinTools(registry Registry) error {
 
 	err = registry.Register(shellSpec)
 	if err != nil {
-		gl.Log("error", "Failed to register shell.command tool", err)
+		logz.Log("error", "Failed to register shell.command tool", err)
 		return fmt.Errorf("failed to register shell.command: %w", err)
 	}
 
-	gl.Log("info", "Built-in MCP tools registered successfully")
+	logz.Log("info", "Built-in MCP tools registered successfully")
 	return nil
 }
 
 // systemStatusHandler handles the system.status tool execution
 func systemStatusHandler(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-	gl.Log("debug", "Executing system.status tool")
+	logz.Log("debug", "Executing system.status tool")
 
 	// Get detailed flag (default false)
 	detailed := false
@@ -143,7 +143,7 @@ func systemStatusHandler(ctx context.Context, args map[string]interface{}) (inte
 			if metrics, err := systemService.GetCurrentMetrics(); err == nil {
 				status["system_metrics"] = metrics
 			} else {
-				gl.Log("warn", "Failed to get system metrics", err)
+				logz.Log("warn", "Failed to get system metrics", err)
 				status["system_metrics_error"] = err.Error()
 			}
 		}
@@ -161,13 +161,13 @@ var bootTime = time.Now()
 // GetRegistry returns the global registry instance for external access
 // Note: This should be called after the registry is initialized in the controller
 func GetRegistry() Registry {
-	gl.Log("warn", "GetRegistry called - registry should be accessed via controller")
+	logz.Log("warn", "GetRegistry called - registry should be accessed via controller")
 	return nil // The registry is managed by the controller, not globally here
 }
 
 // SetRegistry allows external setting of the registry (for testing)
 func SetRegistry(registry Registry) {
-	gl.Log("info", "SetRegistry called - registry should be managed via controller")
+	logz.Log("info", "SetRegistry called - registry should be managed via controller")
 }
 
 // checkSystemHealth performs basic system health checks
@@ -254,7 +254,7 @@ func checkAMQPConnection() map[string]interface{} {
 
 // shellCommandHandler handles the shell.command tool execution
 func shellCommandHandler(ctx context.Context, args map[string]interface{}) (interface{}, error) {
-	gl.Log("info", "Executing shell.command tool")
+	logz.Log("info", "Executing shell.command tool")
 
 	// Get command and args
 	command, ok := args["command"].(string)
@@ -289,7 +289,7 @@ func shellCommandHandler(ctx context.Context, args map[string]interface{}) (inte
 	}
 
 	if !commandAllowed {
-		gl.Log("warn", "Command not allowed in whitelist", command)
+		logz.Log("warn", "Command not allowed in whitelist", command)
 		return map[string]interface{}{
 			"status":           "error",
 			"message":          fmt.Sprintf("Command not allowed: %s", command),
@@ -313,7 +313,7 @@ func shellCommandHandler(ctx context.Context, args map[string]interface{}) (inte
 	}
 
 	if err != nil {
-		gl.Log("warn", "Command execution failed", command, err)
+		logz.Log("warn", "Command execution failed", command, err)
 		result["status"] = "error"
 		result["error"] = err.Error()
 		if cmd.ProcessState != nil {

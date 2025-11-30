@@ -8,7 +8,7 @@ import (
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"github.com/zalando/go-keyring"
 )
 
@@ -32,13 +32,13 @@ func NewKeyringServiceType(service, name string) *KeyringService {
 
 func (k *KeyringService) StorePassword(password string) error {
 	if password == "" {
-		gl.Log("error", "key cannot be empty")
+		logz.Log("error", "key cannot be empty")
 		return fmt.Errorf("key cannot be empty")
 	}
 	if err := keyring.Set(k.keyringService.GetValue(), k.keyringName.GetValue(), password); err != nil {
 		return fmt.Errorf("error storing key: %v", err)
 	}
-	gl.Log("debug", fmt.Sprintf("key stored successfully: %s", k.keyringName.GetValue()))
+	logz.Log("debug", fmt.Sprintf("key stored successfully: %s", k.keyringName.GetValue()))
 	return nil
 }
 func (k *KeyringService) RetrievePassword() (string, error) {
@@ -46,7 +46,7 @@ func (k *KeyringService) RetrievePassword() (string, error) {
 		if errors.Is(err, keyring.ErrNotFound) {
 			return "", os.ErrNotExist
 		}
-		gl.Log("debug", fmt.Sprintf("error retrieving key: %v", err))
+		logz.Log("debug", fmt.Sprintf("error retrieving key: %v", err))
 		return "", fmt.Errorf("error retrieving key: %v", err)
 	} else {
 		return password, nil

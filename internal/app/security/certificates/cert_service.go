@@ -17,7 +17,7 @@ import (
 	krs "github.com/kubex-ecosystem/gobe/internal/app/security/external"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/module/kbx"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	logz "github.com/kubex-ecosystem/logz"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
@@ -38,7 +38,7 @@ type CertService struct {
 func (c *CertService) GenerateCertificate(certPath, keyPath string, password []byte) ([]byte, []byte, error) {
 	priv, generateKeyErr := rsa.GenerateKey(rand.Reader, 2048)
 	if generateKeyErr != nil {
-		gl.Log("error", fmt.Sprintf("error generating private key: %v", generateKeyErr))
+		logz.Log("error", fmt.Sprintf("error generating private key: %v", generateKeyErr))
 		return nil, nil, fmt.Errorf("error generating private key: %v", generateKeyErr)
 	}
 
@@ -55,7 +55,7 @@ func (c *CertService) GenerateCertificate(certPath, keyPath string, password []b
 
 	certDER, certDERErr := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if certDERErr != nil {
-		gl.Log("error", fmt.Sprintf("error creating certificate: %v", certDERErr))
+		logz.Log("error", fmt.Sprintf("error creating certificate: %v", certDERErr))
 		return nil, nil, fmt.Errorf("error creating certificate: %v", certDERErr)
 	}
 
@@ -65,7 +65,7 @@ func (c *CertService) GenerateCertificate(certPath, keyPath string, password []b
 		pwd, pwdErr = GetOrGenPasswordKeyringPass("jwt_secret")
 
 		if pwdErr != nil {
-			gl.Log("error", fmt.Sprintf("error retrieving password: %v", pwdErr))
+			logz.Log("error", fmt.Sprintf("error retrieving password: %v", pwdErr))
 			return nil, nil, fmt.Errorf("error retrieving password: %w", pwdErr)
 		}
 		password = []byte(pwd)
@@ -79,7 +79,7 @@ func (c *CertService) GenerateCertificate(certPath, keyPath string, password []b
 	if isEncoded {
 		decodedPassword, err = c.security.DecodeIfEncoded(password)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("error decoding password: %v", err))
+			logz.Log("error", fmt.Sprintf("error decoding password: %v", err))
 			return nil, nil, fmt.Errorf("error decoding password: %w", err)
 		}
 	} else {
@@ -89,25 +89,25 @@ func (c *CertService) GenerateCertificate(certPath, keyPath string, password []b
 
 	block, err := chacha20poly1305.NewX(decodedPassword)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error creating cipher: %v, %d", err, len(decodedPassword)))
+		logz.Log("error", fmt.Sprintf("error creating cipher: %v, %d", err, len(decodedPassword)))
 		return nil, nil, fmt.Errorf("error creating cipher: %w", err)
 	}
 
 	nonce := make([]byte, block.NonceSize())
 	if _, err := rand.Read(nonce); err != nil {
-		gl.Log("error", fmt.Sprintf("error generating nonce: %v", err))
+		logz.Log("error", fmt.Sprintf("error generating nonce: %v", err))
 		return nil, nil, fmt.Errorf("error generating nonce: %w", err)
 	}
 
 	ciphertext := block.Seal(nonce, nonce, pkcs1PrivBytes, nil)
 	if err := os.MkdirAll(filepath.Dir(keyPath), 0755); err != nil {
-		gl.Log("error", fmt.Sprintf("error creating directory for key file: %v", err))
+		logz.Log("error", fmt.Sprintf("error creating directory for key file: %v", err))
 		return nil, nil, fmt.Errorf("error creating directory for key file: %w", err)
 	}
 
 	certFile, err := os.OpenFile(certPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error opening certificate file: %v", err))
+		logz.Log("error", fmt.Sprintf("error opening certificate file: %v", err))
 		return nil, nil, fmt.Errorf("error opening certificate file: %w", err)
 	}
 	defer func(certFile *os.File) {
@@ -116,13 +116,13 @@ func (c *CertService) GenerateCertificate(certPath, keyPath string, password []b
 
 	pemBlock := pem.Block{Type: "CERTIFICATE", Bytes: certDER}
 	if err := pem.Encode(certFile, &pemBlock); err != nil {
-		gl.Log("error", fmt.Sprintf("error encoding certificate: %v", err))
+		logz.Log("error", fmt.Sprintf("error encoding certificate: %v", err))
 		return nil, nil, fmt.Errorf("error encoding certificate: %w", err)
 	}
 
 	keyFile, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error opening key file: %v", err))
+		logz.Log("error", fmt.Sprintf("error opening key file: %v", err))
 		return nil, nil, fmt.Errorf("error opening key file: %w", err)
 	}
 	defer func(keyFile *os.File) {
@@ -131,7 +131,7 @@ func (c *CertService) GenerateCertificate(certPath, keyPath string, password []b
 
 	pemBlock = pem.Block{Type: "RSA PRIVATE KEY", Bytes: ciphertext}
 	if err := pem.Encode(keyFile, &pemBlock); err != nil {
-		gl.Log("error", fmt.Sprintf("error encoding private key: %v", err))
+		logz.Log("error", fmt.Sprintf("error encoding private key: %v", err))
 		return nil, nil, fmt.Errorf("error encoding private key: %w", err)
 	}
 
@@ -149,7 +149,7 @@ func (c *CertService) GenSelfCert() ([]byte, []byte, error) {
 	key, keyErr := GetOrGenPasswordKeyringPass("jwt_secret")
 
 	if keyErr != nil {
-		gl.Log("error", fmt.Sprintf("error retrieving password: %v", keyErr))
+		logz.Log("error", fmt.Sprintf("error retrieving password: %v", keyErr))
 		return nil, nil, fmt.Errorf("error retrieving password: %w", keyErr)
 	}
 	return c.GenerateCertificate(c.certPath, c.keyPath, []byte(key))
@@ -162,12 +162,12 @@ func (c *CertService) GenSelfCert() ([]byte, []byte, error) {
 // Returns: The decrypted private key and an error if any.
 func (c *CertService) DecryptPrivateKey(privKeyBytes []byte, password []byte) (*rsa.PrivateKey, error) {
 	if c == nil {
-		gl.Log("fatal", "CertService is nil, trying to create a new one")
+		logz.Log("fatal", "CertService is nil, trying to create a new one")
 	}
 	if password == nil {
 		strPassword, passwordErr := GetOrGenPasswordKeyringPass("jwt_secret")
 		if passwordErr != nil {
-			gl.Log("error", fmt.Sprintf("error retrieving password: %v", passwordErr))
+			logz.Log("error", fmt.Sprintf("error retrieving password: %v", passwordErr))
 			return nil, fmt.Errorf("error retrieving password: %w", passwordErr)
 		}
 		password = []byte(strPassword)
@@ -188,7 +188,7 @@ func (c *CertService) DecryptPrivateKey(privKeyBytes []byte, password []byte) (*
 // Returns: The certificate bytes, the private key bytes, and an error if any.
 func (c *CertService) GetCertAndKeyFromFile() ([]byte, []byte, error) {
 	if c == nil {
-		gl.Log("warn", "CertService is nil, trying to create a new one")
+		logz.Log("warn", "CertService is nil, trying to create a new one")
 		c = new(CertService)
 	}
 	if c.keyPath == "" {
@@ -214,7 +214,7 @@ func (c *CertService) GetCertAndKeyFromFile() ([]byte, []byte, error) {
 // Returns: An error if the certificate is invalid or cannot be read.
 func (c *CertService) VerifyCert() error {
 	if c == nil {
-		gl.Log("warn", "CertService is nil, trying to create a new one")
+		logz.Log("warn", "CertService is nil, trying to create a new one")
 		c = new(CertService)
 	}
 	if c.keyPath == "" {
@@ -253,7 +253,7 @@ func (c *CertService) VerifyCert() error {
 // Returns: The public key and an error if any.
 func (c *CertService) GetPublicKey() (*rsa.PublicKey, error) {
 	if c == nil {
-		gl.Log("warn", "CertService is nil, trying to create a new one")
+		logz.Log("warn", "CertService is nil, trying to create a new one")
 		c = new(CertService)
 	}
 	if c.keyPath == "" {
@@ -264,25 +264,25 @@ func (c *CertService) GetPublicKey() (*rsa.PublicKey, error) {
 	}
 	certBytes, err := os.ReadFile(os.ExpandEnv(c.certPath))
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error reading certificate file: %v", err))
+		logz.Log("error", fmt.Sprintf("error reading certificate file: %v", err))
 		return nil, fmt.Errorf("error reading certificate file: %w", err)
 	}
 
 	block, _ := pem.Decode(certBytes)
 	if block == nil {
-		gl.Log("error", "error decoding certificate")
+		logz.Log("error", "error decoding certificate")
 		return nil, fmt.Errorf("error decoding certificate")
 	}
 
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error parsing certificate: %v", err))
+		logz.Log("error", fmt.Sprintf("error parsing certificate: %v", err))
 		return nil, fmt.Errorf("error parsing certificate: %w", err)
 	}
 
 	pubKey, ok := cert.PublicKey.(*rsa.PublicKey)
 	if !ok {
-		gl.Log("error", "error asserting public key type")
+		logz.Log("error", "error asserting public key type")
 		return nil, fmt.Errorf("error asserting public key type")
 	}
 
@@ -325,24 +325,24 @@ func (c *CertService) GetPrivateKey() (*rsa.PrivateKey, error) {
 	copy(copyKey, privateKeyBlock.Bytes)
 	privKeyDecrypted, privKeyDecryptedDecoded, err := c.security.Decrypt(copyKey, decodedPassword)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("error decrypting private key: %v", err))
+		logz.Log("error", fmt.Sprintf("error decrypting private key: %v", err))
 		return nil, fmt.Errorf("erro ao descriptografar chave privada: %w", err)
 	}
 	if len(privKeyDecrypted) == 0 {
-		gl.Log("error", "error decrypting private key: empty result")
+		logz.Log("error", "error decrypting private key: empty result")
 		return nil, fmt.Errorf("erro ao descriptografar chave privada: %w", err)
 	}
 
 	isEncoded = c.security.IsBase64String(string(privKeyDecrypted))
 	if isEncoded {
-		gl.Log("debug", "private key is encoded, decoding it")
+		logz.Log("debug", "private key is encoded, decoding it")
 		privKeyDecryptedBytes, err := c.security.DecodeBase64(string(privKeyDecrypted))
 		if err != nil {
 			return nil, fmt.Errorf("error decoding private key: %w", err)
 		}
 		privKeyDecrypted = string(privKeyDecryptedBytes)
 		if privKeyDecrypted != string(privKeyDecryptedDecoded) {
-			gl.Log("error", "decoded private key is not equal to decrypted private key")
+			logz.Log("error", "decoded private key is not equal to decrypted private key")
 			return nil, fmt.Errorf("decoded private key is not equal to decrypted private key")
 		}
 	}
@@ -412,10 +412,10 @@ func GetOrGenPasswordKeyringPass(name string) (string, error) {
 	if krPassErr != nil {
 		if errors.Is(krPassErr, os.ErrNotExist) {
 			// If the error is "keyring: item not found", generate a new key
-			gl.Log("debug", fmt.Sprintf("Key not found, generating new key for %s", name))
+			logz.Log("debug", fmt.Sprintf("Key not found, generating new key for %s", name))
 			krPassKey, krPassKeyErr := cryptoService.GenerateKey()
 			if krPassKeyErr != nil {
-				gl.Log("error", fmt.Sprintf("Error generating key: %v", krPassKeyErr))
+				logz.Log("error", fmt.Sprintf("Error generating key: %v", krPassKeyErr))
 				return "", krPassKeyErr
 			}
 
@@ -425,13 +425,13 @@ func GetOrGenPasswordKeyringPass(name string) (string, error) {
 			// This is a better practice for performance and readability
 			encodedPass, storeErr := storeKeyringPassword(name, string(krPassKey))
 			if storeErr != nil {
-				gl.Log("error", fmt.Sprintf("Error storing key: %v", storeErr))
+				logz.Log("error", fmt.Sprintf("Error storing key: %v", storeErr))
 				return "", storeErr
 			}
 
 			return encodedPass, nil
 		} else {
-			gl.Log("error", fmt.Sprintf("Error retrieving key: %v", krPassErr))
+			logz.Log("error", fmt.Sprintf("Error retrieving key: %v", krPassErr))
 			return "", krPassErr
 		}
 	}
@@ -439,7 +439,7 @@ func GetOrGenPasswordKeyringPass(name string) (string, error) {
 	isEncoded := cryptoService.IsBase64String(krPass)
 
 	if !isEncoded {
-		gl.Log("debug", fmt.Sprintf("Keyring password is not encoded, encoding it for %s", name))
+		logz.Log("debug", fmt.Sprintf("Keyring password is not encoded, encoding it for %s", name))
 		return cryptoService.EncodeBase64([]byte(krPass)), nil
 	}
 
@@ -464,7 +464,7 @@ func storeKeyringPassword(name string, pass string) (string, error) {
 		// Will decode if encoded, but only if the password is not empty, not nil and not ENCODED
 		decodedPassByte, decodeErr = cryptoService.DecodeBase64(pass)
 		if decodeErr != nil {
-			gl.Log("error", fmt.Sprintf("Error decoding password: %v", decodeErr))
+			logz.Log("error", fmt.Sprintf("Error decoding password: %v", decodeErr))
 			return "", decodeErr
 		}
 		outputPass = string(decodedPassByte)
@@ -474,7 +474,7 @@ func storeKeyringPassword(name string, pass string) (string, error) {
 
 	// Check if the decoded password is empty
 	if len(outputPass) == 0 {
-		gl.Log("error", "Decoded password is empty")
+		logz.Log("error", "Decoded password is empty")
 		return "", errors.New("decoded password is empty")
 	}
 
@@ -483,7 +483,7 @@ func storeKeyringPassword(name string, pass string) (string, error) {
 	// integration and other utilities
 	storeErr := krs.NewKeyringService(kbx.KeyringService, fmt.Sprintf("gobe-%s", name)).StorePassword(outputPass)
 	if storeErr != nil {
-		gl.Log("error", fmt.Sprintf("Error storing key: %v", storeErr))
+		logz.Log("error", fmt.Sprintf("Error storing key: %v", storeErr))
 		return "", storeErr
 	}
 

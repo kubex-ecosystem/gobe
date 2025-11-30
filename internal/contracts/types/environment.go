@@ -22,8 +22,7 @@ import (
 	crp "github.com/kubex-ecosystem/gobe/internal/app/security/crypto"
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	l "github.com/kubex-ecosystem/logz"
-	gl "github.com/kubex-ecosystem/logz/logger"
+	"github.com/kubex-ecosystem/logz"
 )
 
 type EnvCacheMap map[string]any
@@ -41,7 +40,7 @@ func NewEnvCache() *EnvCache {
 type Environment struct {
 	isConfidential bool
 
-	Logger l.Logger
+	Logger *logz.LoggerZ
 
 	*Reference
 
@@ -62,35 +61,35 @@ type Environment struct {
 	mapper ci.IMapper[EnvCacheMap]
 }
 
-func newEnvironment(envFile string, isConfidential bool, logger l.Logger) (*Environment, error) {
+func newEnvironment(envFile string, isConfidential bool, logger *logz.LoggerZ) (*Environment, error) {
 	if logger == nil {
-		logger = l.GetLogger("Environment")
+		logger = logz.GetLoggerZ("Environment")
 	}
 	if envFile == "" {
 		envFile = ".env"
 		if _, err := os.Stat(envFile); os.IsNotExist(err) {
 			if createErr := os.WriteFile(envFile, []byte(""), 0644); createErr != nil {
-				gl.Log("error", fmt.Sprintf("Error creating env file: %s", createErr.Error()))
+				logz.Log("error", fmt.Sprintf("Error creating env file: %s", createErr.Error()))
 				return nil, fmt.Errorf("error creating env file: %s", createErr.Error())
 			}
 		}
 	} else {
 		if _, err := os.Stat(envFile); os.IsNotExist(err) {
-			gl.Log("error", fmt.Sprintf("Error checking env file: %s", err.Error()))
+			logz.Log("error", fmt.Sprintf("Error checking env file: %s", err.Error()))
 			//return nil, fmt.Errorf("error checking env file: %s", err.Error())
 			if createErr := os.WriteFile(envFile, []byte(""), 0644); createErr != nil {
-				gl.Log("error", fmt.Sprintf("Error creating env file: %s", createErr.Error()))
+				logz.Log("error", fmt.Sprintf("Error creating env file: %s", createErr.Error()))
 				return nil, fmt.Errorf("error creating env file: %s", createErr.Error())
 			}
 		}
 	}
 
-	gl.Log("notice", "Creating new Environment instance")
+	logz.Log("notice", "Creating new Environment instance")
 	cpuCount := runtime.NumCPU()
 	memTotal := syscall.Sysinfo_t{}.Totalram
 	hostname, hostnameErr := os.Hostname()
 	if hostnameErr != nil {
-		gl.Log("error", fmt.Sprintf("Error getting hostname: %s", hostnameErr.Error()))
+		logz.Log("error", fmt.Sprintf("Error getting hostname: %s", hostnameErr.Error()))
 		return nil, fmt.Errorf("error getting hostname: %s", hostnameErr.Error())
 	}
 	oos := runtime.GOOS
@@ -133,11 +132,11 @@ func newEnvironment(envFile string, isConfidential bool, logger l.Logger) (*Envi
 
 		envEnvCacheM[key] = value
 		if value == "" {
-			gl.Log("info", fmt.Sprintf("Environment variable '%s' is empty, skipping setenv", key))
+			logz.Log("info", fmt.Sprintf("Environment variable '%s' is empty, skipping setenv", key))
 			continue
 		}
 		if setEnvErr := os.Setenv(key, value); setEnvErr != nil {
-			gl.Log("error", fmt.Sprintf("Error setting environment variable '%s': %v", key, setEnvErr))
+			logz.Log("error", fmt.Sprintf("Error setting environment variable '%s': %v", key, setEnvErr))
 			continue
 		}
 	}
@@ -152,7 +151,7 @@ func newEnvironment(envFile string, isConfidential bool, logger l.Logger) (*Envi
 	envEnvCacheM["ENV_MEM_AVAILABLE"] = fmt.Sprintf("%d", env.MemAvailable())
 	envEnvCacheM["ENV_MEM_USED"] = fmt.Sprintf("%d", env.MemTotal()-env.MemAvailable())
 
-	gl.Log("debug", fmt.Sprintf("Environment variables file (env.envFile): %s", env.envFile))
+	logz.Log("debug", fmt.Sprintf("Environment variables file (env.envFile): %s", env.envFile))
 	env.mapper = NewMapper(env.m, env.envFile)
 
 	fileType := filepath.Ext(env.envFile)
@@ -167,30 +166,30 @@ func newEnvironment(envFile string, isConfidential bool, logger l.Logger) (*Envi
 	// Read the config file
 	cfgData, err := os.ReadFile(env.envFile)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error reading config file: %s", err.Error()))
+		logz.Log("error", fmt.Sprintf("Error reading config file: %s", err.Error()))
 		return nil, fmt.Errorf("error reading config file: %s", err.Error())
 	}
 	if len(cfgData) == 0 {
-		gl.Log("warning", "Config file is empty, skipping deserialization")
+		logz.Log("warning", "Config file is empty, skipping deserialization")
 		return env, nil
 	}
 	// Check if the config file is encrypted, if so, decrypt it
 	isEncrypted := env.IsEncryptedValue(string(cfgData))
 	if isEncrypted {
-		gl.Log("debug", "Config file is encrypted, decrypting...")
+		logz.Log("debug", "Config file is encrypted, decrypting...")
 		var decryptedData string
 		decryptedData, err = env.DecryptEnv(string(cfgData))
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error decrypting config file: %s", err.Error()))
+			logz.Log("error", fmt.Sprintf("Error decrypting config file: %s", err.Error()))
 			return nil, fmt.Errorf("error decrypting config file: %s", err.Error())
 		}
 		if len(decryptedData) == 0 {
-			gl.Log("error", "Decrypted config file is empty")
+			logz.Log("error", "Decrypted config file is empty")
 			return nil, fmt.Errorf("decrypted config file is empty")
 		}
 		cfgData = []byte(decryptedData)
 		if len(cfgData) == 0 {
-			gl.Log("error", "Decrypted config file is empty")
+			logz.Log("error", "Decrypted config file is empty")
 			return nil, fmt.Errorf("decrypted config file is empty")
 		}
 	}
@@ -206,10 +205,10 @@ func newEnvironment(envFile string, isConfidential bool, logger l.Logger) (*Envi
 
 	return env, nil
 }
-func NewEnvironment(envFile string, isConfidential bool, logger l.Logger) (ci.IEnvironment, error) {
+func NewEnvironment(envFile string, isConfidential bool, logger *logz.LoggerZ) (ci.IEnvironment, error) {
 	return newEnvironment(envFile, isConfidential, logger)
 }
-func NewEnvironmentType(envFile string, isConfidential bool, logger l.Logger) (*Environment, error) {
+func NewEnvironmentType(envFile string, isConfidential bool, logger *logz.LoggerZ) (*Environment, error) {
 	return newEnvironment(envFile, isConfidential, logger)
 }
 
@@ -236,7 +235,7 @@ func (e *Environment) MemTotal() int {
 		var mem syscall.Sysinfo_t
 		err := syscall.Sysinfo(&mem)
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error getting memory info: %s", err.Error()))
+			logz.Log("error", fmt.Sprintf("Error getting memory info: %s", err.Error()))
 			return 0
 		}
 		totalRAM := mem.Totalram * uint64(mem.Unit) / (1024 * 1024)
@@ -251,7 +250,7 @@ func (e *Environment) Hostname() string {
 	if e.hostname == "" {
 		hostname, err := os.Hostname()
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error getting hostname: %s", err.Error()))
+			logz.Log("error", fmt.Sprintf("Error getting hostname: %s", err.Error()))
 			return ""
 		}
 		e.hostname = hostname
@@ -282,52 +281,52 @@ func (e *Environment) GetenvOrDefault(key string, defaultValue any) (ci.IPropert
 
 	if val, exists := (*e.EnvCache.m)[key]; exists {
 		if val == "" {
-			gl.Log("info", fmt.Sprintf("'%s' found in cache, but value is empty", key))
+			logz.Log("info", fmt.Sprintf("'%s' found in cache, but value is empty", key))
 			return NewVal[any](key, &defaultValue), reflect.TypeOf(defaultValue).Kind()
 		}
 		isEncryptedValue := e.IsEncryptedValue(val.(string))
 		if isEncryptedValue {
-			gl.Log("debug", fmt.Sprintf("'%s' found in cache, value is encrypted", key))
+			logz.Log("debug", fmt.Sprintf("'%s' found in cache, value is encrypted", key))
 			decryptedVal, err := e.DecryptEnv(val.(string))
 			if err != nil {
-				gl.Log("error", fmt.Sprintf("Error decrypting value for key '%s': %v", key, err))
+				logz.Log("error", fmt.Sprintf("Error decrypting value for key '%s': %v", key, err))
 				return NewVal[any](key, &defaultValue), reflect.TypeOf(defaultValue).Kind()
 			}
-			gl.Log("debug", fmt.Sprintf("Decrypted value for key '%s': %s", key, decryptedVal))
+			logz.Log("debug", fmt.Sprintf("Decrypted value for key '%s': %s", key, decryptedVal))
 			value := any(decryptedVal)
 			return NewVal[any](key, &value), reflect.TypeOf(decryptedVal).Kind()
 		}
 		value := any(val)
 		return NewVal[any](key, &value), reflect.TypeOf(val).Kind()
 	}
-	gl.Log("debug", fmt.Sprintf("'%s' not found in cache, checking system env...", key))
+	logz.Log("debug", fmt.Sprintf("'%s' not found in cache, checking system env...", key))
 	return NewVal[any](key, &defaultValue), reflect.TypeOf(defaultValue).Kind()
 }
 func (e *Environment) Getenv(key string) string {
 	if val, exists := (*e.EnvCache.m)[key]; exists {
 		if val == "" {
-			gl.Log("info", fmt.Sprintf("'%s' found in cache, but value is empty", key))
+			logz.Log("info", fmt.Sprintf("'%s' found in cache, but value is empty", key))
 			return ""
 		}
 		isEncryptedValue := e.IsEncryptedValue(val.(string))
 		if isEncryptedValue {
-			gl.Log("debug", fmt.Sprintf("'%s' found in cache, value is encrypted", key))
+			logz.Log("debug", fmt.Sprintf("'%s' found in cache, value is encrypted", key))
 			decryptedVal, err := e.DecryptEnv(val.(string))
 			if err != nil {
-				gl.Log("error", fmt.Sprintf("Error decrypting value for key '%s': %v", key, err))
-				gl.Log("error", fmt.Sprintf("Value for key %s: %s", key, val))
+				logz.Log("error", fmt.Sprintf("Error decrypting value for key '%s': %v", key, err))
+				logz.Log("error", fmt.Sprintf("Value for key %s: %s", key, val))
 				return ""
 			}
-			gl.Log("debug", fmt.Sprintf("Decrypted value for key '%s': %s", key, decryptedVal))
+			logz.Log("debug", fmt.Sprintf("Decrypted value for key '%s': %s", key, decryptedVal))
 			return decryptedVal
 		}
 		if err := e.Setenv(key, val.(string)); err != nil {
-			gl.Log("error", fmt.Sprintf("Error setting environment variable '%s': %v", key, err))
+			logz.Log("error", fmt.Sprintf("Error setting environment variable '%s': %v", key, err))
 			return ""
 		}
 		return val.(string)
 	}
-	gl.Log("debug", fmt.Sprintf("'%s' not found in cache, checking system env...", key))
+	logz.Log("debug", fmt.Sprintf("'%s' not found in cache, checking system env...", key))
 	return os.Getenv(key)
 }
 func (e *Environment) Setenv(key, value string) error {
@@ -342,7 +341,7 @@ func (e *Environment) Setenv(key, value string) error {
 		} else {
 			encryptedValue, err := e.EncryptEnv(value)
 			if err != nil {
-				gl.Log("error", fmt.Sprintf("Error encrypting value for key '%s': %v", key, err))
+				logz.Log("error", fmt.Sprintf("Error encrypting value for key '%s': %v", key, err))
 				return err
 			}
 			eEnvCacheM[key] = encryptedValue
@@ -351,7 +350,7 @@ func (e *Environment) Setenv(key, value string) error {
 		if isEncrypted {
 			decryptedValue, err := e.DecryptEnv(value)
 			if err != nil {
-				gl.Log("error", fmt.Sprintf("Error decrypting value for key '%s': %v", key, err))
+				logz.Log("error", fmt.Sprintf("Error decrypting value for key '%s': %v", key, err))
 			} else if decryptedValue != "" {
 				eEnvCacheM[key] = decryptedValue
 			}
@@ -359,7 +358,7 @@ func (e *Environment) Setenv(key, value string) error {
 		eEnvCacheM[key] = value
 	}
 
-	gl.Log("debug", fmt.Sprintf("Key '%s' value: %s", key, value))
+	logz.Log("debug", fmt.Sprintf("Key '%s' value: %s", key, value))
 
 	e.EnvCache.m = &eEnvCacheM
 
@@ -367,7 +366,7 @@ func (e *Environment) Setenv(key, value string) error {
 }
 func (e *Environment) GetEnvCache() map[string]any {
 	if e.EnvCache.m == nil {
-		gl.Log("debug", "EnvCache is nil, initializing...")
+		logz.Log("debug", "EnvCache is nil, initializing...")
 		e.EnvCache.m = &EnvCacheMap{}
 	}
 
@@ -400,7 +399,7 @@ func (e *Environment) LoadEnvFromShell() error {
 		}
 	}
 
-	gl.Log("debug", "Environment variables loaded from shell")
+	logz.Log("debug", "Environment variables loaded from shell")
 	return nil
 }
 func (e *Environment) MemAvailable() int {
@@ -409,7 +408,7 @@ func (e *Environment) MemAvailable() int {
 
 	var mem syscall.Sysinfo_t
 	if err := syscall.Sysinfo(&mem); err != nil {
-		gl.Log("error", fmt.Sprintf("Erro ao obter RAM disponível: %v", err))
+		logz.Log("error", fmt.Sprintf("Erro ao obter RAM disponível: %v", err))
 		return -1
 	}
 	return int(mem.Freeram * uint64(mem.Unit) / (1024 * 1024))
@@ -449,7 +448,7 @@ func (e *Environment) BackupEnvFile() error {
 }
 func (e *Environment) EncryptEnvFile() error {
 	if !e.isConfidential {
-		gl.Log("debug", "Environment is not confidential, skipping encryption")
+		logz.Log("debug", "Environment is not confidential, skipping encryption")
 		return nil
 	}
 	isEncrypted := e.IsEncrypted(e.envFile)
@@ -476,17 +475,17 @@ func (e *Environment) EncryptEnvFile() error {
 func (e *Environment) DecryptEnvFile() (string, error) {
 	isEncrypted := e.IsEncrypted(e.envFile)
 	if !isEncrypted {
-		gl.Log("debug", "Env file is not encrypted, skipping decryption")
+		logz.Log("debug", "Env file is not encrypted, skipping decryption")
 		return "", nil
 	}
 
 	data, err := os.ReadFile(e.envFile)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error reading env file: %v", err))
+		logz.Log("error", fmt.Sprintf("Error reading env file: %v", err))
 		return "", err
 	}
 	if len(data) == 0 {
-		gl.Log("error", "Env file is empty")
+		logz.Log("error", "Env file is empty")
 		return "", fmt.Errorf("env file is empty")
 	}
 
@@ -499,12 +498,12 @@ func (e *Environment) EncryptEnv(value string) (string, error) {
 
 	cryptoService, key, err := getKey(e)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error getting key: %v", err))
+		logz.Log("error", fmt.Sprintf("Error getting key: %v", err))
 		return "", err
 	}
 
 	if cryptoService == nil {
-		gl.Log("error", "CryptoService is nil")
+		logz.Log("error", "CryptoService is nil")
 		return "", fmt.Errorf("cryptoService is nil")
 	}
 
@@ -520,7 +519,7 @@ func (e *Environment) EncryptEnv(value string) (string, error) {
 
 	encoded := cryptoService.EncodeBase64([]byte(encrypt))
 	if len(encoded) == 0 {
-		gl.Log("error", "Failed to encode the encrypted value")
+		logz.Log("error", "Failed to encode the encrypted value")
 		return "", fmt.Errorf("failed to encode the encrypted value")
 	}
 
@@ -533,14 +532,14 @@ func (e *Environment) DecryptEnv(encryptedValue string) (string, error) {
 		}
 	} else {
 		if !e.IsEncryptedValue(encryptedValue) {
-			gl.Log("debug", "Value is not encrypted")
+			logz.Log("debug", "Value is not encrypted")
 			return encryptedValue, nil
 		}
 	}
 
 	cryptoService, key, err := getKey(e)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error getting key: %v", err))
+		logz.Log("error", fmt.Sprintf("Error getting key: %v", err))
 		return "", err
 	}
 
@@ -554,7 +553,7 @@ func (e *Environment) DecryptEnv(encryptedValue string) (string, error) {
 	if isEncoded {
 		decodedBytes, decryptedBytesErr := cryptoService.DecodeBase64(encryptedValue)
 		if decryptedBytesErr != nil {
-			gl.Log("error", fmt.Sprintf("Error decoding base64 string: %v", decryptedBytesErr))
+			logz.Log("error", fmt.Sprintf("Error decoding base64 string: %v", decryptedBytesErr))
 			return "", decryptedBytesErr
 		}
 		decodedData = strings.TrimSpace(string(decodedBytes))
@@ -565,12 +564,12 @@ func (e *Environment) DecryptEnv(encryptedValue string) (string, error) {
 
 	decrypted, _, err := cryptoService.Decrypt(trimmedDataBytes, key)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error decrypting value: %v", err))
+		logz.Log("error", fmt.Sprintf("Error decrypting value: %v", err))
 		return "", err
 	}
 
 	if len(decrypted) == 0 {
-		gl.Log("error", "Decrypted value is empty")
+		logz.Log("error", "Decrypted value is empty")
 		return "", fmt.Errorf("decrypted value is empty")
 	}
 
@@ -578,25 +577,25 @@ func (e *Environment) DecryptEnv(encryptedValue string) (string, error) {
 }
 func (e *Environment) IsEncrypted(envFile string) bool {
 	if _, err := os.Stat(envFile); os.IsNotExist(err) {
-		gl.Log("error", fmt.Sprintf("Arquivo não encontrado: %v", err))
+		logz.Log("error", fmt.Sprintf("Arquivo não encontrado: %v", err))
 		return false
 	}
 	cryptoService, _, err := getKey(e)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error getting key: %v", err))
+		logz.Log("error", fmt.Sprintf("Error getting key: %v", err))
 		return false
 	}
 	if cryptoService == nil {
-		gl.Log("error", "CryptoService is nil")
+		logz.Log("error", "CryptoService is nil")
 		return false
 	}
 	data, err := os.ReadFile(envFile)
 	if err != nil {
-		gl.Log("error", fmt.Sprintf("Error reading file: %v", err))
+		logz.Log("error", fmt.Sprintf("Error reading file: %v", err))
 		return false
 	}
 	if len(data) == 0 {
-		gl.Log("error", "File is empty")
+		logz.Log("error", "File is empty")
 		return false
 	}
 	return cryptoService.IsEncrypted(data)
@@ -610,7 +609,7 @@ func (e *Environment) IsEncryptedValue(value string) bool {
 }
 func (e *Environment) EnableEnvFileEncryption() error {
 	if e.isConfidential {
-		gl.Log("debug", "Environment is already confidential, skipping encryption")
+		logz.Log("debug", "Environment is already confidential, skipping encryption")
 		return nil
 	}
 
@@ -624,7 +623,7 @@ func (e *Environment) EnableEnvFileEncryption() error {
 }
 func (e *Environment) DisableEnvFileEncryption() error {
 	if !e.isConfidential {
-		gl.Log("debug", "Environment is not confidential, skipping decryption")
+		logz.Log("debug", "Environment is not confidential, skipping decryption")
 		return nil
 	}
 
@@ -645,11 +644,11 @@ func (e *Environment) LoadEnvFile(watchFunc func(ctx context.Context, chanCbArg 
 	var contextWithCancel context.Context
 	var cancel context.CancelFunc
 	if watchFunc != nil {
-		gl.Log("debug", "Callback function provided, executing...")
+		logz.Log("debug", "Callback function provided, executing...")
 		contextWithCancel, cancel = context.WithTimeout(context.Background(), timeout)
 		watchFunc(contextWithCancel, chanCb)
 	} else {
-		gl.Log("debug", "No callback function provided")
+		logz.Log("debug", "No callback function provided")
 		contextWithCancel, cancel = context.WithTimeout(context.Background(), timeout)
 	}
 
@@ -661,12 +660,12 @@ func (e *Environment) LoadEnvFile(watchFunc func(ctx context.Context, chanCbArg 
 			close(chanCb)
 		}(chanErr, chanDone, chanCb)
 
-		gl.Log("debug", "Loading env file...")
+		logz.Log("debug", "Loading env file...")
 		for {
 			select {
 			case <-contextWithCancel.Done():
 				if err := contextWithCancel.Err(); err != nil {
-					gl.Log("error", fmt.Sprintf("Error loading env file: %v", err))
+					logz.Log("error", fmt.Sprintf("Error loading env file: %v", err))
 					return
 				}
 				return
@@ -676,7 +675,7 @@ func (e *Environment) LoadEnvFile(watchFunc func(ctx context.Context, chanCbArg 
 				}
 				return
 			case <-chanDone:
-				gl.Log("debug", "Env file loaded successfully")
+				logz.Log("debug", "Env file loaded successfully")
 				return
 			default:
 				continue
@@ -694,7 +693,7 @@ func (e *Environment) LoadEnvFile(watchFunc func(ctx context.Context, chanCbArg 
 
 func readEnvFile(e *Environment, ctx context.Context, wg *sync.WaitGroup) {
 	if e.GetEnvFilePath() == "" || e.GetEnvFilePath() == ".env" {
-		gl.Log("error", "Env file path is empty or default")
+		logz.Log("error", "Env file path is empty or default")
 		return
 	}
 
@@ -706,56 +705,56 @@ func readEnvFile(e *Environment, ctx context.Context, wg *sync.WaitGroup) {
 		// Read the env file
 		fileData, err := os.ReadFile(e.GetEnvFilePath())
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error reading env file: %v", err))
+			logz.Log("error", fmt.Sprintf("Error reading env file: %v", err))
 			ctx.Value(fmt.Errorf("error reading env file: %v", err))
 			return
 		}
 		if len(fileData) == 0 {
-			gl.Log("error", "Env file is empty")
+			logz.Log("error", "Env file is empty")
 			ctx.Value(fmt.Errorf("env file is empty"))
 			return
 		}
 		// Check if the env file is encrypted, if so, decrypt it
 		isEncrypted := e.IsEncryptedValue(string(fileData))
 		if isEncrypted {
-			gl.Log("debug", "Env file is encrypted, decrypting...")
+			logz.Log("debug", "Env file is encrypted, decrypting...")
 			var decryptedData string
 			decryptedData, err = e.DecryptEnv(string(fileData))
 			if err != nil {
-				gl.Log("debug", fmt.Sprintf("Error decrypting env file: %v", err))
+				logz.Log("debug", fmt.Sprintf("Error decrypting env file: %v", err))
 				return
 			}
 			if len(decryptedData) == 0 {
-				gl.Log("error", "Decrypted env file is empty")
+				logz.Log("error", "Decrypted env file is empty")
 				return
 			}
 			fileData = []byte(decryptedData)
 			if len(fileData) == 0 {
-				gl.Log("error", "Decrypted env file is empty")
+				logz.Log("error", "Decrypted env file is empty")
 				return
 			}
 		}
 		// Create a temp copy of the env file with Mktemp with decrypted data
 		tmpFile, err := os.CreateTemp("", "env_*.tmp")
 		if err != nil {
-			gl.Log("error", fmt.Sprintf("Error creating temp file: %v", err))
+			logz.Log("error", fmt.Sprintf("Error creating temp file: %v", err))
 			return
 		}
 
 		defer func(tmpFile *os.File) {
-			gl.Log("debug", "Closing temp file")
+			logz.Log("debug", "Closing temp file")
 			if closeErr := tmpFile.Close(); closeErr != nil {
-				gl.Log("error", fmt.Sprintf("Error closing temp file: %v", closeErr.Error()))
+				logz.Log("error", fmt.Sprintf("Error closing temp file: %v", closeErr.Error()))
 				return
 			}
-			gl.Log("debug", "Removing temp file")
+			logz.Log("debug", "Removing temp file")
 			if err := os.Remove(tmpFile.Name()); err != nil {
-				gl.Log("error", fmt.Sprintf("Error removing temp file: %v", err))
+				logz.Log("error", fmt.Sprintf("Error removing temp file: %v", err))
 			}
 		}(tmpFile)
 
 		if _, err := tmpFile.Write(fileData); err != nil {
-			gl.Log("error", fmt.Sprintf("Error writing to temp file: %v", err))
+			logz.Log("error", fmt.Sprintf("Error writing to temp file: %v", err))
 			return
 		}
 
@@ -769,47 +768,47 @@ func readEnvFile(e *Environment, ctx context.Context, wg *sync.WaitGroup) {
 		if fileType == "" {
 			fileType = "env"
 		}
-		gl.Log("debug", fmt.Sprintf("Temp file type: %s", fileType))
+		logz.Log("debug", fmt.Sprintf("Temp file type: %s", fileType))
 		// Deserialize the temp file into a map[string]string
 		extT, existingErr := mapper.DeserializeFromFile(fileType)
 		if existingErr != nil {
-			gl.Log("error", fmt.Sprintf("Error deserializing env file: %v", existingErr))
+			logz.Log("error", fmt.Sprintf("Error deserializing env file: %v", existingErr))
 			return
 		}
 		if extT == nil {
-			gl.Log("error", "Error loading file: nil value")
+			logz.Log("error", "Error loading file: nil value")
 		} else {
 			ext = reflect.ValueOf(extT).Elem().Interface()
 		}
 		if oldMap, ok := ext.(*EnvCacheMap); ok {
 			for key, value := range *oldMap {
-				gl.Log("debug", fmt.Sprintf("Key '%s' value: %s", key, value))
+				logz.Log("debug", fmt.Sprintf("Key '%s' value: %s", key, value))
 				if setEnvErr := e.Setenv(key, value.(string)); setEnvErr != nil {
-					gl.Log("error", fmt.Sprintf("Erro ao definir variável de ambiente '%s': %v", key, setEnvErr))
+					logz.Log("error", fmt.Sprintf("Erro ao definir variável de ambiente '%s': %v", key, setEnvErr))
 					continue
 				}
 			}
 			e.EnvCache.m = oldMap
 			if err := os.Remove(tmpFile.Name()); err != nil {
-				gl.Log("error", fmt.Sprintf("Error removing temp file: %v", err))
+				logz.Log("error", fmt.Sprintf("Error removing temp file: %v", err))
 				return
 			}
-			gl.Log("debug", "Temp file removed successfully")
-			gl.Log("debug", "Env file read successfully")
+			logz.Log("debug", "Temp file removed successfully")
+			logz.Log("debug", "Env file read successfully")
 			return
 		} else {
-			gl.Log("error", "Error casting to map[string]string")
+			logz.Log("error", "Error casting to map[string]string")
 			return
 		}
 	}(e, ctx, wg)
 
-	gl.Log("success", "Env file read successfully")
+	logz.Log("success", "Env file read successfully")
 }
 func getKey(e *Environment) (sci.ICryptoService, []byte, error) {
 	if e.properties["cryptoService"] == nil {
 		cryptoService := crp.NewCryptoService()
 		if cryptoService == nil {
-			gl.Log("error", "Failed to create crypto service")
+			logz.Log("error", "Failed to create crypto service")
 			return nil, nil, fmt.Errorf("failed to create crypto service")
 		}
 		if e.properties == nil {
@@ -822,7 +821,7 @@ func getKey(e *Environment) (sci.ICryptoService, []byte, error) {
 	}
 	cryptoServiceProperty, ok := e.properties["cryptoService"].(ci.IProperty[sci.ICryptoService])
 	if !ok {
-		gl.Log("error", "Failed to cast crypto service")
+		logz.Log("error", "Failed to cast crypto service")
 		return nil, nil, fmt.Errorf("failed to cast crypto service")
 	}
 	cryptoService := cryptoServiceProperty.GetValue()
@@ -838,7 +837,7 @@ func getKey(e *Environment) (sci.ICryptoService, []byte, error) {
 	}
 	key := e.properties["key"].(*Property[[]byte]).GetValue()
 	if key == nil {
-		gl.Log("error", "Key is nil")
+		logz.Log("error", "Key is nil")
 		return nil, nil, fmt.Errorf("key is nil")
 	}
 	return cryptoService, key, nil
