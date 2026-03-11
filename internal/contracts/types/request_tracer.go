@@ -15,8 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
-	l "github.com/kubex-ecosystem/logz"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 const (
@@ -349,7 +348,7 @@ func updateRequestTracer(g ci.IGoBE, updatedTracer ci.IRequestsTracer) error {
 	return nil
 }
 
-func isDuplicateRequest(g ci.IGoBE, rt ci.IRequestsTracer, logger l.Logger) bool {
+func isDuplicateRequest(g ci.IGoBE, rt ci.IRequestsTracer) bool {
 	path := defaultFileIfEmpty(rt.GetFilePath())
 	f, err := os.Open(path)
 	if err != nil {

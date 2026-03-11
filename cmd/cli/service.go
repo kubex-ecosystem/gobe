@@ -10,8 +10,8 @@ import (
 	"time"
 
 	gb "github.com/kubex-ecosystem/gobe"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )
@@ -57,10 +57,10 @@ func startCommand() *cobra.Command {
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
 			if debug {
-				gl.SetDebug(true)
+				gl.SetDebugMode(true)
 			}
 
-			gbm, gbmErr := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, l.GetLogger("GoBE"), debug, releaseMode)
+			gbm, gbmErr := gb.NewGoBE(name, port, bind, logFile, configFile, isConfidential, l.GetLoggerZ("GoBE"), debug, releaseMode)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return
@@ -124,7 +124,7 @@ func restartCommand() *cobra.Command {
 		Long:        longDesc,
 		Annotations: GetDescriptions([]string{shortDesc, longDesc}, (os.Getenv("GOBE_HIDEBANNER") == "true")),
 		Run: func(cmd *cobra.Command, args []string) {
-			gbm, gbmErr := gb.NewGoBE(name, "", "", "", "", false, l.GetLogger("GoBE"), false, false)
+			gbm, gbmErr := gb.NewGoBE(name, "", "", "", "", false, l.GetLoggerZ("GoBE"), false, false)
 			if gbmErr != nil {
 				gl.Log("fatal", "Failed to create GoBE instance: ", gbmErr.Error())
 				return

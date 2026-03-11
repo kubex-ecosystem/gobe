@@ -1,6 +1,8 @@
 package gdbasez
 
 import (
+	"context"
+
 	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	"gorm.io/gorm"
 )
@@ -46,5 +48,5 @@ func NewTasksService(repo TasksRepo) TasksService {
 }
 
 func NewTasksRepo(db *gorm.DB) TasksRepo {
-	return models.NewTasksRepo(db)
+	return models.NewTasksRepo(context.Background(), nil)
 }

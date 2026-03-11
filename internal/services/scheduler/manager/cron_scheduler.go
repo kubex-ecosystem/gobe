@@ -4,8 +4,8 @@ package manager
 import (
 	"time"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	pl "github.com/kubex-ecosystem/gobe/internal/services/scheduler/services"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 // CronJobScheduler gerencia a execução de cronjobs usando o GoroutinePool.

@@ -7,8 +7,8 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 // NewWhatsAppRoutes registers WhatsApp related endpoints.

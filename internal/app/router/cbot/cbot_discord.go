@@ -9,8 +9,8 @@ import (
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/hub"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 type DiscordRoutes struct {

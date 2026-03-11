@@ -12,13 +12,11 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/utils"
-
-	l "github.com/kubex-ecosystem/logz"
+	logger "github.com/kubex-ecosystem/logz"
 )
 
-var gl = logger.GetLogger[l.Logger](nil)
+var gl = logger.GetLoggerZ("")
 
 func getFromConfigMap[T *Config | *DiscordConfig | *LLMConfig | *ApprovalConfig | *ServerConfig | *ZMQConfig | *GoBeConfig | *GobeCtlConfig | *IntegrationConfig | *WhatsAppConfig | *TelegramConfig | any](configType string) (T, bool) {
 	switch configType {

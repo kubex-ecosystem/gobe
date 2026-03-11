@@ -8,7 +8,7 @@ import (
 )
 
 type (
-	ErrorResponse  = t.ErrorResponse
+	ErrorResponse   = t.ErrorResponse
 	MessageResponse = t.MessageResponse
 )
 
@@ -115,28 +115,6 @@ type SchedulerActionResponse struct {
 	Status    string    `json:"status"`
 	Message   string    `json:"message"`
 	Timestamp time.Time `json:"timestamp"`
-}
-
-// LookAtniActionResponse descreve ações assíncronas de extração/arquivo.
-type LookAtniActionResponse struct {
-	Status    string                 `json:"status"`
-	Operation string                 `json:"operation"`
-	Payload   map[string]interface{} `json:"payload"`
-	Message   string                 `json:"message"`
-	Timestamp time.Time              `json:"timestamp"`
-}
-
-// LookAtniDownloadResponse apresenta o link temporário de download.
-type LookAtniDownloadResponse struct {
-	DownloadURL string `json:"download_url"`
-	ExpiresIn   int    `json:"expires_in"`
-	Note        string `json:"note"`
-}
-
-// LookAtniProjectsResponse lista projetos configurados.
-type LookAtniProjectsResponse struct {
-	Projects []map[string]interface{} `json:"projects"`
-	Version  string                   `json:"version"`
 }
 
 // WebhookAckResponse confirma recebimento de webhooks na camada gateway.

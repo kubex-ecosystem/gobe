@@ -16,7 +16,7 @@ type ContactRoutes struct {
 
 func NewContactRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		l.ErrorCtx("Router is nil for ContactRoute", nil)
+		l.Error("Router is nil for ContactRoute", nil)
 		return nil
 	}
 	rtl := *rtr

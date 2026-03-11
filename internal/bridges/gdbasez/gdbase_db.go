@@ -2,6 +2,7 @@
 package gdbasez
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ import (
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,8 +24,8 @@ import (
 
 type DBService = sc.IDBService
 
-func NewDBService(config *sc.DBConfig, logger l.Logger) (DBService, error) {
-	return f.NewDatabaseService(config, logger)
+func NewDBService(config *sc.DBConfig, logger *l.LoggerZ) (DBService, error) {
+	return f.NewDatabaseService(context.Background(), config, logger)
 }
 
 type IDBConfig = sc.DBConfig
@@ -42,7 +43,7 @@ func getEnvOrDefault[T string | int | bool](environment ci.IEnvironment, key str
 	return defaultValue
 }
 
-func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger l.Logger, debug bool) (*sc.DBConfig, error) {
+func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger *l.LoggerZ, debug bool) (*sc.DBConfig, error) {
 	dbName := getEnvOrDefault(environment, "DB_NAME", "kubex_db")
 	if _, err := os.Stat(dbConfigFilePath); err != nil && os.IsNotExist(err) {
 		// if err := ut.EnsureDir(filepath.Dir(dbConfigFilePath), 0644, []string{}); err != nil {
@@ -58,7 +59,7 @@ func SetupDatabase(environment ci.IEnvironment, dbConfigFilePath string, logger 
 			return nil, fmt.Errorf("❌ Erro ao criar o arquivo de configuração do banco de dados: %v", err)
 		}
 	}
-	dbConfig := sc.NewDBConfigWithArgs(dbName, dbConfigFilePath, true, logger, debug)
+	dbConfig := sc.NewDBConfig(dbName, dbConfigFilePath, true, logger, debug)
 	if dbConfig == nil {
 		gl.Log("error", "❌ Erro ao inicializar DBConfig")
 		return nil, fmt.Errorf("❌ Erro ao inicializar DBConfig")
@@ -77,7 +78,7 @@ func WaitForDatabase(dbConfig *sc.DBConfig) (*gorm.DB, error) {
 	if len(dbConfig.Databases) == 0 {
 		return nil, fmt.Errorf("nenhum banco de dados encontrado na configuração")
 	}
-	var pgConfig *sc.Database
+	var pgConfig *sc.DatabaseType
 	for _, db := range dbConfig.Databases {
 		if db.Type == "postgresql" {
 			pgConfig = db
@@ -105,7 +106,7 @@ func WaitForDatabase(dbConfig *sc.DBConfig) (*gorm.DB, error) {
 	return nil, fmt.Errorf("tempo limite excedido ao esperar pelo banco de dados")
 }
 
-func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug bool) (DBService, error) {
+func InitializeAllServices(environment ci.IEnvironment, logger *l.LoggerZ, debug bool) (DBService, error) {
 	if logger == nil {
 		logger = l.NewLogger("GoBE")
 	}
@@ -145,13 +146,13 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 	}
 
 	// 2. Inicializar Docker
-	dockerService, dockerServiceErr := f.NewDockerService(dbConfig, logger)
+	dockerService, dockerServiceErr := f.NewDockerService(logger)
 	if dockerServiceErr != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DockerService: %v", dockerServiceErr))
 		return nil, fmt.Errorf("❌ Erro ao inicializar DockerService: %v", dockerServiceErr)
 	}
 
-	err = f.SetupDatabaseServices(dockerService, dbConfig)
+	err = f.SetupDatabaseServices(context.Background(), dockerService, nil) //dbConfig)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao configurar Docker: %v", err))
 		return nil, err
@@ -162,7 +163,7 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar Docker: %v", err))
 		return nil, err
 	}
-	if err := f.SetupDatabaseServices(dockerService, dbConfig); err != nil {
+	if err := f.SetupDatabaseServices(context.Background(), dockerService, nil); /* dbConfig) */ err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao configurar Docker: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao configurar Docker: %v", err)
 	}
@@ -171,12 +172,12 @@ func InitializeAllServices(environment ci.IEnvironment, logger l.Logger, debug b
 	if _, err = WaitForDatabase(dbConfig); err != nil {
 		return nil, err
 	}
-	dbService, err := f.NewDatabaseService(dbConfig, logger)
+	dbService, err := f.NewDatabaseService(context.Background(), dbConfig, logger)
 	if err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao inicializar DatabaseService: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao inicializar DatabaseService: %v", err)
 	}
-	if err := dbService.Initialize(); err != nil {
+	if err := dbService.Initialize(context.Background()); err != nil {
 		gl.Log("error", fmt.Sprintf("❌ Erro ao conectar ao banco: %v", err))
 		return nil, fmt.Errorf("❌ Erro ao conectar ao banco: %v", err)
 	}

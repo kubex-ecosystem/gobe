@@ -12,7 +12,7 @@ type IProperty[T any] interface {
 	SetValue(v *T)
 	GetReference() (uuid.UUID, string)
 	Prop() IPropertyValBase[T]
-	GetLogger() l.Logger
+	GetLogger() *l.LoggerZ
 	Serialize(format, filePath string) ([]byte, error)
 	Deserialize(data []byte, format, filePath string) error
 	SaveToFile(filePath string, format string) error

@@ -2,15 +2,15 @@
 package cli_test
 
 import (
+	cli "github.com/kubex-ecosystem/gobe/cmd/cli"
 	"os"
 	"testing"
-	cli "github.com/kubex-ecosystem/gobe/cmd/cli"
 )
 
 func TestGetDescriptions_BannerAndDescription(t *testing.T) {
 	orig := os.Args
 	os.Args = []string{"gobe", "-h"}
-	t.Cleanup(func(){ os.Args = orig })
+	t.Cleanup(func() { os.Args = orig })
 
 	m := cli.GetDescriptions([]string{"descrição longa", "descrição curta"}, true)
 	if m == nil {

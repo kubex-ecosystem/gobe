@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	tu "github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
 
@@ -23,7 +22,7 @@ type ChannelCtl[T any] struct {
 	//ci.IChannelCtl[T] // Channel interface for this Channel instance
 
 	// Logger is the Logger instance for this Channel instance.
-	Logger l.Logger // Logger for this Channel instance
+	Logger *l.LoggerZ // Logger for this Channel instance
 
 	// IMutexes is the interface for the mutexes in this Channel instance.
 	*Mutexes // Mutexes for this Channel instance
@@ -49,9 +48,9 @@ type ChannelCtl[T any] struct {
 }
 
 // NewChannelCtl creates a new ChannelCtl instance with the provided name.
-func NewChannelCtl[T any](name string, logger l.Logger) ci.IChannelCtl[T] {
+func NewChannelCtl[T any](name string, logger *l.LoggerZ) ci.IChannelCtl[T] {
 	if logger == nil {
-		logger = l.GetLogger("GoLife")
+		logger = l.GetLoggerZ("GoLife")
 	}
 	ref := NewReference(name)
 	mu := NewMutexesType()
@@ -69,9 +68,9 @@ func NewChannelCtl[T any](name string, logger l.Logger) ci.IChannelCtl[T] {
 }
 
 // NewChannelCtlWithProperty creates a new ChannelCtl instance with the provided name and type.
-func NewChannelCtlWithProperty[T any, P ci.IProperty[T]](name string, buffers *int, property P, withMetrics bool, logger l.Logger) ci.IChannelCtl[T] {
+func NewChannelCtlWithProperty[T any, P ci.IProperty[T]](name string, buffers *int, property P, withMetrics bool, logger *l.LoggerZ) ci.IChannelCtl[T] {
 	if logger == nil {
-		logger = l.GetLogger("GoLife")
+		logger = l.GetLoggerZ("GoLife")
 	}
 	ref := NewReference(name)
 	mu := NewMutexesType()
@@ -154,7 +153,7 @@ func (cCtl *ChannelCtl[T]) SetSubChannels(channels map[string]interface{}) map[s
 // GetSubChannelByName returns the sub-channel by name and its type.
 func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, bool) {
 	if cCtl.Channels == nil {
-		gl.LogObjLogger(cCtl, "info", "Creating channels map for:", cCtl.Name, "ID:", cCtl.ID.String())
+		cCtl.Logger.Log("info", "Creating channels map for:", cCtl.Name, "ID:", cCtl.ID.String())
 		cCtl.Channels = initChannelsMap(cCtl)
 	}
 	cCtl.MuRLock()
@@ -163,11 +162,11 @@ func (cCtl *ChannelCtl[T]) GetSubChannelByName(name string) (any, reflect.Type, 
 		if channel, ok := rawChannel.(ci.IChannelBase[T]); ok {
 			return channel, channel.GetType(), true
 		} else {
-			gl.LogObjLogger(cCtl, "error", fmt.Sprintf("Channel %s is not a valid channel type. Expected: %s, receive %s", name, reflect.TypeFor[ci.IChannelBase[T]]().String(), reflect.TypeOf(rawChannel)))
+			cCtl.Logger.Log("error", fmt.Sprintf("Channel %s is not a valid channel type. Expected: %s, receive %s", name, reflect.TypeFor[ci.IChannelBase[T]]().String(), reflect.TypeOf(rawChannel)))
 			return nil, nil, false
 		}
 	}
-	gl.LogObjLogger(cCtl, "error", "Channel not found:", name, "ID:", cCtl.ID.String())
+	cCtl.Logger.Log("error", "Channel not found:", name, "ID:", cCtl.ID.String())
 	return nil, nil, false
 }
 
@@ -248,7 +247,7 @@ func (cCtl *ChannelCtl[T]) SetMainChannel(channel chan T) chan T {
 		defer cCtl.MuUnlock()
 		cCtl.ch = channel
 	} else {
-		gl.LogObjLogger(cCtl, "warn", "SetMainChannel: provided channel is nil, keeping existing channel")
+		cCtl.Logger.Log("warn", "SetMainChannel: provided channel is nil, keeping existing channel")
 		cCtl.MuRLock()
 		defer cCtl.MuRUnlock()
 		cCtl.ch = nil
@@ -374,7 +373,7 @@ func initChannelsMap[T any](v *ChannelCtl[T]) map[string]interface{} {
 	if v.Channels == nil {
 		v.MuLock()
 		defer v.MuUnlock()
-		gl.LogObjLogger(v, "info", "Creating channels map for:", v.Name, "ID:", v.ID.String())
+		v.Logger.Log("info", "Creating channels map for:", v.Name, "ID:", v.ID.String())
 		v.Channels = make(map[string]interface{})
 		// done is a channel for the done signal.
 		v.Channels["done"] = NewChannelBase[bool]("done", smBuf, v.Logger)
@@ -392,7 +391,7 @@ func initChannelsMap[T any](v *ChannelCtl[T]) map[string]interface{} {
 }
 
 // getDefaultChannelsMap returns a map with default channels for the ChannelCtl instance.
-func getDefaultChannelsMap(withMetrics bool, logger l.Logger) map[string]any {
+func getDefaultChannelsMap(withMetrics bool, logger *l.LoggerZ) map[string]any {
 	mp := map[string]any{
 		// done is a channel for the done signal.
 		"done": NewChannelBase[bool]("done", smBuf, logger),

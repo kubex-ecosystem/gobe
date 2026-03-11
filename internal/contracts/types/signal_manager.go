@@ -7,13 +7,13 @@ import (
 	"syscall"
 
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 )
 
 type SignalManager[T chan string] struct {
 	// Logger is the Logger instance for this GoLife instance.
-	Logger l.Logger
+	Logger *l.LoggerZ
 	// Reference is the reference ID and name.
 	*Reference
 	// SigChan is the channel for the signal.
@@ -22,9 +22,9 @@ type SignalManager[T chan string] struct {
 }
 
 // NewSignalManager creates a new SignalManager instance.
-func newSignalManager[T chan string](channelCtl T, logger l.Logger) *SignalManager[T] {
+func newSignalManager[T chan string](channelCtl T, logger *l.LoggerZ) *SignalManager[T] {
 	if logger == nil {
-		logger = l.GetLogger("GoLife")
+		logger = l.GetLoggerZ("GoLife")
 	}
 	return &SignalManager[T]{
 		Logger:     logger,
@@ -35,7 +35,7 @@ func newSignalManager[T chan string](channelCtl T, logger l.Logger) *SignalManag
 }
 
 // NewSignalManager creates a new SignalManager instance.
-func NewSignalManager[T chan string](channelCtl chan string, logger l.Logger) ci.ISignalManager[T] {
+func NewSignalManager[T chan string](channelCtl chan string, logger *l.LoggerZ) ci.ISignalManager[T] {
 	return newSignalManager[T](channelCtl, logger)
 }
 
@@ -60,5 +60,5 @@ func (sm *SignalManager[T]) ListenForSignals() (<-chan string, error) {
 func (sm *SignalManager[T]) StopListening() {
 	signal.Stop(sm.SigChan) // 🔥 Para de escutar sinais
 	close(sm.SigChan)       // 🔥 Fecha o canal para evitar vazamento de goroutines
-	gl.LogObjLogger(sm, "info", "Parando escuta de sinais")
+	gl.Log("info", "Parando escuta de sinais")
 }

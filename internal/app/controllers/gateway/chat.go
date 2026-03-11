@@ -8,9 +8,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubex-ecosystem/gobe/internal/app/transport/sse"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	gatewayService "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 type ChatController struct {

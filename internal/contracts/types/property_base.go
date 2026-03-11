@@ -2,7 +2,7 @@ package types
 
 import (
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 
 	"fmt"
@@ -17,7 +17,7 @@ type Pointer[T any] = atomic.Pointer[T]
 // PropertyValBase is a type for the value.
 type PropertyValBase[T any] struct {
 	// Logger is the logger for this context.
-	Logger l.Logger `json:"-" yaml:"-" toml:"-" xml:"-"`
+	Logger *l.LoggerZ `json:"-" yaml:"-" toml:"-" xml:"-"`
 
 	// v is the value.
 	*Pointer[T] `json:"-" yaml:"-" toml:"-" xml:"-"`
@@ -71,7 +71,7 @@ func newVal[T any](name string, v *T) *PropertyValBase[T] {
 func NewVal[T any](name string, v *T) ci.IPropertyValBase[T] { return newVal(name, v) }
 
 // GetLogger is a method that returns the logger for the value.
-func (v *PropertyValBase[T]) GetLogger() l.Logger {
+func (v *PropertyValBase[T]) GetLogger() *l.LoggerZ {
 	if v == nil {
 		gl.Log("error", "GetLogger: property does not exist (", reflect.TypeFor[T]().String(), ")")
 		return nil

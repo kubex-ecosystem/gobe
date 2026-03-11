@@ -8,9 +8,9 @@ import (
 	"sync"
 
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	gateway "github.com/kubex-ecosystem/gobe/internal/services/gateway"
 	"github.com/kubex-ecosystem/gobe/internal/services/gateway/providers"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 type Registry struct {

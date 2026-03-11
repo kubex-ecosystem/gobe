@@ -7,16 +7,14 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
-	analyzergateway "github.com/kubex-ecosystem/analyzer/factory/gateway"
-	models "github.com/kubex-ecosystem/gdbase/factory/models/mcp"
 	gatewayController "github.com/kubex-ecosystem/gobe/internal/app/controllers/gateway"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	svc "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	gatewaysvc "github.com/kubex-ecosystem/gobe/internal/services/gateway/registry"
 	webhooksvc "github.com/kubex-ecosystem/gobe/internal/services/webhooks"
 	messagery "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
+	gl "github.com/kubex-ecosystem/logz"
 	"gorm.io/gorm"
 )
 
@@ -34,11 +32,11 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	dbService := rtl.GetDatabaseService()
 	var db *gorm.DB
 	if dbService != nil {
-		var err error
-		db, err = dbService.GetDB()
-		if err != nil {
-			gl.Log("warn", "Failed to fetch DB for gateway module", err)
-		}
+		// var err error
+		// db, err = dbService.GetDB()
+		// if err != nil {
+		// 	gl.Log("warn", "Failed to fetch DB for gateway module", err)
+		// }
 	} else {
 		gl.Log("warn", "Database service is nil for GatewayRoutes")
 	}
@@ -47,7 +45,7 @@ func NewGatewayRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	var webhookService *webhooksvc.WebhookService
 
 	if db != nil {
-		providersSvc := svc.NewProvidersService(models.NewProvidersRepo(db))
+		providersSvc := svc.NewProvidersService(nil)
 		gw, err := gatewaysvc.NewService(providersSvc)
 		if err != nil {
 			gl.Log("error", "failed to initialize gateway service", err)
@@ -152,24 +150,24 @@ func initializeAnalyzerHandler() http.Handler {
 		return nil
 	}
 
-	server, err := analyzergateway.NewServer(&analyzergateway.ServerConfig{
-		Addr:            ":0",
-		ProvidersConfig: configPath,
-		Debug:           os.Getenv("ANALYZER_DEBUG") == "true",
-		EnableCORS:      false,
-	})
-	if err != nil {
-		gl.Log("error", "Failed to initialize analyzer gateway server", err)
-		return nil
-	}
+	// server, err := analyzergateway.NewServer(&analyzergateway.ServerConfig{
+	// 	Addr:            ":0",
+	// 	ProvidersConfig: configPath,
+	// 	Debug:           os.Getenv("ANALYZER_DEBUG") == "true",
+	// 	EnableCORS:      false,
+	// })
+	// if err != nil {
+	// 	gl.Log("error", "Failed to initialize analyzer gateway server", err)
+	// 	return nil
+	// }
 
-	handler, err := server.Handler()
-	if err != nil {
-		gl.Log("error", "Failed to build analyzer gateway handler", err)
-		return nil
-	}
+	// handler, err := server.Handler()
+	// if err != nil {
+	// 	gl.Log("error", "Failed to build analyzer gateway handler", err)
+	// 	return nil
+	// }
 
-	return handler
+	return nil
 }
 
 func analyzerProvidersConfigPath() string {

@@ -27,7 +27,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/utils"
 	l "github.com/kubex-ecosystem/logz"
 
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 type GoBECertData struct {
@@ -37,7 +37,7 @@ type GoBECertData struct {
 
 type GoBE struct {
 	InitArgs    ci.InitArgs
-	Logger      l.Logger
+	Logger      *l.LoggerZ
 	environment ci.IEnvironment
 
 	*t.Mutexes
@@ -64,12 +64,12 @@ type GoBE struct {
 	Middlewares map[string]any
 }
 
-func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug, releaseMode bool) (ci.IGoBE, error) {
+func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger *l.LoggerZ, debug, releaseMode bool) (ci.IGoBE, error) {
 	if logger == nil {
-		logger = l.GetLogger("GoBE")
+		logger = l.GetLoggerZ("GoBE")
 	}
 	if debug {
-		gl.SetDebug(debug)
+		gl.SetDebugMode(debug)
 	}
 	if releaseMode {
 		os.Setenv("GIN_MODE", "release")
@@ -287,7 +287,7 @@ func (g *GoBE) InitializeResources() error {
 	gl.Log("notice", "Initializing GoBE...")
 
 	if g.Logger == nil {
-		g.Logger = l.GetLogger("GoBE")
+		g.Logger = l.GetLoggerZ("GoBE")
 	}
 	envT := g.Properties["env"].(*t.Property[ci.IEnvironment])
 	env := envT.GetValue()
@@ -438,7 +438,7 @@ func (g *GoBE) InitializeServer() (ci.IRouter, error) {
 
 	return router, nil
 }
-func (g *GoBE) GetLogger() l.Logger {
+func (g *GoBE) GetLogger() *l.LoggerZ {
 	return g.Logger
 }
 func (g *GoBE) StartGoBE() {
@@ -541,7 +541,7 @@ func (g *GoBE) GetDatabaseService() gdbf.DBService {
 func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 	//g.Mutexes.MuRLock()
 	//defer g.Mutexes.MuRUnlock()
-	if loggerProp, ok := g.Properties["logger"].(*t.Property[l.Logger]); ok {
+	if loggerProp, ok := g.Properties["logger"].(*t.Property[*l.LoggerZ]); ok {
 		if loggerProp == nil {
 			gl.Log("error", "Logger is nil")
 			return nil, errors.New("logger is nil")
@@ -552,7 +552,7 @@ func (g *GoBE) LogsGoBE() (*io.OffsetWriter, error) {
 			gl.Log("error", "Logger is nil")
 			return nil, errors.New("logger is nil")
 		}
-		logsWriterInt := logger.GetWriter()
+		logsWriterInt := logger.Writer()
 		if logsWriterInt == nil {
 			gl.Log("error", "Logs writer is nil")
 			return nil, errors.New("logs writer is nil")

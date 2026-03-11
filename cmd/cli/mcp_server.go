@@ -12,8 +12,8 @@ import (
 
 	f "github.com/kubex-ecosystem/gobe/factory"
 	"github.com/kubex-ecosystem/gobe/internal/config"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 )

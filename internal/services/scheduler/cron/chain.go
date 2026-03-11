@@ -40,7 +40,7 @@ func (c Chain) Then(j Job) Job {
 }
 
 // Recover panics in wrapped jobs and log them with the provided logger.
-func Recover(logger l.Logger) JobWrapper {
+func Recover(logger *l.LoggerZ) JobWrapper {
 	return func(j Job) Job {
 		return FuncJob(func() {
 			defer func() {
@@ -52,7 +52,7 @@ func Recover(logger l.Logger) JobWrapper {
 					if !ok {
 						err = fmt.Errorf("%v", r)
 					}
-					logger.ErrorCtx(err.Error(), map[string]any{
+					logger.Error(err.Error(), map[string]any{
 						"stack": string(buf),
 						"job":   j,
 					})
@@ -66,7 +66,7 @@ func Recover(logger l.Logger) JobWrapper {
 // DelayIfStillRunning serializes jobs, delaying subsequent runs until the
 // previous one is complete. Jobs running after a delay of more than a minute
 // have the delay logged at Info.
-func DelayIfStillRunning(logger l.Logger) JobWrapper {
+func DelayIfStillRunning(logger *l.LoggerZ) JobWrapper {
 	return func(j Job) Job {
 		var mu sync.Mutex
 		return FuncJob(func() {
@@ -74,7 +74,7 @@ func DelayIfStillRunning(logger l.Logger) JobWrapper {
 			mu.Lock()
 			defer mu.Unlock()
 			if dur := time.Since(start); dur > time.Minute {
-				logger.InfoCtx("delay", map[string]any{
+				logger.Info("delay", map[string]any{
 					"duration": dur,
 				})
 			}
@@ -85,7 +85,7 @@ func DelayIfStillRunning(logger l.Logger) JobWrapper {
 
 // SkipIfStillRunning skips an invocation of the Job if a previous invocation is
 // still running. It logs skips to the given logger at Info level.
-func SkipIfStillRunning(logger l.Logger) JobWrapper {
+func SkipIfStillRunning(logger *l.LoggerZ) JobWrapper {
 	return func(j Job) Job {
 		var ch = make(chan struct{}, 1)
 		ch <- struct{}{}
@@ -95,7 +95,7 @@ func SkipIfStillRunning(logger l.Logger) JobWrapper {
 				defer func() { ch <- v }()
 				j.Run()
 			default:
-				logger.InfoCtx("skip", nil)
+				logger.Info("skip", nil)
 			}
 		})
 	}

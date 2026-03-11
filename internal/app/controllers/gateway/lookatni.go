@@ -10,10 +10,32 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/services/analyzer"
+	gl "github.com/kubex-ecosystem/logz"
 	"gorm.io/gorm"
 )
+
+// LookAtniActionResponse descreve ações assíncronas de extração/arquivo.
+type LookAtniActionResponse struct {
+	Status    string                 `json:"status"`
+	Operation string                 `json:"operation"`
+	Payload   map[string]interface{} `json:"payload"`
+	Message   string                 `json:"message"`
+	Timestamp time.Time              `json:"timestamp"`
+}
+
+// LookAtniDownloadResponse apresenta o link temporário de download.
+type LookAtniDownloadResponse struct {
+	DownloadURL string `json:"download_url"`
+	ExpiresIn   int    `json:"expires_in"`
+	Note        string `json:"note"`
+}
+
+// LookAtniProjectsResponse lista projetos configurados.
+type LookAtniProjectsResponse struct {
+	Projects []map[string]interface{} `json:"projects"`
+	Version  string                   `json:"version"`
+}
 
 // LookAtniController manages LookAtni automation operations with real job processing.
 type LookAtniController struct {

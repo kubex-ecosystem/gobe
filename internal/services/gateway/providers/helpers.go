@@ -28,4 +28,3 @@ func externalAPIKey(req gateway.ChatRequest) string {
 	}
 	return ""
 }
-

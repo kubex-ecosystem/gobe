@@ -3,8 +3,8 @@ package module
 
 import (
 	cc "github.com/kubex-ecosystem/gobe/cmd/cli"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	vs "github.com/kubex-ecosystem/gobe/internal/module/version"
+	gl "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/cobra"
 
 	"os"

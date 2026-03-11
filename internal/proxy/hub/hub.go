@@ -11,7 +11,6 @@ import (
 
 	"github.com/kubex-ecosystem/gobe/internal/config"
 	"github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	"github.com/kubex-ecosystem/gobe/internal/observers/approval"
 	"github.com/kubex-ecosystem/gobe/internal/observers/events"
 	"github.com/kubex-ecosystem/gobe/internal/proxy/gobe"
@@ -19,6 +18,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/services/chatbot/discord"
 	"github.com/kubex-ecosystem/gobe/internal/services/llm"
 	"github.com/kubex-ecosystem/gobe/internal/services/mcp"
+	gl "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/viper"
 )
 

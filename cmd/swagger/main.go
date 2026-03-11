@@ -28,7 +28,7 @@ import (
 	"github.com/kubex-ecosystem/gobe/internal/app/router"
 
 	"github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	logger "github.com/kubex-ecosystem/logz"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -37,7 +37,7 @@ import (
 	l "github.com/kubex-ecosystem/logz"
 )
 
-var gl = logger.GetLogger[l.Logger](nil)
+var gl = logger.GetLoggerZ("")
 
 func SwaggerMain() {
 	// Initialize logger
@@ -45,7 +45,7 @@ func SwaggerMain() {
 	environment, err := types.NewEnvironment(
 		"",
 		false,
-		l.GetLogger("GoBE Swagger"),
+		l.GetLoggerZ("GoBE Swagger"),
 	)
 	if err != nil {
 		gl.Log("fatal", "❌ Failed to create environment:", err)
@@ -60,14 +60,14 @@ func SwaggerMain() {
 	dbConfig, err := services.SetupDatabase(
 		environment,
 		dbConfigPath.(string),
-		l.GetLogger("GoBE Swagger"),
+		l.GetLoggerZ("GoBE Swagger"),
 		false,
 	)
 	if err != nil {
 		gl.Log("fatal", "❌ Failed to set up database:", err)
 		return
 	}
-	dbService, err := services.NewDBService(dbConfig, l.GetLogger("GoBE Swagger"))
+	dbService, err := services.NewDBService(dbConfig, l.GetLoggerZ("GoBE Swagger"))
 	if err != nil {
 		gl.Log("fatal", "❌ Failed to create database service:", err)
 		return
@@ -82,7 +82,7 @@ func SwaggerMain() {
 			"8088",
 		),
 		dbService,
-		l.GetLogger("GoBE Swagger"),
+		l.GetLoggerZ("GoBE Swagger"),
 		true,
 	)
 	if err != nil {

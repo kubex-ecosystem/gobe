@@ -8,7 +8,7 @@ import (
 	products_controller "github.com/kubex-ecosystem/gobe/internal/app/controllers/app/products"
 	proto "github.com/kubex-ecosystem/gobe/internal/app/router/types"
 	ar "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 )
 
@@ -18,7 +18,7 @@ type ProductRoutes struct {
 
 func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 	if rtr == nil {
-		l.ErrorCtx("Router is nil for ProductRoute", nil)
+		l.Error("Router is nil for ProductRoute", nil)
 		return nil
 	}
 	rtl := *rtr
@@ -28,12 +28,7 @@ func NewProductRoutes(rtr *ar.IRouter) map[string]ar.IRoute {
 		gl.Log("error", "Database service is nil for ProductRoute")
 		return nil
 	}
-	dbGorm, err := dbService.GetDB()
-	if err != nil {
-		gl.Log("error", "Failed to get DB from service", err)
-		return nil
-	}
-	productController := products_controller.NewProductController(dbGorm)
+	productController := products_controller.NewProductController(nil)
 
 	routesMap := make(map[string]ar.IRoute)
 	middlewaresMap := make(map[string]gin.HandlerFunc)

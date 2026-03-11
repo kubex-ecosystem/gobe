@@ -49,7 +49,7 @@ type Channel struct {
 type IAdapter interface {
 	Connect() error
 	Disconnect() error
-	OnMessage(func(Message))        // neutral callback
+	OnMessage(func(Message)) // neutral callback
 	SendMessage(channelID, content string, opts ...SendOptions) error
 	GetChannels(guildID string) ([]Channel, error)
 	PingAdapter(msg string) error

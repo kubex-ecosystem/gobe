@@ -3,8 +3,8 @@ package utils_test
 
 import (
 	"errors"
-	"testing"
 	utils "github.com/kubex-ecosystem/gobe/internal/utils"
+	"testing"
 )
 
 func TestValidateWorkerLimit(t *testing.T) {
@@ -13,7 +13,7 @@ func TestValidateWorkerLimit(t *testing.T) {
 			t.Fatalf("esperava nil, obteve erro: %v", err)
 		}
 	})
-	
+
 	t.Run("Rejeita negativo", func(t *testing.T) {
 		if err := utils.ValidateWorkerLimit(-1); err == nil {
 			t.Fatalf("esperava erro para negativo, obteve nil")

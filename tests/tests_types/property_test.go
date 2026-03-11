@@ -12,7 +12,7 @@ import (
 	"time"
 
 	types "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 func TestProperty_GetSetSerialize(t *testing.T) {

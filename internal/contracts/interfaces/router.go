@@ -11,7 +11,7 @@ import (
 
 type IRouter interface {
 	GetDebug() bool
-	GetLogger() l.Logger
+	GetLogger() *l.LoggerZ
 	GetConfigPath() string
 	GetBindingAddress() string
 	GetPort() string

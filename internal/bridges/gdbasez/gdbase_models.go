@@ -70,7 +70,7 @@ func NewClientModel() *ClientModel {
 }
 
 func NewClientRepo(dbConn *gorm.DB) ClientRepo {
-	return fscm.NewClientRepo(dbConn)
+	return fscm.NewClientRepo(context.Background(), nil) //dbConn)
 }
 
 func NewProductService(db ProductRepo) ProductService {
@@ -82,11 +82,11 @@ func NewProductModel() *ProductModel {
 }
 
 func NewProductRepo(dbConn *gorm.DB) ProductRepo {
-	return fscm.NewProductRepo(dbConn)
+	return fscm.NewProductRepo(context.Background(), nil) //dbConn)
 }
 
 func NewCronService(db CronRepo) CronService {
-	return fscm.NewCronJobService(db)
+	return fscm.NewCronJobService(nil)
 }
 
 func NewCronModel() *CronModel {
@@ -94,7 +94,7 @@ func NewCronModel() *CronModel {
 }
 
 func NewCronRepo(ctx context.Context, dbConn *gorm.DB) CronRepo {
-	return fscm.NewCronJobRepo(ctx, dbConn)
+	return fscm.NewCronJobRepo(ctx, nil) //dbConn)
 }
 
 func NewDiscordService(db DiscordRepo) DiscordService {
@@ -106,14 +106,14 @@ func NewDiscordModel() *DiscordModel {
 }
 
 func NewDiscordRepo(dbConn *gorm.DB) DiscordRepo {
-	return fscm.NewDiscordRepo(dbConn)
+	return fscm.NewDiscordRepo(context.Background(), nil) //dbConn)
 }
 func NewJobQueueService(db JobQueueRepo) JobQueueService {
 	return fscm.NewJobQueueService(db)
 }
 
 func NewJobQueueRepo(dbConn *gorm.DB) JobQueueRepo {
-	return fscm.NewJobQueueRepo(dbConn)
+	return fscm.NewJobQueueRepo(context.Background(), nil) //dbConn)
 }
 
 func NewJobQueueModel() JobQueueModel {
@@ -125,7 +125,7 @@ func NewAnalysisJobService(db AnalysisJobRepo) AnalysisJobService {
 }
 
 func NewAnalysisJobRepo(dbConn *gorm.DB) AnalysisJobRepo {
-	return fscm.NewAnalysisJobRepo(dbConn)
+	return fscm.NewAnalysisJobRepo(context.Background(), nil) //dbConn)
 }
 
 func NewAnalysisJobModel() AnalysisJobModel {

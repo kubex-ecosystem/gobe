@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	wa "github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
+	wa "github.com/kubex-ecosystem/gobe/internal/services/chatbot/whatsapp"
 )
 
 // Controller manages WhatsApp webhooks and message sending.

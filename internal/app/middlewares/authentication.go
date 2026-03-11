@@ -22,10 +22,10 @@ import (
 	sci "github.com/kubex-ecosystem/gobe/internal/app/security/interfaces"
 	srv "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
-	"github.com/kubex-ecosystem/gobe/internal/module/logger"
+	logger "github.com/kubex-ecosystem/logz"
 )
 
-var gl = logger.GetLogger[l.Logger](nil)
+var gl = logger.GetLoggerZ("")
 
 type AuthenticationMiddleware struct {
 	contractapi.Contract
@@ -33,9 +33,9 @@ type AuthenticationMiddleware struct {
 	TokenService sci.TokenService
 }
 
-func NewTokenService(config *srv.IDBConfig, logger l.Logger) (sci.TokenService, sci.ICertService, error) {
+func NewTokenService(config *srv.IDBConfig, logger *l.LoggerZ) (sci.TokenService, sci.ICertService, error) {
 	if logger == nil {
-		logger = l.GetLogger("GoBE")
+		logger = l.GetLoggerZ("GoBE")
 	}
 	var err error
 	crtService := crt.NewCertService(os.ExpandEnv(cm.DefaultGoBEKeyPath), os.ExpandEnv(cm.DefaultGoBECertPath))

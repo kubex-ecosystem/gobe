@@ -8,8 +8,8 @@ import (
 	gb "github.com/kubex-ecosystem/gobe"
 	s "github.com/kubex-ecosystem/gobe/internal/bridges/gdbasez"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
 	msg "github.com/kubex-ecosystem/gobe/internal/sockets/messagery"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -24,7 +24,7 @@ var (
 	dbConfig *DBConfig
 )
 
-func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger l.Logger, debug, releaseMode bool) (ci.IGoBE, error) {
+func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, logger *l.LoggerZ, debug, releaseMode bool) (ci.IGoBE, error) {
 	err := initRabbitMQ()
 	if err != nil {
 		return nil, err
@@ -33,13 +33,13 @@ func NewGoBE(name, port, bind, logFile, configFile string, isConfidential bool, 
 	if err != nil {
 		return nil, err
 	}
-	dbService, err := GetDatabaseService(goBe)
-	if err != nil {
-		return nil, err
-	}
-	if dbService != nil {
-		dbConfig = dbService.GetConfig()
-	}
+	// dbService, err := GetDatabaseService(goBe)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if dbService != nil {
+	// 	dbConfig = dbService.GetConfig()
+	// }
 
 	return goBe, nil
 }

@@ -10,7 +10,7 @@ import (
 
 	cm "github.com/kubex-ecosystem/gobe/internal/commons"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 )
 
 // TLSConfig is a struct that holds the TLS configuration for the GoBE instance.

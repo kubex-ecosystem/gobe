@@ -20,7 +20,7 @@ type IGoBE interface {
 	Environment() IEnvironment
 	InitializeResources() error
 	InitializeServer() (IRouter, error)
-	GetLogger() l.Logger
+	GetLogger() *l.LoggerZ
 	StartGoBE()
 	StopGoBE()
 	GetChanCtl() chan string

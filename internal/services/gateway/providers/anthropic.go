@@ -253,17 +253,17 @@ func estimateAnthropicCost(model string, inputTokens, outputTokens int) float64 
 
 	switch {
 	case strings.Contains(model, "claude-3-5-sonnet"):
-		inputRate = 3.0 / 1_000_000    // $3.00 per million input tokens
-		outputRate = 15.0 / 1_000_000  // $15.00 per million output tokens
+		inputRate = 3.0 / 1_000_000   // $3.00 per million input tokens
+		outputRate = 15.0 / 1_000_000 // $15.00 per million output tokens
 	case strings.Contains(model, "claude-3-opus"):
-		inputRate = 15.0 / 1_000_000   // $15.00 per million input tokens
-		outputRate = 75.0 / 1_000_000  // $75.00 per million output tokens
+		inputRate = 15.0 / 1_000_000  // $15.00 per million input tokens
+		outputRate = 75.0 / 1_000_000 // $75.00 per million output tokens
 	case strings.Contains(model, "claude-3-sonnet"):
-		inputRate = 3.0 / 1_000_000    // $3.00 per million input tokens
-		outputRate = 15.0 / 1_000_000  // $15.00 per million output tokens
+		inputRate = 3.0 / 1_000_000   // $3.00 per million input tokens
+		outputRate = 15.0 / 1_000_000 // $15.00 per million output tokens
 	case strings.Contains(model, "claude-3-haiku"):
-		inputRate = 0.25 / 1_000_000   // $0.25 per million input tokens
-		outputRate = 1.25 / 1_000_000  // $1.25 per million output tokens
+		inputRate = 0.25 / 1_000_000  // $0.25 per million input tokens
+		outputRate = 1.25 / 1_000_000 // $1.25 per million output tokens
 	default:
 		// Default to Claude 3.5 Sonnet pricing
 		inputRate = 3.0 / 1_000_000

@@ -9,11 +9,10 @@ import (
 	"time"
 
 	gdbf "github.com/kubex-ecosystem/gdbase/factory"
-	"github.com/kubex-ecosystem/gdbase/types"
 	mdw "github.com/kubex-ecosystem/gobe/internal/app/middlewares"
 	ci "github.com/kubex-ecosystem/gobe/internal/contracts/interfaces"
 	t "github.com/kubex-ecosystem/gobe/internal/contracts/types"
-	gl "github.com/kubex-ecosystem/gobe/internal/module/logger"
+	gl "github.com/kubex-ecosystem/logz"
 	l "github.com/kubex-ecosystem/logz"
 	"github.com/spf13/viper"
 	"golang.org/x/time/rate"
@@ -31,7 +30,7 @@ type Router struct {
 	*gin.Engine
 	*t.Mutexes
 	InitArgs        ci.InitArgs
-	Logger          l.Logger
+	Logger          *l.LoggerZ
 	settings        map[string]string
 	databaseService gdbf.DBService
 	routes          map[string]map[string]ci.IRoute
@@ -42,9 +41,9 @@ type Router struct {
 }
 
 // newRouter initializes a new Router instance with the provided configuration.
-func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logger l.Logger, debug bool) (*Router, error) {
+func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logger *l.LoggerZ, debug bool) (*Router, error) {
 	if logger == nil {
-		logger = l.GetLogger("GoBE")
+		logger = l.GetLoggerZ("GoBE")
 	}
 
 	rtr := &Router{
@@ -66,7 +65,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 
 	var autenticationMiddleware *mdw.AuthenticationMiddleware
 	if databaseService != nil {
-		tokenService, certService, err := mdw.NewTokenService(databaseService.GetConfig(), logger)
+		tokenService, certService, err := mdw.NewTokenService(nil, logger)
 		if err != nil {
 			gl.Log("error", fmt.Sprintf("❌ Failed to create token service: %v", err))
 			return nil, err
@@ -155,7 +154,7 @@ func newRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logge
 }
 
 // NewRouter creates a new Router instance and returns it as an IRouter interface.
-func NewRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logger l.Logger, debug bool) (ci.IRouter, error) {
+func NewRouter(serverConfig *t.GoBEConfig, databaseService gdbf.DBService, logger *l.LoggerZ, debug bool) (ci.IRouter, error) {
 	return newRouter(serverConfig, databaseService, logger, debug)
 }
 
@@ -170,7 +169,7 @@ func (rtr *Router) GetDebug() bool {
 }
 
 // GetLogger returns the logger instance associated with the router.
-func (rtr *Router) GetLogger() l.Logger {
+func (rtr *Router) GetLogger() *l.LoggerZ {
 	return rtr.Logger
 }
 
@@ -211,9 +210,7 @@ func (rtr *Router) HandleFunc(path string, handler gin.HandlerFunc) gin.IRoutes 
 
 // DBConfig is a placeholder function for database configuration.
 func (rtr *Router) DBConfig() gdbf.IDBConfig {
-	return *types.NewDBConfig(
-		nil,
-	)
+	return nil
 }
 
 // Start starts the server with the configured settings.
